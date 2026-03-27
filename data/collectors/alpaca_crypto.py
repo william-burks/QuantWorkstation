@@ -1,7 +1,7 @@
 """
 Alpaca crypto OHLCV batch collector.
 
-Init run: fetches 2 years of daily + hourly bars per symbol.
+Init run: fetches 2 years of multi-timeframe bars per symbol.
 Incremental run: fetches bars since the last stored timestamp.
 """
 
@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 import pandas as pd
 from alpaca.data.historical import CryptoHistoricalDataClient
 from alpaca.data.requests import CryptoBarsRequest
-from alpaca.data.timeframe import TimeFrame
+from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 
 from data.config import get_settings
 from data.store import get_store
@@ -20,8 +20,13 @@ log = logging.getLogger(__name__)
 
 _TWO_YEARS = timedelta(days=730)
 _TIMEFRAMES = {
-    "daily": TimeFrame.Day,
-    "hourly": TimeFrame.Hour,
+    "1-minute":  TimeFrame(1,  TimeFrameUnit.Minute),
+    "5-minute":  TimeFrame(5,  TimeFrameUnit.Minute),
+    "15-minute": TimeFrame(15, TimeFrameUnit.Minute),
+    "hourly":    TimeFrame(1,  TimeFrameUnit.Hour),
+    "4-hour":    TimeFrame(4,  TimeFrameUnit.Hour),
+    "daily":     TimeFrame(1,  TimeFrameUnit.Day),
+    "weekly":    TimeFrame(1,  TimeFrameUnit.Week),
 }
 
 

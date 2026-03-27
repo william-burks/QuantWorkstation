@@ -10,3 +10,5 @@ class Position(BaseModel):
     avg_price: float
     unrealized_pnl: float
     broker: Literal["alpaca", "ibkr"]
+    risk: float
+    to_make: float
