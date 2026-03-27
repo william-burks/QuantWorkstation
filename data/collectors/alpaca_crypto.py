@@ -35,9 +35,8 @@ def _client() -> CryptoHistoricalDataClient:
     return CryptoHistoricalDataClient(s.alpaca_api_key, s.alpaca_api_secret)
 
 
-def _bars_to_df(bars_response: object, symbol: str) -> pd.DataFrame:
-    """Normalize Alpaca BarSet response to a plain DataFrame."""
-    raw = bars_response[symbol]  # list[Bar]
+def _bars_to_df(bars: list) -> pd.DataFrame:
+    """Normalize a list of Alpaca Bar objects to a plain DataFrame."""
     records = [
         {
             "open": b.open,
@@ -49,9 +48,9 @@ def _bars_to_df(bars_response: object, symbol: str) -> pd.DataFrame:
             "source": "alpaca",
             "adjusted": False,
         }
-        for b in raw
+        for b in bars
     ]
-    df = pd.DataFrame(records, index=pd.DatetimeIndex([b.timestamp for b in raw], tz="UTC"))
+    df = pd.DataFrame(records, index=pd.DatetimeIndex([b.timestamp for b in bars], tz="UTC"))
     df.index.name = "timestamp"
     return df
 
@@ -86,11 +85,13 @@ def collect(symbol: str, timeframe: str = "daily") -> None:
     )
     response = client.get_crypto_bars(request)
 
-    if symbol not in response or not response[symbol]:
+    # BarSet exposes data via .data dict — does not support `in` or `[]` directly
+    bars = response.data.get(symbol)
+    if not bars:
         log.warning("No data returned for %s %s", symbol, timeframe)
         return
 
-    df = _bars_to_df(response, symbol)
+    df = _bars_to_df(bars)
     store.write_bars(lib, store_key, df)
     log.info("Stored %d bars for %s %s", len(df), symbol, timeframe)
 

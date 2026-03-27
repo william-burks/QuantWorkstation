@@ -24,21 +24,20 @@ def _make_mock_bar(ts: datetime, price: float = 40000.0) -> MagicMock:
 
 
 def _make_response(symbol: str, bars: list) -> MagicMock:
+    """Mock a BarSet — data lives in response.data dict."""
     response = MagicMock()
-    response.__contains__ = lambda self, key: key == symbol
-    response.__getitem__ = lambda self, key: bars
+    response.data = {symbol: bars} if bars else {}
     return response
 
 
 # ------------------------------------------------------------------
-# _bars_to_df
+# _bars_to_df  (now takes a list, not a response object)
 # ------------------------------------------------------------------
 
 def test_bars_to_df_shape():
     ts = datetime(2024, 1, 1, tzinfo=timezone.utc)
     bars = [_make_mock_bar(ts), _make_mock_bar(ts + timedelta(days=1))]
-    response = _make_response("BTC/USD", bars)
-    df = _bars_to_df(response, "BTC/USD")
+    df = _bars_to_df(bars)
     assert len(df) == 2
     assert list(df.columns) == ["open", "high", "low", "close", "volume", "market", "source", "adjusted"]
     assert df.index.name == "timestamp"
@@ -50,8 +49,7 @@ def test_bars_to_df_shape():
 def test_bars_to_df_index_is_utc():
     ts = datetime(2024, 6, 1, tzinfo=timezone.utc)
     bars = [_make_mock_bar(ts)]
-    response = _make_response("ETH/USD", bars)
-    df = _bars_to_df(response, "ETH/USD")
+    df = _bars_to_df(bars)
     assert df.index.tz is not None
     assert str(df.index.tz) == "UTC"
 
@@ -78,11 +76,10 @@ def test_collect_init_fetches_two_years(mock_client, mock_get_store):
     collect("BTC/USD", "daily")
 
     store.write_bars.assert_called_once()
-    call_args = store.write_bars.call_args
-    assert call_args[0][0] == "crypto"
-    assert call_args[0][1] == "BTC/USD_daily"
-    df = call_args[0][2]
-    assert len(df) == 5
+    call_args = store.write_bars.call_args[0]
+    assert call_args[0] == "crypto"
+    assert call_args[1] == "BTC/USD_daily"
+    assert len(call_args[2]) == 5
 
 
 @patch("data.collectors.alpaca_crypto.get_store")
@@ -135,7 +132,6 @@ def test_collect_incremental_starts_after_last_bar(mock_client, mock_get_store):
     collect("BTC/USD", "daily")
 
     request = client.get_crypto_bars.call_args[0][0]
-    # CryptoBarsRequest stores start tz-naive; strip tz from last_ts for comparison
     req_start = pd.Timestamp(request.start).tz_localize("UTC")
     assert req_start > last_ts
 
@@ -147,9 +143,7 @@ def test_collect_skips_write_when_no_bars_returned(mock_client, mock_get_store):
     store.has_symbol.return_value = False
     mock_get_store.return_value = store
 
-    # Empty response — symbol not present
-    response = MagicMock()
-    response.__contains__ = lambda self, key: False
+    response = _make_response("BTC/USD", [])  # empty .data dict
     client = MagicMock()
     client.get_crypto_bars.return_value = response
     mock_client.return_value = client

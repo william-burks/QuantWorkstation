@@ -8,6 +8,7 @@ __pycache__/
 dist/
 *.egg-info/
 data/arctic/
+arctic_data/
 .venv/
 venv/
 .idea/

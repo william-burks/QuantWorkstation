@@ -23,7 +23,9 @@ _LIBRARIES = ("crypto", "futures", "futures_meta", "signals")
 
 class Store:
     def __init__(self, uri: str | None = None) -> None:
-        uri = uri or os.environ.get("ARCTIC_URI", "lmdb:///data/arctic")
+        default_path = os.path.join(os.path.dirname(__file__), "..", "arctic_data")
+        default_uri = f"lmdb://{os.path.abspath(default_path)}"
+        uri = uri or os.environ.get("ARCTIC_URI", default_uri)
         self._ac: Arctic = adb.Arctic(uri)
         self._libs: dict[str, Library] = {}
         for lib in _LIBRARIES:
