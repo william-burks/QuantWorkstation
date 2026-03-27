@@ -88,7 +88,7 @@ def collect(symbol: str, timeframe: str = "daily") -> None:
     # BarSet exposes data via .data dict — does not support `in` or `[]` directly
     bars = response.data.get(symbol)
     if not bars:
-        log.warning("No data returned for %s %s", symbol, timeframe)
+        log.info("Already up to date: no new bars for %s %s", symbol, timeframe)
         return
 
     df = _bars_to_df(bars)

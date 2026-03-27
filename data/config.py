@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://redis:6379/0"
 
     # Crypto symbols to collect
-    crypto_symbols: list[str] = ["BTC/USD", "ETH/USD", "SOL/USD"]
+    crypto_symbols: list[str] = ["BTC/USD"]
 
     # Futures root symbols to collect
     futures_symbols: list[str] = ["ES", "NQ", "CL", "GC"]
