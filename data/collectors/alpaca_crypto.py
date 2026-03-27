@@ -68,7 +68,7 @@ def collect(symbol: str, timeframe: str = "daily") -> None:
         start = now - _TWO_YEARS
         log.info("Init collect %s %s from %s", symbol, timeframe, start)
 
-    if start >= now:
+    if start >= now - timedelta(hours=1):
         log.info("No new bars for %s %s", symbol, timeframe)
         return
 
