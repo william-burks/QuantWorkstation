@@ -1,127 +1,147 @@
 # Data Collectors
 
-Batch collectors for crypto and futures OHLCV data. All data is written to arcticdb.
+Batch collectors for crypto (Alpaca) and futures (IBKR) OHLCV data, stored in arcticdb.
 
 ---
 
-## Collectors
+## Prerequisites
 
-### `alpaca_crypto.py`
-Fetches crypto bars from Alpaca Markets.
+**1. Install dependencies**
+```bash
+cd ~/ClaudeProjects/QuantWorkstation
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+```
 
-**Symbols:** configured via `CRYPTO_SYMBOLS` env var (default: `BTC/USD`, `ETH/USD`, `SOL/USD`)
+**2. Create your `.env`**
+```bash
+cp env.example .env
+# Fill in ALPACA_API_KEY and ALPACA_API_SECRET at minimum
+```
 
-**Timeframes:**
+**3. For futures only — start IB Gateway**
 
-| Key | Resolution |
-|---|---|
-| `1-minute` | 1 min |
-| `5-minute` | 5 min |
-| `15-minute` | 15 min |
-| `hourly` | 1 hour |
-| `4-hour` | 4 hours |
-| `daily` | 1 day |
-| `weekly` | 1 week |
+Open IB Gateway (paper account), enable API connections:
+- Configure → API → Settings → Enable ActiveX and Socket Clients ✓
+- Socket port: `4002` (paper) or `4001` (live)
+- Trusted IPs: `127.0.0.1`
 
-**arcticdb keys:** `crypto / {symbol}_{timeframe}` (e.g. `BTC/USD_daily`)
+---
 
-**Behavior:**
-- First run: fetches 2 years of history
-- Subsequent runs: incremental from last stored timestamp
-- Skips if last bar is within the past hour (already current)
+## Running the Collectors
 
-**Requires:** `ALPACA_API_KEY`, `ALPACA_API_SECRET`
+### Crypto (Alpaca)
 
-```python
+No external process required — just valid API keys in `.env`.
+
+```bash
+# From repo root, with .venv active
+python3 - <<'EOF'
 from data.collectors.alpaca_crypto import collect, collect_all
 
-collect("BTC/USD", "daily")       # single symbol
+# Single symbol, single timeframe
+collect("BTC/USD", "daily")
 collect("ETH/USD", "hourly")
-collect_all("daily")              # all configured symbols
+
+# All configured symbols (BTC/USD, ETH/USD, SOL/USD by default)
+collect_all("daily")
+EOF
 ```
 
----
+Available timeframes: `1-minute`, `5-minute`, `15-minute`, `hourly`, `4-hour`, `daily`, `weekly`
 
-### `ibkr_futures.py`
-Fetches futures daily bars from IBKR via `ib_insync`.
+First run fetches 2 years of history. Subsequent runs are incremental.
 
-**Supported roots:**
+### Futures (IBKR)
 
-| Symbol | Exchange | Multiplier |
-|---|---|---|
-| `ES` | CME | $50/pt |
-| `NQ` | CME | $20/pt |
-| `CL` | NYMEX | $1,000/contract |
-| `GC` | COMEX | $100/troy oz |
+Requires IB Gateway running before calling collect.
 
-**Timeframes:** `daily`, `hourly`
-
-**arcticdb keys:** `futures / {root}_continuous_{timeframe}` (e.g. `ES_continuous_daily`)
-
-**Behavior:**
-- Fetches front-month contract bars
-- First run: 1-year history (IBKR limit)
-- Subsequent runs: incremental from last stored timestamp
-- Deduplicates: bars at or before last stored timestamp are discarded
-- Always disconnects from IB Gateway, even on error
-
-**Requires:** IB Gateway or TWS running locally on `IBKR_HOST:IBKR_PORT` (default `127.0.0.1:4002` for paper)
-
-```python
+```bash
+python3 - <<'EOF'
 from data.collectors.ibkr_futures import collect, collect_all
 
-collect("ES", "daily")    # single root
-collect_all("daily")      # all configured roots
+# Single root
+collect("ES", "daily")
+
+# All configured roots (ES, NQ, CL, GC by default)
+collect_all("daily")
+EOF
+```
+
+Available timeframes: `daily`, `hourly`
+
+First run fetches 1 year of history (IBKR limit). Subsequent runs are incremental.
+
+---
+
+## Verifying Data Was Stored
+
+```bash
+python3 - <<'EOF'
+from data.store import get_store
+import os; os.environ.setdefault("ARCTIC_URI", "lmdb:///data/arctic")
+
+store = get_store()
+
+# List what's in each library
+print("Crypto symbols:", store.list_symbols("crypto"))
+print("Futures symbols:", store.list_symbols("futures"))
+
+# Read and inspect a symbol
+df = store.read_bars("crypto", "BTC/USD_daily")
+print(df.tail())
+print(f"\n{len(df)} bars, {df.index.min()} → {df.index.max()}")
+EOF
 ```
 
 ---
 
-### `roll_calendar.py`
-Builds Panama-adjusted continuous price series from individual contract bars.
+## Running the Tests
 
-**Panama method:** at each roll, prior prices are multiplied by `(new_front_close / old_front_close)`. Percentage returns are preserved; prices are not actual tradeable prices.
+Unit tests use mocked API clients — no live connections required.
 
-**Roll timing:** 5 business days before contract expiry.
+```bash
+# All unit tests
+pytest tests/unit/ -v
 
-```python
-from data.collectors.roll_calendar import build_continuous
+# Collectors only
+pytest tests/unit/test_alpaca_crypto_collector.py -v
+pytest tests/unit/test_ibkr_futures_collector.py -v
 
-# contracts: DataFrame with [expiry, front_month] columns
-# bars_by_expiry: dict mapping expiry date → OHLCV DataFrame
-continuous_df = build_continuous("ES", contracts, bars_by_expiry)
+# Roll calendar
+pytest tests/unit/test_roll_calendar.py -v
+
+# Schemas
+pytest tests/unit/test_schemas.py tests/unit/test_schemas_quote.py -v
 ```
 
----
-
-## arcticdb Libraries
-
-| Library | Contents | Key format |
-|---|---|---|
-| `crypto` | Crypto OHLCV bars | `{symbol}_{timeframe}` |
-| `futures` | Futures continuous bars | `{root}_continuous_{timeframe}` |
-| `futures_meta` | Contract metadata | `{root}` |
-| `signals` | Strategy signals | `{strategy}/{symbol}` |
+Expected output: **35 passed**.
 
 ---
 
-## Scheduling
+## Troubleshooting
 
-Collectors are run as APScheduler jobs (configured in `execution/scheduler.py`):
+**`ValidationError: alpaca_api_key field required`**
+→ `.env` file is missing or not loaded. Make sure it's in the repo root and contains `ALPACA_API_KEY`.
 
-| Job | Schedule | Notes |
-|---|---|---|
-| Crypto daily | 00:15 UTC daily | After midnight close |
-| Futures daily | 23:15 UTC Mon–Fri | After CME close (17:15 CT) |
+**`ConnectionRefusedError` on IBKR collect**
+→ IB Gateway is not running, or the port doesn't match `IBKR_PORT` in `.env` (default `4002` for paper).
 
-For intraday timeframes (hourly, 15-min), adjust the schedule accordingly.
+**`KeyError: 'BTC/USD'` from Alpaca response**
+→ No data returned for that symbol/timeframe. Check the symbol spelling — Alpaca uses `BTC/USD` not `BTCUSD`.
+
+**`ValueError: Unknown futures root`**
+→ Symbol not in `_CONTRACT_SPECS`. Add it to `ibkr_futures.py` and to `futures_symbols` in `.env`.
 
 ---
 
 ## Adding a New Futures Symbol
 
-1. Add an entry to `_CONTRACT_SPECS` in `ibkr_futures.py`:
+1. Add to `_CONTRACT_SPECS` in `ibkr_futures.py`:
 ```python
 "MES": {"multiplier": "5", "exchange": "CME", "currency": "USD"},
 ```
-2. Add the root to `futures_symbols` in your `.env` or `data/config.py` defaults.
-3. No other changes required.
+2. Add to `FUTURES_SYMBOLS` in `.env` (or update the default in `data/config.py`):
+```bash
+FUTURES_SYMBOLS=["ES","NQ","CL","GC","MES"]
+```
