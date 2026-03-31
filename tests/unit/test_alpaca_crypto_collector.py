@@ -73,12 +73,12 @@ def test_collect_init_fetches_two_years(mock_client, mock_get_store):
     client.get_crypto_bars.return_value = response
     mock_client.return_value = client
 
-    collect("BTC/USD", "daily")
+    collect("BTC/USD", "1D")
 
     store.write_bars.assert_called_once()
     call_args = store.write_bars.call_args[0]
     assert call_args[0] == "crypto"
-    assert call_args[1] == "BTC/USD_daily"
+    assert call_args[1] == "BTC/USD_1D"
     assert len(call_args[2]) == 5
 
 
@@ -94,7 +94,7 @@ def test_collect_init_start_is_approx_two_years_ago(mock_client, mock_get_store)
     client.get_crypto_bars.return_value = response
     mock_client.return_value = client
 
-    collect("BTC/USD", "daily")
+    collect("BTC/USD", "1D")
 
     request = client.get_crypto_bars.call_args[0][0]
     # CryptoBarsRequest stores start as tz-naive; compare without tz
@@ -129,7 +129,7 @@ def test_collect_incremental_starts_after_last_bar(mock_client, mock_get_store):
     client.get_crypto_bars.return_value = response
     mock_client.return_value = client
 
-    collect("BTC/USD", "daily")
+    collect("BTC/USD", "1D")
 
     request = client.get_crypto_bars.call_args[0][0]
     req_start = pd.Timestamp(request.start).tz_localize("UTC")
@@ -148,7 +148,7 @@ def test_collect_skips_write_when_no_bars_returned(mock_client, mock_get_store):
     client.get_crypto_bars.return_value = response
     mock_client.return_value = client
 
-    collect("BTC/USD", "daily")
+    collect("BTC/USD", "1D")
 
     store.write_bars.assert_not_called()
 
@@ -171,6 +171,6 @@ def test_collect_skips_when_already_up_to_date(mock_client, mock_get_store):
     client = MagicMock()
     mock_client.return_value = client
 
-    collect("BTC/USD", "daily")
+    collect("BTC/USD", "1D")
 
     client.get_crypto_bars.assert_not_called()

@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     ibkr_port: int = 4002  # 4002=paper, 4001=live
     ibkr_client_id: int = 1
 
-    # arcticdb
-    arctic_uri: str = "lmdb:///data/arctic"
+    # arcticdb — override with ARCTIC_URI env var; store.py sets a local default if unset
+    arctic_uri: str = ""
 
     # Redis
     redis_url: str = "redis://redis:6379/0"
@@ -24,7 +24,11 @@ class Settings(BaseSettings):
     crypto_symbols: list[str] = ["BTC/USD"]
 
     # Futures root symbols to collect
-    futures_symbols: list[str] = ["ES", "NQ", "CL", "GC"]
+    futures_symbols: list[str] = ["MES", "MNQ", "CL"]
+
+    # Risk / evaluation
+    eval_profit_target: float = 3000.0   # evaluation profit goal (USD)
+    risk_per_trade_pct: float = 0.01     # 1% of balance per trade (range: 0.005–0.01)
 
 
 _settings: Settings | None = None
