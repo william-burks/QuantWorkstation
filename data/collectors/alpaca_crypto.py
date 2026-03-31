@@ -20,13 +20,13 @@ log = logging.getLogger(__name__)
 
 _TWO_YEARS = timedelta(days=730)
 _TIMEFRAMES = {
-    "1-minute":  TimeFrame(1,  TimeFrameUnit.Minute),
-    "5-minute":  TimeFrame(5,  TimeFrameUnit.Minute),
-    "15-minute": TimeFrame(15, TimeFrameUnit.Minute),
-    "hourly":    TimeFrame(1,  TimeFrameUnit.Hour),
-    "4-hour":    TimeFrame(4,  TimeFrameUnit.Hour),
-    "daily":     TimeFrame(1,  TimeFrameUnit.Day),
-    "weekly":    TimeFrame(1,  TimeFrameUnit.Week),
+    "1T":  TimeFrame(1,  TimeFrameUnit.Minute),
+    "5T":  TimeFrame(5,  TimeFrameUnit.Minute),
+    "15T": TimeFrame(15, TimeFrameUnit.Minute),
+    "1H":    TimeFrame(1,  TimeFrameUnit.Hour),
+    "4H":    TimeFrame(4,  TimeFrameUnit.Hour),
+    "1D":     TimeFrame(1,  TimeFrameUnit.Day),
+    "1W":    TimeFrame(1,  TimeFrameUnit.Week),
 }
 
 
