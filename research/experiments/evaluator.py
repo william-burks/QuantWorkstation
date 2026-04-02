@@ -25,7 +25,6 @@ from research.experiments.standards import (
     TIERS,
 )
 from strategies.base import BaseStrategy
-from strategies.adapters.vectorbt_adapter import leveraged_to_margin, run
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +34,9 @@ _METRIC_COLS: frozenset[str] = frozenset({
     "annual_volatility", "n_bars", "win_rate", "profit_factor",
     "n_trades", "gain", "fees",
     "beat_bh", "tier", "fee_pct_of_gain",
+    "sample_size", "total_r", "avg_r_per_trade", "breakeven_win_rate",
+    "strategy_return", "bh_exposure_return", "outperformance_x",
+    "max_hours_in_market", "total_hours", "exposure_frac",
 })
 
 _REGISTRY_PATH = Path(__file__).parent.parent / "results" / "registry.json"
@@ -210,6 +212,9 @@ def worst_trades(
         entry_time, exit_time, direction, entry_price, exit_price,
         pnl_usd, pnl_pct, bars_held
     """
+    # Local import keeps evaluate/report usable in environments without vectorbt.
+    from strategies.adapters.vectorbt_adapter import run
+
     strategy = strategy_cls(**params)
     pf = run(
         strategy, bars,
@@ -366,6 +371,19 @@ def _print_full(results: pd.DataFrame, n: int) -> None:
 
 def _record_passing(results: pd.DataFrame, metadata: dict) -> None:
     """Append any passing results to the registry file."""
+
+    def _json_safe(value: Any) -> Any:
+        if isinstance(value, dict):
+            return {k: _json_safe(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [_json_safe(v) for v in value]
+        if hasattr(value, "item"):
+            try:
+                return value.item()
+            except Exception:
+                return value
+        return value
+
     passing = results[results.get("tier", pd.Series("fail", index=results.index)) != "fail"]
     if passing.empty:
         return
@@ -395,11 +413,11 @@ def _record_passing(results: pd.DataFrame, metadata: dict) -> None:
             "symbol":      metadata.get("symbol", "unknown"),
             "freq":        metadata.get("freq", "unknown"),
             "tier":        t,
-            "params":      {c: row[c] for c in pcols},
+            "params":      _json_safe({c: row[c] for c in pcols}),
             "metrics":     {k: round(float(row[k]), 6) for k in metric_keys if k in row},
             "beat_bh":     bool(row.get("beat_bh", False)),
-            "metadata":    {k: v for k, v in metadata.items()
-                            if k not in ("data_span", "strategy", "symbol", "freq")},
+            "metadata":    _json_safe({k: v for k, v in metadata.items()
+                            if k not in ("data_span", "strategy", "symbol", "freq")}),
         }
         existing.append(entry)
         recorded_tiers.append(t.upper())
