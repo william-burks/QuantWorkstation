@@ -1,7 +1,11 @@
 from research.experiments.evaluator import evaluate, report, worst_trades
 from research.experiments.metrics import summary
-from research.experiments.sweep import sweep
 from research.experiments.standards import CALMAR, MAX_DRAWDOWN_LIMIT, PROFIT_FACTOR, SHARPE, TIERS
+
+try:
+    from research.experiments.sweep import sweep
+except ModuleNotFoundError:  # pragma: no cover - optional vectorbt dependency
+    sweep = None
 
 __all__ = [
     "evaluate",
