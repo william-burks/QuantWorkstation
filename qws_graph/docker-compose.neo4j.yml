@@ -1,0 +1,14 @@
+services:
+  qws-neo4j:
+    image: neo4j:5-community
+    container_name: qws-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: ${QW_GRAPH_NEO4J_AUTH:-neo4j/password}
+    volumes:
+      - ./.qws/neo4j_data:/data
+    restart: unless-stopped
+
+

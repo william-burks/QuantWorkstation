@@ -26,6 +26,13 @@ The repository already produces baseline/grid CSVs and champion markdowns, but l
 - Existing scripts: `research/run_es_nq_baseline.sh`, `research/run_es_phase2.sh`
 - Existing validation conventions in `research/candidate_validator.py`, `data/schemas/`
 
+## Story 0 quickstart (local Neo4j)
+- Copy `env.example` to `.env` and adjust values if needed.
+- Start Neo4j with `docker compose -f docker-compose.neo4j.yml up -d`.
+- Neo4j Browser is available at `http://localhost:7474`.
+- Set `QW_GRAPH_ENABLED=false` when you want graph-disabled mode with no Neo4j dependency.
+- Stop Neo4j with `docker compose -f docker-compose.neo4j.yml down`.
+
 ## Exit criteria
 - `qw record` ingests baseline/grid/champion artifacts with deterministic IDs
 - `qw reconcile` can audit pending/drift state from CLI
