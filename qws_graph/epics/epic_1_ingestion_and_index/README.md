@@ -28,10 +28,12 @@ The repository already produces baseline/grid CSVs and champion markdowns, but l
 
 ## Story 0 quickstart (local Neo4j)
 - Copy `env.example` to `.env` and adjust values if needed.
-- Start Neo4j with `docker compose -f docker-compose.neo4j.yml up -d`.
+- Start Neo4j with `make neo4j-up`.
+- Check status with `make neo4j-status`.
+- View logs with `make neo4j-logs`.
 - Neo4j Browser is available at `http://localhost:7474`.
 - Set `QW_GRAPH_ENABLED=false` when you want graph-disabled mode with no Neo4j dependency.
-- Stop Neo4j with `docker compose -f docker-compose.neo4j.yml down`.
+- Stop Neo4j with `make neo4j-down`.
 
 ## Exit criteria
 - `qw record` ingests baseline/grid/champion artifacts with deterministic IDs
@@ -39,5 +41,3 @@ The repository already produces baseline/grid CSVs and champion markdowns, but l
 - Re-ingest does not duplicate graph state
 - Shell hooks run with `|| true` and do not break existing runs
 - Receipt and pending behavior is verified through shell entrypoints
-
-
