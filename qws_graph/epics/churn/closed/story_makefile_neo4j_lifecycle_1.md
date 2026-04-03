@@ -1,7 +1,7 @@
 # Story: Makefile Local Neo4j Lifecycle
 
 ## Status
-in_progress
+closed
 
 ## Problem
 Local Neo4j lifecycle commands are currently run with direct `docker compose` invocations, which is easy to mistype and inconsistent across contributors.
@@ -30,7 +30,7 @@ A root-level `Makefile` with clear Neo4j lifecycle targets and lightweight docs 
 ## Repo Touchpoints
 - `Makefile` (new)
 - `epics/epic_1_ingestion_and_index/README.md` (quickstart command updates)
-- `churn/story_makefile_neo4j_lifecycle_1.md` (this story)
+- `epics/churn/closed/story_makefile_neo4j_lifecycle_1.md` (this story)
 
 ## Acceptance Criteria
 1. Running `make neo4j-up` starts the local Neo4j service defined in `docker-compose.neo4j.yml`.
@@ -51,4 +51,3 @@ A root-level `Makefile` with clear Neo4j lifecycle targets and lightweight docs 
 
 ## Notes
 - If host port `7474` is occupied, `make neo4j-up` will fail until the conflict is resolved or ports are remapped in compose.
-
