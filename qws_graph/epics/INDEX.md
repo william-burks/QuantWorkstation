@@ -25,7 +25,7 @@ Navigation and execution index for `qws_graph/epics`.
 - Objective: sidecar ingestion/index without breaking current shell/script entrypoints.
 
 Stories (execution order):
-1. [`story_0_infra_scaffold_and_docker.md`](epic_1_ingestion_and_index/story_0_infra_scaffold_and_docker.md) — `ready`
+1. [`story_0_infra_scaffold_and_docker.md`](epic_1_ingestion_and_index/closed/story_0_infra_scaffold_and_docker.md) — `ready`
 2. [`story_1_graph_v1_contract_alignment.md`](epic_1_ingestion_and_index/story_1_graph_v1_contract_alignment.md) — `ready`
 3. [`story_2_pydantic_models_and_parsers.md`](epic_1_ingestion_and_index/story_2_pydantic_models_and_parsers.md) — `ready`
 4. [`story_3_qw_record_cli.md`](epic_1_ingestion_and_index/story_3_qw_record_cli.md) — `ready`
