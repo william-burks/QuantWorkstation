@@ -1,7 +1,7 @@
 # Story 0 — Infra Scaffold and Docker
 
 ## Status
-ready
+closed
 
 ## Summary
 Create the minimum infrastructure scaffold for Graph V1 before parser/CLI/store implementation starts.
