@@ -69,6 +69,15 @@ Guardrails:
 
 ## Artifact Types in V1
 
+Canonical artifact kind enum for `ResearchArtifact.kind`, `qw record --kind`, pending payloads, and receipts:
+
+| Kind | Source format | Expected location pattern | V1 ingest behavior |
+|---|---|---|---|
+| `baseline_csv` | CSV | `results/*_baseline.csv` | Parse rows, write `Strategy` + `Run` + `Config` |
+| `grid_csv` | CSV | `results/*_grid_*.csv` | Parse rows, write `Strategy` + `Run` + `Config` |
+| `champion_md` | Markdown | `research/results/champions/*.md` | Parse document, write `Champion`, link to `Strategy`, optional pivot |
+| `tracker_md` | Markdown | `research/*tracker*.md` | Attach raw blob metadata only (`BlobArtifact`) |
+
 ### 1) Baseline CSV
 Expected examples:
 - `results/es_bear_baseline.csv`
@@ -125,6 +134,8 @@ Apply before hashing:
 ### Collision handling
 - Fail-fast with `CriticalIDError`.
 - No automatic fallback ID generation in V1.
+- Collision condition: if a deterministic ID already exists but resolves to a different canonical payload hash, abort write and return validation failure semantics for that artifact.
+- `CriticalIDError` is terminal for that `qw record` invocation and must not emit partial graph writes.
 
 ### Reference implementation (contract code)
 ```python
@@ -389,9 +400,17 @@ class ResearchArtifact(BaseModel):
 - `0`: validation passed and persisted, or validation passed and written to pending in offline mode.
 - `1`: schema validation failure.
 - `2`: infrastructure failure (Neo4j unavailable and `--offline` not provided).
+- `--dry-run` returns `0` only when parse + validation succeed; it writes neither pending payloads nor receipts.
 
 ### Receipt behavior
-For every successful `qw record` call, write a receipt JSON to `.qws/receipts/<run_or_champion_id>.json`.
+For every successful non-dry-run `qw record` call, write a receipt JSON to `.qws/receipts/<run_or_champion_id>.json`.
+
+Write mode matrix:
+- Online success: graph write + receipt, no pending file.
+- Offline success (`--offline`): pending file + receipt with `status=pending_offline`.
+- Validation failure: no graph write, no pending file, no receipt.
+- Infra failure (`--offline` not set): no graph write, no pending file, no receipt.
+- Dry-run success: no graph write, no pending file, no receipt.
 
 Required receipt fields:
 - `id`
@@ -454,6 +473,8 @@ Re-running `qw record` against unchanged artifact must:
 The following statements are contract-level references for implementation.
 
 ### Ingest strategy + runs + configs (CSV)
+Applies to both `baseline_csv` and `grid_csv` payloads.
+
 ```cypher
 UNWIND $rows AS row
 MERGE (s:Strategy {strategy_id: row.strategy.strategy_id})
@@ -497,6 +518,8 @@ MERGE (r)-[:USES_CONFIG]->(c)
 ```
 
 ### Ingest champion markdown
+Applies to `champion_md` payloads.
+
 ```cypher
 MERGE (s:Strategy {strategy_id: $champion.strategy_id})
   ON CREATE SET s.created_at = datetime()
@@ -750,6 +773,14 @@ Unblocked tasks:
   - `research/run_es_nq_baseline.sh`
   - `research/run_es_phase2.sh`
 - Reconcile/query command shells.
+
+## Implementation Checklist (Story 1 Contract Gates)
+
+- [x] Artifact kind enum is explicit and consistent across schema, CLI kind values, pending payloads, and receipts.
+- [x] Deterministic ID algorithm is fixed (`normalize_text` + SHA-256 `hash12`) with explicit collision fail-fast policy.
+- [x] `qw record` exit codes are exact and exhaustive for V1 (`0`, `1`, `2`, plus dry-run write behavior).
+- [x] `.qws/receipts` and `.qws/pending` write conditions are explicitly defined.
+- [x] Cypher MERGE mappings are specified for CSV ingest and champion ingest.
 
 ---
 
