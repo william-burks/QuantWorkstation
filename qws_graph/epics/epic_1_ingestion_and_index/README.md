@@ -10,8 +10,8 @@ The repository already produces baseline/grid CSVs and champion markdowns, but l
 - Add infra scaffold for local Neo4j and graph settings
 - Implement fixed ingestion contract from `docs/graph_v1_contract.md`
 - Parse and validate artifact payloads
-- Add `qw record` and idempotent Neo4j writes
-- Add soft-fail shell hooks and reconciliation support
+- Add `qw record` + `qw reconcile` and idempotent Neo4j writes
+- Add soft-fail shell hooks and receipt/pending operations
 
 ## Stories in execution order
 1. `story_0_infra_scaffold_and_docker.md`
@@ -28,7 +28,9 @@ The repository already produces baseline/grid CSVs and champion markdowns, but l
 
 ## Exit criteria
 - `qw record` ingests baseline/grid/champion artifacts with deterministic IDs
+- `qw reconcile` can audit pending/drift state from CLI
 - Re-ingest does not duplicate graph state
 - Shell hooks run with `|| true` and do not break existing runs
-- Reconcile command can report pending/drift state
+- Receipt and pending behavior is verified through shell entrypoints
+
 

@@ -60,5 +60,7 @@ Stories (execution order):
 
 ## Current Focus Suggestion
 - Start with Epic 1 Story 0, then Story 1 and Story 2 in sequence.
+- Implement `qw record` and `qw reconcile` in the same Story 3 PR with separate commits.
 - Do not begin MCP adapter work before Epic 1 exit criteria are met.
 - Keep shell-first execution behavior unchanged through Epic 1 and Epic 2.
+
