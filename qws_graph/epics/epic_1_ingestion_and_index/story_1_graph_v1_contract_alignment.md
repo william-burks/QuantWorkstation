@@ -1,7 +1,7 @@
 # Story 1 — Graph V1 Contract Alignment
 
 ## Status
-ready
+CLOSED
 
 ## Summary
 Freeze the implementation contract so all V1 graph code follows one source of truth.
@@ -41,20 +41,20 @@ Ensure `docs/graph_v1_contract.md` is complete, internally consistent, and direc
 - Confirm phase boundaries and non-goals are explicit.
 
 ## Acceptance Criteria
-- [ ] Contract includes exact artifact kinds for V1 ingest.
-- [ ] Contract includes deterministic key algorithm and collision strategy.
-- [ ] Contract includes exact `qw record` exit codes.
-- [ ] Contract includes `.qws/receipts` and `.qws/pending` behavior.
-- [ ] Contract includes Cypher MERGE patterns for CSV and champion ingest.
+- [x] Contract includes exact artifact kinds for V1 ingest.
+- [x] Contract includes deterministic key algorithm and collision strategy.
+- [x] Contract includes exact `qw record` exit codes.
+- [x] Contract includes `.qws/receipts` and `.qws/pending` behavior.
+- [x] Contract includes Cypher MERGE patterns for CSV and champion ingest.
 
 ## Validation
 - Manual review checklist pass against this story’s acceptance criteria.
 - Spot-check contract sections against one real CSV and one champion markdown.
 
 ## Definition of Done
-- [ ] Contract is implementation-ready.
-- [ ] No unresolved placeholders remain in contract sections used by V1 code.
-- [ ] Epic stories reference the finalized contract consistently.
+- [x] Contract is implementation-ready.
+- [x] No unresolved placeholders remain in contract sections used by V1 code.
+- [x] Epic stories reference the finalized contract consistently.
 
 ## Open Questions
 - None.
