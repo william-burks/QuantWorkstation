@@ -44,6 +44,7 @@ Guardrails:
 ### Workflow disruption
 - Shell hooks must soft-fail: `qw record ... || true`.
 - Neo4j connection timeout is 3 seconds.
+- `qw record` defaults to online mode; offline is explicit via `--offline`.
 - Script outputs and CLI flags must not be changed in V1.
 
 ### Schema design
@@ -371,6 +372,14 @@ class ResearchArtifact(BaseModel):
 - V1 is synchronous only.
 - No background queue worker in V1.
 
+### Default mode
+- Default is online graph write.
+- `qw record` attempts a Neo4j handshake with a 3-second timeout.
+- If handshake fails and `--offline` is not set:
+  - print `WARNING` with failure summary
+  - print retry guidance (`start Neo4j` or rerun with `--offline`)
+  - exit with code `2`
+
 ### Offline mode
 - `--offline` skips Neo4j network calls.
 - Validated payload written to `.qws/pending/<artifact_id>.json`.
@@ -595,6 +604,10 @@ qw record --file "research/results/champions/es_bear_sweep_1h_v1.md" \
 Purpose:
 - Parse an artifact, validate schema, persist to graph or pending queue.
 
+Online default behavior:
+- If Neo4j is reachable, write directly to graph.
+- If Neo4j is unreachable and `--offline` is not set, return infra failure.
+
 Usage:
 ```text
 qw record --file <path> --kind <baseline_csv|grid_csv|champion_md|tracker_md> [options]
@@ -627,6 +640,9 @@ Output:
 - missing in graph
 - missing in artifacts
 - hash/provenance mismatch
+
+Commit guidance:
+- Implement in the same story/PR as `qw record`, but in a separate commit for review clarity.
 
 ### `qw query`
 Purpose:
@@ -698,6 +714,21 @@ Deferred beyond V1:
 
 ---
 
+## Locked Epic 1 Infra Defaults
+
+These defaults are locked for Epic 1 / Story 0 unless they conflict with hard runtime constraints.
+
+- Neo4j image: 5.x Community Edition.
+- Compose service name: `qws-neo4j`.
+- Ports:
+  - `7474:7474` (HTTP)
+  - `7687:7687` (Bolt)
+- Dev auth default: `neo4j/password` (overridable via `.env`).
+- Persistent volume path: `./.qws/neo4j_data`.
+- Python CLI entrypoint: `qw` -> `research.graph.cli:main` (configured in `pyproject.toml`).
+
+---
+
 ## Open Quantitative Unknowns
 
 ### Benchmark basket
@@ -729,4 +760,5 @@ Intentionally deferred:
 - Visualizer choice beyond Neo4j Browser.
 - MCP write-path design.
 - HUD/CodeLens productization.
+
 

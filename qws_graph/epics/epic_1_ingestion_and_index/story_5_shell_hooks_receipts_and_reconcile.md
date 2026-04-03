@@ -1,16 +1,16 @@
-# Story 5 — Shell Hooks, Receipts, and Reconcile
+# Story 5 — Shell Hooks and Receipt Operations
 
 ## Status
 ready
 
 ## Summary
-Integrate `qw record` into existing shell workflows with soft-fail behavior and add reconcile support for ingestion visibility.
+Integrate `qw record` into existing shell workflows with soft-fail behavior and verify receipt/pending operations in live script paths.
 
 ## Problem
-Without shell hooks, ingestion is manual and easy to skip; without reconcile, drift is hard to detect.
+Without shell hooks, ingestion is manual and easy to skip; receipt/pending behavior also goes unverified in real execution paths.
 
 ## Goal
-Wire post-run `qw record` hooks and provide `qw reconcile` to inspect missing/pending/drift state.
+Wire post-run `qw record` hooks and validate end-to-end script behavior under online/offline graph conditions.
 
 ## Inputs
 - `research/run_es_nq_baseline.sh`
@@ -20,16 +20,13 @@ Wire post-run `qw record` hooks and provide `qw reconcile` to inspect missing/pe
 
 ## Deliverable
 - Shell hook patch in the two run scripts
-- `qw reconcile` command implementation
-- Reconcile output format docs in CLI help
+- Receipt/pending behavior verification notes
+- Shell-level runbook notes for warning/retry/offline fallback
 
 ## In Scope
 - Add `qw record ... || true` after successful artifact writes
 - Ensure no existing script flags or flow changes
-- Implement reconcile checks:
-  - pending queue status
-  - artifact vs graph presence
-  - basic provenance mismatch reporting
+- Verify receipt/pending outcomes for online and offline runs
 
 ## Out of Scope
 - Automatic sync scheduling
@@ -51,22 +48,23 @@ Wire post-run `qw record` hooks and provide `qw reconcile` to inspect missing/pe
 ## Acceptance Criteria
 - [ ] Hooks execute `qw record` in both run scripts.
 - [ ] Hook failures do not stop script execution.
-- [ ] Reconcile reports pending files and missing graph records.
-- [ ] Reconcile returns non-zero only for command errors, not data drift findings.
+- [ ] Online run writes receipts to `.qws/receipts/`.
+- [ ] Offline run writes pending payloads to `.qws/pending/`.
 
 ## Validation
 - Run scripts with Neo4j down and verify completion.
 - Run scripts with Neo4j up and verify receipts + graph entries.
-- Run `qw reconcile` and confirm expected output.
+- Verify warning/retry messaging is visible when handshake fails.
 
 ## Definition of Done
 - [ ] Shell hooks merged and tested.
-- [ ] Reconcile command implemented.
-- [ ] Operator docs updated in CLI help or project docs.
+- [ ] Receipt/pending behavior verified in script paths.
+- [ ] Operator notes updated for online/offline hook behavior.
 
 ## Open Questions
 - None.
 
 ## Notes
 Completes Epic 1 and enables stable ingestion/index operations.
+
 

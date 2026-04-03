@@ -26,9 +26,10 @@ Stand up local Neo4j compose config and repository config wiring so later storie
 
 ## In Scope
 - Local Neo4j service definition for dev usage
-- Sensible defaults for URI/user/password/database/timeout
+- Locked defaults for service name, ports, auth, and volume persistence
 - Optional feature flag for graph enable/disable
 - Connection timeout default aligned to contract (3 seconds)
+- `qw` CLI entrypoint registration in `pyproject.toml`
 
 ## Out of Scope
 - Cloud deployment
@@ -48,11 +49,15 @@ Stand up local Neo4j compose config and repository config wiring so later storie
 - Use local-first defaults; do not assume external infra.
 
 ## Acceptance Criteria
-- [ ] `docker-compose.neo4j.yml` exists and defines a local Neo4j service.
+- [ ] `docker-compose.neo4j.yml` exists with service name `qws-neo4j`.
+- [ ] Compose exposes ports `7474` and `7687` with default mappings.
+- [ ] Compose persists data to `./.qws/neo4j_data`.
+- [ ] Neo4j auth defaults to `neo4j/password` for local dev (override via `.env`).
 - [ ] `data/config.py` exposes graph settings via existing settings pattern.
 - [ ] `env.example` includes graph variables with safe defaults/comments.
 - [ ] Graph-disabled mode can run without Neo4j dependency.
 - [ ] Timeout value is configurable and defaults to 3 seconds.
+- [ ] `pyproject.toml` registers `qw` -> `research.graph.cli:main`.
 
 ## Validation
 - Start Neo4j from compose and verify service is reachable.
@@ -69,4 +74,5 @@ Stand up local Neo4j compose config and repository config wiring so later storie
 
 ## Notes
 This story intentionally front-loads plumbing so Story 3 (`qw record`) and Story 4 (store layer) can remain focused on core logic.
+
 
