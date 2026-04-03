@@ -1,7 +1,7 @@
 # Story 2 — Pydantic Models and Parsers
 
 ## Status
-ready
+CLOSED
 
 ## Summary
 Implement strict-enough V1 artifact models and parsers for baseline CSV, grid CSV, and champion Markdown.
@@ -46,11 +46,11 @@ Create validated `ResearchArtifact` payloads from real repository outputs.
 - Keep parser outputs deterministic (same artifact -> same payload ordering/values).
 
 ## Acceptance Criteria
-- [ ] Baseline CSV parser returns one or more valid `Run` payloads.
-- [ ] Grid CSV parser returns `Run` + `Config` payloads with deterministic config IDs.
-- [ ] Champion parser returns valid `Champion` payload including `fragilities` list.
-- [ ] Missing required columns/sections produce validation failure.
-- [ ] Extra CSV columns are ignored and reported.
+- [x] Baseline CSV parser returns one or more valid `Run` payloads.
+- [x] Grid CSV parser returns `Run` + `Config` payloads with deterministic config IDs.
+- [x] Champion parser returns valid `Champion` payload including `fragilities` list.
+- [x] Missing required columns/sections produce validation failure.
+- [x] Extra CSV columns are ignored and reported.
 
 ## Validation
 - Run unit tests on parser and model modules.
@@ -58,9 +58,9 @@ Create validated `ResearchArtifact` payloads from real repository outputs.
 - Confirm repeated parse returns identical normalized payload hash.
 
 ## Definition of Done
-- [ ] Models and parsers committed with tests.
-- [ ] Fixtures represent current repo artifact formats.
-- [ ] Test suite passes for parser cases.
+- [x] Models and parsers committed with tests.
+- [x] Fixtures represent current repo artifact formats.
+- [x] Test suite passes for parser cases.
 
 ## Open Questions
 - None; benchmark basket is deferred and not required for parser completion.
