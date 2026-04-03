@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qws-graph"
+version = "0.1.0"
+description = "Graph V1 infrastructure scaffold"
+requires-python = ">=3.11"
+
+[project.scripts]
+qw = "research.graph.cli:main"
+
