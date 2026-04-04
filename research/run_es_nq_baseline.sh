@@ -8,6 +8,10 @@ record_artifact() {
 	local artifact_file="$1"
 	local artifact_kind="$2"
 
+	# Python CSV writes may still be buffered when the process exits; give the
+	# filesystem a moment to sync before checking for the artifact.
+	sleep 1
+
 	if [[ ! -f "$artifact_file" ]]; then
 		echo "WARNING: expected artifact not found for graph hook: $artifact_file" >&2
 		return
