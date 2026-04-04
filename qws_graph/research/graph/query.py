@@ -19,6 +19,7 @@ from neo4j import GraphDatabase
 from .query_models import (
     ChampionDetailsV1,
     ConfigLinkageV1,
+    CrossArtifactRowV1,
     RunHistoryItemV1,
     StrategyLineageV1,
     StrategySummaryV1,
@@ -149,6 +150,60 @@ RETURN {
 ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 """.strip()
 
+GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER = """
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)-[:PIVOTED_FROM]->(r:Run {run_id: $run_id})
+RETURN {
+  champion_id: ch.champion_id,
+  strategy_id: s.strategy_id,
+  freeze_date: ch.freeze_date,
+  oos_status: ch.oos_status,
+  fragilities: ch.fragilities,
+  artifact_path: ch.artifact_path,
+  pivot_from_run_id: r.run_id,
+  metrics_summary: ch.metrics_summary
+} AS result
+ORDER BY ch.freeze_date DESC, ch.champion_id ASC
+""".strip()
+
+GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER = """
+MATCH (anchor:Strategy {strategy_id: $strategy_id})
+MATCH (related:Strategy)
+WHERE related.logic_type = anchor.logic_type
+  AND related.direction = anchor.direction
+  AND related.strategy_id <> anchor.strategy_id
+CALL {
+  WITH related
+  OPTIONAL MATCH (related)-[:HAS_RUN]->(r:Run)
+  RETURN count(r) AS run_count
+}
+CALL {
+  WITH related
+  OPTIONAL MATCH (related)-[:PRODUCED_CHAMPION]->(ch:Champion)
+  RETURN count(ch) AS champion_count
+}
+CALL {
+  WITH related
+  OPTIONAL MATCH (related)-[:PRODUCED_CHAMPION]->(ch:Champion)
+  WITH ch
+  ORDER BY ch.freeze_date DESC, ch.champion_id ASC
+  RETURN ch.champion_id AS latest_champion_id, ch.freeze_date AS latest_champion_freeze_date
+  LIMIT 1
+}
+RETURN {
+  anchor_strategy_id: anchor.strategy_id,
+  related_strategy_id: related.strategy_id,
+  instrument: related.instrument,
+  timeframe: related.timeframe,
+  direction: related.direction,
+  logic_type: related.logic_type,
+  run_count: run_count,
+  champion_count: champion_count,
+  latest_champion_id: latest_champion_id,
+  latest_champion_freeze_date: latest_champion_freeze_date
+} AS result
+ORDER BY related.instrument ASC, related.timeframe ASC
+""".strip()
+
 
 class QuerySession(Protocol):
     """Small protocol for Neo4j read sessions and test doubles."""
@@ -206,6 +261,14 @@ class GraphQueryService:
     def get_recent_champions_v1(self, limit: int = 20) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_recent_champions_v1(session, limit=limit)
+
+    def get_downstream_champions_v1(self, run_id: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_downstream_champions_v1(session, run_id)
+
+    def get_cross_artifact_correlation_v1(self, strategy_id: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_cross_artifact_correlation_v1(session, strategy_id)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -410,6 +473,59 @@ def get_recent_champions_v1(session: QuerySession, limit: int = 20) -> list[dict
     return items[:limit]
 
 
+def get_downstream_champions_v1(session: QuerySession, run_id: str) -> list[dict[str, Any]]:
+    """Return champions that pivoted from *run_id* via an explicit PIVOTED_FROM edge.
+
+    Traversal depth: one hop (``Champion-[:PIVOTED_FROM]->Run``).
+    Returns an empty list when no explicit pivot edges exist for *run_id*.
+    Only PIVOTED_FROM edges written at ingest time are traversed; no inferred pivots.
+    """
+
+    rows = _all_results(session, GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER, run_id=run_id)
+    return [
+        ChampionDetailsV1(
+            champion_id=str(row["champion_id"]),
+            strategy_id=str(row["strategy_id"]),
+            freeze_date=str(_normalize_temporal(row["freeze_date"])),
+            oos_status=str(row["oos_status"]),
+            fragilities=list(row.get("fragilities") or []),
+            artifact_path=str(row["artifact_path"]),
+            pivot_from_run_id=row.get("pivot_from_run_id"),
+            metrics_summary=_normalize_json_like(row.get("metrics_summary") or {}),
+        ).model_dump(mode="json")
+        for row in rows
+    ]
+
+
+def get_cross_artifact_correlation_v1(session: QuerySession, strategy_id: str) -> list[dict[str, Any]]:
+    """Return strategies that share ``logic_type`` and ``direction`` with *strategy_id*.
+
+    Traversal depth: one hop from the anchor ``Strategy`` node to related ``Strategy``
+    nodes matched by shared canonical properties. No file-system reads; no new persisted
+    labels. Returns an empty list when no related strategies exist.
+
+    Correlation axis: ``logic_type`` + ``direction`` (same strategy family, different
+    instrument/timeframe). Callers may filter further on ``instrument`` or ``timeframe``.
+    """
+
+    rows = _all_results(session, GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER, strategy_id=strategy_id)
+    return [
+        CrossArtifactRowV1(
+            anchor_strategy_id=str(row["anchor_strategy_id"]),
+            related_strategy_id=str(row["related_strategy_id"]),
+            instrument=str(row["instrument"]),
+            timeframe=str(row["timeframe"]),
+            direction=str(row["direction"]),
+            logic_type=str(row["logic_type"]),
+            run_count=int(row.get("run_count") or 0),
+            champion_count=int(row.get("champion_count") or 0),
+            latest_champion_id=row.get("latest_champion_id"),
+            latest_champion_freeze_date=_normalize_temporal(row.get("latest_champion_freeze_date")),
+        ).model_dump(mode="json")
+        for row in rows
+    ]
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -417,6 +533,8 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_config_linkage_v1": get_config_linkage_v1,
     "get_strategy_lineage_v1": get_strategy_lineage_v1,
     "get_recent_champions_v1": get_recent_champions_v1,
+    "get_downstream_champions_v1": get_downstream_champions_v1,
+    "get_cross_artifact_correlation_v1": get_cross_artifact_correlation_v1,
 }
 
 
@@ -432,6 +550,8 @@ def get_query_view(name: str) -> Callable[..., Any]:
 __all__ = [
     "GET_CHAMPION_DETAILS_V1_CYPHER",
     "GET_CONFIG_LINKAGE_V1_CYPHER",
+    "GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER",
+    "GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER",
     "GET_RECENT_CHAMPIONS_V1_CYPHER",
     "GET_RUN_HISTORY_V1_CYPHER",
     "GET_STRATEGY_LINEAGE_V1_CYPHER",
@@ -440,6 +560,8 @@ __all__ = [
     "QUERY_VIEW_REGISTRY",
     "get_champion_details_v1",
     "get_config_linkage_v1",
+    "get_cross_artifact_correlation_v1",
+    "get_downstream_champions_v1",
     "get_query_view",
     "get_recent_champions_v1",
     "get_run_history_v1",

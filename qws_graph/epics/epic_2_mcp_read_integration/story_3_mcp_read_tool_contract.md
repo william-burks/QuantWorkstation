@@ -1,7 +1,7 @@
 # Story 3 — MCP Read Tool Contract
 
 ## Status
-blocked
+CLOSED
 
 ## Summary
 Implement the MCP force-multiplier layer: a minimal read adapter contract backed by the Bridge query presets.
@@ -51,19 +51,19 @@ Provide a small read-only MCP-facing interface that exposes Story 1/2 query outp
 - MCP payloads should be flattened, deterministic JSON dictionaries (including list-of-object collections where needed).
 
 ## Acceptance Criteria
-- [ ] Adapter exposes a documented function surface for read tools.
-- [ ] Adapter returns deterministic JSON-compatible payloads.
-- [ ] Adapter does not parse file-system artifacts directly.
-- [ ] Errors include stable codes/messages for caller handling.
-- [ ] Missing graph data never triggers file fallback; adapter returns deterministic empty/not-found or infra error response.
+- [x] Adapter exposes a documented function surface for read tools.
+- [x] Adapter returns deterministic JSON-compatible payloads.
+- [x] Adapter does not parse file-system artifacts directly.
+- [x] Errors include stable codes/messages for caller handling.
+- [x] Missing graph data never triggers file fallback; adapter returns deterministic empty/not-found or infra error response.
 
 ## Validation
 - Unit tests mocking store/query responses.
 - Contract tests for output shape.
 
 ## Definition of Done
-- [ ] Adapter module merged with tests.
-- [ ] Read contract documented in module or docs.
+- [x] Adapter module merged with tests.
+- [x] Read contract documented in module or docs.
 
 ## Open Questions
 - Exact MCP tool registry binding location in this repo.

@@ -73,8 +73,9 @@ def _make_query_args(**kwargs: Any) -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 
 class TestPresetCatalog:
-    def test_all_three_presets_present(self) -> None:
-        assert set(PRESET_CATALOG) == {"recent_champions", "strategy_lineage", "pending_offline"}
+    def test_core_presets_present(self) -> None:
+        # Checks that Story 2 presets are present; Story 4 adds more (see test_lineage_queries.py).
+        assert {"recent_champions", "strategy_lineage", "pending_offline"}.issubset(set(PRESET_CATALOG))
 
     def test_preset_specs_have_stable_fields(self) -> None:
         for name, spec in PRESET_CATALOG.items():

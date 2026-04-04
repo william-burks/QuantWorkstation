@@ -97,9 +97,29 @@ class StrategyLineageV1(QueryModelV1):
     pivot_config_id: str | None = None
 
 
+class CrossArtifactRowV1(QueryModelV1):
+    """One related-strategy row from a cross-artifact correlation query (Story 4).
+
+    Anchors on shared canonical ``Strategy`` properties (``logic_type`` + ``direction``)
+    without introducing new persisted labels or file-system reads.
+    """
+
+    anchor_strategy_id: str
+    related_strategy_id: str
+    instrument: str
+    timeframe: str
+    direction: str
+    logic_type: str
+    run_count: int = 0
+    champion_count: int = 0
+    latest_champion_id: str | None = None
+    latest_champion_freeze_date: str | None = None
+
+
 __all__ = [
     "ChampionDetailsV1",
     "ConfigLinkageV1",
+    "CrossArtifactRowV1",
     "QueryModelV1",
     "RunHistoryItemV1",
     "StrategyLineageV1",

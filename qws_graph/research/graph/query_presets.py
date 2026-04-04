@@ -15,7 +15,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .query import get_recent_champions_v1, get_strategy_lineage_v1
+from .query import (
+    get_cross_artifact_correlation_v1,
+    get_downstream_champions_v1,
+    get_recent_champions_v1,
+    get_strategy_lineage_v1,
+)
 
 if TYPE_CHECKING:
     from .query import GraphQueryService
@@ -62,6 +67,36 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         description="List artifacts queued for offline graph ingestion (.qws/pending/).",
         params=(),
         requires_graph=False,
+    ),
+    "downstream_champions": PresetSpec(
+        name="downstream_champions",
+        description=(
+            "Return champions that pivoted from a specific run via explicit PIVOTED_FROM edges. "
+            "Returns empty list when no explicit pivot edges exist for the run."
+        ),
+        params=(
+            PresetParam(
+                "run_id",
+                required=True,
+                description="Canonical run ID to query downstream champions for",
+            ),
+        ),
+        requires_graph=True,
+    ),
+    "cross_artifact_correlation": PresetSpec(
+        name="cross_artifact_correlation",
+        description=(
+            "Return strategies sharing the same logic_type and direction as the anchor strategy. "
+            "Anchors on shared canonical Strategy properties; no file-system reads."
+        ),
+        params=(
+            PresetParam(
+                "strategy_id",
+                required=True,
+                description="Anchor strategy ID (e.g. es-1h-bear-sweep)",
+            ),
+        ),
+        requires_graph=True,
     ),
 }
 
@@ -126,6 +161,16 @@ def run_preset(
     if name == "pending_offline":
         return _run_pending_offline(repo_root or Path.cwd())
 
+    if name == "downstream_champions":
+        run_id = params["run_id"]
+        assert service is not None
+        return service.get_downstream_champions_v1(run_id)
+
+    if name == "cross_artifact_correlation":
+        strategy_id = params["strategy_id"]
+        assert service is not None
+        return service.get_cross_artifact_correlation_v1(strategy_id)
+
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 
 
@@ -173,6 +218,8 @@ def _extract_artifact_path(payload: dict[str, Any]) -> str | None:
 _PRESET_VIEW_FUNCTIONS = {
     "recent_champions": get_recent_champions_v1,
     "strategy_lineage": get_strategy_lineage_v1,
+    "downstream_champions": get_downstream_champions_v1,
+    "cross_artifact_correlation": get_cross_artifact_correlation_v1,
 }
 
 __all__ = [
