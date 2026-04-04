@@ -1,7 +1,7 @@
 # Story: Strategy Script CSV Output Path Handling
 
 ## Status
-ready
+CLOSED
 
 ## Problem
 Strategy scripts in `strategies/bear_*_baseline.py` accept `--results-csv` path arguments but don't actually write CSV outputs to those custom paths. Shell hooks in Story 5 expect artifacts at paths like `results/es_phase2_session_nypre.csv`, but the strategy scripts don't emit files to these locations, blocking ingestion validation.
@@ -37,10 +37,10 @@ Fix strategy scripts to reliably write CSV artifacts to the path specified by `-
 - Verify output files are non-empty before script completion
 
 ## Acceptance Criteria
-- [ ] CSV output is written to the path specified by `--results-csv` in baseline runs
-- [ ] CSV output is written to the path specified by `--results-csv` in grid search runs
-- [ ] Output directories are created automatically if missing
-- [ ] Scripts validate that output files are non-empty
+- [x] CSV output is written to the path specified by `--results-csv` in baseline runs
+- [x] CSV output is written to the path specified by `--results-csv` in grid search runs
+- [x] Output directories are created automatically if missing
+- [x] Scripts validate that output files are non-empty
 
 ## Validation
 - Run baseline scripts with explicit `--results-csv` overrides and confirm files exist at specified paths
@@ -48,10 +48,10 @@ Fix strategy scripts to reliably write CSV artifacts to the path specified by `-
 - Verify shell hooks can now find and ingest artifacts from hook-expected paths
 
 ## Definition of Done
-- [ ] Both baseline scripts write to `--results-csv` paths consistently
-- [ ] Output directories auto-created if needed
-- [ ] Strategy script CSV output paths are satisfied
-- [ ] Story 5 shell hooks can now complete receipt/pending validation
+- [x] Both baseline scripts write to `--results-csv` paths consistently
+- [x] Output directories auto-created if needed
+- [x] Strategy script CSV output paths are satisfied
+- [x] Story 5 shell hooks can now complete receipt/pending validation
 
 ## Dependencies
 - Unblocks: Epic 1 Story 5 (shell hooks receipt/pending ingestion)
