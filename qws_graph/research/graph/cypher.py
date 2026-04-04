@@ -13,6 +13,7 @@ MERGE (s:Strategy {strategy_id: row.strategy.strategy_id})
     s.logic_type = row.strategy.logic_type,
     s.created_at = datetime()
   SET
+    s.family_id = row.strategy.family_id,
     s.updated_at = datetime()
 
 MERGE (r:Run {run_id: row.run.run_id})
@@ -76,6 +77,38 @@ FOREACH (_ IN CASE WHEN $pivot_from_run_id IS NULL THEN [] ELSE [1] END |
   MERGE (r:Run {run_id: $pivot_from_run_id})
   MERGE (ch)-[:PIVOTED_FROM]->(r)
 )
+""".strip()
+
+
+RUN_STATS_SUMMARY_QUERY = """
+MERGE (s:Strategy {strategy_id: $summary.strategy_id})
+  SET s.updated_at = datetime()
+MERGE (rss:RunStatsSummary {summary_id: $summary.summary_id})
+  ON CREATE SET rss.created_at = datetime()
+  SET
+    rss.strategy_id = $summary.strategy_id,
+    rss.artifact_path = $summary.artifact_path,
+    rss.total_run_count = $summary.total_run_count,
+    rss.selected_run_count = $summary.selected_run_count,
+    rss.rolled_up_run_count = $summary.rolled_up_run_count,
+    rss.sharpe_mean = $summary.sharpe_mean,
+    rss.sharpe_max = $summary.sharpe_max,
+    rss.sharpe_min = $summary.sharpe_min,
+    rss.max_drawdown_worst = $summary.max_drawdown_worst,
+    rss.ingested_at = datetime($summary.ingested_at),
+    rss.updated_at = datetime()
+MERGE (s)-[:HAS_RUN_SUMMARY]->(rss)
+""".strip()
+
+
+ABORT_STRATEGY_QUERY = """
+MATCH (s:Strategy {strategy_id: $strategy_id})
+SET
+  s.status = 'ABORTED',
+  s.abort_reason = $reason,
+  s.aborted_at = datetime(),
+  s.updated_at = datetime()
+RETURN s.strategy_id AS strategy_id
 """.strip()
 
 

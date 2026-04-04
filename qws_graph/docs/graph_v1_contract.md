@@ -232,6 +232,12 @@ class Strategy(BaseModel):
     timeframe: str
     direction: Literal["long", "short", "bear", "bull"]
     logic_type: str
+    # Added in Story 1 (Churn):
+    family_id: str | None = None        # hash12(logic_type, direction, source_hash)
+    # Graph-only (set by `qw abort`; not persisted during CSV ingest):
+    # status: str | None          — "ABORTED" when marked dead
+    # abort_reason: str | None    — mandatory reason string for abort
+    # aborted_at: datetime | None — timestamp of abort decision
 
 
 class Config(BaseModel):
@@ -560,6 +566,64 @@ MERGE (b:BlobArtifact {artifact_path: $blob.artifact_path})
     b.updated_at = datetime()
 MERGE (s)-[:HAS_BLOB]->(b)
 ```
+
+### Significance Gate (grid_csv only)
+
+Applies to `grid_csv` artifacts. Introduced in Story 1 (Churn epic).
+
+Default: `qw record --kind grid_csv` selects up to 7 instructive runs from the full CSV
+and rolls the remainder into one `RunStatsSummary` node.
+
+**Selection tiers (applied in order, non-overlapping):**
+
+| Tier | Criterion | Default N |
+|---|---|---|
+| Performance | Top N rows by `sharpe` | 5 |
+| Risk boundary | Bottom N rows by `max_drawdown` (most negative = worst) | 2 |
+| Provenance | Rows whose `run_id` matches a known champion's `pivot_from_run_id` | all |
+| Manual override | `--significant <run_id>` flag at `qw record` time | all |
+
+`--all` flag bypasses the gate entirely (existing behaviour preserved).
+`baseline_csv` is unaffected.
+
+### RunStatsSummary Node
+
+Aggregate record for grid-sweep rows that did not pass the significance gate.
+
+```
+RunStatsSummary {
+    summary_id: str            # hash12(strategy_id, artifact_path, artifact_mtime_iso)
+    strategy_id: str
+    artifact_path: str
+    total_run_count: int
+    selected_run_count: int
+    rolled_up_run_count: int
+    sharpe_mean: float
+    sharpe_max: float
+    sharpe_min: float
+    max_drawdown_worst: float  # most negative value = worst
+    ingested_at: datetime
+}
+```
+
+Edge: `(Strategy)-[:HAS_RUN_SUMMARY]->(RunStatsSummary)`
+
+Merged idempotently on `summary_id`; when the same CSV is re-ingested after modification
+(mtime changes) a new `summary_id` is generated and a new node is created.
+
+### Abort Strategy Contract
+
+`qw abort --strategy <strategy_id> --reason "<reason>"` sets three graph-only properties
+on the `Strategy` node via `ABORT_STRATEGY_QUERY`:
+
+```
+Strategy.status      = "ABORTED"
+Strategy.abort_reason = <reason>
+Strategy.aborted_at  = datetime()
+```
+
+These are `SET` operations — no data is deleted. `get_strategy_summary_v1` returns
+`status` and `abort_reason` in its output. `--reason` is mandatory and must be non-empty.
 
 ---
 

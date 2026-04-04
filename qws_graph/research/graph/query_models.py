@@ -37,6 +37,9 @@ class StrategySummaryV1(QueryModelV1):
     timeframe: str
     direction: str
     logic_type: str
+    family_id: str | None = None
+    status: str | None = None
+    abort_reason: str | None = None
     run_count: int = 0
     champion_count: int = 0
     latest_run_id: str | None = None
@@ -100,8 +103,8 @@ class StrategyLineageV1(QueryModelV1):
 class CrossArtifactRowV1(QueryModelV1):
     """One related-strategy row from a cross-artifact correlation query (Story 4).
 
-    Anchors on shared canonical ``Strategy`` properties (``logic_type`` + ``direction``)
-    without introducing new persisted labels or file-system reads.
+    Primary correlation axis: ``family_id`` when populated; falls back to
+    ``logic_type`` + ``direction`` for Strategy nodes that predate family tagging.
     """
 
     anchor_strategy_id: str
@@ -110,10 +113,30 @@ class CrossArtifactRowV1(QueryModelV1):
     timeframe: str
     direction: str
     logic_type: str
+    family_id: str | None = None
     run_count: int = 0
     champion_count: int = 0
     latest_champion_id: str | None = None
     latest_champion_freeze_date: str | None = None
+
+
+class RunStatsSummaryV1(QueryModelV1):
+    """Aggregate run stats for a grid-sweep artifact — bounded neighbourhood alternative.
+
+    One node per (strategy_id, artifact_path, artifact_mtime) triple.
+    """
+
+    summary_id: str
+    strategy_id: str
+    artifact_path: str
+    total_run_count: int
+    selected_run_count: int
+    rolled_up_run_count: int
+    sharpe_mean: float
+    sharpe_max: float
+    sharpe_min: float
+    max_drawdown_worst: float
+    ingested_at: str
 
 
 __all__ = [
@@ -122,6 +145,7 @@ __all__ = [
     "CrossArtifactRowV1",
     "QueryModelV1",
     "RunHistoryItemV1",
+    "RunStatsSummaryV1",
     "StrategyLineageV1",
     "StrategySummaryV1",
 ]

@@ -13,6 +13,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
+from . import ids as _ids
+from .curator import apply_significance_gate
 from .models import ResearchArtifact
 from .parsers import CSVParser, ChampionMarkdownParser, research_artifact_payload_hash
 from .query import GraphQueryService
@@ -197,6 +199,8 @@ def cmd_record(args: argparse.Namespace) -> int:
     timeout_seconds = args.timeout_seconds
     repo_root = Path(args.repo_root) if args.repo_root else Path.cwd()
     dry_run = args.dry_run
+    source_file = Path(args.source_file) if getattr(args, "source_file", None) else None
+    ingest_all = getattr(args, "all", False)
 
     # Parse and validate artifact
     try:
@@ -212,6 +216,28 @@ def cmd_record(args: argparse.Namespace) -> int:
     except ValueError as exc:
         print(f"ERROR: Validation failed: {exc}", file=sys.stderr)
         return 1
+
+    # Attach family_id when source file is provided
+    if source_file is not None:
+        try:
+            src_bytes = source_file.read_bytes()
+        except OSError as exc:
+            print(f"ERROR: Cannot read source file: {exc}", file=sys.stderr)
+            return 1
+        src_hash = _ids.source_hash(src_bytes)
+        fid = _ids.family_id(
+            artifact.strategy.logic_type,
+            artifact.strategy.direction,
+            src_hash,
+        )
+        artifact = artifact.model_copy(
+            update={"strategy": artifact.strategy.model_copy(update={"family_id": fid})}
+        )
+
+    # Apply significance gate for grid_csv (unless --all is set)
+    summary = None
+    if kind == "grid_csv" and not ingest_all:
+        artifact, summary = apply_significance_gate(artifact)
 
     artifact_id = _get_artifact_id(artifact)
     payload = artifact.model_dump(mode="json")
@@ -276,7 +302,7 @@ def cmd_record(args: argparse.Namespace) -> int:
     try:
         store = GraphStore.from_env(timeout_seconds=timeout_seconds)
         try:
-            result = store.persist_artifact(artifact)
+            result = store.persist_artifact(artifact, summary=summary)
             node_counts = result.node_counts
             relationship_counts = result.relationship_counts
         finally:
@@ -347,6 +373,53 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
         print(f"  Missing in artifacts: {len(audit['missing_in_artifacts'])}")
         print(f"  Hash mismatches: {len(audit['hash_mismatch'])}")
 
+    return 0
+
+
+def cmd_abort(args: argparse.Namespace) -> int:
+    """Execute `qw abort` command.
+
+    Marks a Strategy node as ABORTED with a mandatory reason string.
+
+    Exit codes:
+        0: strategy found and marked ABORTED
+        1: validation error (empty reason) or strategy not found in graph
+        2: infrastructure failure (Neo4j unavailable)
+    """
+    strategy_id = args.strategy
+    reason = args.reason.strip()
+    timeout_seconds = getattr(args, "timeout_seconds", 3)
+
+    if not reason:
+        print("ERROR: --reason must be a non-empty string", file=sys.stderr)
+        return 1
+
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(
+            f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            found = store.abort_strategy(strategy_id, reason)
+        finally:
+            store.close()
+    except StoreInfraError as exc:
+        print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
+        return 2
+
+    if not found:
+        print(
+            f"ERROR: Strategy {strategy_id!r} not found in graph",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(f"OK: Strategy {strategy_id!r} marked ABORTED — {reason!r}", file=sys.stdout)
     return 0
 
 
@@ -471,7 +544,44 @@ def main() -> int:
         action="store_true",
         help="Parse and validate only; do not write to graph or pending",
     )
+    record_parser.add_argument(
+        "--source-file",
+        default=None,
+        metavar="PATH",
+        help="Strategy Python source file; used to derive family_id (hash of file content)",
+    )
+    record_parser.add_argument(
+        "--all",
+        action="store_true",
+        dest="all",
+        help="Bypass significance gate for grid_csv; ingest all rows (default: top-5 Sharpe + bottom-2 drawdown)",
+    )
     record_parser.set_defaults(func=cmd_record)
+
+    # `qw abort` subcommand
+    abort_parser = subparsers.add_parser(
+        "abort",
+        help="Mark a strategy family as ABORTED with an explicit reason",
+    )
+    abort_parser.add_argument(
+        "--strategy",
+        required=True,
+        metavar="STRATEGY_ID",
+        help="Canonical strategy_id to mark as ABORTED (e.g. es-1h-bear-rsi-reversion)",
+    )
+    abort_parser.add_argument(
+        "--reason",
+        required=True,
+        metavar="REASON",
+        help="Mandatory explanation for the abort decision (must be non-empty)",
+    )
+    abort_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    abort_parser.set_defaults(func=cmd_abort)
 
     # `qw reconcile` subcommand
     reconcile_parser = subparsers.add_parser(

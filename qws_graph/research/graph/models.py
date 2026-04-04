@@ -33,6 +33,7 @@ class Strategy(BaseModel):
     timeframe: str
     direction: Literal["long", "short", "bear", "bull"]
     logic_type: str
+    family_id: str | None = None
 
 
 class Config(BaseModel):
@@ -92,6 +93,29 @@ class Champion(BaseModel):
         if not self.fragilities:
             raise ValueError("champion fragilities must contain at least one entry")
         return self
+
+
+class RunStatsSummary(BaseModel):
+    """Aggregate stats for grid-sweep runs that did not pass the significance gate.
+
+    One node is persisted per (strategy_id, artifact_path, artifact_mtime) triple,
+    merged idempotently via ``HAS_RUN_SUMMARY`` from the owning ``Strategy`` node.
+    Provides a bounded neighbourhood summary instead of raw run enumeration.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    summary_id: str
+    strategy_id: str
+    artifact_path: str
+    total_run_count: int
+    selected_run_count: int
+    rolled_up_run_count: int
+    sharpe_mean: float
+    sharpe_max: float
+    sharpe_min: float
+    max_drawdown_worst: float
+    ingested_at: datetime
 
 
 class BlobArtifact(BaseModel):

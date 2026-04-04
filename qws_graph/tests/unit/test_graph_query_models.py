@@ -77,6 +77,9 @@ class TestQueryModels:
             "timeframe": "1H",
             "direction": "bear",
             "logic_type": "sweep",
+            "family_id": None,
+            "status": None,
+            "abort_reason": None,
             "run_count": 3,
             "champion_count": 1,
             "latest_run_id": "run-003",
@@ -161,8 +164,10 @@ class TestQueryFunctions:
 
         assert session.calls[0] == (GET_STRATEGY_SUMMARY_V1_CYPHER, {"strategy_id": "es-1h-bear-sweep"})
         assert json.dumps(result, sort_keys=True, indent=2) == """{
+  \"abort_reason\": null,
   \"champion_count\": 1,
   \"direction\": \"bear\",
+  \"family_id\": null,
   \"instrument\": \"ES\",
   \"latest_champion_freeze_date\": \"2026-04-02\",
   \"latest_champion_id\": \"champ-001\",
@@ -170,6 +175,7 @@ class TestQueryFunctions:
   \"latest_run_timestamp\": \"2026-04-02T12:30:00+00:00\",
   \"logic_type\": \"sweep\",
   \"run_count\": 3,
+  \"status\": null,
   \"strategy_id\": \"es-1h-bear-sweep\",
   \"timeframe\": \"1H\",
   \"version\": \"v1\"
