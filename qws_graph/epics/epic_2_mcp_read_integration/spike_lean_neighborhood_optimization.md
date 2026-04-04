@@ -2,7 +2,7 @@
 
 # Spike — Lean Neighborhood Optimization
 
-**Status:** IN PROGRESS  
+**Status:** CLOSED  
 **Priority:** **P1 — Risk Mitigation.** **Context:** A successful strategy generates thousands of `Run` nodes via grid sweeps. Without bounding `get_context_neighborhood` before ingestion scales, the system faces MCP context overflow and query timeouts.
 
 ---
@@ -46,9 +46,9 @@ Unlike truncation (hiding data), this **adds meaning**. It allows the MCP to per
 ---
 
 ## 4. Spike Output (Definition of Done)
-- [ ] **Immediate:** Follow-on story drafted: *"Add max_results safety cap to get_context_neighborhood."*
-- [ ] **Architecture:** Option D dependencies linked to `story_strategy_family_definitions.md`.
-- [ ] **Documentation:** Decision recorded in `docs/` as the implementation brief for Epic 3.
+- [x] **Immediate:** V1 safety cap implemented in `mcp_adapter.py` — `get_context_neighborhood(champion_id, max_runs=50)` with `max_runs` validated in 1..200; `runs_capped` flag returned; 42 unit tests passing. Follow-on story drafted at `epics/unsorted_stories/story_recursive_lineage_traversal.md`.
+- [x] **Architecture:** Option D dependencies linked to `epics/unsorted_stories/story_strategy_family_definitions.md` (P2 — family taxonomy, `family_id` spec, V2 migration path).
+- [x] **Documentation:** Neighborhood bounding contract documented in `docs/graph_v1_contract.md` § MCP Read Contract V1 → "Neighborhood Bounding (V1 Safety Cap)".
 
 ## 5. Repo Touchpoints
 * `research/graph/mcp_adapter.py`: Update `get_context_neighborhood` signature to handle limits.

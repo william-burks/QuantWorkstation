@@ -590,6 +590,32 @@ MCP assumptions in V1:
 
 No MCP write in V1.
 
+### Neighborhood Bounding (V1 Safety Cap)
+
+`get_context_neighborhood` fans out to four view functions and returns a bounded result:
+
+```
+get_champion_details_v1(champion_id)     → champion
+get_strategy_summary_v1(strategy_id)    → strategy
+get_config_linkage_v1(pivot_from_run_id) → pivot_config (if present)
+get_run_history_v1(strategy_id)         → recent_runs (capped at max_runs)
+```
+
+Response shape:
+```json
+{
+  "champion":     { ... },
+  "strategy":     { ... },
+  "pivot_config": { ... } | null,
+  "recent_runs":  [ ... ],
+  "runs_capped":  true | false
+}
+```
+
+`max_runs` default: 50. Upper bound: 200. Values outside 1–200 return `INVALID_PARAMS`.
+When the strategy has more runs than `max_runs`, `runs_capped` is `true`.
+`get_run_history_v1` must be registered in `QUERY_VIEW_REGISTRY` before this contract can be satisfied end-to-end.
+
 ---
 
 ## Shell Hook Integration Contract
