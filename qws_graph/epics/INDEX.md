@@ -31,7 +31,7 @@ Stories (execution order):
 4. [`story_3_qw_record_cli.md`](epic_1_ingestion_and_index/closed/story_3_qw_record_cli.md) — `CLOSED`
 5. [`story_4_neo4j_idempotent_store.md`](epic_1_ingestion_and_index/closed/story_4_neo4j_idempotent_store.md) — `CLOSED`
 6. [`story_5_shell_hooks_receipts_and_reconcile.md`](epic_1_ingestion_and_index/closed/story_5_shell_hooks_receipts_and_reconcile.md) — `CLOSED`
-7. [`story_6_readme_and_runbook_basis.md`](epic_1_ingestion_and_index/story_6_readme_and_runbook_basis.md) — `CLOSED`
+7. [`story_6_readme_and_runbook_basis.md`](epic_1_ingestion_and_index/closed/story_6_readme_and_runbook_basis.md) — `CLOSED`
 
 ---
 
