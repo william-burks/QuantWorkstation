@@ -30,7 +30,7 @@ Stories (execution order):
 3. [`story_2_pydantic_models_and_parsers.md`](epic_1_ingestion_and_index/closed/story_2_pydantic_models_and_parsers.md) — `ready`
 4. [`story_3_qw_record_cli.md`](epic_1_ingestion_and_index/closed/story_3_qw_record_cli.md) — `ready`
 5. [`story_4_neo4j_idempotent_store.md`](epic_1_ingestion_and_index/closed/story_4_neo4j_idempotent_store.md) — `ready`
-6. [`story_5_shell_hooks_receipts_and_reconcile.md`](epic_1_ingestion_and_index/story_5_shell_hooks_receipts_and_reconcile.md) — `ready`
+6. [`story_5_shell_hooks_receipts_and_reconcile.md`](epic_1_ingestion_and_index/closed/story_5_shell_hooks_receipts_and_reconcile.md) — `ready`
 
 ---
 
