@@ -21,30 +21,30 @@ Navigation and execution index for `qws_graph/epics`.
 ---
 
 ## Epic 1 — Ingestion and Index
-- Epic README: [`epic_1_ingestion_and_index/README.md`](epic_1_ingestion_and_index/README.md)
+- Epic README: [`epic_1_ingestion_and_index/README.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/README.md)
 - Objective: sidecar ingestion/index without breaking current shell/script entrypoints.
 
 Stories (execution order):
-1. [`story_0_infra_scaffold_and_docker.md`](epic_1_ingestion_and_index/closed/story_0_infra_scaffold_and_docker.md) — `CLOSED`
-2. [`story_1_graph_v1_contract_alignment.md`](epic_1_ingestion_and_index/closed/story_1_graph_v1_contract_alignment.md) — `CLOSED`
-3. [`story_2_pydantic_models_and_parsers.md`](epic_1_ingestion_and_index/closed/story_2_pydantic_models_and_parsers.md) — `CLOSED`
-4. [`story_3_qw_record_cli.md`](epic_1_ingestion_and_index/closed/story_3_qw_record_cli.md) — `CLOSED`
-5. [`story_4_neo4j_idempotent_store.md`](epic_1_ingestion_and_index/closed/story_4_neo4j_idempotent_store.md) — `CLOSED`
-6. [`story_5_shell_hooks_receipts_and_reconcile.md`](epic_1_ingestion_and_index/closed/story_5_shell_hooks_receipts_and_reconcile.md) — `CLOSED`
-7. [`story_6_readme_and_runbook_basis.md`](epic_1_ingestion_and_index/closed/story_6_readme_and_runbook_basis.md) — `CLOSED`
+1. [`story_0_infra_scaffold_and_docker.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_0_infra_scaffold_and_docker.md) — `CLOSED`
+2. [`story_1_graph_v1_contract_alignment.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_1_graph_v1_contract_alignment.md) — `CLOSED`
+3. [`story_2_pydantic_models_and_parsers.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_2_pydantic_models_and_parsers.md) — `CLOSED`
+4. [`story_3_qw_record_cli.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_3_qw_record_cli.md) — `CLOSED`
+5. [`story_4_neo4j_idempotent_store.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_4_neo4j_idempotent_store.md) — `CLOSED`
+6. [`story_5_shell_hooks_receipts_and_reconcile.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_5_shell_hooks_receipts_and_reconcile.md) — `CLOSED`
+7. [`story_6_readme_and_runbook_basis.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_6_readme_and_runbook_basis.md) — `CLOSED`
 
 ---
 
 ## Epic 2 — MCP Read Integration
-- Epic README: [`epic_2_mcp_read_integration/README.md`](epic_2_mcp_read_integration/README.md)
+- Epic README: [`epic_2_mcp_read_integration/README.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/README.md)
 - Objective: stable graph read/query surfaces for agent-assisted research retrieval.
 
 Stories (execution order):
-0. [`story_0_target_state_schema_mapping.md`](epic_2_mcp_read_integration/closed/story_0_target_state_schema_mapping.md) — `draft`
-1. [`story_1_read_models_and_query_projections.md`](epic_2_mcp_read_integration/closed/story_1_read_models_and_query_projections.md) — `draft`
-2. [`story_2_qw_query_presets.md`](epic_2_mcp_read_integration/closed/story_2_qw_query_presets.md) — `draft`
-3. [`story_3_mcp_read_tool_contract.md`](epic_2_mcp_read_integration/closed/story_3_mcp_read_tool_contract.md) — `blocked`
-4. [`story_4_lineage_and_pivot_queries.md`](epic_2_mcp_read_integration/closed/story_4_lineage_and_pivot_queries.md) — `draft`
+0. [`story_0_target_state_schema_mapping.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_0_target_state_schema_mapping.md) — `draft`
+1. [`story_1_read_models_and_query_projections.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_1_read_models_and_query_projections.md) — `draft`
+2. [`story_2_qw_query_presets.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_2_qw_query_presets.md) — `draft`
+3. [`story_3_mcp_read_tool_contract.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_3_mcp_read_tool_contract.md) — `blocked`
+4. [`story_4_lineage_and_pivot_queries.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_4_lineage_and_pivot_queries.md) — `draft`
 
 ---
 
