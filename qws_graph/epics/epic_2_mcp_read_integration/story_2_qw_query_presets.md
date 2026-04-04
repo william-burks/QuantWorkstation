@@ -29,6 +29,11 @@ Add contract-backed `qw query` presets for high-value retrieval paths so CLI and
 - JSON output mode for automation
 - Clear mapping from preset names/params to `research/graph/query.py` view functions from Story 1
 
+## Canonical Graph Semantics (Required)
+- Presets route only to Story 1 views built on canonical labels/edges (`Strategy`, `Run`, `Config`, `Champion`, `BlobArtifact`; `HAS_RUN`, `USES_CONFIG`, `PRODUCED_CHAMPION`, `PIVOTED_FROM`, `HAS_BLOB`).
+- Alias terms may be accepted at CLI parameter/docs level but must resolve to canonical Graph V1 semantics.
+- Presets must not introduce persisted `Artifact` or `Instrument` nodes/relationships.
+
 ## Out of Scope
 - Free-form arbitrary Cypher execution
 - Query UI/dashboard
