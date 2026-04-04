@@ -39,6 +39,8 @@ Implement first-class lineage and cross-artifact correlation queries using expli
 ## Implementation Notes
 - Use explicit pivot edges only; no inferred pivots.
 - Keep outputs compact and deterministic for MCP consumers.
+- Implement through shared query view functions (not ad-hoc per-caller Cypher variants).
+- Keep validation Neo4j-only; missing relationships should return deterministic empty/not-found results.
 
 ## Acceptance Criteria
 - [ ] Strategy lineage query returns ordered chain.

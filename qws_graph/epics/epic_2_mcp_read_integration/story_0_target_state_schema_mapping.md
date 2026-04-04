@@ -70,6 +70,11 @@ Define a repo-native schema mapping contract for Epic 2 read paths using Graph V
 - Story 3: MCP adapter exposes Story 1/2 outputs and should not bypass this mapping.
 - Story 4: acid-test scenarios must prove lineage and cross-instrument/timeframe retrieval using canonical anchors.
 
+## Implementation Guardrails (Normative)
+- Projection shape: outputs are flattened, deterministic JSON dictionaries (lists of flat objects allowed for lineage/history collections).
+- Query execution boundary: view functions are code-defined in `research/graph/query.py`; callers bind by name and do not embed duplicate query logic.
+- Read source of truth: Neo4j is the only read source for Epic 2 query paths; no file fallback to CSV/Markdown artifacts.
+
 ## Acceptance Criteria
 - [ ] Node labels and relationship types for Epic 2 reads are explicit and version-aligned with Graph V1.
 - [ ] All Story 1/2/3/4 query surfaces reference canonical graph semantics (aliases documented where used).

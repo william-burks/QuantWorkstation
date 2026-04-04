@@ -20,10 +20,11 @@ Provide typed read DTOs and projection queries that form the internal Query API 
 
 ## Deliverable
 - `research/graph/query_models.py`
-- `research/graph/query.py` projection functions
+- `research/graph/query.py` view/projection functions
 
 ## In Scope
 - Target State Schema alignment for read/query shape before implementation (no write-model changes)
+- Code-defined query view functions in `research/graph/query.py` for each projection surface
 - Projection contracts for:
   - strategy summary
   - run history
@@ -44,11 +45,13 @@ Provide typed read DTOs and projection queries that form the internal Query API 
 - Keep DTOs versioned (`v1`) to avoid silent schema churn.
 - Avoid exposing raw Cypher-specific internals to callers.
 - Treat this story as the bridge-contract layer; downstream stories consume these shapes, not raw graph node payloads.
+- Projection outputs should be flattened JSON-friendly dictionaries (or lists of flat objects), not raw Neo4j record maps.
 
 ## Acceptance Criteria
 - [ ] Target read/query schema shape is documented and aligned with `docs/graph_v1_contract.md` before projection coding begins.
 - [ ] Read models exist for strategy/run/champion lineage views.
 - [ ] Projection functions return deterministic key names.
+- [ ] View functions in `research/graph/query.py` are callable by stable name for Story 2/3 routing.
 - [ ] Tests cover missing-edge and multi-edge scenarios.
 
 ## Validation
