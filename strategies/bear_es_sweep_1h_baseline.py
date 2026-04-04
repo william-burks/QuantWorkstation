@@ -15,6 +15,21 @@ import numpy as np
 import pandas as pd
 
 try:
+    from strategies.common.strategy_artifacts import (
+        normalize_trades_for_csv,
+        parse_float_list,
+        parse_str_list,
+        write_results_csv,
+    )
+except ModuleNotFoundError:  # pragma: no cover
+    from common.strategy_artifacts import (
+        normalize_trades_for_csv,
+        parse_float_list,
+        parse_str_list,
+        write_results_csv,
+    )
+
+try:
     from scipy import stats
 except Exception:  # pragma: no cover
     stats = None
@@ -817,21 +832,8 @@ def print_backtest_report(result, loaded_rows):
         )
 
 
-def parse_float_list(raw):
-    """Parse comma-separated floats."""
-    return [float(x.strip()) for x in raw.split(',') if x.strip()]
-
-
-def parse_str_list(raw):
-    """Parse comma-separated strings."""
-    return [x.strip() for x in raw.split(',') if x.strip()]
-
-
 def run_grid_search(data, base_config, target_r_list, wick_modes, atr_stops, sessions_list, output_csv):
     """Run grid search across parameter combinations."""
-    import csv
-    from datetime import datetime
-
     results = []
     combo_count = 0
 
@@ -872,15 +874,10 @@ def run_grid_search(data, base_config, target_r_list, wick_modes, atr_stops, ses
     # Sort by sharpe descending
     results.sort(key=lambda x: x['sharpe'], reverse=True)
 
-    # Write CSV
-    with open(output_csv, 'w', newline='') as f:
-        fieldnames = ['sessions', 'target_r', 'wick_mode', 'atr_mult_stop', 'n', 'win_rate',
-                      'avg_r', 'total_r', 'profit_factor', 'sharpe', 'max_dd']
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(results)
+    results_df = pd.DataFrame(results)
+    output_path = write_results_csv(results_df, output_csv, artifact_name='grid results CSV')
 
-    print(f"\nGrid search complete: {combo_count} combos, results saved to {output_csv}")
+    print(f"\nGrid search complete: {combo_count} combos, results saved to {output_path}")
     print("\nTop 10 by Sharpe:")
     print("=" * 120)
     for i, r in enumerate(results[:10], 1):
@@ -994,6 +991,9 @@ def main():
 
     result = run_backtest(data, config)
     print_backtest_report(result, loaded_rows)
+    trades_csv = normalize_trades_for_csv(result.get('trades_df'))
+    output_path = write_results_csv(trades_csv, args.results_csv, artifact_name='baseline trades CSV')
+    print(f"\nBaseline results saved to {output_path}")
 
 
 if __name__ == '__main__':

@@ -15,6 +15,21 @@ import numpy as np
 import pandas as pd
 
 try:
+    from strategies.common.strategy_artifacts import (
+        normalize_trades_for_csv,
+        parse_float_list,
+        parse_str_list,
+        write_results_csv,
+    )
+except ModuleNotFoundError:  # pragma: no cover
+    from common.strategy_artifacts import (
+        normalize_trades_for_csv,
+        parse_float_list,
+        parse_str_list,
+        write_results_csv,
+    )
+
+try:
     from scipy import stats
 except Exception:  # pragma: no cover
     stats = None
@@ -783,21 +798,75 @@ def print_backtest_report(result, loaded_rows):
         )
 
 
-def parse_float_list(raw):
-    """Parse comma-separated floats."""
-    return [float(x.strip()) for x in raw.split(',') if x.strip()]
+def run_grid_search(data, base_config, target_r_list, wick_modes, atr_stops, sessions_list, output_csv):
+    """Run grid search across parameter combinations."""
+    results = []
+    combo_count = 0
 
+    for sessions_str in sessions_list:
+        sessions = parse_str_list(sessions_str)
+        for tr in target_r_list:
+            for wm in wick_modes:
+                for atr in atr_stops:
+                    combo_count += 1
+                    config = dict(base_config)
+                    config['target_r'] = tr
+                    config['wick_mode'] = wm
+                    config['atr_mult_stop'] = atr
+                    config['allowed_sessions'] = sessions
 
-def parse_str_list(raw):
-    """Parse comma-separated strings."""
-    return [x.strip() for x in raw.split(',') if x.strip()]
+                    result = run_backtest(data, config)
+                    metrics = result['metrics']
+
+                    results.append({
+                        'sessions': ','.join(sessions),
+                        'target_r': tr,
+                        'wick_mode': wm,
+                        'atr_mult_stop': atr,
+                        'n': metrics['sample_size'],
+                        'win_rate': metrics['win_rate'],
+                        'avg_r': metrics['avg_r_per_trade'],
+                        'total_r': metrics['total_r'],
+                        'profit_factor': metrics['profit_factor'],
+                        'sharpe': metrics['sharpe'],
+                        'max_dd': metrics['max_drawdown_r'],
+                    })
+
+                    print(f"Grid combo {combo_count}: sessions={','.join(sessions)}, "
+                          f"target_r={tr}, wick={wm}, atr={atr} -> "
+                          f"n={metrics['sample_size']}, sharpe={metrics['sharpe']:.3f}, "
+                          f"total_r={metrics['total_r']:.2f}")
+
+    results.sort(key=lambda x: x['sharpe'], reverse=True)
+
+    results_df = pd.DataFrame(results)
+    output_path = write_results_csv(results_df, output_csv, artifact_name='grid results CSV')
+
+    print(f"\nGrid search complete: {combo_count} combos, results saved to {output_path}")
+    print("\nTop 10 by Sharpe:")
+    print("=" * 120)
+    for i, r in enumerate(results[:10], 1):
+        print(f"{i:2d}. sessions={r['sessions']:20s} tr={r['target_r']:.2f} wick={r['wick_mode']:15s} "
+              f"atr={r['atr_mult_stop']:.1f} | n={r['n']:3d} wr={r['win_rate']:.1%} "
+              f"total_r={r['total_r']:+.2f} pf={r['profit_factor']:.2f} sharpe={r['sharpe']:.3f} "
+              f"max_dd={r['max_dd']:.1f}")
+    print("=" * 120)
+
+    return results
 
 
 def build_arg_parser():
     """Build argument parser for CLI overrides."""
     parser = argparse.ArgumentParser(description='NQ Bear Sweep 1H Baseline Backtest')
     parser.add_argument('--results-csv', default='results/nq_bear_baseline.csv', help='Output CSV path')
-    
+
+    # Grid mode
+    parser.add_argument('--grid', action='store_true', help='Run grid search mode')
+    parser.add_argument('--target-r-grid', type=str, default='1.0,1.25,1.5,1.75', help='Comma-separated target_r values for grid')
+    parser.add_argument('--wick-modes', type=str, default='none,exclude_q2,q3_q4_only', help='Comma-separated wick modes for grid')
+    parser.add_argument('--atr-mult-stop-grid', type=str, default='0.3,0.5,0.7', help='Comma-separated ATR multipliers for grid')
+    parser.add_argument('--sessions-grid', type=str, default='NY_PRE;NY_PRE,LONDON', help='Semicolon-separated session combos for grid')
+
     # Single-run overrides
     parser.add_argument('--target-r', type=float, default=None, help='Single-run target R override')
     parser.add_argument('--min-r-dist', type=float, default=None, help='Single-run min R distance override')
@@ -857,6 +926,16 @@ def main():
         print(f"Error: {e}")
         return
 
+    # Grid search mode
+    if args.grid:
+        target_r_list = parse_float_list(args.target_r_grid)
+        wick_modes = parse_str_list(args.wick_modes)
+        atr_stops = parse_float_list(args.atr_mult_stop_grid)
+        sessions_list = args.sessions_grid.split(';')
+
+        run_grid_search(data, config, target_r_list, wick_modes, atr_stops, sessions_list, args.results_csv)
+        return
+
     loaded_rows = {
         'mnq5': len(data['mnq5']),
         'mnq1h': len(data['mnq1h']),
@@ -865,6 +944,9 @@ def main():
 
     result = run_backtest(data, config)
     print_backtest_report(result, loaded_rows)
+    trades_csv = normalize_trades_for_csv(result.get('trades_df'))
+    output_path = write_results_csv(trades_csv, args.results_csv, artifact_name='baseline trades CSV')
+    print(f"\nBaseline results saved to {output_path}")
 
 
 if __name__ == '__main__':
