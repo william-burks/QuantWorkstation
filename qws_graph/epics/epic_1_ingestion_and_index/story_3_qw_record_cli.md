@@ -1,7 +1,7 @@
 # Story 3 — `qw record` CLI
 
 ## Status
-ready
+CLOSED
 
 ## Summary
 Add the first graph integration command that validates and records artifact data without altering existing run commands.
@@ -48,23 +48,23 @@ Implement `qw record` (writer) and `qw reconcile` (auditor) with contract-compli
 - `--dry-run` must not require Neo4j availability.
 
 ## Acceptance Criteria
-- [ ] `qw record --help` documents contract flags.
-- [ ] `qw record` defaults to online mode and attempts a 3-second Neo4j handshake.
-- [ ] Validation failure returns exit code 1.
-- [ ] Infra failure without offline returns exit code 2.
-- [ ] Offline success returns exit code 0 and writes pending payload.
-- [ ] Successful ingest writes receipt JSON.
-- [ ] `qw reconcile` command exists and returns audit output.
+- [x] `qw record --help` documents contract flags.
+- [x] `qw record` defaults to online mode and attempts a 3-second Neo4j handshake.
+- [x] Validation failure returns exit code 1.
+- [x] Infra failure without offline returns exit code 2.
+- [x] Offline success returns exit code 0 and writes pending payload.
+- [x] Successful ingest writes receipt JSON.
+- [x] `qw reconcile` command exists and returns audit output.
 
 ## Validation
 - CLI integration tests for success/failure/offline/dry-run paths.
 - Manual smoke run with one baseline CSV and one champion markdown.
 
 ## Definition of Done
-- [ ] CLI command wired and discoverable.
-- [ ] Exit code contract verified by tests.
-- [ ] Receipt and pending directories created automatically when missing.
-- [ ] `qw record` and `qw reconcile` are implemented in the same PR as separate commits.
+- [x] CLI command wired and discoverable.
+- [x] Exit code contract verified by tests.
+- [x] Receipt and pending directories created automatically when missing.
+- [x] `qw record` and `qw reconcile` are implemented in the same PR as separate commits.
 
 ## Open Questions
 - None.
