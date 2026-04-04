@@ -87,7 +87,8 @@ RETURN {
   total_trades: r.total_trades,
   total_r: r.total_r,
   artifact_path: r.artifact_path,
-  config_id: c.config_id
+  config_id: c.config_id,
+  curator_note: r.curator_note
 } AS result
 ORDER BY r.timestamp DESC, r.run_id ASC
 """.strip()
@@ -427,6 +428,7 @@ def get_run_history_v1(session: QuerySession, strategy_id: str) -> list[dict[str
             total_r=None if row.get("total_r") is None else float(row["total_r"]),
             artifact_path=str(row["artifact_path"]),
             config_id=row.get("config_id"),
+            curator_note=row.get("curator_note"),
         ).model_dump(mode="json")
         for row in rows
     ]

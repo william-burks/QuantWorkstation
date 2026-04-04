@@ -1,7 +1,7 @@
 # Story 2 — Semantic Gate: Llama 4 Scout Analyst
 
 ## Status
-DRAFT
+CLOSED
 
 ## Priority
 P2 — Research Enhancement. Story 1's math gate is correct and ship-safe. This story adds
@@ -212,24 +212,24 @@ updated). This is the correct query for inspecting per-run analyst notes.
 
 ## Acceptance Criteria
 
-- [ ] `research/graph/analyst.py` exists with `LlamaAnalyst` class and `annotate()` method.
+- [x] `research/graph/analyst.py` exists with `LlamaAnalyst` class and `annotate()` method.
       `LlamaUnavailableError` is raised (not swallowed) when endpoint is unreachable; caller
       catches it.
-- [ ] `qw record --kind grid_csv --analyze` invokes the semantic tier when
+- [x] `qw record --kind grid_csv --analyze` invokes the semantic tier when
       `QW_AI_ANALYST_ENDPOINT` is set; falls back to Story 1 math-tier defaults with a
       `WARNING` on stderr when the endpoint is not set or unreachable.
-- [ ] `Run` model gains `curator_note: str | None = None`. `CSV_INGEST_QUERY` persists it.
+- [x] `Run` model gains `curator_note: str | None = None`. `CSV_INGEST_QUERY` persists it.
       `RunHistoryItemV1` DTO gains `curator_note: str | None`. `GET_RUN_HISTORY_V1_CYPHER`
       returns `r.curator_note`.
-- [ ] A new `run_history` preset is added to `PRESET_CATALOG`. `qw query --name run_history
+- [x] A new `run_history` preset is added to `PRESET_CATALOG`. `qw query --name run_history
       --param strategy_id=<id>` returns run rows including `curator_note` (may be `null` for
       runs ingested without `--analyze`).
-- [ ] Prompt uses compact CSV row format (no verbose JSON per row). Token count for a 20-run
+- [x] Prompt uses compact CSV row format (no verbose JSON per row). Token count for a 20-run
       batch must be < 2,000 tokens (verifiable via `_estimate_prompt_tokens()` utility).
-- [ ] Unit tests in `tests/unit/test_analyst.py` cover: successful annotation round-trip
+- [x] Unit tests in `tests/unit/test_analyst.py` cover: successful annotation round-trip
       (mock client), partial LLM response (some run IDs missing), malformed JSON response
       (defensive parser returns math-tier fallback), and `LlamaUnavailableError` propagation.
-- [ ] Existing tests (`test_curator.py`, `test_qw_query.py`, `test_mcp_adapter.py`,
+- [x] Existing tests (`test_curator.py`, `test_qw_query.py`, `test_mcp_adapter.py`,
       `test_lineage_queries.py`) remain green — `curator_note` defaults to `None` and no
       existing assertions break.
 
@@ -255,13 +255,13 @@ updated). This is the correct query for inspecting per-run analyst notes.
 
 ## Definition of Done
 
-- [ ] All new unit tests pass with a mock llama-stack client (no live LLM required for CI).
-- [ ] `qw record --kind grid_csv --analyze` with a real llama-stack endpoint produces runs
+- [x] All new unit tests pass with a mock llama-stack client (no live LLM required for CI).
+- [x] `qw record --kind grid_csv --analyze` with a real llama-stack endpoint produces runs
       with non-null `curator_note` in Neo4j (manual smoke test).
-- [ ] `qw query --name run_history --param strategy_id=<id>` shows `curator_note` per row.
-- [ ] `qw record --kind grid_csv --analyze` with no endpoint set falls back cleanly and
+- [x] `qw query --name run_history --param strategy_id=<id>` shows `curator_note` per row.
+- [x] `qw record --kind grid_csv --analyze` with no endpoint set falls back cleanly and
       produces the same output as `qw record --kind grid_csv`.
-- [ ] Story marked CLOSED after test suite passes.
+- [x] Story marked CLOSED after test suite passes.
 
 ---
 

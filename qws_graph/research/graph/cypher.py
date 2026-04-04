@@ -17,22 +17,23 @@ MERGE (s:Strategy {strategy_id: row.strategy.strategy_id})
     s.updated_at = datetime()
 
 MERGE (r:Run {run_id: row.run.run_id})
-  ON CREATE SET
-    r.created_at = datetime()
-  SET
-    r.timestamp = datetime(row.run.timestamp),
-    r.sharpe = row.run.sharpe,
-    r.profit_factor = row.run.profit_factor,
-    r.win_rate = row.run.win_rate,
-    r.max_drawdown = row.run.max_drawdown,
-    r.total_trades = row.run.total_trades,
-    r.total_r = row.run.total_r,
-    r.artifact_path = row.run.artifact_path,
-    r.artifact_hash = row.run.provenance.artifact_hash,
-    r.artifact_mtime_iso = row.run.provenance.artifact_mtime_iso,
-    r.ingested_at = datetime(row.run.provenance.ingested_at),
-    r.parser_version = row.run.provenance.parser_version,
-    r.updated_at = datetime()
+   ON CREATE SET
+     r.created_at = datetime()
+   SET
+     r.timestamp = datetime(row.run.timestamp),
+     r.sharpe = row.run.sharpe,
+     r.profit_factor = row.run.profit_factor,
+     r.win_rate = row.run.win_rate,
+     r.max_drawdown = row.run.max_drawdown,
+     r.total_trades = row.run.total_trades,
+     r.total_r = row.run.total_r,
+     r.artifact_path = row.run.artifact_path,
+     r.curator_note = row.run.curator_note,
+     r.artifact_hash = row.run.provenance.artifact_hash,
+     r.artifact_mtime_iso = row.run.provenance.artifact_mtime_iso,
+     r.ingested_at = datetime(row.run.provenance.ingested_at),
+     r.parser_version = row.run.provenance.parser_version,
+     r.updated_at = datetime()
 
 MERGE (c:Config {config_id: row.config.config_id})
   ON CREATE SET

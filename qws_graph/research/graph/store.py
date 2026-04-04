@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from neo4j import GraphDatabase
 from neo4j.exceptions import Neo4jError
 
+from .analyst import truncate_curator_note
 from .cypher import (
     ABORT_STRATEGY_QUERY,
     BLOB_INGEST_QUERY,
@@ -150,6 +151,10 @@ class GraphStore:
         rows = []
         strategy_payload = payload["strategy"]
         for run_payload, config_payload in zip(payload["runs"], payload["configs"], strict=True):
+            run_for_query = {
+                **run_payload,
+                "curator_note": truncate_curator_note(run_payload.get("curator_note")),
+            }
             config_for_query = {
                 **config_payload,
                 "params_json_text": json.dumps(config_payload.get("params_json", {}), sort_keys=True, separators=(",", ":"), ensure_ascii=True),
@@ -158,7 +163,7 @@ class GraphStore:
             rows.append(
                 {
                     "strategy": strategy_payload,
-                    "run": run_payload,
+                    "run": run_for_query,
                     "config": config_for_query,
                 }
             )
