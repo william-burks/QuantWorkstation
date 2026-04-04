@@ -893,7 +893,7 @@ def run_grid_search(data, base_config, target_r_list, wick_modes, atr_stops, ses
 def build_arg_parser():
     """Build argument parser for CLI overrides."""
     parser = argparse.ArgumentParser(description='ES Bear Sweep 1H Baseline Backtest')
-    parser.add_argument('--results-csv', default='results/es_bear_baseline.csv', help='Output CSV path')
+    parser.add_argument('--results-csv', default='results/es_bear_sweep_1h_baseline.csv', help='Output CSV path')
 
     # Grid mode
     parser.add_argument('--grid', action='store_true', help='Run grid search mode')

@@ -34,7 +34,7 @@ Ship a cutover playbook with objective checks and a tested rollback path.
 ## Repo Touchpoints
 - `docs/graph_cutover_playbook.md`
 - `research/graph/cli.py`
-- `research/run_es_nq_baseline.sh`
+- `research/run_es_nq_bear_sweep_1h_baseline.sh`
 - `research/run_es_phase2.sh`
 
 ## Implementation Notes

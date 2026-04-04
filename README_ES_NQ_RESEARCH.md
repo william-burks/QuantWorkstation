@@ -51,7 +51,7 @@ research/
   es_nq_bear_sweep_tracker.md                   Master results tracker (fill as you go)
   es_bear_sweep_1h_champion_template.md         Template for Phase 4 (champion freeze)
   nq_bear_sweep_1h_champion_template.md         Template for Phase 4 (champion freeze)
-  run_es_nq_baseline.sh                         Shell script to auto-run baselines
+  run_es_nq_bear_sweep_1h_baseline.sh           Shell script to auto-run baselines
 ```
 
 ### Results (Auto-generated After Runs)

@@ -23,7 +23,7 @@ The repository already produces baseline/grid CSVs and champion markdowns, but l
 
 ## Dependencies
 - Existing artifact outputs under `results/` and `research/results/champions/`
-- Existing scripts: `research/run_es_nq_baseline.sh`, `research/run_es_phase2.sh`
+- Existing scripts: `research/run_es_nq_bear_sweep_1h_baseline.sh`, `research/run_es_phase2.sh`
 - Existing validation conventions in `research/candidate_validator.py`, `data/schemas/`
 
 ## Story 0 quickstart (local Neo4j)

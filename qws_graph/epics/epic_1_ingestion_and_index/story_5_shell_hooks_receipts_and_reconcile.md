@@ -1,7 +1,7 @@
 # Story 5 — Shell Hooks and Receipt Operations
 
 ## Status
-ready
+CLOSED
 
 ## Summary
 Integrate `qw record` into existing shell workflows with soft-fail behavior and verify receipt/pending operations in live script paths.
@@ -13,7 +13,7 @@ Without shell hooks, ingestion is manual and easy to skip; receipt/pending behav
 Wire post-run `qw record` hooks and validate end-to-end script behavior under online/offline graph conditions.
 
 ## Inputs
-- `research/run_es_nq_baseline.sh`
+- `research/run_es_nq_bear_sweep_1h_baseline.sh`
 - `research/run_es_phase2.sh`
 - Story 3 (`qw record`)
 - Story 4 (store + receipts)
@@ -34,7 +34,7 @@ Wire post-run `qw record` hooks and validate end-to-end script behavior under on
 - MCP integration
 
 ## Repo Touchpoints
-- `research/run_es_nq_baseline.sh`
+- `research/run_es_nq_bear_sweep_1h_baseline.sh`
 - `research/run_es_phase2.sh`
 - `research/graph/cli.py`
 - `.qws/receipts/`

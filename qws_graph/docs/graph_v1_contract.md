@@ -595,7 +595,7 @@ No MCP write in V1.
 ## Shell Hook Integration Contract
 
 Execution entrypoints remain unchanged:
-- `research/run_es_nq_baseline.sh`
+- `research/run_es_nq_bear_sweep_1h_baseline.sh`
 - `research/run_es_phase2.sh`
 
 Hook rule:
@@ -770,7 +770,7 @@ Unblocked tasks:
 - Receipt + pending directory handling under `.qws/`.
 - Neo4j store layer in `research/graph/store.py` with MERGE semantics.
 - Shell hook integration patches for:
-  - `research/run_es_nq_baseline.sh`
+  - `research/run_es_nq_bear_sweep_1h_baseline.sh`
   - `research/run_es_phase2.sh`
 - Reconcile/query command shells.
 

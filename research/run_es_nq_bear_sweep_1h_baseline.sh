@@ -34,17 +34,17 @@ echo ""
 
 echo "Running ES baseline..."
 python strategies/bear_es_sweep_1h_baseline.py
-record_artifact "results/es_bear_baseline.csv" "baseline_csv"
+record_artifact "results/es_bear_sweep_1h_baseline.csv" "baseline_csv"
 
 echo ""
 echo "Running NQ baseline..."
 python strategies/bear_nq_sweep_1h_baseline.py
-record_artifact "results/nq_bear_baseline.csv" "baseline_csv"
+record_artifact "results/nq_bear_sweep_1h_baseline.csv" "baseline_csv"
 
 echo ""
 echo "✓ Baselines complete. Review reports in:"
-echo "  - results/es_bear_baseline.csv"
-echo "  - results/nq_bear_baseline.csv"
+echo "  - results/es_bear_sweep_1h_baseline.csv"
+echo "  - results/nq_bear_sweep_1h_baseline.csv"
 echo ""
 
 # Phase 2: Isolation (if needed)
