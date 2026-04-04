@@ -1,7 +1,7 @@
 # Story 4 — Neo4j Idempotent Store
 
 ## Status
-ready
+CLOSED
 
 ## Summary
 Implement transactional, idempotent graph persistence for V1 artifacts.
@@ -44,20 +44,20 @@ Provide a store layer that applies contract MERGE mappings and guarantees repeat
 - Return node/relationship counts for receipt output.
 
 ## Acceptance Criteria
-- [ ] Double-ingesting same artifact does not create extra nodes.
-- [ ] Double-ingesting same artifact does not create extra relationships.
-- [ ] Champion ingest creates `PRODUCED_CHAMPION` and optional `PIVOTED_FROM`.
-- [ ] Store returns counts and status for receipts.
-- [ ] Infra errors propagate as store-layer exceptions.
+- [x] Double-ingesting same artifact does not create extra nodes.
+- [x] Double-ingesting same artifact does not create extra relationships.
+- [x] Champion ingest creates `PRODUCED_CHAMPION` and optional `PIVOTED_FROM`.
+- [x] Store returns counts and status for receipts.
+- [x] Infra errors propagate as store-layer exceptions.
 
 ## Validation
 - Integration tests with clean graph then repeated ingest.
 - Manual check in Neo4j Browser for duplicate prevention.
 
 ## Definition of Done
-- [ ] Store layer follows contract MERGE semantics.
-- [ ] Idempotency tests pass.
-- [ ] CLI can call store successfully for CSV and champion artifacts.
+- [x] Store layer follows contract MERGE semantics.
+- [x] Idempotency tests pass.
+- [x] CLI can call store successfully for CSV and champion artifacts.
 
 ## Open Questions
 - None.
