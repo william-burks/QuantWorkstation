@@ -18,6 +18,12 @@ Provide typed read DTOs and projection queries that form the internal Query API 
 - Existing champion and run artifacts already ingested
 - `story_0_target_state_schema_mapping.md` (read-shape alignment gate)
 
+## Canonical Graph Semantics (Required)
+- Labels: `Strategy`, `Run`, `Config`, `Champion`, `BlobArtifact`.
+- Edges: `HAS_RUN`, `USES_CONFIG`, `PRODUCED_CHAMPION`, `PIVOTED_FROM`, `HAS_BLOB`.
+- Alias boundary: `ResearchRun` may appear in DTO/doc naming only and maps to canonical `Run`.
+- No persisted `Artifact` or `Instrument` labels in Epic 2 read surfaces.
+
 ## Deliverable
 - `research/graph/query_models.py`
 - `research/graph/query.py` view/projection functions

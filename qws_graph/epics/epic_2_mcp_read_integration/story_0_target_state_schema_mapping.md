@@ -1,7 +1,7 @@
 # Story 0 — Target State Schema Mapping
 
 ## Status
-draft
+CLOSED
 
 ## Summary
 Lock the Epic 2 read/query topology before Story 1 so read models and presets map to a stable graph shape.
@@ -70,15 +70,21 @@ Define a repo-native schema mapping contract for Epic 2 read paths using Graph V
 - Story 3: MCP adapter exposes Story 1/2 outputs and should not bypass this mapping.
 - Story 4: acid-test scenarios must prove lineage and cross-instrument/timeframe retrieval using canonical anchors.
 
+## Story Surface Canonical Mapping Requirements (Normative)
+- Story 1 (`story_1_read_models_and_query_projections.md`): query/read models must use canonical labels/edges (`Strategy`, `Run`, `Config`, `Champion`, `BlobArtifact`; `HAS_RUN`, `USES_CONFIG`, `PRODUCED_CHAMPION`, `PIVOTED_FROM`, `HAS_BLOB`); `ResearchRun` is DTO/doc alias only.
+- Story 2 (`story_2_qw_query_presets.md`): preset routing must resolve to Story 1 views that use canonical labels/edges only; no preset may introduce persisted `Artifact` or `Instrument` nodes.
+- Story 3 (`story_3_mcp_read_tool_contract.md`): adapter may expose alias terms to callers but must bind to Story 1/2 canonical query views and Neo4j Graph V1 relationships.
+- Story 4 (`story_4_lineage_and_pivot_queries.md`): lineage and pivot retrieval must use explicit `(:Champion)-[:PIVOTED_FROM]->(:Run)` and `(:Strategy)` anchors only; no inferred pivot edges.
+
 ## Implementation Guardrails (Normative)
 - Projection shape: outputs are flattened, deterministic JSON dictionaries (lists of flat objects allowed for lineage/history collections).
 - Query execution boundary: view functions are code-defined in `research/graph/query.py`; callers bind by name and do not embed duplicate query logic.
 - Read source of truth: Neo4j is the only read source for Epic 2 query paths; no file fallback to CSV/Markdown artifacts.
 
 ## Acceptance Criteria
-- [ ] Node labels and relationship types for Epic 2 reads are explicit and version-aligned with Graph V1.
-- [ ] All Story 1/2/3/4 query surfaces reference canonical graph semantics (aliases documented where used).
-- [ ] No write-model changes or new persisted node labels are introduced by Epic 2 Story 0.
+- [x] Node labels and relationship types for Epic 2 reads are explicit and version-aligned with Graph V1.
+- [x] All Story 1/2/3/4 query surfaces reference canonical graph semantics (aliases documented where used).
+- [x] No write-model changes or new persisted node labels are introduced by Epic 2 Story 0.
 
 ## Notes
 If future requirements require `ResearchProject`, `ResearchRun`, `Artifact`, or `Instrument` as persisted labels, that is a contract revision (Graph V2+), not an Epic 2 read-layer change.

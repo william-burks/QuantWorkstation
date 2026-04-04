@@ -29,6 +29,11 @@ Provide a small read-only MCP-facing interface that exposes Story 1/2 query outp
 - Reuse of existing query projection/preset contracts instead of MCP-specific graph traversal logic
 - Name-based binding from MCP tools to `research/graph/query.py` view functions
 
+## Canonical Graph Semantics (Required)
+- Adapter reads through Story 1/2 query views that use canonical Graph V1 labels/edges (`Strategy`, `Run`, `Config`, `Champion`, `BlobArtifact`; `HAS_RUN`, `USES_CONFIG`, `PRODUCED_CHAMPION`, `PIVOTED_FROM`, `HAS_BLOB`).
+- Alias terms exposed to MCP callers are translation-only and cannot change underlying graph semantics.
+- No MCP read path may imply persisted `Artifact`/`Instrument` nodes not present in Graph V1.
+
 ## Out of Scope
 - MCP write APIs
 - Browser ingestion bridge

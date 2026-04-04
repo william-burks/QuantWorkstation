@@ -42,6 +42,11 @@ Implement first-class lineage and cross-artifact correlation queries using expli
 - Implement through shared query view functions (not ad-hoc per-caller Cypher variants).
 - Keep validation Neo4j-only; missing relationships should return deterministic empty/not-found results.
 
+## Canonical Graph Semantics (Required)
+- Lineage/pivot traversal uses canonical Graph V1 path `(:Strategy)-[:PRODUCED_CHAMPION]->(:Champion)-[:PIVOTED_FROM]->(:Run)` plus `(:Strategy)-[:HAS_RUN]->(:Run)`/`(:Run)-[:USES_CONFIG]->(:Config)` where needed.
+- Cross-artifact correlation must anchor on shared canonical `Strategy` properties/relationships, not new persisted labels.
+- Alias artifact-to-artifact wording is permitted only at response/docs layer; stored semantics remain Champion-to-Run pivot edges.
+
 ## Acceptance Criteria
 - [ ] Strategy lineage query returns ordered chain.
 - [ ] Pivot query returns empty list when no explicit pivot edges exist.
