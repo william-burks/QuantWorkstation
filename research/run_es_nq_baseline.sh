@@ -4,6 +4,23 @@
 
 set -e  # exit on error
 
+record_artifact() {
+	local artifact_file="$1"
+	local artifact_kind="$2"
+
+	if [[ ! -f "$artifact_file" ]]; then
+		echo "WARNING: expected artifact not found for graph hook: $artifact_file" >&2
+		return
+	fi
+
+	if [[ "${QW_GRAPH_ENABLED:-true}" == "false" ]]; then
+		qw record --file "$artifact_file" --kind "$artifact_kind" --offline || true
+		return
+	fi
+
+	qw record --file "$artifact_file" --kind "$artifact_kind" || true
+}
+
 echo "=== ES/NQ Bear Sweep Research — Phase 1 Execution ==="
 echo ""
 
@@ -13,10 +30,12 @@ echo ""
 
 echo "Running ES baseline..."
 python strategies/bear_es_sweep_1h_baseline.py
+record_artifact "results/es_bear_baseline.csv" "baseline_csv"
 
 echo ""
 echo "Running NQ baseline..."
 python strategies/bear_nq_sweep_1h_baseline.py
+record_artifact "results/nq_bear_baseline.csv" "baseline_csv"
 
 echo ""
 echo "✓ Baselines complete. Review reports in:"
