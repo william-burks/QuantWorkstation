@@ -1,4 +1,4 @@
-"""CLI entry point for qw record and qw reconcile commands.
+"""CLI entry point for qw record, qw reconcile, and qw query commands.
 
 Reference: docs/graph_v1_contract.md - CLI Spec (Man-page style)
 """
@@ -15,6 +15,8 @@ from typing import Any, Literal
 
 from .models import ResearchArtifact
 from .parsers import CSVParser, ChampionMarkdownParser, research_artifact_payload_hash
+from .query import GraphQueryService
+from .query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params
 from .store import GraphStore, StoreInfraError
 
 
@@ -348,6 +350,76 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_query(args: argparse.Namespace) -> int:
+    """Execute `qw query` command.
+
+    Exit codes:
+        0: preset ran successfully
+        1: invalid preset name or params
+        2: graph connection required but unavailable
+    """
+    name = args.name
+    output_json = getattr(args, "json", False)
+    repo_root = Path(args.repo_root) if getattr(args, "repo_root", None) else Path.cwd()
+    timeout_seconds = getattr(args, "timeout_seconds", 3)
+
+    # Parse --param key=value pairs
+    raw_params: list[str] = args.param or []
+    params: dict[str, str] = {}
+    for kv in raw_params:
+        if "=" not in kv:
+            print(f"ERROR: --param must be key=value, got: {kv!r}", file=sys.stderr)
+            return 1
+        k, _, v = kv.partition("=")
+        params[k.strip()] = v.strip()
+
+    # Resolve preset — deterministic error for unknown names
+    try:
+        spec = resolve_preset(name)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    # Validate params before any connection attempt
+    errors = validate_params(spec, params)
+    if errors:
+        for err in errors:
+            print(f"ERROR: {err}", file=sys.stderr)
+        return 1
+
+    # Connect to graph only if the preset requires it
+    service: GraphQueryService | None = None
+    if spec.requires_graph:
+        connector = NeoConnector(timeout_seconds=timeout_seconds)
+        if not connector.is_available():
+            print(
+                f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s); "
+                f"preset {name!r} requires a graph connection",
+                file=sys.stderr,
+            )
+            return 2
+        service = GraphQueryService.from_env(timeout_seconds=timeout_seconds)
+
+    try:
+        results = run_preset(name, params, service=service, repo_root=repo_root)
+    except (ValueError, RuntimeError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        if service is not None:
+            service.close()
+
+    if output_json:
+        print(json.dumps({"preset": name, "results": results}, indent=2))
+    else:
+        if not results:
+            print(f"No results for preset {name!r}.")
+        for item in results:
+            print(json.dumps(item))
+
+    return 0
+
+
 def main() -> int:
     """Main entry point for `qw` CLI."""
     parser = argparse.ArgumentParser(
@@ -422,6 +494,51 @@ def main() -> int:
         help="Repository root directory (auto-detected if not provided)",
     )
     reconcile_parser.set_defaults(func=cmd_reconcile)
+
+    # `qw query` subcommand
+    _preset_names = sorted(PRESET_CATALOG)
+    _preset_help_lines = "\n".join(
+        f"  {spec.name}: {spec.description}" for spec in PRESET_CATALOG.values()
+    )
+    query_parser = subparsers.add_parser(
+        "query",
+        help="Run a predefined graph query preset",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=(
+            "Run a predefined graph query preset.\n\n"
+            f"Available presets:\n{_preset_help_lines}"
+        ),
+    )
+    query_parser.add_argument(
+        "--name",
+        required=True,
+        metavar="PRESET",
+        help=f"Preset name. One of: {', '.join(_preset_names)}",
+    )
+    query_parser.add_argument(
+        "--param",
+        action="append",
+        metavar="KEY=VALUE",
+        default=None,
+        help="Preset parameter (repeatable). E.g. --param strategy_id=es-1h-bear-sweep",
+    )
+    query_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output results as JSON ({preset, results})",
+    )
+    query_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    query_parser.add_argument(
+        "--repo-root",
+        default=None,
+        help="Repository root directory (auto-detected if not provided)",
+    )
+    query_parser.set_defaults(func=cmd_query)
 
     # Parse arguments
     args = parser.parse_args()

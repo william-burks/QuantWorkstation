@@ -1,7 +1,7 @@
 # Story 2 — `qw query` Presets
 
 ## Status
-draft
+CLOSED
 
 ## Summary
 Implement the operator-facing Bridge surface: stable `qw query` presets on top of Story 1 read projections.
@@ -50,19 +50,19 @@ Add contract-backed `qw query` presets for high-value retrieval paths so CLI and
 - Treat presets as name-based routing to view functions; CLI is orchestration, not query-definition.
 
 ## Acceptance Criteria
-- [ ] `qw query --name recent_champions` works.
-- [ ] `qw query --name strategy_lineage --param strategy_id=...` works.
-- [ ] Invalid preset names return deterministic error.
-- [ ] `--json` output shape is stable.
-- [ ] Preset implementation calls code-defined query views by stable function name.
+- [x] `qw query --name recent_champions` works.
+- [x] `qw query --name strategy_lineage --param strategy_id=...` works.
+- [x] Invalid preset names return deterministic error.
+- [x] `--json` output shape is stable.
+- [x] Preset implementation calls code-defined query views by stable function name.
 
 ## Validation
 - Unit tests for preset routing and parameter validation.
 - Integration checks on seeded graph test dataset.
 
 ## Definition of Done
-- [ ] Preset catalog implemented with tests.
-- [ ] CLI help documents available presets.
+- [x] Preset catalog implemented with tests.
+- [x] CLI help documents available presets.
 
 ## Open Questions
 - None.

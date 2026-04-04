@@ -133,6 +133,22 @@ RETURN {
 ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 """.strip()
 
+GET_RECENT_CHAMPIONS_V1_CYPHER = """
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
+OPTIONAL MATCH (ch)-[:PIVOTED_FROM]->(r:Run)
+RETURN {
+  champion_id: ch.champion_id,
+  strategy_id: s.strategy_id,
+  freeze_date: ch.freeze_date,
+  oos_status: ch.oos_status,
+  fragilities: ch.fragilities,
+  artifact_path: ch.artifact_path,
+  pivot_from_run_id: r.run_id,
+  metrics_summary: ch.metrics_summary
+} AS result
+ORDER BY ch.freeze_date DESC, ch.champion_id ASC
+""".strip()
+
 
 class QuerySession(Protocol):
     """Small protocol for Neo4j read sessions and test doubles."""
@@ -186,6 +202,10 @@ class GraphQueryService:
     def get_strategy_lineage_v1(self, strategy_id: str) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_strategy_lineage_v1(session, strategy_id)
+
+    def get_recent_champions_v1(self, limit: int = 20) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_recent_champions_v1(session, limit=limit)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -370,12 +390,33 @@ def get_strategy_lineage_v1(session: QuerySession, strategy_id: str) -> list[dic
     return _sort_lineage(items)
 
 
+def get_recent_champions_v1(session: QuerySession, limit: int = 20) -> list[dict[str, Any]]:
+    """Return recent champions across all strategies, most recent freeze_date first."""
+
+    rows = _all_results(session, GET_RECENT_CHAMPIONS_V1_CYPHER)
+    items = [
+        ChampionDetailsV1(
+            champion_id=str(row["champion_id"]),
+            strategy_id=str(row["strategy_id"]),
+            freeze_date=str(_normalize_temporal(row["freeze_date"])),
+            oos_status=str(row["oos_status"]),
+            fragilities=list(row.get("fragilities") or []),
+            artifact_path=str(row["artifact_path"]),
+            pivot_from_run_id=row.get("pivot_from_run_id"),
+            metrics_summary=_normalize_json_like(row.get("metrics_summary") or {}),
+        ).model_dump(mode="json")
+        for row in rows
+    ]
+    return items[:limit]
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
     "get_champion_details_v1": get_champion_details_v1,
     "get_config_linkage_v1": get_config_linkage_v1,
     "get_strategy_lineage_v1": get_strategy_lineage_v1,
+    "get_recent_champions_v1": get_recent_champions_v1,
 }
 
 
@@ -391,6 +432,7 @@ def get_query_view(name: str) -> Callable[..., Any]:
 __all__ = [
     "GET_CHAMPION_DETAILS_V1_CYPHER",
     "GET_CONFIG_LINKAGE_V1_CYPHER",
+    "GET_RECENT_CHAMPIONS_V1_CYPHER",
     "GET_RUN_HISTORY_V1_CYPHER",
     "GET_STRATEGY_LINEAGE_V1_CYPHER",
     "GET_STRATEGY_SUMMARY_V1_CYPHER",
@@ -399,6 +441,7 @@ __all__ = [
     "get_champion_details_v1",
     "get_config_linkage_v1",
     "get_query_view",
+    "get_recent_champions_v1",
     "get_run_history_v1",
     "get_strategy_lineage_v1",
     "get_strategy_summary_v1",
