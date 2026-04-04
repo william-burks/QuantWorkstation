@@ -135,3 +135,27 @@ MERGE (s)-[:HAS_BLOB]->(b)
 """.strip()
 
 
+# ---------------------------------------------------------------------------
+# family_id backfill queries (migration story)
+# ---------------------------------------------------------------------------
+
+AUDIT_NULL_FAMILY_ID_QUERY = """
+MATCH (s:Strategy)
+WHERE s.family_id IS NULL
+RETURN s.strategy_id AS strategy_id,
+       s.logic_type  AS logic_type,
+       s.direction   AS direction,
+       s.created_at  AS created_at
+ORDER BY s.created_at ASC
+""".strip()
+
+
+PATCH_FAMILY_ID_QUERY = """
+MATCH (s:Strategy {strategy_id: $strategy_id})
+SET
+  s.family_id  = $family_id,
+  s.updated_at = datetime()
+RETURN s.strategy_id AS strategy_id
+""".strip()
+
+

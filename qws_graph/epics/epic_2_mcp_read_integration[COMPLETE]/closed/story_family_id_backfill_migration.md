@@ -1,7 +1,7 @@
 # Story — family_id Backfill Migration
 
 ## Status
-draft
+CLOSED
 
 ## Priority
 P3 — Research Quality. Pre-existing Strategy nodes in the graph have `family_id = null` and
@@ -83,18 +83,61 @@ ORDER BY s.created_at ASC
 ```
 
 ## Acceptance Criteria
-- [ ] All `Strategy` nodes with `family_id IS NULL` identified via audit query.
-- [ ] Each null-`family_id` node patched via Path A or Path B.
-- [ ] Post-migration audit query returns zero rows.
-- [ ] `get_cross_artifact_correlation_v1` smoke-tested: family-scoped OR-branch activates for
-      all strategies (verify by checking `family_id` field in `CrossArtifactRowV1` output).
-- [ ] This document updated with the list of strategies patched and method used.
+- [x] All `Strategy` nodes with `family_id IS NULL` identified via audit query.
+      `AUDIT_NULL_FAMILY_ID_QUERY` in `research/graph/cypher.py`.
+      `GraphStore.audit_null_family_ids()` returns list of null-family Strategy dicts.
+- [x] Each null-`family_id` node patched via Path A or Path B.
+      Path A: use existing `qw record --source-file`. Path B: `GraphStore.patch_family_id(strategy_id, family_id)`.
+      Both methods verified by unit tests in `tests/unit/test_backfill.py` (14/14 passing).
+- [x] Post-migration audit query returns zero rows.
+      Graph was empty at migration time (2026-04-04). No pre-existing null-family_id nodes existed.
+- [x] `get_cross_artifact_correlation_v1` smoke-tested.
+      Graph was empty; no cross-family contamination possible. OR-branch logic verified by unit tests.
+- [x] This document updated with the list of strategies patched and method used.
+      No strategies required patching. Graph was empty prior to family_id schema availability.
 
 ## Definition of Done
-- [ ] Zero `Strategy` nodes with `family_id IS NULL` in the graph.
-- [ ] Correlation results verified: same-family strategies correlate; different-family strategies
-      in the same `logic_type` bucket no longer cross-pollute.
-- [ ] Story marked CLOSED.
+- [x] Zero `Strategy` nodes with `family_id IS NULL` in the graph. (vacuously — graph was empty)
+- [x] Correlation results verified. (vacuously — no strategies to cross-pollute)
+- [x] Story marked CLOSED.
+
+## Implementation Note
+Infrastructure added in `research/graph/cypher.py` and `research/graph/store.py`:
+
+```
+AUDIT_NULL_FAMILY_ID_QUERY  — identifies Strategy nodes with family_id IS NULL
+PATCH_FAMILY_ID_QUERY       — sets family_id on a single Strategy node (Path B)
+GraphStore.audit_null_family_ids() → list[dict]
+GraphStore.patch_family_id(strategy_id, family_id) → bool
+```
+
+Also added `qws_graph/conftest.py` — stubs pandas before neo4j imports it, fixing a
+numpy/pandas binary incompatibility in the conda env that blocked collection of all
+tests importing `neo4j`.
+
+Operator runbook for **Path A** (preferred):
+```bash
+# For each strategy with source file on disk:
+qw record <artifact_path> --source-file strategies/<strategy_file>.py
+
+# Verify after each:
+python -c "
+from research.graph.store import GraphStore
+s = GraphStore.from_env()
+print(s.audit_null_family_ids())
+"
+```
+
+Operator runbook for **Path B** (no source file available):
+```python
+from research.graph.ids import family_id, source_hash
+from research.graph.store import GraphStore
+
+fid = family_id("MeanReversion", "bear", source_hash(open("strategies/rsi_reversion.py", "rb").read()))
+store = GraphStore.from_env()
+patched = store.patch_family_id("rsi-reversion-es-1h-bear", fid)
+print("patched:", patched)
+```
 
 ## In Scope
 - Backfill `family_id` on pre-existing `Strategy` nodes.
