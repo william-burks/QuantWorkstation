@@ -36,7 +36,7 @@ research/
   es_nq_bear_sweep_tracker.md              ← Master tracker (fill in as you go)
   es_bear_sweep_1h_champion_template.md    ← Template for Phase 4 (after grid)
   nq_bear_sweep_1h_champion_template.md    ← Template for Phase 4 (after grid)
-  run_es_nq_baseline.sh                    ← Quick start shell script
+  run_es_nq_bear_sweep_1h_baseline.sh      ← Quick start shell script
 ```
 
 ### References
@@ -62,8 +62,8 @@ python strategies/bear_nq_sweep_1h_baseline.py
 ### Or Use Script
 ```zsh
 cd research
-chmod +x run_es_nq_baseline.sh
-./run_es_nq_baseline.sh
+chmod +x run_es_nq_bear_sweep_1h_baseline.sh
+./run_es_nq_bear_sweep_1h_baseline.sh
 ```
 
 ---

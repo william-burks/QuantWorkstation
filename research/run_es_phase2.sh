@@ -57,8 +57,8 @@ test_1a() {
     log_test "1A" "ES: NY_PRE Only" \
         "python strategies/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE' \
-            --results-csv 'results/es_phase2_session_nypre.csv'"
-    record_artifact "results/es_phase2_session_nypre.csv" "baseline_csv"
+            --results-csv 'results/es_bear_sweep_1h_nypre.csv'"
+    record_artifact "results/es_bear_sweep_1h_nypre.csv" "baseline_csv"
 }
 
 # ES Test 1B: NY_PRE + LONDON
@@ -66,8 +66,8 @@ test_1b() {
     log_test "1B" "ES: NY_PRE + LONDON" \
         "python strategies/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE,LONDON' \
-            --results-csv 'results/es_phase2_session_nypre_london.csv'"
-    record_artifact "results/es_phase2_session_nypre_london.csv" "baseline_csv"
+            --results-csv 'results/es_bear_sweep_1h_nypre_london.csv'"
+    record_artifact "results/es_bear_sweep_1h_nypre_london.csv" "baseline_csv"
 }
 
 # ES Test 2A: Exclude Q2 Wicks (within NY_PRE)
@@ -76,8 +76,8 @@ test_2a() {
         "python strategies/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE' \
             --wick-mode 'exclude_q2' \
-            --results-csv 'results/es_phase2_nypre_exclude_q2.csv'"
-    record_artifact "results/es_phase2_nypre_exclude_q2.csv" "baseline_csv"
+            --results-csv 'results/es_bear_sweep_1h_nypre_excq2.csv'"
+    record_artifact "results/es_bear_sweep_1h_nypre_excq2.csv" "baseline_csv"
 }
 
 # ES Test 2B: Q3+Q4 Only (within NY_PRE)
@@ -86,8 +86,8 @@ test_2b() {
         "python strategies/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE' \
             --wick-mode 'q3_q4_only' \
-            --results-csv 'results/es_phase2_nypre_q3q4_only.csv'"
-    record_artifact "results/es_phase2_nypre_q3q4_only.csv" "baseline_csv"
+            --results-csv 'results/es_bear_sweep_1h_nypre_q3q4.csv'"
+    record_artifact "results/es_bear_sweep_1h_nypre_q3q4.csv" "baseline_csv"
 }
 
 # ES Test 3A: Tighter Stop (0.3 ATR)
@@ -97,8 +97,8 @@ test_3a() {
             --allowed-sessions 'NY_PRE' \
             --wick-mode 'exclude_q2' \
             --atr-mult-stop 0.3 \
-            --results-csv 'results/es_phase2_nypre_exclude_q2_atr03.csv'"
-    record_artifact "results/es_phase2_nypre_exclude_q2_atr03.csv" "baseline_csv"
+            --results-csv 'results/es_bear_sweep_1h_nypre_excq2_atr03.csv'"
+    record_artifact "results/es_bear_sweep_1h_nypre_excq2_atr03.csv" "baseline_csv"
 }
 
 # ES Test 3B: Looser Stop (0.7 ATR)
@@ -108,8 +108,8 @@ test_3b() {
             --allowed-sessions 'NY_PRE' \
             --wick-mode 'exclude_q2' \
             --atr-mult-stop 0.7 \
-            --results-csv 'results/es_phase2_nypre_exclude_q2_atr07.csv'"
-    record_artifact "results/es_phase2_nypre_exclude_q2_atr07.csv" "baseline_csv"
+            --results-csv 'results/es_bear_sweep_1h_nypre_excq2_atr07.csv'"
+    record_artifact "results/es_bear_sweep_1h_nypre_excq2_atr07.csv" "baseline_csv"
 }
 
 # NQ Test: ASIA Only
@@ -117,8 +117,8 @@ test_nq() {
     log_test "NQ" "NQ: ASIA Only (quick probe)" \
         "python strategies/bear_nq_sweep_1h_baseline.py \
             --allowed-sessions 'ASIA' \
-            --results-csv 'results/nq_phase2_asia_only.csv'"
-    record_artifact "results/nq_phase2_asia_only.csv" "baseline_csv"
+            --results-csv 'results/nq_bear_sweep_1h_asia.csv'"
+    record_artifact "results/nq_bear_sweep_1h_asia.csv" "baseline_csv"
 }
 
 # Run all tests in sequence
