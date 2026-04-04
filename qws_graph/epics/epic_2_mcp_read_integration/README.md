@@ -16,6 +16,11 @@ After ingestion is stable, the next value is reliable retrieval of lineage and c
 - Force Multiplier (Story 3): expose the same read/query layer to MCP so assistants can retrieve graph context natively.
 - Acid Test (Story 4): validate real research retrieval by exercising lineage and cross-artifact traversal.
 
+## Implementation Guardrails
+- Flattened projection outputs: read models and MCP payloads must be deterministic, JSON-friendly dictionaries (including lists of flat objects where needed for lineage/history), not raw Neo4j structures.
+- Query views as code: query presets resolve to code-defined view functions in `research/graph/query.py`; CLI and MCP both call these by stable name.
+- Neo4j-only reads: no CSV/Markdown/file fallback on read paths; if data is missing in graph, return a deterministic empty/not-found result or infra error.
+
 ## Pre-Story Alignment Task
 0. Target State Schema Alignment (read-shape only)
    - Lock the target read/query shape before Story 1 implementation.

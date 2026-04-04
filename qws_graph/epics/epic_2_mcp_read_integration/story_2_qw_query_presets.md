@@ -27,11 +27,12 @@ Add contract-backed `qw query` presets for high-value retrieval paths so CLI and
   - `strategy_lineage`
   - `pending_offline`
 - JSON output mode for automation
-- Clear mapping from preset names/params to projection functions from Story 1
+- Clear mapping from preset names/params to `research/graph/query.py` view functions from Story 1
 
 ## Out of Scope
 - Free-form arbitrary Cypher execution
 - Query UI/dashboard
+- Duplicating Cypher/query logic in CLI command handlers
 
 ## Repo Touchpoints
 - `research/graph/cli.py`
@@ -41,12 +42,14 @@ Add contract-backed `qw query` presets for high-value retrieval paths so CLI and
 ## Implementation Notes
 - Keep preset names stable and documented.
 - Validate preset parameters before query execution.
+- Treat presets as name-based routing to view functions; CLI is orchestration, not query-definition.
 
 ## Acceptance Criteria
 - [ ] `qw query --name recent_champions` works.
 - [ ] `qw query --name strategy_lineage --param strategy_id=...` works.
 - [ ] Invalid preset names return deterministic error.
 - [ ] `--json` output shape is stable.
+- [ ] Preset implementation calls code-defined query views by stable function name.
 
 ## Validation
 - Unit tests for preset routing and parameter validation.

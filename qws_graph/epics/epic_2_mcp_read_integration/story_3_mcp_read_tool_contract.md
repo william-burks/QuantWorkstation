@@ -27,6 +27,7 @@ Provide a small read-only MCP-facing interface that exposes Story 1/2 query outp
   - run/champion context neighborhood
 - Standardized error envelope
 - Reuse of existing query projection/preset contracts instead of MCP-specific graph traversal logic
+- Name-based binding from MCP tools to `research/graph/query.py` view functions
 
 ## Out of Scope
 - MCP write APIs
@@ -42,12 +43,14 @@ Provide a small read-only MCP-facing interface that exposes Story 1/2 query outp
 ## Implementation Notes
 - Adapter should depend on projection layer, not raw Cypher strings.
 - Enforce Neo4j-only read policy from contract.
+- MCP payloads should be flattened, deterministic JSON dictionaries (including list-of-object collections where needed).
 
 ## Acceptance Criteria
 - [ ] Adapter exposes a documented function surface for read tools.
 - [ ] Adapter returns deterministic JSON-compatible payloads.
 - [ ] Adapter does not parse file-system artifacts directly.
 - [ ] Errors include stable codes/messages for caller handling.
+- [ ] Missing graph data never triggers file fallback; adapter returns deterministic empty/not-found or infra error response.
 
 ## Validation
 - Unit tests mocking store/query responses.
