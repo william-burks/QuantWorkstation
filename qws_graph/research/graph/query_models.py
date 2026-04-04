@@ -62,6 +62,7 @@ class RunHistoryItemV1(QueryModelV1):
     total_r: float | None = None
     artifact_path: str
     config_id: str | None = None
+    curator_note: str | None = None
 
 
 class ChampionDetailsV1(QueryModelV1):

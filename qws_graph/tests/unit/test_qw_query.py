@@ -39,9 +39,11 @@ class FakeGraphQueryService:
         self,
         recent_champions: list[dict[str, Any]] | None = None,
         strategy_lineage: list[dict[str, Any]] | None = None,
+        run_history: list[dict[str, Any]] | None = None,
     ) -> None:
         self._recent_champions = recent_champions or []
         self._strategy_lineage = strategy_lineage or []
+        self._run_history = run_history or []
         self.calls: list[tuple[str, dict[str, Any]]] = []
 
     def get_recent_champions_v1(self, limit: int = 20) -> list[dict[str, Any]]:
@@ -51,6 +53,10 @@ class FakeGraphQueryService:
     def get_strategy_lineage_v1(self, strategy_id: str) -> list[dict[str, Any]]:
         self.calls.append(("get_strategy_lineage_v1", {"strategy_id": strategy_id}))
         return self._strategy_lineage
+
+    def get_run_history_v1(self, strategy_id: str) -> list[dict[str, Any]]:
+        self.calls.append(("get_run_history_v1", {"strategy_id": strategy_id}))
+        return self._run_history
 
     def close(self) -> None:
         pass
@@ -75,7 +81,7 @@ def _make_query_args(**kwargs: Any) -> argparse.Namespace:
 class TestPresetCatalog:
     def test_core_presets_present(self) -> None:
         # Checks that Story 2 presets are present; Story 4 adds more (see test_lineage_queries.py).
-        assert {"recent_champions", "strategy_lineage", "pending_offline"}.issubset(set(PRESET_CATALOG))
+        assert {"recent_champions", "strategy_lineage", "run_history", "pending_offline"}.issubset(set(PRESET_CATALOG))
 
     def test_preset_specs_have_stable_fields(self) -> None:
         for name, spec in PRESET_CATALOG.items():
@@ -99,7 +105,7 @@ class TestPresetCatalog:
 
 class TestResolvePreset:
     def test_known_presets_resolve(self) -> None:
-        for name in ["recent_champions", "strategy_lineage", "pending_offline"]:
+        for name in ["recent_champions", "strategy_lineage", "run_history", "pending_offline"]:
             spec = resolve_preset(name)
             assert spec.name == name
 
@@ -157,6 +163,11 @@ class TestValidateParams:
     def test_pending_offline_no_params_valid(self) -> None:
         spec = resolve_preset("pending_offline")
         assert validate_params(spec, {}) == []
+
+    def test_run_history_requires_strategy_id(self) -> None:
+        spec = resolve_preset("run_history")
+        errors = validate_params(spec, {})
+        assert any("strategy_id" in e for e in errors)
 
 
 # ---------------------------------------------------------------------------
@@ -270,6 +281,14 @@ class TestRunPresetStrategyLineage:
     def test_no_service_raises_runtime_error(self) -> None:
         with pytest.raises(RuntimeError, match="requires a graph connection"):
             run_preset("strategy_lineage", {"strategy_id": "es-1h-bear-sweep"}, service=None)
+
+
+class TestRunPresetRunHistory:
+    def test_routes_to_get_run_history_v1(self) -> None:
+        service = FakeGraphQueryService(run_history=[{"run_id": "r1", "curator_note": "ok"}])
+        results = run_preset("run_history", {"strategy_id": "es-1h-bear-sweep"}, service=service)
+        assert service.calls[0][0] == "get_run_history_v1"
+        assert results[0]["curator_note"] == "ok"
 
 
 class TestRunPresetUnknown:
@@ -451,3 +470,54 @@ class TestCmdQueryGraphBacked:
         assert exit_code == 2
         captured = capsys.readouterr()
         assert "Neo4j unavailable" in captured.err
+
+    def test_run_history_text_output_includes_curator_note_sharpe_drawdown(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        fake_service = FakeGraphQueryService(
+            run_history=[
+                {
+                    "run_id": "run-001",
+                    "sharpe": 1.23,
+                    "max_drawdown": -7.8,
+                    "curator_note": "Strong expectancy",
+                }
+            ]
+        )
+        args = _make_query_args(
+            name="run_history",
+            param=["strategy_id=es-1h-bear-sweep"],
+            repo_root=str(tmp_path),
+            **{"json": False},
+        )
+        with patch("research.graph.cli.NeoConnector") as mock_connector_cls:
+            mock_connector_cls.return_value.is_available.return_value = True
+            with patch("research.graph.cli.GraphQueryService") as mock_svc_cls:
+                mock_svc_cls.from_env.return_value = fake_service
+                exit_code = cmd_query(args)
+
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert "sharpe=1.23" in captured.out
+        assert "max_drawdown=-7.8" in captured.out
+        assert "curator_note=Strong expectancy" in captured.out
+
+    def test_run_history_shortcut_flag_routes_to_preset(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        fake_service = FakeGraphQueryService(run_history=[{"run_id": "run-001", "sharpe": 1.1, "max_drawdown": -5.0, "curator_note": None}])
+        args = _make_query_args(
+            name=None,
+            param=["strategy_id=es-1h-bear-sweep"],
+            repo_root=str(tmp_path),
+            **{"run_history": True},
+        )
+        with patch("research.graph.cli.NeoConnector") as mock_connector_cls:
+            mock_connector_cls.return_value.is_available.return_value = True
+            with patch("research.graph.cli.GraphQueryService") as mock_svc_cls:
+                mock_svc_cls.from_env.return_value = fake_service
+                exit_code = cmd_query(args)
+
+        assert exit_code == 0
+        assert fake_service.calls[0][0] == "get_run_history_v1"
+

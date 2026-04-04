@@ -19,6 +19,7 @@ from .query import (
     get_cross_artifact_correlation_v1,
     get_downstream_champions_v1,
     get_recent_champions_v1,
+    get_run_history_v1,
     get_strategy_lineage_v1,
 )
 
@@ -53,6 +54,18 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
     "strategy_lineage": PresetSpec(
         name="strategy_lineage",
         description="Return champion lineage rows for a single strategy.",
+        params=(
+            PresetParam(
+                "strategy_id",
+                required=True,
+                description="Canonical strategy ID (e.g. es-1h-bear-sweep)",
+            ),
+        ),
+        requires_graph=True,
+    ),
+    "run_history": PresetSpec(
+        name="run_history",
+        description="Return run history rows for a single strategy, including curator notes.",
         params=(
             PresetParam(
                 "strategy_id",
@@ -158,6 +171,11 @@ def run_preset(
         assert service is not None
         return service.get_strategy_lineage_v1(strategy_id)
 
+    if name == "run_history":
+        strategy_id = params["strategy_id"]
+        assert service is not None
+        return service.get_run_history_v1(strategy_id)
+
     if name == "pending_offline":
         return _run_pending_offline(repo_root or Path.cwd())
 
@@ -218,6 +236,7 @@ def _extract_artifact_path(payload: dict[str, Any]) -> str | None:
 _PRESET_VIEW_FUNCTIONS = {
     "recent_champions": get_recent_champions_v1,
     "strategy_lineage": get_strategy_lineage_v1,
+    "run_history": get_run_history_v1,
     "downstream_champions": get_downstream_champions_v1,
     "cross_artifact_correlation": get_cross_artifact_correlation_v1,
 }

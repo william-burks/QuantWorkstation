@@ -184,6 +184,13 @@ def _parse_artifact(
         raise ValueError(f"unknown artifact kind: {kind}")
 
 
+def _keep_approved(artifact: ResearchArtifact) -> ResearchArtifact:
+    """Keep only runs with curator_note set (approved by semantic tier)."""
+    approved_runs = [r for r in artifact.runs if r.curator_note]
+    approved_configs = [c for c, r in zip(artifact.configs, artifact.runs) if r.curator_note]
+    return artifact.model_copy(update={"runs": approved_runs, "configs": approved_configs})
+
+
 def cmd_record(args: argparse.Namespace) -> int:
     """Execute `qw record` command.
 
@@ -201,6 +208,7 @@ def cmd_record(args: argparse.Namespace) -> int:
     dry_run = args.dry_run
     source_file = Path(args.source_file) if getattr(args, "source_file", None) else None
     ingest_all = getattr(args, "all", False)
+    analyze = getattr(args, "analyze", False)
 
     # Parse and validate artifact
     try:
@@ -237,7 +245,21 @@ def cmd_record(args: argparse.Namespace) -> int:
     # Apply significance gate for grid_csv (unless --all is set)
     summary = None
     if kind == "grid_csv" and not ingest_all:
-        artifact, summary = apply_significance_gate(artifact)
+        if analyze:
+            try:
+                from .analyst import AnalystFactory, LlamaUnavailableError
+                try:
+                    analyst = AnalystFactory.from_env()
+                    candidates, summary = apply_significance_gate(artifact, top_n_sharpe=20, bottom_n_drawdown=0)
+                    artifact = analyst.annotate(candidates)
+                    artifact = _keep_approved(artifact)
+                except LlamaUnavailableError as exc:
+                    print(f"WARNING: AI analyst unavailable — {exc}", file=sys.stderr)
+                    artifact, summary = apply_significance_gate(artifact)
+            except ImportError:
+                artifact, summary = apply_significance_gate(artifact)
+        else:
+            artifact, summary = apply_significance_gate(artifact)
 
     artifact_id = _get_artifact_id(artifact)
     payload = artifact.model_dump(mode="json")
@@ -431,7 +453,10 @@ def cmd_query(args: argparse.Namespace) -> int:
         1: invalid preset name or params
         2: graph connection required but unavailable
     """
-    name = args.name
+    name = "run_history" if getattr(args, "run_history", False) else args.name
+    if not name:
+        print("ERROR: specify --name <preset> or --run-history", file=sys.stderr)
+        return 1
     output_json = getattr(args, "json", False)
     repo_root = Path(args.repo_root) if getattr(args, "repo_root", None) else Path.cwd()
     timeout_seconds = getattr(args, "timeout_seconds", 3)
@@ -487,8 +512,17 @@ def cmd_query(args: argparse.Namespace) -> int:
     else:
         if not results:
             print(f"No results for preset {name!r}.")
-        for item in results:
-            print(json.dumps(item))
+        if name == "run_history":
+            for item in results:
+                print(
+                    f"run_id={item.get('run_id')} "
+                    f"sharpe={item.get('sharpe')} "
+                    f"max_drawdown={item.get('max_drawdown')} "
+                    f"curator_note={item.get('curator_note')}"
+                )
+        else:
+            for item in results:
+                print(json.dumps(item))
 
     return 0
 
@@ -556,6 +590,11 @@ def main() -> int:
         dest="all",
         help="Bypass significance gate for grid_csv; ingest all rows (default: top-5 Sharpe + bottom-2 drawdown)",
     )
+    record_parser.add_argument(
+        "--analyze",
+        action="store_true",
+        help="Invoke semantic tier analysis (Llama Scout) for grid_csv; uses QW_AI_ANALYST_ENDPOINT env var",
+    )
     record_parser.set_defaults(func=cmd_record)
 
     # `qw abort` subcommand
@@ -621,9 +660,14 @@ def main() -> int:
     )
     query_parser.add_argument(
         "--name",
-        required=True,
+        required=False,
         metavar="PRESET",
         help=f"Preset name. One of: {', '.join(_preset_names)}",
+    )
+    query_parser.add_argument(
+        "--run-history",
+        action="store_true",
+        help="Shortcut for --name run_history",
     )
     query_parser.add_argument(
         "--param",

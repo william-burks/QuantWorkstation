@@ -61,6 +61,7 @@ class Run(BaseModel):
     total_trades: int
     total_r: float | None = None
     artifact_path: str
+    curator_note: str | None = None
     provenance: Provenance
 
     @field_validator("win_rate")
