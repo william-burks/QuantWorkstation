@@ -21,6 +21,7 @@ from .query_models import (
     ConfigLinkageV1,
     CrossArtifactRowV1,
     RunHistoryItemV1,
+    RunStatsSummaryV1,
     StrategyLineageV1,
     StrategySummaryV1,
 )
@@ -60,6 +61,9 @@ RETURN {
   timeframe: s.timeframe,
   direction: s.direction,
   logic_type: s.logic_type,
+  family_id: s.family_id,
+  status: s.status,
+  abort_reason: s.abort_reason,
   run_count: run_count,
   champion_count: champion_count,
   latest_run_id: latest_run_id,
@@ -168,9 +172,16 @@ ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER = """
 MATCH (anchor:Strategy {strategy_id: $strategy_id})
 MATCH (related:Strategy)
-WHERE related.logic_type = anchor.logic_type
+WHERE (
+  anchor.family_id IS NOT NULL
+  AND related.family_id = anchor.family_id
+  AND related.strategy_id <> anchor.strategy_id
+) OR (
+  anchor.family_id IS NULL
+  AND related.logic_type = anchor.logic_type
   AND related.direction = anchor.direction
   AND related.strategy_id <> anchor.strategy_id
+)
 CALL {
   WITH related
   OPTIONAL MATCH (related)-[:HAS_RUN]->(r:Run)
@@ -196,12 +207,31 @@ RETURN {
   timeframe: related.timeframe,
   direction: related.direction,
   logic_type: related.logic_type,
+  family_id: related.family_id,
   run_count: run_count,
   champion_count: champion_count,
   latest_champion_id: latest_champion_id,
   latest_champion_freeze_date: latest_champion_freeze_date
 } AS result
 ORDER BY related.instrument ASC, related.timeframe ASC
+""".strip()
+
+GET_RUN_STATS_SUMMARY_V1_CYPHER = """
+MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary)
+RETURN {
+  summary_id: rss.summary_id,
+  strategy_id: rss.strategy_id,
+  artifact_path: rss.artifact_path,
+  total_run_count: rss.total_run_count,
+  selected_run_count: rss.selected_run_count,
+  rolled_up_run_count: rss.rolled_up_run_count,
+  sharpe_mean: rss.sharpe_mean,
+  sharpe_max: rss.sharpe_max,
+  sharpe_min: rss.sharpe_min,
+  max_drawdown_worst: rss.max_drawdown_worst,
+  ingested_at: rss.ingested_at
+} AS result
+ORDER BY rss.ingested_at DESC
 """.strip()
 
 
@@ -269,6 +299,10 @@ class GraphQueryService:
     def get_cross_artifact_correlation_v1(self, strategy_id: str) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_cross_artifact_correlation_v1(session, strategy_id)
+
+    def get_run_stats_summary_v1(self, strategy_id: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_run_stats_summary_v1(session, strategy_id)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -363,6 +397,9 @@ def get_strategy_summary_v1(session: QuerySession, strategy_id: str) -> dict[str
         timeframe=str(row["timeframe"]),
         direction=str(row["direction"]),
         logic_type=str(row["logic_type"]),
+        family_id=row.get("family_id"),
+        status=row.get("status"),
+        abort_reason=row.get("abort_reason"),
         run_count=int(row.get("run_count") or 0),
         champion_count=int(row.get("champion_count") or 0),
         latest_run_id=row.get("latest_run_id"),
@@ -517,10 +554,37 @@ def get_cross_artifact_correlation_v1(session: QuerySession, strategy_id: str) -
             timeframe=str(row["timeframe"]),
             direction=str(row["direction"]),
             logic_type=str(row["logic_type"]),
+            family_id=row.get("family_id"),
             run_count=int(row.get("run_count") or 0),
             champion_count=int(row.get("champion_count") or 0),
             latest_champion_id=row.get("latest_champion_id"),
             latest_champion_freeze_date=_normalize_temporal(row.get("latest_champion_freeze_date")),
+        ).model_dump(mode="json")
+        for row in rows
+    ]
+
+
+def get_run_stats_summary_v1(session: QuerySession, strategy_id: str) -> list[dict[str, Any]]:
+    """Return ``RunStatsSummary`` nodes for *strategy_id*, most recent first.
+
+    Returns an empty list when no summary nodes exist for the strategy.
+    Summary nodes are created by the significance gate during ``grid_csv`` ingest.
+    """
+
+    rows = _all_results(session, GET_RUN_STATS_SUMMARY_V1_CYPHER, strategy_id=strategy_id)
+    return [
+        RunStatsSummaryV1(
+            summary_id=str(row["summary_id"]),
+            strategy_id=str(row["strategy_id"]),
+            artifact_path=str(row["artifact_path"]),
+            total_run_count=int(row["total_run_count"]),
+            selected_run_count=int(row["selected_run_count"]),
+            rolled_up_run_count=int(row["rolled_up_run_count"]),
+            sharpe_mean=float(row["sharpe_mean"]),
+            sharpe_max=float(row["sharpe_max"]),
+            sharpe_min=float(row["sharpe_min"]),
+            max_drawdown_worst=float(row["max_drawdown_worst"]),
+            ingested_at=str(_normalize_temporal(row["ingested_at"])),
         ).model_dump(mode="json")
         for row in rows
     ]
@@ -535,6 +599,7 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_recent_champions_v1": get_recent_champions_v1,
     "get_downstream_champions_v1": get_downstream_champions_v1,
     "get_cross_artifact_correlation_v1": get_cross_artifact_correlation_v1,
+    "get_run_stats_summary_v1": get_run_stats_summary_v1,
 }
 
 
@@ -554,6 +619,7 @@ __all__ = [
     "GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER",
     "GET_RECENT_CHAMPIONS_V1_CYPHER",
     "GET_RUN_HISTORY_V1_CYPHER",
+    "GET_RUN_STATS_SUMMARY_V1_CYPHER",
     "GET_STRATEGY_LINEAGE_V1_CYPHER",
     "GET_STRATEGY_SUMMARY_V1_CYPHER",
     "GraphQueryService",
@@ -565,6 +631,7 @@ __all__ = [
     "get_query_view",
     "get_recent_champions_v1",
     "get_run_history_v1",
+    "get_run_stats_summary_v1",
     "get_strategy_lineage_v1",
     "get_strategy_summary_v1",
 ]

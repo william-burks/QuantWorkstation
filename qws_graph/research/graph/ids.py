@@ -85,3 +85,41 @@ def champion_id(strategy_id_value: str, freeze_date_iso: str) -> str:
     """
     return hash12(strategy_id_value, freeze_date_iso)
 
+
+def source_hash(source_bytes: bytes) -> str:
+    """Hash raw strategy source file bytes to a 12-character hex string.
+
+    Used as the ``source_hash`` input to ``family_id``. Changing the source
+    content (i.e., the logic) produces a different hash; changing parameters
+    in a config file does not.
+    """
+    return hashlib.sha256(source_bytes).hexdigest()[:12]
+
+
+def family_id(logic_type: str, direction: str, src_hash: str) -> str:
+    """Deterministic family identifier from logic type, direction, and source hash.
+
+    A Strategy Family is defined by its core signal logic, not by instrument,
+    timeframe, or parameter choices.  Two strategies that share the same
+    ``logic_type``, ``direction``, and source code hash will share a
+    ``family_id`` even when deployed on different instruments or timeframes.
+
+    Args:
+        logic_type:  Canonical logic category (e.g. ``"MeanReversion"``).
+        direction:   Trade direction (e.g. ``"bear"``).
+        src_hash:    12-character hex digest from :func:`source_hash`.
+
+    Returns:
+        12-character hex string stable across filenames and paths.
+    """
+    return hash12(normalize_text(logic_type), normalize_text(direction), src_hash)
+
+
+def run_stats_summary_id(strategy_id_value: str, artifact_path: str, artifact_mtime_iso: str) -> str:
+    """Deterministic summary_id for a RunStatsSummary node.
+
+    Merges naturally when the same CSV is re-ingested after modification
+    (mtime changes → new summary replaces old).
+    """
+    return hash12(strategy_id_value, normalize_text(artifact_path), artifact_mtime_iso)
+

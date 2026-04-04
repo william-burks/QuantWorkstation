@@ -409,6 +409,7 @@ class TestCrossArtifactCorrelation:
             "timeframe",
             "direction",
             "logic_type",
+            "family_id",
             "run_count",
             "champion_count",
             "latest_champion_id",

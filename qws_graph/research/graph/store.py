@@ -9,8 +9,14 @@ from dataclasses import dataclass
 from neo4j import GraphDatabase
 from neo4j.exceptions import Neo4jError
 
-from .cypher import BLOB_INGEST_QUERY, CHAMPION_INGEST_QUERY, CSV_INGEST_QUERY
-from .models import ResearchArtifact
+from .cypher import (
+    ABORT_STRATEGY_QUERY,
+    BLOB_INGEST_QUERY,
+    CHAMPION_INGEST_QUERY,
+    CSV_INGEST_QUERY,
+    RUN_STATS_SUMMARY_QUERY,
+)
+from .models import ResearchArtifact, RunStatsSummary
 
 
 class StoreError(RuntimeError):
@@ -63,24 +69,33 @@ class GraphStore:
         except Exception as exc:  # noqa: BLE001
             raise StoreInfraError(f"Neo4j connectivity check failed: {exc}") from exc
 
-    def persist_artifact(self, artifact: ResearchArtifact) -> StoreResult:
+    def persist_artifact(
+        self,
+        artifact: ResearchArtifact,
+        summary: RunStatsSummary | None = None,
+    ) -> StoreResult:
         payload = artifact.model_dump(mode="json")
 
         try:
             with self._driver.session(database=self._database) as session:
                 if artifact.kind in {"baseline_csv", "grid_csv"}:
-                    self._persist_csv(session, payload)
+                    self._persist_csv(session, payload, summary)
+                    node_counts: dict[str, int] = {
+                        "Strategy": 1,
+                        "Run": len(artifact.runs),
+                        "Config": len(artifact.configs),
+                    }
+                    rel_counts: dict[str, int] = {
+                        "HAS_RUN": len(artifact.runs),
+                        "USES_CONFIG": len(artifact.runs),
+                    }
+                    if summary is not None:
+                        node_counts["RunStatsSummary"] = 1
+                        rel_counts["HAS_RUN_SUMMARY"] = 1
                     return StoreResult(
                         status="persisted",
-                        node_counts={
-                            "Strategy": 1,
-                            "Run": len(artifact.runs),
-                            "Config": len(artifact.configs),
-                        },
-                        relationship_counts={
-                            "HAS_RUN": len(artifact.runs),
-                            "USES_CONFIG": len(artifact.runs),
-                        },
+                        node_counts=node_counts,
+                        relationship_counts=rel_counts,
                     )
 
                 if artifact.kind == "champion_md":
@@ -111,7 +126,27 @@ class GraphStore:
         except Exception as exc:  # noqa: BLE001
             raise StoreInfraError(f"Unexpected store error: {exc}") from exc
 
-    def _persist_csv(self, session, payload: dict) -> None:
+    def abort_strategy(self, strategy_id: str, reason: str) -> bool:
+        """Mark a strategy as ABORTED with an explicit reason.
+
+        Returns ``True`` when the strategy was found and updated, ``False`` when
+        no ``Strategy`` node with that ``strategy_id`` exists.  Raises
+        ``StoreInfraError`` on Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx):
+                    result = tx.run(ABORT_STRATEGY_QUERY, strategy_id=strategy_id, reason=reason)
+                    return list(result)
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def _persist_csv(self, session, payload: dict, summary: RunStatsSummary | None = None) -> None:
         rows = []
         strategy_payload = payload["strategy"]
         for run_payload, config_payload in zip(payload["runs"], payload["configs"], strict=True):
@@ -130,6 +165,9 @@ class GraphStore:
 
         def _write(tx) -> None:
             tx.run(CSV_INGEST_QUERY, rows=rows).consume()
+            if summary is not None:
+                summary_payload = summary.model_dump(mode="json")
+                tx.run(RUN_STATS_SUMMARY_QUERY, summary=summary_payload).consume()
 
         session.execute_write(_write)
 
