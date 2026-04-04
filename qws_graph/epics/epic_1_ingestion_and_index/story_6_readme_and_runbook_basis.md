@@ -1,7 +1,7 @@
 # Story 6 — README and Runbook Baseline for Current Graph Workflow
 
 ## Status
-PROPOSED
+CLOSED
 
 ## Summary
 Create a docs-only story that defines the first canonical `qws_graph` README and operator runbook from all closed Epic 1 delivery artifacts.
@@ -14,7 +14,7 @@ Produce two documentation deliverables that consolidate current behavior and mak
 
 ## Inputs
 - `qws_graph/docs/graph_v1_contract.md`
-- `qws_graph/docs/story_5_shell_hook_runbook.md`
+- `qws_graph/epics/epic_1_ingestion_and_index/closed/story_5_shell_hooks_receipts_and_reconcile.md`
 - `qws_graph/epics/epic_1_ingestion_and_index/README.md`
 - All files in `qws_graph/epics/epic_1_ingestion_and_index/closed/`
 
@@ -27,6 +27,8 @@ Produce two documentation deliverables that consolidate current behavior and mak
 - Define required sections and minimum content for the runbook baseline.
 - Require explicit coverage of all closed Epic 1 stories in both deliverables.
 - Ensure runbook content reflects current online/offline, pending/receipt, and reconcile behavior.
+- Migrate any remaining operator guidance from the deprecated Story 5 notes into `qws_graph/docs/qws_graph_runbook.md`.
+- Delete the deprecated Story 5 notes file after migration and update references.
 
 ## Out of Scope
 - New CLI, parser, storage, or hook features.
@@ -34,8 +36,8 @@ Produce two documentation deliverables that consolidate current behavior and mak
 - Additional automation beyond currently delivered workflows.
 
 ## Repo Touchpoints
-- `qws_graph/README.md` (to be created by implementation of this story)
-- `qws_graph/docs/qws_graph_runbook.md` (to be created by implementation of this story)
+- `qws_graph/README.md`
+- `qws_graph/docs/qws_graph_runbook.md`
 - `qws_graph/epics/epic_1_ingestion_and_index/story_6_readme_and_runbook_basis.md`
 
 ## Closed Story Coverage (Required)
@@ -70,19 +72,24 @@ Both deliverables must reference and incorporate outputs from every closed story
 - Verification checklist for intended current behavior.
 
 ## Acceptance Criteria
-- [ ] Story defines exactly two documentation deliverables and their target file paths.
-- [ ] Deliverable 1 explicitly references all nine closed stories as input basis.
-- [ ] Deliverable 2 explicitly references all nine closed stories as input basis.
-- [ ] Story states that runbook procedures must describe how the graph is intended to work now.
-- [ ] Story remains docs-only and does not add implementation scope.
+- [x] Story defines exactly two documentation deliverables and their target file paths.
+- [x] Deliverable 1 explicitly references all nine closed stories as input basis.
+- [x] Deliverable 2 explicitly references all nine closed stories as input basis.
+- [x] Story states that runbook procedures must describe how the graph is intended to work now.
+- [x] Story remains docs-only and does not add implementation scope.
+- [x] The deprecated Story 5 notes file is deleted after its operator guidance is migrated into `qws_graph/docs/qws_graph_runbook.md`.
+- [x] No remaining docs reference the deleted Story 5 notes file.
 
 ## Validation
-- [ ] Confirm every file under `qws_graph/epics/epic_1_ingestion_and_index/closed/` appears in the coverage table.
-- [ ] Confirm required README and runbook sections are present in this story.
-- [ ] Confirm deliverables align with current behavior documented in `qws_graph/docs/story_5_shell_hook_runbook.md`.
+- [x] Confirm every file under `qws_graph/epics/epic_1_ingestion_and_index/closed/` appears in the coverage table.
+- [x] Confirm required README and runbook sections are present in this story.
+- [x] Confirm all operator guidance previously captured in the deleted Story 5 notes is now present in `qws_graph/docs/qws_graph_runbook.md`.
+- [x] Confirm no remaining docs reference the deleted Story 5 notes file.
 
 ## Definition of Done
-- [ ] Story file merged in Epic 1 with acceptance criteria and validation checklist.
-- [ ] Epic 1 README story list includes Story 6 in execution order.
-- [ ] Story is implementation-ready for docs creation work.
+- [x] Story file merged in Epic 1 with acceptance criteria and validation checklist.
+- [x] Epic 1 README story list includes Story 6 in execution order.
+- [x] Story deliverables are created: `qws_graph/README.md` and `qws_graph/docs/qws_graph_runbook.md`.
+- [x] The deprecated Story 5 notes file is removed from the repo and replaced by canonical guidance in `qws_graph/docs/qws_graph_runbook.md`.
+
 
