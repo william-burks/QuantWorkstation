@@ -20,6 +20,7 @@ The repository already produces baseline/grid CSVs and champion markdowns, but l
 4. `story_3_qw_record_cli.md`
 5. `story_4_neo4j_idempotent_store.md`
 6. `story_5_shell_hooks_receipts_and_reconcile.md`
+7. `story_6_readme_and_runbook_basis.md`
 
 ## Dependencies
 - Existing artifact outputs under `results/` and `research/results/champions/`
