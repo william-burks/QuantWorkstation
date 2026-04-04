@@ -10,7 +10,7 @@ from unittest import mock
 import pytest
 
 from research.graph.cli import cmd_record, cmd_reconcile
-from research.graph.models import ResearchArtifact
+from research.graph.store import StoreResult
 
 
 @pytest.fixture
@@ -136,6 +136,59 @@ class TestRecordCommand:
         if receipts_dir.exists():
             assert len(list(receipts_dir.glob("*.json"))) == 0
 
+    @mock.patch("research.graph.cli.GraphStore.from_env")
+    @mock.patch("research.graph.cli.NeoConnector.is_available")
+    def test_record_online_calls_store_for_csv(self, mock_is_available, mock_store_factory, csv_baseline: Path, temp_repo_root: Path) -> None:
+        """Online CSV ingest calls GraphStore.persist_artifact and writes persisted receipt."""
+        mock_is_available.return_value = True
+        mock_store = mock.MagicMock()
+        mock_store.persist_artifact.return_value = StoreResult(
+            status="persisted",
+            node_counts={"Strategy": 1, "Run": 1, "Config": 1},
+            relationship_counts={"HAS_RUN": 1, "USES_CONFIG": 1},
+        )
+        mock_store_factory.return_value = mock_store
+
+        args = mock.MagicMock()
+        args.file = str(csv_baseline)
+        args.kind = "baseline_csv"
+        args.pivot_from = None
+        args.offline = False
+        args.timeout_seconds = 3
+        args.repo_root = str(temp_repo_root)
+        args.dry_run = False
+
+        exit_code = cmd_record(args)
+        assert exit_code == 0
+        assert mock_store.persist_artifact.call_count == 1
+
+    @mock.patch("research.graph.cli.GraphStore.from_env")
+    @mock.patch("research.graph.cli.NeoConnector.is_available")
+    def test_record_online_calls_store_for_champion(self, mock_is_available, mock_store_factory, temp_repo_root: Path) -> None:
+        """Online champion ingest calls GraphStore.persist_artifact."""
+        champion = Path("/Users/will/ClaudeProjects/QuantWorkstation/qws_graph/tests/fixtures/artifacts/champion/es_bear_sweep_1h_v1.md")
+        mock_is_available.return_value = True
+        mock_store = mock.MagicMock()
+        mock_store.persist_artifact.return_value = StoreResult(
+            status="persisted",
+            node_counts={"Strategy": 1, "Champion": 1},
+            relationship_counts={"PRODUCED_CHAMPION": 1, "PIVOTED_FROM": 1},
+        )
+        mock_store_factory.return_value = mock_store
+
+        args = mock.MagicMock()
+        args.file = str(champion)
+        args.kind = "champion_md"
+        args.pivot_from = None
+        args.offline = False
+        args.timeout_seconds = 3
+        args.repo_root = "/Users/will/ClaudeProjects/QuantWorkstation/qws_graph"
+        args.dry_run = False
+
+        exit_code = cmd_record(args)
+        assert exit_code == 0
+        assert mock_store.persist_artifact.call_count == 1
+
 
 class TestReconcileCommand:
     """Tests for qw reconcile command."""
@@ -192,4 +245,5 @@ class TestReconcileCommand:
         # Should be valid JSON
         result = json.loads(output)
         assert "missing_in_graph" in result
+
 

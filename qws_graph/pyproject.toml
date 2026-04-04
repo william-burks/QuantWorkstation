@@ -7,13 +7,14 @@ name = "qws-graph"
 version = "0.1.0"
 description = "Graph V1 infrastructure scaffold"
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.0"]
+dependencies = [
+  "pydantic>=2.0",
+  "neo4j>=5,<6",
+]
 
-[tool.setuptools]
-packages = ["research"]
-
-[tool.setuptools.package-dir]
-research = "research"
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["research*"]
 
 [project.scripts]
 qw = "research.graph.cli:main"

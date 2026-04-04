@@ -15,6 +15,7 @@ from typing import Any, Literal
 
 from .models import ResearchArtifact
 from .parsers import CSVParser, ChampionMarkdownParser, research_artifact_payload_hash
+from .store import GraphStore, StoreInfraError
 
 
 class ReceiptWriter:
@@ -70,36 +71,21 @@ class PendingWriter:
 
 
 class NeoConnector:
-    """Minimal Neo4j connection handler with timeout."""
+    """Thin compatibility wrapper for handshake checks in CLI flow."""
 
     def __init__(self, timeout_seconds: int = 3):
         self.timeout_seconds = timeout_seconds
 
     def is_available(self) -> bool:
-        """Check if Neo4j is reachable within timeout."""
         try:
-            import socket
-
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(self.timeout_seconds)
-            result = sock.connect_ex(("localhost", 7687))
-            sock.close()
-            return result == 0
-        except Exception:
+            store = GraphStore.from_env(timeout_seconds=self.timeout_seconds)
+            try:
+                store.ping()
+            finally:
+                store.close()
+            return True
+        except StoreInfraError:
             return False
-
-    def write_artifact(self, artifact: ResearchArtifact) -> tuple[dict[str, int], dict[str, int]]:
-        """Write artifact to Neo4j via Cypher (stub for integration).
-
-        In full implementation, this would execute Cypher MERGE statements
-        against the Neo4j instance.
-
-        Returns:
-            (node_counts, relationship_counts) tuple
-        """
-        # Stub implementation: return zero counts for testing
-        # Real implementation would connect to Neo4j Bolt driver
-        return {}, {}
 
 
 def _get_artifact_id(artifact: ResearchArtifact) -> str:
@@ -257,7 +243,7 @@ def cmd_record(args: argparse.Namespace) -> int:
             receipt_writer.write_receipt(
                 artifact_id=artifact_id,
                 kind=kind,
-                artifact_path=payload.get("strategy", {}).get("strategy_id", file_path.as_posix()),
+                artifact_path=file_path.as_posix(),
                 artifact_hash=artifact_hash,
                 status="pending_offline",
                 node_counts={},
@@ -286,8 +272,14 @@ def cmd_record(args: argparse.Namespace) -> int:
 
     # Write to Neo4j
     try:
-        node_counts, relationship_counts = connector.write_artifact(artifact)
-    except Exception as exc:
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            result = store.persist_artifact(artifact)
+            node_counts = result.node_counts
+            relationship_counts = result.relationship_counts
+        finally:
+            store.close()
+    except StoreInfraError as exc:
         print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
         return 2
 
@@ -445,5 +437,7 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
 
 
