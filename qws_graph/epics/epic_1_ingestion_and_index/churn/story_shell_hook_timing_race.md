@@ -1,7 +1,7 @@
 # Story: Shell Hook Race Condition on Artifact Flush
 
 ## Status
-ready
+CLOSED
 
 ## Problem
 Shell ingestion hooks in Story 5 execute `qw record` immediately after strategy script completion. Python CSV writes may not have fully flushed to disk by the time the hook checks for the file, causing a race condition where the file exists in Python's buffer but not yet on filesystem.
