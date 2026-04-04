@@ -1,7 +1,7 @@
 # Story 1 — Read Models and Query Projections
 
 ## Status
-draft
+CLOSED
 
 ## Summary
 Build the Bridge foundation: stable graph read projections for runs, configs, champions, and lineage.
@@ -54,19 +54,19 @@ Provide typed read DTOs and projection queries that form the internal Query API 
 - Projection outputs should be flattened JSON-friendly dictionaries (or lists of flat objects), not raw Neo4j record maps.
 
 ## Acceptance Criteria
-- [ ] Target read/query schema shape is documented and aligned with `docs/graph_v1_contract.md` before projection coding begins.
-- [ ] Read models exist for strategy/run/champion lineage views.
-- [ ] Projection functions return deterministic key names.
-- [ ] View functions in `research/graph/query.py` are callable by stable name for Story 2/3 routing.
-- [ ] Tests cover missing-edge and multi-edge scenarios.
+- [x] Target read/query schema shape is documented and aligned with `docs/graph_v1_contract.md` before projection coding begins.
+- [x] Read models exist for strategy/run/champion lineage views.
+- [x] Projection functions return deterministic key names.
+- [x] View functions in `research/graph/query.py` are callable by stable name for Story 2/3 routing.
+- [x] Tests cover missing-edge and multi-edge scenarios.
 
 ## Validation
 - Query seeded graph and verify model parsing.
 - Snapshot tests for JSON projection output.
 
 ## Definition of Done
-- [ ] Projection layer available for `qw query`.
-- [ ] Typed outputs documented in module docstrings.
+- [x] Projection layer available for `qw query`.
+- [x] Typed outputs documented in module docstrings.
 
 ## Open Questions
 - None.
