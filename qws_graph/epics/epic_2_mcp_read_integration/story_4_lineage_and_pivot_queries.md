@@ -1,7 +1,7 @@
 # Story 4 — Lineage and Pivot Queries
 
 ## Status
-draft
+CLOSED
 
 ## Summary
 Run the Epic 2 acid test with focused lineage/pivot retrieval paths that prove real graph-ledger query value.
@@ -48,18 +48,18 @@ Implement first-class lineage and cross-artifact correlation queries using expli
 - Alias artifact-to-artifact wording is permitted only at response/docs layer; stored semantics remain Champion-to-Run pivot edges.
 
 ## Acceptance Criteria
-- [ ] Strategy lineage query returns ordered chain.
-- [ ] Pivot query returns empty list when no explicit pivot edges exist.
-- [ ] Multi-hop lineage traversal is bounded and documented.
-- [ ] Cross-artifact correlation query returns related runs/champions through shared `Strategy` anchors without artifact file parsing.
+- [x] Strategy lineage query returns ordered chain.
+- [x] Pivot query returns empty list when no explicit pivot edges exist.
+- [x] Multi-hop lineage traversal is bounded and documented.
+- [x] Cross-artifact correlation query returns related runs/champions through shared `Strategy` anchors without artifact file parsing.
 
 ## Validation
 - Seeded graph fixtures with known lineage graph.
 - Snapshot tests for returned JSON.
 
 ## Definition of Done
-- [ ] Query functions implemented and tested.
-- [ ] Preset docs updated.
+- [x] Query functions implemented and tested.
+- [x] Preset docs updated.
 
 ## Open Questions
 - None.
