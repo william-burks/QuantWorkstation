@@ -12,9 +12,11 @@ from neo4j.exceptions import Neo4jError
 from .analyst import truncate_curator_note
 from .cypher import (
     ABORT_STRATEGY_QUERY,
+    AUDIT_NULL_FAMILY_ID_QUERY,
     BLOB_INGEST_QUERY,
     CHAMPION_INGEST_QUERY,
     CSV_INGEST_QUERY,
+    PATCH_FAMILY_ID_QUERY,
     RUN_STATS_SUMMARY_QUERY,
 )
 from .models import ResearchArtifact, RunStatsSummary
@@ -138,6 +140,48 @@ class GraphStore:
             with self._driver.session(database=self._database) as session:
                 def _write(tx):
                     result = tx.run(ABORT_STRATEGY_QUERY, strategy_id=strategy_id, reason=reason)
+                    return list(result)
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def audit_null_family_ids(self) -> list[dict]:
+        """Return all Strategy nodes that have no family_id set.
+
+        Used to identify which nodes need backfill before running
+        ``patch_family_id``.  Returns a list of dicts with keys
+        ``strategy_id``, ``logic_type``, ``direction``, ``created_at``.
+
+        Raises ``StoreInfraError`` on Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx):
+                    return [dict(r) for r in tx.run(AUDIT_NULL_FAMILY_ID_QUERY)]
+
+                return session.execute_read(_read)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def patch_family_id(self, strategy_id: str, family_id: str) -> bool:
+        """Set family_id on a Strategy node directly (Path B backfill).
+
+        Idempotent — safe to re-run with the same values.  Returns ``True``
+        when the strategy was found and updated, ``False`` when no
+        ``Strategy`` node with that ``strategy_id`` exists.
+
+        Raises ``StoreInfraError`` on Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx):
+                    result = tx.run(PATCH_FAMILY_ID_QUERY, strategy_id=strategy_id, family_id=family_id)
                     return list(result)
 
                 records = session.execute_write(_write)
