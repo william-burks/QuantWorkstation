@@ -1,5 +1,8 @@
 # Story: Baseline CSV Validation Regression After Rollback
 
+## Status
+CLOSED
+
 ## Context
 Phase 1/2 research runners currently generate baseline artifacts that fail graph ingest validation with:
 

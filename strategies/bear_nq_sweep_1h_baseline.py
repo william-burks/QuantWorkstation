@@ -16,14 +16,14 @@ import pandas as pd
 
 try:
     from strategies.common.strategy_artifacts import (
-        normalize_trades_for_csv,
+        build_baseline_summary_for_csv,
         parse_float_list,
         parse_str_list,
         write_results_csv,
     )
 except ModuleNotFoundError:  # pragma: no cover
     from common.strategy_artifacts import (
-        normalize_trades_for_csv,
+        build_baseline_summary_for_csv,
         parse_float_list,
         parse_str_list,
         write_results_csv,
@@ -944,8 +944,13 @@ def main():
 
     result = run_backtest(data, config)
     print_backtest_report(result, loaded_rows)
-    trades_csv = normalize_trades_for_csv(result.get('trades_df'))
-    output_path = write_results_csv(trades_csv, args.results_csv, artifact_name='baseline trades CSV')
+    summary_csv = build_baseline_summary_for_csv(
+        result,
+        instrument='NQ',
+        timeframe='1H',
+        direction='bear',
+    )
+    output_path = write_results_csv(summary_csv, args.results_csv, artifact_name='baseline summary CSV')
     print(f"\nBaseline results saved to {output_path}")
 
 
