@@ -4,13 +4,13 @@
 draft
 
 ## Summary
-Add focused lineage/pivot retrieval paths for strategy evolution analysis.
+Run the Epic 2 acid test with focused lineage/pivot retrieval paths that prove real graph-ledger query value.
 
 ## Problem
 The key graph value is relationship traversal; without lineage/pivot queries, users still rely on manual file tracing.
 
 ## Goal
-Implement first-class lineage queries that use explicit pivot edges from `--pivot-from`.
+Implement first-class lineage and cross-artifact correlation queries using explicit graph relationships (including `--pivot-from` edges).
 
 ## Inputs
 - Champion ingest behavior from Epic 1
@@ -25,6 +25,7 @@ Implement first-class lineage queries that use explicit pivot edges from `--pivo
 - Query by strategy_id to return run->champion->pivot chain
 - Query by run_id to return downstream champion nodes
 - Optional depth-limited traversal controls
+- Cross-artifact correlation retrieval (for example ES vs NQ, 5m vs 1h) through shared `Strategy` anchors
 
 ## Out of Scope
 - NLP parsing of tracker markdown pivot rationale
@@ -43,6 +44,7 @@ Implement first-class lineage queries that use explicit pivot edges from `--pivo
 - [ ] Strategy lineage query returns ordered chain.
 - [ ] Pivot query returns empty list when no explicit pivot edges exist.
 - [ ] Multi-hop lineage traversal is bounded and documented.
+- [ ] Cross-artifact correlation query returns related runs/champions through shared `Strategy` anchors without artifact file parsing.
 
 ## Validation
 - Seeded graph fixtures with known lineage graph.
@@ -56,5 +58,5 @@ Implement first-class lineage queries that use explicit pivot edges from `--pivo
 - None.
 
 ## Notes
-Completes read-value core for Epic 2.
+This is the Epic 2 acid test story: if these scenarios are not easy to answer via graph queries, read-model utility is not yet proven.
 

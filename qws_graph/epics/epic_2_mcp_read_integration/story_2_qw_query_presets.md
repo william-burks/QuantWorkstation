@@ -4,13 +4,13 @@
 draft
 
 ## Summary
-Implement operator-focused graph query presets on top of read projections.
+Implement the operator-facing Bridge surface: stable `qw query` presets on top of Story 1 read projections.
 
 ## Problem
 Users need stable, named queries rather than ad-hoc Cypher for common tasks.
 
 ## Goal
-Add contract-backed `qw query` presets for high-value retrieval paths.
+Add contract-backed `qw query` presets for high-value retrieval paths so CLI and MCP layers reuse the same Query API.
 
 ## Inputs
 - Story 1 projection models
@@ -27,6 +27,7 @@ Add contract-backed `qw query` presets for high-value retrieval paths.
   - `strategy_lineage`
   - `pending_offline`
 - JSON output mode for automation
+- Clear mapping from preset names/params to projection functions from Story 1
 
 ## Out of Scope
 - Free-form arbitrary Cypher execution
@@ -59,5 +60,5 @@ Add contract-backed `qw query` presets for high-value retrieval paths.
 - None.
 
 ## Notes
-This story should remain read-only and avoid expanding write surfaces.
+This story is the CLI half of the Bridge and remains read-only with no write-surface expansion.
 

@@ -40,6 +40,7 @@ Stories (execution order):
 - Objective: stable graph read/query surfaces for agent-assisted research retrieval.
 
 Stories (execution order):
+0. [`story_0_target_state_schema_mapping.md`](epic_2_mcp_read_integration/story_0_target_state_schema_mapping.md) — `draft`
 1. [`story_1_read_models_and_query_projections.md`](epic_2_mcp_read_integration/story_1_read_models_and_query_projections.md) — `draft`
 2. [`story_2_qw_query_presets.md`](epic_2_mcp_read_integration/story_2_qw_query_presets.md) — `draft`
 3. [`story_3_mcp_read_tool_contract.md`](epic_2_mcp_read_integration/story_3_mcp_read_tool_contract.md) — `blocked`

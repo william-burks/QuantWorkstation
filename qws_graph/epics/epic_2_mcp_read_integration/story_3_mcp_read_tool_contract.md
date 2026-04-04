@@ -4,13 +4,13 @@
 blocked
 
 ## Summary
-Define and implement the minimal MCP read adapter contract backed by graph query presets.
+Implement the MCP force-multiplier layer: a minimal read adapter contract backed by the Bridge query presets.
 
 ## Problem
 Without a stable adapter contract, MCP integration risks coupling directly to internal graph storage details.
 
 ## Goal
-Provide a small read-only MCP-facing interface that consumes `qw query`/query module outputs.
+Provide a small read-only MCP-facing interface that exposes Story 1/2 query outputs to agents without introducing new query semantics.
 
 ## Inputs
 - Story 1 and Story 2 outputs
@@ -26,6 +26,7 @@ Provide a small read-only MCP-facing interface that consumes `qw query`/query mo
   - strategy lineage
   - run/champion context neighborhood
 - Standardized error envelope
+- Reuse of existing query projection/preset contracts instead of MCP-specific graph traversal logic
 
 ## Out of Scope
 - MCP write APIs
