@@ -346,11 +346,11 @@ def main() -> None:
     _print_exposure_normalized(exposure_metrics)
     tier_assessment = _tier_assessment_payload(results, bh)
 
-    html_path = ROOT / "research" / "trials" / "futures" / "liquidity_sweep" / "index.html"
+    html_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "index.html"
     _write_index_html(metadata, bh, results, tier_assessment, exposure_metrics, html_path)
     print(f"\nHTML report written: {html_path}")
 
-    csv_path = ROOT / "research" / "trials" / "futures" / "liquidity_sweep" / "baseline_results.csv"
+    csv_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "baseline_results.csv"
     if _write_baseline_csv(results, csv_path):
         print(f"Baseline CSV written: {csv_path}")
     else:

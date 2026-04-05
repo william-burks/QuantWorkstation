@@ -257,7 +257,7 @@ def _write_champion_md(results: pd.DataFrame, n_trades: int, output_path: Path) 
 - Calmar: {calmar:.6f}
 - Return: {ret:.6f}
 
-Source: `research/trials/futures/liquidity_sweep/golden_results.csv`
+Source: `research/results/futures/liquidity_sweep/golden_results.csv`
 
 ---
 
@@ -405,18 +405,18 @@ def main() -> None:
     report(results, bh_exposure_adjusted, metadata, top_n=1, full_n=1)
 
     tier_assessment = _tier_assessment_payload(results, bh)
-    html_path = ROOT / "research" / "trials" / "futures" / "liquidity_sweep" / "golden.html"
+    html_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "golden.html"
     _write_index_html(metadata, bh, results, tier_assessment, exposure, html_path)
     print(f"\nHTML report written: {html_path}")
 
-    csv_path = ROOT / "research" / "trials" / "futures" / "liquidity_sweep" / "golden_results.csv"
+    csv_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "golden_results.csv"
     if _write_golden_csv(results, csv_path):
         print(f"Golden strategy CSV written: {csv_path}")
     else:
         print("Golden strategy CSV not written (no valid results).")
 
     champion_md_path = (
-        ROOT / "research" / "trials" / "futures" / "liquidity_sweep"
+        ROOT / "research" / "results" / "futures" / "liquidity_sweep"
         / "cl_bear_liquidity_sweep_1h_golden_champion.md"
     )
     if _write_champion_md(results, len(trades), champion_md_path):

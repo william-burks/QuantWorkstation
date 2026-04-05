@@ -147,7 +147,7 @@ def main() -> None:
         total_hours=int(len(cl1h)),
     )
 
-    out_dir = ROOT / "research" / "trials" / "futures" / "liquidity_sweep"
+    out_dir = ROOT / "research" / "results" / "futures" / "liquidity_sweep"
     summary_csv = out_dir / "position_sizing_results.csv"
     curves_csv = out_dir / "position_sizing_equity_curves.csv"
     html_path = out_dir / "position_sizing.html"

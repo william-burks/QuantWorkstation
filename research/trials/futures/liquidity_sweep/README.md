@@ -11,13 +11,13 @@ This trial runs `strategies/bear_cl_sweep_1h_baseline.py` logic through
 ## Baseline run
 
 ```bash
-python research/trials/futures/liquidity_sweep/01_baseline.py
+python research/results/futures/liquidity_sweep/01_baseline.py
 ```
 
 Graph-enabled runner (same `qw record` plumbing pattern as other research scripts):
 
 ```bash
-./research/run_liquidity_sweep_baseline.sh
+./research/bin/run_liquidity_sweep_baseline.sh
 ```
 
 The baseline config in `01_baseline.py` follows the explained profile:
@@ -32,13 +32,13 @@ Baseline artifacts written to this folder:
 ## Position sizing comparison
 
 ```bash
-python research/trials/futures/liquidity_sweep/02_position_sizing.py
+python research/results/futures/liquidity_sweep/02_position_sizing.py
 ```
 
 Graph-enabled runner:
 
 ```bash
-./research/run_liquidity_sweep_position_sizing.sh
+./research/bin/run_liquidity_sweep_position_sizing.sh
 ```
 
 This replays the same baseline trades under multiple risk rules (fixed risk,
@@ -55,13 +55,13 @@ Artifacts written to this folder:
 ## Golden strategy (rdist volatility targeting)
 
 ```bash
-python research/trials/futures/liquidity_sweep/golden.py
+python research/results/futures/liquidity_sweep/golden.py
 ```
 
 Graph-enabled runner:
 
 ```bash
-./research/run_liquidity_sweep_golden.sh
+./research/bin/run_liquidity_sweep_golden.sh
 ```
 
 The golden strategy applies optimized position sizing based on reward-to-risk distance scaling,

@@ -1,18 +1,18 @@
 #!/usr/bin/env zsh
 # Liquidity Sweep Trial — Golden Strategy Runner
-# Working directory: /Users/will/ClaudeProjects/QuantWorkstation
 
-set -e  # exit on error
+set -e
 
-# Source graph environment variables from qws_graph/.env.
-# Falls back silently if the file does not exist (allows CI override via exports).
-_QWS_ENV_FILE="${0:A:h:h}/qws_graph/.env"
+_QWS_ROOT="$(git -C "${0:A:h}" rev-parse --show-toplevel 2>/dev/null || echo "${0:A:h:h:h}")"
+_QWS_ENV_FILE="$_QWS_ROOT/qws_graph/.env"
 if [[ -f "$_QWS_ENV_FILE" ]]; then
   set -o allexport
   source "$_QWS_ENV_FILE"
   set +o allexport
 fi
 unset _QWS_ENV_FILE
+cd "$_QWS_ROOT"
+unset _QWS_ROOT
 
 record_artifact() {
 	local artifact_file="$1"
@@ -47,19 +47,19 @@ echo "Running liquidity sweep golden strategy..."
 python research/trials/futures/liquidity_sweep/golden.py
 
 record_artifact \
-	"research/trials/futures/liquidity_sweep/golden_results.csv" \
+	"research/results/futures/liquidity_sweep/golden_results.csv" \
 	"baseline_csv" \
 	"research/trials/futures/liquidity_sweep/golden.py"
 
 record_artifact \
-	"research/trials/futures/liquidity_sweep/cl_bear_liquidity_sweep_1h_golden_champion.md" \
+	"research/results/futures/liquidity_sweep/cl_bear_liquidity_sweep_1h_golden_champion.md" \
 	"champion_md" \
 	"research/trials/futures/liquidity_sweep/golden.py"
 
 echo ""
 echo "✓ Golden strategy complete. Review:"
-echo "  - research/trials/futures/liquidity_sweep/golden.html"
-echo "  - research/trials/futures/liquidity_sweep/golden_results.csv"
+echo "  - research/results/futures/liquidity_sweep/golden.html"
+echo "  - research/results/futures/liquidity_sweep/golden_results.csv"
 echo ""
 echo "Documentation:"
 echo "  - research/trials/futures/liquidity_sweep/README.md"

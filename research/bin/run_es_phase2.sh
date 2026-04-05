@@ -5,8 +5,16 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$SCRIPT_DIR"
+_QWS_ROOT="$(git -C "${0:A:h}" rev-parse --show-toplevel 2>/dev/null || echo "${0:A:h:h:h}")"
+_QWS_ENV_FILE="$_QWS_ROOT/qws_graph/.env"
+if [[ -f "$_QWS_ENV_FILE" ]]; then
+  set -o allexport
+  source "$_QWS_ENV_FILE"
+  set +o allexport
+fi
+unset _QWS_ENV_FILE
+cd "$_QWS_ROOT"
+unset _QWS_ROOT
 
 # Create results dir if needed
 mkdir -p results
@@ -55,7 +63,7 @@ log_test() {
 # ES Test 1A: NY_PRE Only
 test_1a() {
     log_test "1A" "ES: NY_PRE Only" \
-        "python strategies/bear_es_sweep_1h_baseline.py \
+        "python strategies/legacy/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE' \
             --results-csv 'results/es_bear_sweep_1h_nypre.csv'"
     record_artifact "results/es_bear_sweep_1h_nypre.csv" "baseline_csv"
@@ -64,7 +72,7 @@ test_1a() {
 # ES Test 1B: NY_PRE + LONDON
 test_1b() {
     log_test "1B" "ES: NY_PRE + LONDON" \
-        "python strategies/bear_es_sweep_1h_baseline.py \
+        "python strategies/legacy/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE,LONDON' \
             --results-csv 'results/es_bear_sweep_1h_nypre_london.csv'"
     record_artifact "results/es_bear_sweep_1h_nypre_london.csv" "baseline_csv"
@@ -73,7 +81,7 @@ test_1b() {
 # ES Test 2A: Exclude Q2 Wicks (within NY_PRE)
 test_2a() {
     log_test "2A" "ES: NY_PRE + exclude_q2 wicks" \
-        "python strategies/bear_es_sweep_1h_baseline.py \
+        "python strategies/legacy/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE' \
             --wick-mode 'exclude_q2' \
             --results-csv 'results/es_bear_sweep_1h_nypre_excq2.csv'"
@@ -83,7 +91,7 @@ test_2a() {
 # ES Test 2B: Q3+Q4 Only (within NY_PRE)
 test_2b() {
     log_test "2B" "ES: NY_PRE + q3_q4_only wicks" \
-        "python strategies/bear_es_sweep_1h_baseline.py \
+        "python strategies/legacy/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE' \
             --wick-mode 'q3_q4_only' \
             --results-csv 'results/es_bear_sweep_1h_nypre_q3q4.csv'"
@@ -93,7 +101,7 @@ test_2b() {
 # ES Test 3A: Tighter Stop (0.3 ATR)
 test_3a() {
     log_test "3A" "ES: NY_PRE + exclude_q2 + 0.3 ATR stop" \
-        "python strategies/bear_es_sweep_1h_baseline.py \
+        "python strategies/legacy/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE' \
             --wick-mode 'exclude_q2' \
             --atr-mult-stop 0.3 \
@@ -104,7 +112,7 @@ test_3a() {
 # ES Test 3B: Looser Stop (0.7 ATR)
 test_3b() {
     log_test "3B" "ES: NY_PRE + exclude_q2 + 0.7 ATR stop" \
-        "python strategies/bear_es_sweep_1h_baseline.py \
+        "python strategies/legacy/bear_es_sweep_1h_baseline.py \
             --allowed-sessions 'NY_PRE' \
             --wick-mode 'exclude_q2' \
             --atr-mult-stop 0.7 \
@@ -115,7 +123,7 @@ test_3b() {
 # NQ Test: ASIA Only
 test_nq() {
     log_test "NQ" "NQ: ASIA Only (quick probe)" \
-        "python strategies/bear_nq_sweep_1h_baseline.py \
+        "python strategies/legacy/bear_nq_sweep_1h_baseline.py \
             --allowed-sessions 'ASIA' \
             --results-csv 'results/nq_bear_sweep_1h_asia.csv'"
     record_artifact "results/nq_bear_sweep_1h_asia.csv" "baseline_csv"

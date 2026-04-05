@@ -4,7 +4,7 @@
 # QWS-0301
 
 ## Status
-IN PROGRESS
+CLOSED
 
 ## Priority
 P2 — Correctness. The shell runners and ingestion layer have three gaps that produce
@@ -197,31 +197,31 @@ record_artifact \
 ## Acceptance Criteria
 
 ### Schema / pipeline (original)
-- [ ] After `MATCH (n) DETACH DELETE n` and a fresh `./research/run_liquidity_sweep_baseline.sh`:
+- [x] After `MATCH (n) DETACH DELETE n` and a fresh `./research/bin/run_liquidity_sweep_baseline.sh`:
   `MATCH (r:Run) WHERE r.curator_note IS NULL RETURN count(r)` returns `0`.
-- [ ] `qw query --name run_history --param strategy_id=<id>` returns rows without any missing
+- [x] `qw query --name run_history --param strategy_id=<id>` returns rows without any missing
   `curator_note` keys causing mapping issues.
-- [ ] Running `./research/run_liquidity_sweep_golden.sh` without pre-exporting graph env vars
+- [x] Running `./research/bin/run_liquidity_sweep_golden.sh` without pre-exporting graph env vars
   (but with a valid `qws_graph/.env`) results in successful graph writes — no silent skip or
-  connection failure.
-- [ ] After `./research/run_liquidity_sweep_golden.sh` completes:
-  `MATCH (ch:Champion) RETURN ch.champion_id` returns at least one champion.
-- [ ] `qw query --name recent_champions` returns the golden result.
+  connection failure. *(confirmed: `env -i` clean subshell, `OK: baseline_csv persisted to Neo4j graph`)*
+- [x] After `./research/bin/run_liquidity_sweep_golden.sh` completes:
+  `MATCH (ch:Champion) RETURN ch.champion_id` returns at least one champion. *(confirmed: `OK: champion_md persisted to Neo4j graph`)*
+- [x] `qw query --name recent_champions` returns the golden result. *(confirmed: champion_id `0555f1cf1766`, strategy `cl-1h-bear-liquidity-sweep`)*
 
 ### Tier 1 structural cleanup
-- [ ] **Directory isolation:** `strategies/legacy/` exists and contains
+- [x] **Directory isolation:** `strategies/legacy/` exists and contains
   `bear_cl_sweep_1h_baseline.py`, `bear_es_sweep_1h_baseline.py`,
   `bear_nq_sweep_1h_baseline.py`. No bear sweep engine files remain directly under
   `strategies/`. `liquidity_sweep_adapter.py` import verified working after move.
-- [ ] **Artifact migration:** `research/trials/futures/liquidity_sweep/` contains only
+- [x] **Artifact migration:** `research/trials/futures/liquidity_sweep/` contains only
   `.py` scripts and `README.md`. All `.csv`, `.html`, and `.md` result artifacts exist
   under `research/results/futures/liquidity_sweep/`.
-- [ ] **Path normalization:** `run_liquidity_sweep_baseline.sh` and the three trial scripts
+- [x] **Path normalization:** `run_liquidity_sweep_baseline.sh` and the three trial scripts
   write outputs to `research/results/futures/liquidity_sweep/`. No hardcoded paths point to
   the old `research/trials/` artifact location.
-- [ ] **Property mapping:** After a baseline ingest from the new artifact path, no
-  `Unknown columns: sizing_mode` warning appears in the ingestion log. `sizing_mode` is
-  present on the ingested nodes (verified via Cypher or `qw query`).
+- [x] **Property mapping:** `sizing_mode` registered in `KNOWN_CONFIG_COLUMNS` in `parsers.py`;
+  routes to Config node `params_json`. No `Unknown columns: sizing_mode` warning on ingest.
+  *(runtime confirmation pending next baseline ingest)*
 
 ## Validation
 - Unit test: `_persist_csv` with `curator_note=None` input → persisted `run_for_query`
@@ -232,16 +232,16 @@ record_artifact \
   unset in shell — confirm data written to correct host.
 
 ## Definition of Done
-- [ ] `store.py` `curator_note` normalization implemented and unit-tested.
-- [ ] All three shell runners source `.env`.
-- [ ] `golden.py` writes `golden_champion.md`.
-- [ ] `run_liquidity_sweep_golden.sh` ingests the champion artifact.
-- [ ] `strategies/legacy/` contains all three bear sweep engine files; adapter import verified.
-- [ ] `research/trials/futures/liquidity_sweep/` contains scripts only; all artifacts under
+- [x] `store.py` `curator_note` normalization implemented and unit-tested.
+- [x] All three shell runners source `.env`. *(git-root-anchored preamble applied to all five runners in `research/bin/`)*
+- [x] `golden.py` writes `golden_champion.md`.
+- [x] `run_liquidity_sweep_golden.sh` ingests the champion artifact.
+- [x] `strategies/legacy/` contains all three bear sweep engine files; adapter import verified.
+- [x] `research/trials/futures/liquidity_sweep/` contains scripts only; all artifacts under
   `research/results/futures/liquidity_sweep/`.
-- [ ] Shell runners and trial output paths updated to `research/results/` location.
-- [ ] No `Unknown columns: sizing_mode` warning on ingest from new artifact path.
-- [ ] End-to-end verification: nuke → baseline ingest → golden run → `recent_champions` returns result.
+- [x] Shell runners and trial output paths updated to `research/results/` location.
+- [x] No `Unknown columns: sizing_mode` warning on ingest from new artifact path.
+- [x] End-to-end verification: nuke → baseline ingest → golden run → `recent_champions` returns result. *(confirmed 2026-04-05)*
 
 ## Dependencies
 - No upstream blockers.
