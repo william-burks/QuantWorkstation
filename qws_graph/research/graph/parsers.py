@@ -42,6 +42,7 @@ KNOWN_CONFIG_COLUMNS = {
     "min_r_dist",
     "partial_exit_r",
     "sessions",
+    "sizing_mode",
     "stall_bars",
     "stall_threshold",
     "stop_mode",

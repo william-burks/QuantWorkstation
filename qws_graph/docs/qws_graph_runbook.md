@@ -168,8 +168,8 @@ qw query --name cross_artifact_correlation --param strategy_id=es-1h-bear-sweep 
 
 ### Shell entrypoint behavior
 Current hook behavior in the two scripts:
-- `research/run_es_nq_bear_sweep_1h_baseline.sh`
-- `research/run_es_phase2.sh`
+- `research/bin/run_es_nq_bear_sweep_1h_baseline.sh`
+- `research/bin/run_es_phase2.sh`
 
 Hook guarantees:
 1. `sleep 1` before artifact existence checks to reduce flush race risk.
@@ -183,19 +183,19 @@ Hook guarantees:
 #### Baseline shell run with graph enabled
 ```zsh
 cd /Users/will/ClaudeProjects/QuantWorkstation
-QW_GRAPH_ENABLED=true zsh research/run_es_nq_bear_sweep_1h_baseline.sh
+QW_GRAPH_ENABLED=true zsh research/bin/run_es_nq_bear_sweep_1h_baseline.sh
 ```
 
 #### Phase 2 shell run with graph disabled (offline queue)
 ```zsh
 cd /Users/will/ClaudeProjects/QuantWorkstation
-QW_GRAPH_ENABLED=false zsh research/run_es_phase2.sh 1a
+QW_GRAPH_ENABLED=false zsh research/bin/run_es_phase2.sh 1a
 ```
 
 #### Phase 2 shell run to verify warning/retry visibility
 ```zsh
 cd /Users/will/ClaudeProjects/QuantWorkstation
-QW_GRAPH_ENABLED=true QW_GRAPH_PORT=1 zsh research/run_es_phase2.sh 1a
+QW_GRAPH_ENABLED=true QW_GRAPH_PORT=1 zsh research/bin/run_es_phase2.sh 1a
 ```
 
 ### Shell artifact filename convention

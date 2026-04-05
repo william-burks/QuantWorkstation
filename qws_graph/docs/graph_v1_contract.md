@@ -685,8 +685,8 @@ When the strategy has more runs than `max_runs`, `runs_capped` is `true`.
 ## Shell Hook Integration Contract
 
 Execution entrypoints remain unchanged:
-- `research/run_es_nq_bear_sweep_1h_baseline.sh`
-- `research/run_es_phase2.sh`
+- `research/bin/run_es_nq_bear_sweep_1h_baseline.sh`
+- `research/bin/run_es_phase2.sh`
 
 Hook rule:
 - Add post-run ingestion with soft fail.
@@ -860,8 +860,8 @@ Unblocked tasks:
 - Receipt + pending directory handling under `.qws/`.
 - Neo4j store layer in `research/graph/store.py` with MERGE semantics.
 - Shell hook integration patches for:
-  - `research/run_es_nq_bear_sweep_1h_baseline.sh`
-  - `research/run_es_phase2.sh`
+  - `research/bin/run_es_nq_bear_sweep_1h_baseline.sh`
+  - `research/bin/run_es_phase2.sh`
 - Reconcile/query command shells.
 
 ## Implementation Checklist (Story 1 Contract Gates)
