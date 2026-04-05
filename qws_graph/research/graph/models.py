@@ -60,6 +60,9 @@ class Run(BaseModel):
     max_drawdown: float
     total_trades: int
     total_r: float | None = None
+    calmar: float | None = None
+    metrics_return: float | None = None  # CSV column "return" (reserved word)
+    tier: str | None = None
     artifact_path: str
     curator_note: str | None = None
     provenance: Provenance

@@ -13,6 +13,13 @@ from typing import Any
 
 from .ids import canonical_json, champion_id, config_id, run_id, strategy_id
 from .models import Champion, Config, Provenance, ResearchArtifact, Run, Strategy
+from .schema_registry import (
+    CORE_RISK_PARAM_COLUMNS,
+    IGNORED_COLUMNS,
+    RUN_PROPERTIES,
+    all_config_keys,
+    get_config_keys,
+)
 
 CSV_REQUIRED_ALIASES: dict[str, tuple[str, ...]] = {
     "total_trades": ("total_trades", "n"),
@@ -26,39 +33,14 @@ CSV_OPTIONAL_ALIASES: dict[str, tuple[str, ...]] = {
     "timestamp": ("timestamp", "recorded_at", "run_at"),
     "total_r": ("total_r",),
     "avg_r": ("avg_r", "avg_r_per_trade"),
+    "calmar": ("calmar",),
+    "metrics_return": ("return",),  # "return" is a Python reserved word
+    "tier": ("tier",),
     "params_json": ("params_json",),
     "risk_params": ("risk_params",),
 }
 
 STRATEGY_COLUMNS = {"strategy_id", "instrument", "timeframe", "direction", "logic_type"}
-KNOWN_CONFIG_COLUMNS = {
-    "allowed_dir",
-    "allowed_sessions",
-    "atr_mult_stop",
-    "chain_mode",
-    "lh_buffer_mult",
-    "lh_lookback",
-    "max_hold_bars",
-    "min_r_dist",
-    "partial_exit_r",
-    "sessions",
-    "sizing_mode",
-    "stall_bars",
-    "stall_threshold",
-    "stop_mode",
-    "sweep_timeframe",
-    "target_r",
-    "wick_mode",
-}
-RISK_PARAM_COLUMNS = {
-    "atr_mult_stop",
-    "lh_buffer_mult",
-    "lh_lookback",
-    "partial_exit_r",
-    "stall_bars",
-    "stall_threshold",
-    "stop_mode",
-}
 SECTION_ALIASES = {
     "config": "config",
     "is metrics": "is_metrics",
@@ -253,7 +235,7 @@ class CSVParser:
             elif strategy.model_dump() != strategy_obj.model_dump():
                 raise ValueError("CSV rows resolve to inconsistent strategy metadata")
 
-            params_json, risk_params = self._parse_config_payload(row)
+            params_json, risk_params = self._parse_config_payload(row, strategy.logic_type)
             config_obj = Config(
                 config_id=config_id(params_json, risk_params),
                 params_json=params_json,
@@ -274,6 +256,9 @@ class CSVParser:
                 max_drawdown=self._read_float(row, reader.fieldnames, "max_drawdown"),
                 total_trades=self._read_int(row, reader.fieldnames, "total_trades"),
                 total_r=self._read_optional_float(row, reader.fieldnames, "total_r"),
+                calmar=self._read_optional_float(row, reader.fieldnames, "calmar"),
+                metrics_return=self._read_optional_float(row, reader.fieldnames, "metrics_return"),
+                tier=self._read_optional_str(row, reader.fieldnames, "tier"),
                 artifact_path=artifact_path_text,
                 provenance=provenance,
             )
@@ -298,11 +283,13 @@ class CSVParser:
             raise ValueError(f"missing required columns: {', '.join(sorted(missing))}")
 
     def _collect_unknown_columns(self, fieldnames: list[str]) -> None:
-        recognized = set(STRATEGY_COLUMNS) | KNOWN_CONFIG_COLUMNS
+        recognized = set(STRATEGY_COLUMNS) | all_config_keys() | IGNORED_COLUMNS
         for aliases in CSV_REQUIRED_ALIASES.values():
             recognized.update(aliases)
         for aliases in CSV_OPTIONAL_ALIASES.values():
             recognized.update(aliases)
+        # RUN_PROPERTIES uses the raw CSV column names (e.g. "return", not "metrics_return")
+        recognized.update(RUN_PROPERTIES)
         unknown = sorted(field for field in fieldnames if field not in recognized)
         self.unknown_warnings.add_many(self.artifact_path.name, unknown)
 
@@ -342,7 +329,9 @@ class CSVParser:
             logic_type=logic_type,
         )
 
-    def _parse_config_payload(self, row: dict[str, str]) -> tuple[dict[str, Any], dict[str, Any]]:
+    def _parse_config_payload(
+        self, row: dict[str, str], logic_type: str | None = None
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
         params_json: dict[str, Any] = {}
         risk_params: dict[str, Any] = {}
 
@@ -357,13 +346,13 @@ class CSVParser:
                 raise ValueError("risk_params must decode to an object")
             risk_params.update(parsed)
 
-        for column in sorted(KNOWN_CONFIG_COLUMNS):
+        for column in sorted(get_config_keys(logic_type)):
             if column not in row or not (row[column] or "").strip():
                 continue
             parsed_value = _parse_scalar(row[column])
             if parsed_value is None:
                 continue
-            target = risk_params if column in RISK_PARAM_COLUMNS else params_json
+            target = risk_params if column in CORE_RISK_PARAM_COLUMNS else params_json
             target[column] = parsed_value
 
         return _sorted_mapping(params_json), _sorted_mapping(risk_params)
@@ -406,6 +395,13 @@ class CSVParser:
         if isinstance(value, float) and value.is_integer():
             return int(value)
         raise ValueError(f"invalid integer value for {field}: {row[column]!r}")
+
+    def _read_optional_str(self, row: dict[str, str], fieldnames: Iterable[str], field: str) -> str | None:
+        column = _find_column(fieldnames, CSV_OPTIONAL_ALIASES[field])
+        if column is None:
+            return None
+        value = (row.get(column) or "").strip()
+        return value or None
 
 
 class ChampionMarkdownParser:

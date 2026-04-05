@@ -4,7 +4,7 @@
 # QWS-0304
 
 ## Status
-draft
+CLOSED
 
 ## Priority
 P2 — Correctness. The ingestion pipeline currently drops any CSV column not in the
@@ -140,14 +140,14 @@ SET c += $config_payload
 - `tests/unit/` — schema routing unit tests
 
 ## Acceptance Criteria
-- [ ] A trial CSV with a `sizing_mode` column ingests without `Unknown columns` warning.
-- [ ] `MATCH (c:Config) WHERE c.sizing_mode = 'vol_target' RETURN c` returns results after
+- [x] A trial CSV with a `sizing_mode` column ingests without `Unknown columns` warning.
+- [x] `MATCH (c:Config) WHERE c.sizing_mode = 'vol_target' RETURN c` returns results after
   ingestion of a run that used `vol_target` sizing.
-- [ ] A CSV column not in `CONFIG_PROPERTIES` or `RUN_PROPERTIES` produces a logger warning
+- [x] A CSV column not in `CONFIG_PROPERTIES` or `RUN_PROPERTIES` produces a logger warning
   that names the column — it is not silently dropped.
-- [ ] Existing core metrics (`sharpe`, `calmar`, `win_rate`) still land on `:Run` nodes
+- [x] Existing core metrics (`sharpe`, `calmar`, `win_rate`) still land on `:Run` nodes
   without regression.
-- [ ] Unit tests pass for the routing logic.
+- [x] Unit tests pass for the routing logic.
 
 ## Dependencies
 - Story 1 (QWS-0301) — schema consistency baseline must be stable before extending the
