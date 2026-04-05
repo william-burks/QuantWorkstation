@@ -1,5 +1,8 @@
 # Story 3 — MCP Read Tool Contract
 
+## ID
+# QWS-0203
+
 ## Status
 CLOSED
 

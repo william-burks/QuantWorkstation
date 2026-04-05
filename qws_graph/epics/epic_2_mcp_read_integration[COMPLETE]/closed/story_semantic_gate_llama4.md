@@ -1,5 +1,8 @@
 # Story 2 — Semantic Gate: Llama 4 Scout Analyst
 
+## ID
+## QWS-0211C
+
 ## Status
 CLOSED
 
