@@ -648,10 +648,13 @@ class GraphStore:
                 **run_payload,
                 "curator_note": truncate_curator_note(run_payload.get("curator_note")) or "",
             }
+            params_dict = config_payload.get("params_json", {})
             config_for_query = {
                 **config_payload,
-                "params_json_text": json.dumps(config_payload.get("params_json", {}), sort_keys=True, separators=(",", ":"), ensure_ascii=True),
+                "params_json_text": json.dumps(params_dict, sort_keys=True, separators=(",", ":"), ensure_ascii=True),
                 "risk_params_text": json.dumps(config_payload.get("risk_params", {}), sort_keys=True, separators=(",", ":"), ensure_ascii=True),
+                # First-class Config properties: unpacked by SET c += row.config.params_dict
+                "params_dict": params_dict,
             }
             rows.append(
                 {

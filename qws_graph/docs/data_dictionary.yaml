@@ -1,0 +1,879 @@
+# QuantWorkstation Graph V1 — Data Dictionary
+#
+# FORMAT NOTES FOR AGENTS:
+#   - All `type` values use Python type annotation syntax.
+#   - `nullable: true` means the property may be absent or null in the graph.
+#   - `unit` is omitted when the property is dimensionless or a label/ID.
+#   - `id_source` describes the inputs to the hash12() ID function.
+#   - `csv_column` is the raw CSV header name when it differs from the property name.
+#   - Properties marked `graph_only` are set by the store/lifecycle layer, not parsed
+#     from artifact files.
+#   - Evidence score formula: sharpe * sqrt(total_trades). Used for champion promotion
+#     comparisons only; not stored as a first-class field on Run.
+
+meta:
+  version: "1.0"
+  graph_engine: "Neo4j 5.x Community"
+  id_algorithm: "SHA-256, truncated to first 12 hex characters (hash12)"
+  id_separator: "|"  # parts joined with pipe before hashing
+
+# ---------------------------------------------------------------------------
+# Node types
+# ---------------------------------------------------------------------------
+
+nodes:
+
+  Strategy:
+    description: >
+      Identifies a unique (instrument, timeframe, direction, logic_type) combination.
+      One Strategy node exists per research line; it accumulates Run and Champion history
+      over time. Acts as the anchor for all lineage queries.
+    id_key: strategy_id
+    id_source: "normalize(instrument) | normalize(timeframe) | normalize(direction) | normalize(logic_type)"
+    id_format: "<instrument>-<timeframe>-<direction>-<logic_type>"
+    id_example: "cl-1h-bear-liquidity-sweep"
+    labels: ["Strategy"]
+    properties:
+      strategy_id:
+        type: str
+        nullable: false
+        description: Canonical slug. See id_format.
+      instrument:
+        type: str
+        nullable: false
+        description: Tradeable symbol root. Examples — ES, NQ, CL, BTC.
+      timeframe:
+        type: str
+        nullable: false
+        description: Bar resolution. Examples — 1H, 4H, 1D.
+      direction:
+        type: str
+        nullable: false
+        enum: [long, short, bear, bull]
+        description: >
+          Trade direction bias. "bear" and "bull" are crypto/futures convention;
+          "long" and "short" are equity convention. Do not treat as synonyms —
+          bear != short in this codebase.
+      logic_type:
+        type: str
+        nullable: false
+        description: >
+          Normalized slug identifying the signal logic family. Hyphens replace
+          underscores. Examples — liquidity-sweep, mars, ema-crossover.
+      family_id:
+        type: str
+        nullable: true
+        description: >
+          Groups strategies that share the same logic source code across instruments
+          or timeframes. hash12(normalize(logic_type), normalize(direction), source_hash).
+          Null until backfill is run for pre-V1 nodes.
+      best_run_id:
+        type: str
+        nullable: true
+        graph_only: true
+        description: >
+          run_id of the highest evidence-score Run for this Strategy. Updated by
+          _update_best_run on every CSV ingest. Null until first CSV write.
+      best_evidence_score:
+        type: float
+        nullable: true
+        graph_only: true
+        description: >
+          sharpe * sqrt(total_trades) for the current best run. Used as the
+          promotion gate threshold. Null until first CSV write.
+      status:
+        type: str
+        nullable: true
+        graph_only: true
+        enum: [ABORTED]
+        description: Set to "ABORTED" by `qw abort`. Absent on active strategies.
+      abort_reason:
+        type: str
+        nullable: true
+        graph_only: true
+        description: Mandatory reason string set alongside status=ABORTED.
+      aborted_at:
+        type: datetime
+        nullable: true
+        graph_only: true
+        description: Timestamp of abort decision.
+      created_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+        description: Neo4j server time at first MERGE.
+      updated_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+        description: Neo4j server time of last write touching this node.
+
+  Run:
+    description: >
+      A single backtest result. One node per unique (strategy_id, artifact_path,
+      artifact_mtime) triple — re-ingesting the same file is idempotent. A Run
+      represents "what happened when the strategy was run with a specific Config."
+    id_key: run_id
+    id_source: "strategy_id | normalize(artifact_path) | artifact_mtime_iso:row_number:config_id"
+    id_example: "63bcef04513b"
+    labels: ["Run"]
+    properties:
+      run_id:
+        type: str
+        nullable: false
+        description: Deterministic 12-char hex ID. See id_source.
+      strategy_id:
+        type: str
+        nullable: false
+        description: Foreign key to Strategy.strategy_id.
+      timestamp:
+        type: datetime
+        nullable: false
+        description: >
+          Run timestamp. Sourced from CSV "timestamp" column when present;
+          falls back to artifact mtime.
+      sharpe:
+        type: float
+        nullable: false
+        unit: dimensionless (annualized ratio)
+        description: >
+          Sharpe ratio of the run. Core quality signal. Used directly in
+          evidence_score = sharpe * sqrt(total_trades).
+      profit_factor:
+        type: float
+        nullable: false
+        unit: ratio (gross_profit / gross_loss)
+        description: >
+          Gross profit divided by gross loss. Values > 1.0 are profitable.
+          PROFESSIONAL tier requires >= 1.3.
+      win_rate:
+        type: float
+        nullable: false
+        unit: fraction [0.0, 1.0]
+        description: Fraction of trades that closed at a profit.
+      max_drawdown:
+        type: float
+        nullable: false
+        unit: fraction (negative, e.g. -0.087 = -8.7%)
+        description: >
+          Maximum peak-to-trough equity decline as a fraction. Always negative.
+          PROFESSIONAL tier requires > -0.20 (i.e. drawdown shallower than 20%).
+      total_trades:
+        type: int
+        nullable: false
+        description: >
+          Number of closed trades in the backtest window. Used as the sample-size
+          denominator in evidence_score.
+      total_r:
+        type: float
+        nullable: true
+        unit: R-multiples (sum)
+        description: >
+          Sum of R-multiples across all trades. One R-multiple = 1x the amount
+          risked per trade. INDEPENDENT of position sizing — measures pure edge.
+          Do NOT alias with metrics_return. A strategy with total_r=8.0 made 8x
+          its per-trade risk budget, regardless of dollar amounts.
+      calmar:
+        type: float
+        nullable: true
+        unit: ratio (annualized_return / abs(max_drawdown))
+        description: >
+          Calmar ratio. Annualized return divided by absolute maximum drawdown.
+          INSTITUTIONAL tier requires >= 1.5.
+        csv_column: calmar
+      metrics_return:
+        type: float
+        nullable: true
+        unit: fraction (e.g. 0.0995 = 9.95%)
+        description: >
+          Realized percentage return. DOWNSTREAM of position sizing — reflects
+          actual dollar-scaled performance. Distinct from total_r.
+          A high total_r with a low metrics_return indicates inefficient risk scaling.
+        csv_column: return
+      tier:
+        type: str
+        nullable: true
+        enum: [fail, professional, institutional]
+        description: >
+          Quality tier assigned by the tier assessment logic at backtest time.
+          Thresholds: INSTITUTIONAL requires Sharpe >= 3.5; PROFESSIONAL requires
+          Sharpe >= 2.0 AND profit_factor >= 1.3 AND calmar >= 1.5 AND
+          max_drawdown > -0.20. FAIL if any threshold is missed.
+        csv_column: tier
+      artifact_path:
+        type: str
+        nullable: false
+        description: Relative path of the source CSV file.
+      curator_note:
+        type: str
+        nullable: true
+        description: >
+          Free-text annotation added by the researcher at record time.
+          Truncated to 500 characters at ingest.
+      artifact_hash:
+        type: str
+        nullable: false
+        description: SHA-256 hex digest of the source artifact file bytes.
+      artifact_mtime_iso:
+        type: str
+        nullable: false
+        description: ISO-8601 UTC mtime of the source artifact at ingest time.
+      ingested_at:
+        type: datetime
+        nullable: false
+        description: Timestamp when `qw record` was executed.
+      parser_version:
+        type: str
+        nullable: false
+        description: Parser version string. "v1" for all V1 artifacts.
+      was_best:
+        type: bool
+        nullable: true
+        graph_only: true
+        description: >
+          Set to true when this run is displaced from Strategy.best_run_id by
+          a higher-evidence run. Absent on runs that were never the best.
+      created_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+      updated_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+
+  Config:
+    description: >
+      Parameter set used for a Run. Deduplicated across runs — two runs with
+      identical parameters share a Config node. Stores both a JSON blob for
+      portability and individual first-class properties for direct Cypher filtering.
+    id_key: config_id
+    id_source: "canonical_json(params_json) | canonical_json(risk_params)"
+    id_example: "f4a1b2c3d5e6"
+    labels: ["Config"]
+    properties:
+      config_id:
+        type: str
+        nullable: false
+        description: Deterministic 12-char hex ID derived from the full parameter set.
+      params_json:
+        type: str
+        nullable: false
+        description: >
+          JSON text blob of all Config parameters. Includes all CORE_CONFIG_PROPERTIES
+          and applicable STRATEGY_EXTENSIONS values. Use for portability/export.
+          For filtering, use the individual first-class properties below.
+      risk_params:
+        type: str
+        nullable: false
+        description: >
+          JSON text blob of risk-specific parameters (CORE_RISK_PARAM_COLUMNS).
+          Subset of params_json. Includes atr_mult_stop, lh_buffer_mult, etc.
+
+    first_class_config_properties:
+      description: >
+        These are unpacked from params_json onto the Config node as queryable
+        properties via SET c += params_dict. They allow Cypher WHERE clauses
+        without JSON parsing.
+
+      core:
+        allowed_dir:
+          type: "str | list[str]"
+          nullable: true
+          description: Allowed trade direction filter. Examples — "bull", ["bull", "bear"].
+        allowed_sessions:
+          type: "str | list[str]"
+          nullable: true
+          description: Allowed trading session filter. Examples �� "NY_PRE", ["NY_PRE", "LONDON"].
+        chain_mode:
+          type: str
+          nullable: true
+          description: >
+            Controls whether trades can chain (consecutive signals without a reset).
+            Example values — "no_smt_in_chain", "default".
+        label:
+          type: str
+          nullable: true
+          description: >
+            Human-readable label for the position sizing variant or config variant.
+            Used in position sizing grid sweeps. Example — "loss_streak_2_half".
+        max_hold_bars:
+          type: int
+          nullable: true
+          description: Maximum bars a trade may be held before forced exit.
+        min_r_dist:
+          type: float
+          nullable: true
+          unit: R-multiple
+          description: Minimum R-distance required for a valid setup.
+        sessions:
+          type: "str | list[str]"
+          nullable: true
+          description: Trading sessions the strategy is active during.
+        sizing_mode:
+          type: str
+          nullable: true
+          enum: [fixed_0.25pct, fixed_0.50pct, fixed_1.00pct, rdist_vol_target, loss_streak_2_half, drawdown_half_at_2pct]
+          description: >
+            Position sizing algorithm. fixed_*pct modes risk a fixed fraction per trade.
+            rdist_vol_target scales risk based on R-distribution volatility targeting.
+            loss_streak_* and drawdown_half_* are adaptive risk-reduction modes.
+        sweep_timeframe:
+          type: str
+          nullable: true
+          description: Timeframe used in the sweep signal (may differ from strategy timeframe).
+        target_r:
+          type: float
+          nullable: true
+          unit: R-multiple
+          description: Target profit in R-multiples. Defines the take-profit level.
+        wick_mode:
+          type: str
+          nullable: true
+          enum: [none, q3_q4_only, exclude_q2, all]
+          description: >
+            Controls which candlestick wicks are considered valid liquidity sweep signals.
+
+      risk_params:
+        atr_mult_stop:
+          type: float
+          nullable: true
+          unit: ATR multiplier
+          description: Stop-loss distance expressed as a multiple of ATR.
+        lh_buffer_mult:
+          type: float
+          nullable: true
+          description: Buffer multiplier applied to the liquidity-high reference level.
+        lh_lookback:
+          type: int
+          nullable: true
+          unit: bars
+          description: Lookback window for identifying the liquidity high.
+        partial_exit_r:
+          type: float
+          nullable: true
+          unit: R-multiple
+          description: R-level at which partial position exit is triggered.
+        stall_bars:
+          type: int
+          nullable: true
+          unit: bars
+          description: Number of stall bars before a time-based exit fires.
+        stall_threshold:
+          type: float
+          nullable: true
+          description: Minimum movement required to avoid classifying a bar as a stall.
+        stop_mode:
+          type: str
+          nullable: true
+          description: Stop-loss mode. Examples — "wick", "close", "atr".
+
+      strategy_extensions:
+        mars:
+          atr_period:
+            type: int
+            nullable: true
+            unit: bars
+            description: ATR calculation period for the MARS volatility screen.
+          mom_period:
+            type: int
+            nullable: true
+            unit: bars
+            description: Momentum lookback period for the MARS momentum signal.
+          trend_period:
+            type: int
+            nullable: true
+            unit: bars
+            description: SMA trend filter period for MARS.
+          vol_threshold:
+            type: float
+            nullable: true
+            description: >
+              Minimum normalized ATR required for MARS to consider a bar active.
+              Filters low-volatility regime entries.
+        liquidity-sweep:
+          time_stop:
+            type: int
+            nullable: true
+            unit: bars
+            description: Hard time stop — close trade after N bars regardless of P&L.
+
+    created_at:
+      type: datetime
+      nullable: false
+      graph_only: true
+    updated_at:
+      type: datetime
+      nullable: false
+      graph_only: true
+
+  Champion:
+    description: >
+      A promoted strategy configuration representing the current best-known version
+      of a Strategy. One active Champion per Strategy at any time (enforced by
+      PRODUCED_CHAMPION edge cardinality). Labeled :Champion when active;
+      relabeled :RetiredChampion when displaced.
+    id_key: champion_id
+    id_source_manual: "hash12(strategy_id, freeze_date_iso)"
+    id_source_auto: "hash12(strategy_id, run_id)"
+    id_example: "0555f1cf1766"
+    labels:
+      active: ["Champion"]
+      retired: ["RetiredChampion"]
+    promotion_path:
+      manual: >
+        Ingested via `qw record --kind champion_md`. Researcher has reviewed and
+        curated the champion file. auto_promoted = false/absent. Takes precedence
+        over auto-promoted champions — will not be overridden by the auto-promote gate.
+      auto: >
+        Created by _maybe_auto_promote_champion when a Run's evidence_score
+        (sharpe * sqrt(total_trades)) strictly exceeds the current champion's
+        evidence and sharpe >= PROFESSIONAL_THRESHOLD (2.0). auto_promoted = true.
+        Will be overridden by a subsequent manual champion_md ingest.
+    properties:
+      champion_id:
+        type: str
+        nullable: false
+        description: See id_source_manual / id_source_auto.
+      strategy_id:
+        type: str
+        nullable: false
+        description: Foreign key to Strategy.strategy_id.
+      freeze_date:
+        type: date
+        nullable: false
+        description: Date the champion was designated (ISO-8601).
+      tier:
+        type: str
+        nullable: true
+        enum: [professional, institutional]
+        description: >
+          Quality tier of this champion. "fail" tier is blocked at ingest —
+          a Champion node is never created for a fail-tier result.
+      oos_status:
+        type: str
+        nullable: false
+        enum: [oos_pending, live_paper, retired]
+        description: >
+          Out-of-sample validation status.
+          oos_pending — not yet validated on live/paper data.
+          live_paper — currently running on paper account.
+          retired — no longer active.
+      fragilities:
+        type: list[str]
+        nullable: false
+        description: >
+          List of known failure modes or sensitivity risks. At least one entry required.
+          For auto-promoted champions this is a generated statement about the promotion method.
+      artifact_path:
+        type: str
+        nullable: false
+        description: Path to the source artifact (champion markdown or CSV).
+      metrics_sharpe:
+        type: float
+        nullable: true
+        description: Sharpe ratio from metrics_summary, promoted to a queryable property.
+      metrics_return:
+        type: float
+        nullable: true
+        unit: fraction
+        description: Realized return from metrics_summary.
+      metrics_calmar:
+        type: float
+        nullable: true
+        description: Calmar ratio from metrics_summary.
+      metrics_profit_factor:
+        type: float
+        nullable: true
+        description: Profit factor from metrics_summary.
+      metrics_win_rate:
+        type: float
+        nullable: true
+        unit: fraction [0.0, 1.0]
+        description: Win rate from metrics_summary.
+      metrics_max_drawdown_r:
+        type: float
+        nullable: true
+        unit: fraction (negative)
+        description: Max drawdown from metrics_summary.
+      metrics_sample_size:
+        type: int
+        nullable: true
+        description: Number of trades in the champion's backtest window.
+      metrics_total_trades:
+        type: int
+        nullable: true
+        description: Alias of metrics_sample_size. Set by both manual and auto paths.
+      metrics_summary:
+        type: str
+        nullable: false
+        description: >
+          JSON text blob of all metrics. Portability field — individual metrics_*
+          properties above are the query surface.
+      best_evidence_score:
+        type: float
+        nullable: true
+        graph_only: true
+        description: >
+          sharpe * sqrt(total_trades) at time of promotion. Used by the auto-promote
+          gate to determine if a new run should displace this champion.
+          Absent on manually-curated champions that pre-date this field.
+      auto_promoted:
+        type: bool
+        nullable: true
+        graph_only: true
+        description: >
+          true when created by _maybe_auto_promote_champion.
+          null/absent when created by manual champion_md ingest.
+          The auto-promote gate will not override a champion where auto_promoted is null/false.
+      artifact_hash:
+        type: str
+        nullable: true
+        description: SHA-256 of the source artifact. Set for manual ingest; absent for auto-promoted.
+      artifact_mtime_iso:
+        type: str
+        nullable: true
+        description: Source artifact mtime. Set for manual ingest; absent for auto-promoted.
+      ingested_at:
+        type: datetime
+        nullable: true
+        description: Ingest timestamp. Set for manual ingest; absent for auto-promoted.
+      parser_version:
+        type: str
+        nullable: true
+        description: Set for manual ingest; absent for auto-promoted.
+      created_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+      updated_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+
+  RetiredChampion:
+    description: >
+      A Champion node that has been displaced by a newer promotion. Carries all
+      the same properties as Champion. Label is swapped atomically — the node is
+      never deleted, only relabeled. Querying :Champion returns only the active
+      set; querying :RetiredChampion returns the full lineage chain.
+    id_key: champion_id
+    labels: ["RetiredChampion"]
+    note: >
+      Do not MERGE on :RetiredChampion — the store layer handles re-labeling.
+      Bare MATCH (ch:Champion) will never return RetiredChampion nodes.
+
+  RunStatsSummary:
+    description: >
+      Aggregate statistics for grid-sweep rows that did not pass the significance gate.
+      Created when a grid CSV has more rows than the gate allows. Provides a bounded
+      neighbourhood summary instead of raw run enumeration.
+    id_key: summary_id
+    id_source: "hash12(strategy_id, normalize(artifact_path), artifact_mtime_iso)"
+    labels: ["RunStatsSummary"]
+    properties:
+      summary_id:
+        type: str
+        nullable: false
+      strategy_id:
+        type: str
+        nullable: false
+      artifact_path:
+        type: str
+        nullable: false
+      total_run_count:
+        type: int
+        nullable: false
+        description: Total rows in the source CSV.
+      selected_run_count:
+        type: int
+        nullable: false
+        description: Rows that passed the significance gate and became Run nodes.
+      rolled_up_run_count:
+        type: int
+        nullable: false
+        description: Rows summarized into this node (total - selected).
+      sharpe_mean:
+        type: float
+        nullable: false
+      sharpe_max:
+        type: float
+        nullable: false
+      sharpe_min:
+        type: float
+        nullable: false
+      max_drawdown_worst:
+        type: float
+        nullable: false
+        unit: fraction (negative, most negative = worst)
+      ingested_at:
+        type: datetime
+        nullable: false
+
+  BlobArtifact:
+    description: >
+      Raw unstructured artifact attachment. Used for tracker markdown files that
+      are not parsed in V1. Preserves provenance without attempting structure extraction.
+    id_key: artifact_path
+    labels: ["BlobArtifact"]
+    properties:
+      strategy_id:
+        type: str
+        nullable: false
+      artifact_path:
+        type: str
+        nullable: false
+      artifact_kind:
+        type: str
+        nullable: false
+        enum: [tracker_md]
+      raw_text_sha256:
+        type: str
+        nullable: false
+      artifact_hash:
+        type: str
+        nullable: false
+      ingested_at:
+        type: datetime
+        nullable: false
+      created_at:
+        type: datetime
+        nullable: false
+      updated_at:
+        type: datetime
+        nullable: false
+
+# ---------------------------------------------------------------------------
+# Relationship types
+# ---------------------------------------------------------------------------
+
+relationships:
+
+  HAS_RUN:
+    source: Strategy
+    target: Run
+    cardinality: one-to-many
+    description: A Strategy accumulates Run nodes over research iterations.
+
+  USES_CONFIG:
+    source: Run
+    target: Config
+    cardinality: many-to-one
+    description: >
+      A Run was executed with a specific Config. Multiple Runs may share a Config
+      if they used identical parameters.
+
+  PRODUCED_CHAMPION:
+    source: Strategy
+    target: Champion
+    cardinality: one-to-one (enforced by lifecycle)
+    description: >
+      Points to the current active Champion for this Strategy. There is exactly
+      one PRODUCED_CHAMPION edge per Strategy at any time. When a new champion
+      is promoted, the old edge is deleted and a new one is created atomically.
+
+  WAS_CHAMPION:
+    source: Champion
+    target: RetiredChampion
+    cardinality: one-to-one per link
+    topology: chain
+    description: >
+      Links a new Champion to its immediate predecessor. Forms a navigable linked
+      list: current Champion → last RetiredChampion → earlier RetiredChampion → ...
+      Use [:WAS_CHAMPION*] to traverse the full lineage.
+      Direction is always new → old.
+
+  PIVOTED_FROM:
+    source: "Champion"
+    target: Run
+    cardinality: one-to-one
+    description: >
+      Links a Champion to the specific Run that triggered its promotion.
+      Present on auto-promoted champions and manual champions with --pivot-from.
+      Absent on manually curated champions without an explicit pivot annotation.
+
+  HAS_RUN_SUMMARY:
+    source: Strategy
+    target: RunStatsSummary
+    cardinality: one-to-one per mtime
+    description: >
+      Links a Strategy to its rolled-up grid sweep statistics. A new node is
+      created when the source CSV is modified (mtime changes).
+
+  HAS_BLOB:
+    source: Strategy
+    target: BlobArtifact
+    cardinality: one-to-one per artifact_path
+    description: Attaches a raw unstructured artifact to a Strategy.
+
+# ---------------------------------------------------------------------------
+# Tier thresholds
+# ---------------------------------------------------------------------------
+
+tier_thresholds:
+  description: >
+    Applied at backtest time and stored as Run.tier. Also used by the champion
+    auto-promote gate. All conditions must be satisfied for a tier assignment.
+  institutional:
+    sharpe: ">= 3.5"
+    profit_factor: ">= 1.3"
+    calmar: ">= 1.5"
+    max_drawdown: "> -0.20"
+    beat_buyhold: required
+  professional:
+    sharpe: ">= 2.0"
+    profit_factor: ">= 1.3"
+    calmar: ">= 1.5"
+    max_drawdown: "> -0.20"
+    beat_buyhold: required
+  fail:
+    description: Any condition above is violated.
+    note: >
+      A Champion node is NEVER created for a fail-tier result. Both the Python
+      quality gate and the Cypher WHERE clause enforce this.
+
+# ---------------------------------------------------------------------------
+# Auto-promote gate thresholds
+# ---------------------------------------------------------------------------
+
+auto_promote_gate:
+  description: >
+    Applied by _maybe_auto_promote_champion on every CSV ingest. All conditions
+    must pass for a Run to create a new Champion node automatically.
+  conditions:
+    - "run.tier != 'fail'"
+    - "run.sharpe >= PROFESSIONAL_SHARPE_THRESHOLD (2.0)"
+    - "current champion is auto_promoted=true OR no champion exists"
+    - "evidence_score(run) > evidence_score(current_champion)"
+  evidence_score_formula: "sharpe * sqrt(total_trades)"
+  manual_champion_rule: >
+    If the current PRODUCED_CHAMPION has auto_promoted=null or auto_promoted=false
+    (i.e., it was manually curated), the gate returns None unconditionally. Manual
+    curation is authoritative and cannot be silently overridden by the auto-promote path.
+
+# ---------------------------------------------------------------------------
+# CSV column classification
+# ---------------------------------------------------------------------------
+
+csv_columns:
+  description: >
+    Columns the parser recognizes. Unknown columns (not in any set below) produce
+    a structured warning and are excluded from ingestion. IGNORED columns are
+    accepted silently and discarded.
+
+  required_run_columns:
+    sharpe:   { type: float, destination: Run.sharpe }
+    win_rate: { type: float, destination: "Run.win_rate (normalized to [0,1])" }
+    profit_factor: { type: float, destination: Run.profit_factor }
+    max_drawdown:  { type: float, destination: Run.max_drawdown, aliases: [max_dd] }
+    total_trades:  { type: int, destination: Run.total_trades, aliases: [n] }
+
+  optional_run_columns:
+    timestamp:    { type: str, destination: Run.timestamp, aliases: [recorded_at, run_at] }
+    total_r:      { type: float, destination: Run.total_r }
+    calmar:       { type: float, destination: Run.calmar }
+    return:       { type: float, destination: "Run.metrics_return (reserved word alias)" }
+    tier:         { type: str,   destination: Run.tier }
+    avg_r:        { type: float, destination: "not stored; used for display only", aliases: [avg_r_per_trade] }
+
+  strategy_columns:
+    instrument: { type: str, destination: Strategy.instrument }
+    timeframe:  { type: str, destination: Strategy.timeframe }
+    direction:  { type: str, destination: Strategy.direction }
+    logic_type: { type: str, destination: Strategy.logic_type }
+    strategy_id:
+      type: str
+      destination: "validated against canonical; not re-stored"
+      note: >
+        If provided, must match canonical strategy_id(instrument, timeframe,
+        direction, logic_type) exactly. Validation failure aborts parse.
+
+  core_config_columns:
+    allowed_dir:      { type: "str|list", destination: Config.params_json + Config.allowed_dir }
+    allowed_sessions: { type: "str|list", destination: Config.params_json + Config.allowed_sessions }
+    chain_mode:       { type: str, destination: Config.params_json + Config.chain_mode }
+    label:            { type: str, destination: Config.params_json + Config.label }
+    max_hold_bars:    { type: int, destination: Config.params_json + Config.max_hold_bars }
+    min_r_dist:       { type: float, destination: Config.params_json + Config.min_r_dist }
+    sessions:         { type: "str|list", destination: Config.params_json + Config.sessions }
+    sizing_mode:      { type: str, destination: Config.params_json + Config.sizing_mode }
+    sweep_timeframe:  { type: str, destination: Config.params_json + Config.sweep_timeframe }
+    target_r:         { type: float, destination: Config.params_json + Config.target_r }
+    wick_mode:        { type: str, destination: Config.params_json + Config.wick_mode }
+
+  risk_param_columns:
+    atr_mult_stop:    { type: float, destination: "Config.risk_params + Config.atr_mult_stop" }
+    lh_buffer_mult:   { type: float, destination: "Config.risk_params + Config.lh_buffer_mult" }
+    lh_lookback:      { type: int,   destination: "Config.risk_params + Config.lh_lookback" }
+    partial_exit_r:   { type: float, destination: "Config.risk_params + Config.partial_exit_r" }
+    stall_bars:       { type: int,   destination: "Config.risk_params + Config.stall_bars" }
+    stall_threshold:  { type: float, destination: "Config.risk_params + Config.stall_threshold" }
+    stop_mode:        { type: str,   destination: "Config.risk_params + Config.stop_mode" }
+
+  strategy_extension_columns:
+    mars:
+      atr_period:     { type: int,   destination: Config.params_json + Config.atr_period }
+      mom_period:     { type: int,   destination: Config.params_json + Config.mom_period }
+      trend_period:   { type: int,   destination: Config.params_json + Config.trend_period }
+      vol_threshold:  { type: float, destination: Config.params_json + Config.vol_threshold }
+    liquidity-sweep:
+      time_stop:      { type: int,   destination: Config.params_json + Config.time_stop }
+
+  ignored_columns:
+    description: Accepted without warning; not stored in any node.
+    columns: [avg_risk_pct, bh_exposure_return, fee_pct_of_gain, fees, gain, outperformance_x]
+
+# ---------------------------------------------------------------------------
+# Key distinctions for agents
+# ---------------------------------------------------------------------------
+
+common_confusions:
+
+  total_r_vs_metrics_return:
+    total_r:
+      location: Run node
+      unit: R-multiples (sum)
+      meaning: >
+        Pure edge measurement. Sum of (trade_outcome / amount_risked) for all trades.
+        Position-sizing independent. High total_r = strong signal regardless of dollar size.
+    metrics_return:
+      location: Run node
+      unit: fraction of account
+      meaning: >
+        Realized percentage return. Downstream of position sizing.
+        Low metrics_return with high total_r = edge is real but risk is undersized.
+
+  champion_vs_retired_champion:
+    Champion:
+      meaning: Currently active best version of a Strategy.
+      query: "MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)"
+    RetiredChampion:
+      meaning: Previously active champion, displaced by a newer one.
+      query: "MATCH (ch:RetiredChampion) WHERE ch.strategy_id = $sid"
+    full_lineage:
+      query: "MATCH (ch:Champion)-[:WAS_CHAMPION*]->(rc:RetiredChampion)"
+
+  run_tier_vs_champion_tier:
+    run_tier:
+      meaning: Quality of a single backtest result. Set at trial time.
+      location: Run.tier
+    champion_tier:
+      meaning: Quality of the best-known configuration for a Strategy.
+      location: Champion.tier
+      note: >
+        Champion.tier reflects the champion's own metrics, not necessarily the
+        best run's tier. A professional-tier Champion can coexist with an
+        institutional-tier Run if the Champion was promoted before the
+        institutional run was ingested.
+
+  manual_vs_auto_champion:
+    manual:
+      trigger: "qw record --kind champion_md"
+      auto_promoted: "null or false"
+      authority: authoritative — cannot be overridden by auto-promote
+    auto:
+      trigger: evidence_score gate in _maybe_auto_promote_champion
+      auto_promoted: true
+      authority: >
+        provisional — will be overridden if a manual champion_md is ingested,
+        or if a run with strictly higher evidence_score is ingested

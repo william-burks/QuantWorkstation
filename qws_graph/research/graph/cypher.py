@@ -27,6 +27,9 @@ MERGE (r:Run {run_id: row.run.run_id})
      r.max_drawdown = row.run.max_drawdown,
      r.total_trades = row.run.total_trades,
      r.total_r = row.run.total_r,
+     r.calmar = row.run.calmar,
+     r.metrics_return = row.run.metrics_return,
+     r.tier = row.run.tier,
      r.artifact_path = row.run.artifact_path,
      r.curator_note = row.run.curator_note,
      r.artifact_hash = row.run.provenance.artifact_hash,
@@ -42,6 +45,7 @@ MERGE (c:Config {config_id: row.config.config_id})
     c.params_json = row.config.params_json_text,
     c.risk_params = row.config.risk_params_text,
     c.updated_at = datetime()
+SET c += row.config.params_dict
 
 MERGE (s)-[:HAS_RUN]->(r)
 MERGE (r)-[:USES_CONFIG]->(c)
