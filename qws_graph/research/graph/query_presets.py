@@ -99,14 +99,20 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
     "cross_artifact_correlation": PresetSpec(
         name="cross_artifact_correlation",
         description=(
-            "Return strategies sharing the same logic_type and direction as the anchor strategy. "
-            "Anchors on shared canonical Strategy properties; no file-system reads."
+            "Return strategies in the same family. Provide family_id (preferred) for a "
+            "direct family scan (Mode B), or strategy_id to anchor on a specific strategy "
+            "and resolve its family automatically (Mode A). At least one is required."
         ),
         params=(
             PresetParam(
+                "family_id",
+                required=False,
+                description="12-char family_id hash — preferred; returns all family members (Mode B)",
+            ),
+            PresetParam(
                 "strategy_id",
-                required=True,
-                description="Anchor strategy ID (e.g. es-1h-bear-sweep)",
+                required=False,
+                description="Anchor strategy ID — resolves family automatically (Mode A)",
             ),
         ),
         requires_graph=True,
@@ -185,9 +191,17 @@ def run_preset(
         return service.get_downstream_champions_v1(run_id)
 
     if name == "cross_artifact_correlation":
-        strategy_id = params["strategy_id"]
+        strategy_id = params.get("strategy_id")
+        family_id = params.get("family_id")
+        if not strategy_id and not family_id:
+            raise ValueError(
+                "cross_artifact_correlation requires family_id (preferred) or strategy_id"
+            )
         assert service is not None
-        return service.get_cross_artifact_correlation_v1(strategy_id)
+        return service.get_cross_artifact_correlation_v1(
+            strategy_id=strategy_id,
+            family_id=family_id,
+        )
 
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 
