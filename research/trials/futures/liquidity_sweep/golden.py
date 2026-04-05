@@ -224,6 +224,7 @@ def _write_champion_md(results: pd.DataFrame, n_trades: int, output_path: Path) 
     calmar = float(row.get("calmar", float("nan")))
     ret = float(row.get("return", float("nan")))
     sizing_mode = str(row.get("sizing_mode", SIZING_CONFIG["mode"]))
+    tier = str(row.get("tier", "")).lower() or "unrated"
 
     content = f"""# CL Bear Liquidity Sweep 1H — Golden Champion
 
@@ -256,6 +257,7 @@ def _write_champion_md(results: pd.DataFrame, n_trades: int, output_path: Path) 
 - Max drawdown: {max_drawdown:.6f}
 - Calmar: {calmar:.6f}
 - Return: {ret:.6f}
+- Tier: {tier}
 
 Source: `research/results/futures/liquidity_sweep/golden_results.csv`
 

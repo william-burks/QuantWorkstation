@@ -254,6 +254,75 @@ ORDER BY s.instrument ASC, s.timeframe ASC
 """.strip()
 
 
+GET_PORTFOLIO_ALPHA_V1_CYPHER = """
+MATCH (ch:Champion)
+WHERE ch.tier IN ['professional', 'institutional']
+WITH count(ch) AS champion_count,
+     sum(ch.metrics_return) AS total_return,
+     avg(ch.metrics_sharpe) AS avg_sharpe,
+     collect(ch.strategy_id) AS strategies
+RETURN {
+  champion_count: champion_count,
+  total_return: total_return,
+  avg_sharpe: avg_sharpe,
+  strategies: strategies
+} AS result
+""".strip()
+
+GET_FRAGILITY_REPORT_V1_CYPHER = """
+MATCH (ch:Champion)
+WHERE any(f IN ch.fragilities WHERE toLower(f) CONTAINS 'regime')
+RETURN {
+  strategy_id: ch.strategy_id,
+  champion_id: ch.champion_id,
+  tier: ch.tier,
+  oos_status: ch.oos_status,
+  fragilities: ch.fragilities
+} AS result
+ORDER BY ch.strategy_id ASC
+""".strip()
+
+GET_TRACE_CHAMPION_V1_CYPHER = """
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion {champion_id: $champion_id})
+OPTIONAL MATCH (ch)-[:PIVOTED_FROM]->(r:Run)
+RETURN {
+  strategy_id: s.strategy_id,
+  champion_id: ch.champion_id,
+  artifact_path: ch.artifact_path,
+  tier: ch.tier,
+  metrics_sharpe: ch.metrics_sharpe,
+  metrics_return: ch.metrics_return,
+  pivot_run_id: r.run_id
+} AS result
+""".strip()
+
+GET_STALENESS_REPORT_V1_CYPHER = """
+MATCH (ch:Champion)
+WITH ch, duration.between(ch.freeze_date, date()).days AS days_old
+WHERE days_old > 30
+RETURN {
+  strategy_id: ch.strategy_id,
+  champion_id: ch.champion_id,
+  days_old: days_old,
+  oos_status: ch.oos_status,
+  tier: ch.tier
+} AS result
+ORDER BY days_old DESC
+""".strip()
+
+GET_INSTRUMENT_CONCENTRATION_V1_CYPHER = """
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
+WITH s.instrument AS instrument,
+     count(ch) AS champion_count,
+     sum(ch.metrics_return) AS total_return
+RETURN {
+  instrument: instrument,
+  champion_count: champion_count,
+  total_return: total_return
+} AS result
+ORDER BY champion_count DESC
+""".strip()
+
 GET_RUN_STATS_SUMMARY_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary)
 RETURN {
@@ -345,6 +414,26 @@ class GraphQueryService:
     def get_run_stats_summary_v1(self, strategy_id: str) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_run_stats_summary_v1(session, strategy_id)
+
+    def get_staleness_report_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_staleness_report_v1(session)
+
+    def get_instrument_concentration_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_instrument_concentration_v1(session)
+
+    def get_portfolio_alpha_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_portfolio_alpha_v1(session)
+
+    def get_fragility_report_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_fragility_report_v1(session)
+
+    def get_trace_champion_v1(self, champion_id: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_trace_champion_v1(session, champion_id)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -652,6 +741,31 @@ def get_run_stats_summary_v1(session: QuerySession, strategy_id: str) -> list[di
     ]
 
 
+def get_staleness_report_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return Champions frozen more than 30 days ago, ordered by age descending."""
+    return _all_results(session, GET_STALENESS_REPORT_V1_CYPHER)
+
+
+def get_instrument_concentration_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return champion count and total return aggregated by instrument."""
+    return _all_results(session, GET_INSTRUMENT_CONCENTRATION_V1_CYPHER)
+
+
+def get_portfolio_alpha_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return aggregate return and Sharpe across professional/institutional Champions."""
+    return _all_results(session, GET_PORTFOLIO_ALPHA_V1_CYPHER)
+
+
+def get_fragility_report_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return Champions whose fragilities mention regime sensitivity."""
+    return _all_results(session, GET_FRAGILITY_REPORT_V1_CYPHER)
+
+
+def get_trace_champion_v1(session: QuerySession, champion_id: str) -> list[dict[str, Any]]:
+    """Return the Strategy→Champion lineage for a specific champion_id."""
+    return _all_results(session, GET_TRACE_CHAMPION_V1_CYPHER, champion_id=champion_id)
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -662,6 +776,11 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_downstream_champions_v1": get_downstream_champions_v1,
     "get_cross_artifact_correlation_v1": get_cross_artifact_correlation_v1,
     "get_run_stats_summary_v1": get_run_stats_summary_v1,
+    "get_portfolio_alpha_v1": get_portfolio_alpha_v1,
+    "get_fragility_report_v1": get_fragility_report_v1,
+    "get_trace_champion_v1": get_trace_champion_v1,
+    "get_staleness_report_v1": get_staleness_report_v1,
+    "get_instrument_concentration_v1": get_instrument_concentration_v1,
 }
 
 
@@ -680,23 +799,33 @@ __all__ = [
     "GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER",
     "GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER",
     "GET_FAMILY_CLUSTER_V1_CYPHER",
+    "GET_FRAGILITY_REPORT_V1_CYPHER",
+    "GET_INSTRUMENT_CONCENTRATION_V1_CYPHER",
+    "GET_PORTFOLIO_ALPHA_V1_CYPHER",
+    "GET_STALENESS_REPORT_V1_CYPHER",
     "GET_RECENT_CHAMPIONS_V1_CYPHER",
     "GET_RUN_HISTORY_V1_CYPHER",
     "GET_RUN_STATS_SUMMARY_V1_CYPHER",
     "GET_STRATEGY_LINEAGE_V1_CYPHER",
     "GET_STRATEGY_SUMMARY_V1_CYPHER",
+    "GET_TRACE_CHAMPION_V1_CYPHER",
     "GraphQueryService",
     "QUERY_VIEW_REGISTRY",
     "get_champion_details_v1",
     "get_config_linkage_v1",
     "get_cross_artifact_correlation_v1",
     "get_downstream_champions_v1",
+    "get_fragility_report_v1",
+    "get_instrument_concentration_v1",
+    "get_portfolio_alpha_v1",
+    "get_staleness_report_v1",
     "get_query_view",
     "get_recent_champions_v1",
     "get_run_history_v1",
     "get_run_stats_summary_v1",
     "get_strategy_lineage_v1",
     "get_strategy_summary_v1",
+    "get_trace_champion_v1",
 ]
 
 
