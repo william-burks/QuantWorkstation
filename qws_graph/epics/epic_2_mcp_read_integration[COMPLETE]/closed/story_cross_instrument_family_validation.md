@@ -1,7 +1,7 @@
 # Story — Cross-Instrument Family Validation
 
 ## Status
-draft
+CLOSED
 
 ## Priority
 P2 — Research Integrity. `get_cross_artifact_correlation_v1` currently requires a
@@ -60,13 +60,13 @@ scan returns N flat rows cleanly.
 4. Pass `family_id` to `service.get_cross_artifact_correlation_v1()` when provided.
 
 ## Acceptance Criteria
-- [ ] `qw query --name cross_artifact_correlation --param strategy_id=es-1h-bear-baseline`
+- [x] `qw query --name cross_artifact_correlation --param strategy_id=<anchor_strategy_id>`
       returns family peers (Mode A).
-- [ ] `qw query --name cross_artifact_correlation --param family_id=<hash>` returns all
+- [x] `qw query --name cross_artifact_correlation --param family_id=<family_id>` returns all
       family members without a strategy anchor (Mode B).
-- [ ] Providing neither `strategy_id` nor `family_id` exits `1` with a clear error message.
-- [ ] Providing both is accepted — `family_id` takes precedence (Mode B used).
-- [ ] Unit tests cover: Mode A, Mode B, neither-error, both-prefers-family_id.
+- [x] Providing neither `strategy_id` nor `family_id` exits `1` with a clear error message.
+- [x] Providing both is accepted — `family_id` takes precedence (Mode B used).
+- [x] Unit tests cover: Mode A, Mode B, neither-error, both-prefers-family_id.
 
 ## Out of Scope
 - Changes to Mode A Cypher behaviour.
@@ -74,9 +74,27 @@ scan returns N flat rows cleanly.
 - `CrossArtifactRowV1` shape changes (reusing `anchor_strategy_id` for the family hash is sufficient).
 
 ## Definition of Done
-- [ ] Both modes work end-to-end via `qw query`.
-- [ ] Unit tests passing.
-- [ ] Story marked CLOSED.
+- [x] Both modes work end-to-end via `qw query`.
+- [x] Unit tests passing.
+- [x] Story marked CLOSED.
+
+## Implementation Notes (2026-04-04)
+
+- `research/graph/query.py` includes `GET_FAMILY_CLUSTER_V1_CYPHER` and dual-mode routing in
+  `get_cross_artifact_correlation_v1(session, strategy_id=None, family_id=None)`.
+- `family_id` path takes precedence when both parameters are provided.
+- Missing parameter pair is validated with a clear error from preset routing:
+  `cross_artifact_correlation requires family_id (preferred) or strategy_id`.
+- Unit coverage validated:
+  - `python -m pytest tests/unit/test_lineage_queries.py -q` (40 passed)
+  - `python -m pytest tests/unit/test_qw_query.py -q` (48 passed)
+- End-to-end `qw query` checks validated against local Neo4j by creating/removing temporary
+  `Strategy` nodes sharing `family_id=story4fam1234`:
+  - Mode A (`--param strategy_id=story4-modea-anchor`) returned peer rows.
+  - Mode B (`--param family_id=story4fam1234`) returned all family members with
+    `anchor_strategy_id` set to the family hash.
+  - Neither parameter returned exit code `1` with clear error message.
+  - Both parameters used Mode B precedence.
 
 ## Dependencies
 - Depends on: Churn Story 1 — CLOSED (`family_id` on `Strategy` nodes).
