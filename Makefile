@@ -1,10 +1,14 @@
-# --- CONFIGURATION ---
-# Update this variable once per release cycle
-REL_VER = 26.4.0
-# ---------------------
+
+# --- AUTOMATIC CONFIGURATION ---
+# Detects '26.4.0' from 'feature/26.4.0/QWS-0301'
+CURRENT_BRANCH := $(shell git symbolic-ref --short HEAD)
+REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
+
+.PHONY: to-release to-master check-clean done-with-feature
+
 
 # Internal helper to check for uncommitted changes
 check-clean:
@@ -13,26 +17,33 @@ check-clean:
 		exit 1; \
 	fi
 
-# 1. Merge current feature branch into Release
-# Usage: Stay on feature/yy.m.v/QWS-xxxx and run 'make to-release'
+# 1. Sync feature, merge to release, and return
 to-release: check-clean
-	$(eval FEATURE_BRANCH=$(shell git symbolic-ref --short HEAD))
-	@echo "Merging $(FEATURE_BRANCH) into $(RELEASE_BRANCH)..."
+	@echo "Syncing $(CURRENT_BRANCH) with remote..."
+	git push origin $(CURRENT_BRANCH)
+	@echo "Merging into $(RELEASE_BRANCH)..."
 	git checkout $(RELEASE_BRANCH)
 	git pull origin $(RELEASE_BRANCH)
-	git merge $(FEATURE_BRANCH)
+	git merge $(CURRENT_BRANCH)
 	git push origin $(RELEASE_BRANCH)
-	@echo "Done! Returning to $(FEATURE_BRANCH)..."
-	git checkout $(FEATURE_BRANCH)
+	@echo "Done! Returning to $(CURRENT_BRANCH)..."
+	git checkout $(CURRENT_BRANCH)
 
 # 2. Merge Release into Master
-# Usage: run 'make to-master'
 to-master: check-clean
-	@echo "Merging $(RELEASE_BRANCH) into $(MASTER_BRANCH)..."
+	@echo "Finalizing Release $(REL_VER) into Master..."
 	git checkout $(MASTER_BRANCH)
 	git pull origin $(MASTER_BRANCH)
 	git merge $(RELEASE_BRANCH)
 	git push origin $(MASTER_BRANCH)
-	@echo "Done! Master is updated."
 	git checkout $(RELEASE_BRANCH)
+
+# 3. Optional: Delete feature branch after successful merge
+done-with-feature:
+	@read -p "Delete branch $(CURRENT_BRANCH)? (y/n): " confirm; \
+	if [ "$$confirm" = "y" ]; then \
+		git checkout $(RELEASE_BRANCH); \
+		git branch -d $(CURRENT_BRANCH); \
+		git push origin --delete $(CURRENT_BRANCH); \
+	fi
 
