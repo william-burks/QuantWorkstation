@@ -27,19 +27,19 @@ Navigation and execution index for `qws_graph/epics`.
 - Objective: sidecar ingestion/index without breaking current shell/script entrypoints.
 
 Stories (execution order):
-- [`story_0_infra_scaffold_and_docker.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_0_infra_scaffold_and_docker.md) — `CLOSED`
-- [`story_1_graph_v1_contract_alignment.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_1_graph_v1_contract_alignment.md) — `CLOSED`
-- [`story_2_pydantic_models_and_parsers.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_2_pydantic_models_and_parsers.md) — `CLOSED`
-- [`story_3_qw_record_cli.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_3_qw_record_cli.md) — `CLOSED`
-- [`story_4_neo4j_idempotent_store.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_4_neo4j_idempotent_store.md) — `CLOSED`
-- [`story_5_shell_hooks_receipts_and_reconcile.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_5_shell_hooks_receipts_and_reconcile.md) — `CLOSED`
-- [`story_6_readme_and_runbook_basis.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_6_readme_and_runbook_basis.md) — `CLOSED`
+- `QWS-0100` [`story_0_infra_scaffold_and_docker.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_0_infra_scaffold_and_docker.md) — `CLOSED`
+- `QWS-0101` [`story_1_graph_v1_contract_alignment.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_1_graph_v1_contract_alignment.md) — `CLOSED`
+- `QWS-0102` [`story_2_pydantic_models_and_parsers.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_2_pydantic_models_and_parsers.md) — `CLOSED`
+- `QWS-0103` [`story_3_qw_record_cli.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_3_qw_record_cli.md) — `CLOSED`
+- `QWS-0104` [`story_4_neo4j_idempotent_store.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_4_neo4j_idempotent_store.md) — `CLOSED`
+- `QWS-0105` [`story_5_shell_hooks_receipts_and_reconcile.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_5_shell_hooks_receipts_and_reconcile.md) — `CLOSED`
+- `QWS-0106` [`story_6_readme_and_runbook_basis.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_6_readme_and_runbook_basis.md) — `CLOSED`
 
 Unplanned / patch stories (CLOSED):
-- [`story_baseline_csv_validation_regression.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_baseline_csv_validation_regression.md) — `CLOSED`
-- [`story_makefile_neo4j_lifecycle_1.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_makefile_neo4j_lifecycle_1.md) — `CLOSED`
-- [`story_shell_hook_timing_race.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_shell_hook_timing_race.md) — `CLOSED`
-- [`story_strategy_artifact_output_paths.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_strategy_artifact_output_paths.md) — `CLOSED`
+- `QWS-0107C` [`story_baseline_csv_validation_regression.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_baseline_csv_validation_regression.md) — `CLOSED`
+- `QWS-0108C` [`story_makefile_neo4j_lifecycle_1.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_makefile_neo4j_lifecycle_1.md) — `CLOSED`
+- `QWS-0109C` [`story_shell_hook_timing_race.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_shell_hook_timing_race.md) — `CLOSED`
+- `QWS-0110C` [`story_strategy_artifact_output_paths.md`](epic_1_ingestion_and_index%5BCOMPLETE%5D/closed/story_strategy_artifact_output_paths.md) — `CLOSED`
 
 ---
 
@@ -48,21 +48,21 @@ Unplanned / patch stories (CLOSED):
 - Objective: stable graph read/query surfaces for agent-assisted research retrieval.
 
 Stories (execution order):
-- [`story_0_target_state_schema_mapping.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_0_target_state_schema_mapping.md) — `CLOSED`
-- [`story_1_read_models_and_query_projections.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_1_read_models_and_query_projections.md) — `CLOSED`
-- [`story_2_qw_query_presets.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_2_qw_query_presets.md) — `CLOSED`
-- [`story_3_mcp_read_tool_contract.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_3_mcp_read_tool_contract.md) — `CLOSED`
-- [`story_4_lineage_and_pivot_queries.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_4_lineage_and_pivot_queries.md) — `CLOSED`
+- `QWS-0200` [`story_0_target_state_schema_mapping.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_0_target_state_schema_mapping.md) — `CLOSED`
+- `QWS-0201` [`story_1_read_models_and_query_projections.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_1_read_models_and_query_projections.md) — `CLOSED`
+- `QWS-0202` [`story_2_qw_query_presets.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_2_qw_query_presets.md) — `CLOSED`
+- `QWS-0203` [`story_3_mcp_read_tool_contract.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_3_mcp_read_tool_contract.md) — `CLOSED`
+- `QWS-0204` [`story_4_lineage_and_pivot_queries.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_4_lineage_and_pivot_queries.md) — `CLOSED`
 
 Unplanned / patch stories (CLOSED):
-- [`spike_lean_neighborhood_optimization.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/spike_lean_neighborhood_optimization.md) — `CLOSED`
-- [`story_baseline_ingestion_normalization.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_baseline_ingestion_normalization.md) — `CLOSED`
-- [`story_cross_instrument_family_validation.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_cross_instrument_family_validation.md) — `CLOSED`
-- [`story_docs_sync_epic2.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_docs_sync_epic2.md) — `CLOSED`
-- [`story_family_definitions_significance_filtering.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_family_definitions_significance_filtering.md) — `CLOSED`
-- [`story_family_id_backfill_migration.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_family_id_backfill_migration.md) — `CLOSED`
-- [`story_semantic_gate_llama4.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_semantic_gate_llama4.md) — `CLOSED`
-- [`story_strategy_family_definitions.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_strategy_family_definitions.md) — `CLOSED`
+- `QWS-0205C` [`spike_lean_neighborhood_optimization.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/spike_lean_neighborhood_optimization.md) — `CLOSED`
+- `QWS-0206C` [`story_baseline_ingestion_normalization.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_baseline_ingestion_normalization.md) — `CLOSED`
+- `QWS-0207C` [`story_cross_instrument_family_validation.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_cross_instrument_family_validation.md) — `CLOSED`
+- `QWS-0208C` [`story_docs_sync_epic2.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_docs_sync_epic2.md) — `CLOSED`
+- `QWS-0209C` [`story_family_definitions_significance_filtering.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_family_definitions_significance_filtering.md) — `CLOSED`
+- `QWS-0210C` [`story_family_id_backfill_migration.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_family_id_backfill_migration.md) — `CLOSED`
+- `QWS-0211C` [`story_semantic_gate_llama4.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_semantic_gate_llama4.md) — `CLOSED`
+- `QWS-0212C` [`story_strategy_family_definitions.md`](epic_2_mcp_read_integration%5BCOMPLETE%5D/closed/story_strategy_family_definitions.md) — `CLOSED`
 
 ---
 

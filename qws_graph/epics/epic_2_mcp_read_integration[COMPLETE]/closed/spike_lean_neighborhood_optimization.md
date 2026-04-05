@@ -2,6 +2,9 @@
 
 # Spike — Lean Neighborhood Optimization
 
+## ID
+## QWS-0205C
+
 **Status:** CLOSED  
 **Priority:** **P1 — Risk Mitigation.** **Context:** A successful strategy generates thousands of `Run` nodes via grid sweeps. Without bounding `get_context_neighborhood` before ingestion scales, the system faces MCP context overflow and query timeouts.
 
