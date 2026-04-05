@@ -7,6 +7,7 @@ set -e  # exit on error
 record_artifact() {
 	local artifact_file="$1"
 	local artifact_kind="$2"
+	local source_file="${3:-}"
 
 	# Python CSV writes may still be buffered when the process exits; give the
 	# filesystem a moment to sync before checking for the artifact.
@@ -17,12 +18,17 @@ record_artifact() {
 		return
 	fi
 
+	local source_flag=()
+	if [[ -n "$source_file" ]]; then
+		source_flag=(--source-file "$source_file")
+	fi
+
 	if [[ "${QW_GRAPH_ENABLED:-true}" == "false" ]]; then
-		qw record --file "$artifact_file" --kind "$artifact_kind" --offline || true
+		qw record --file "$artifact_file" --kind "$artifact_kind" "${source_flag[@]}" --offline || true
 		return
 	fi
 
-	qw record --file "$artifact_file" --kind "$artifact_kind" || true
+	qw record --file "$artifact_file" --kind "$artifact_kind" "${source_flag[@]}" || true
 }
 
 echo "=== ES/NQ Bear Sweep Research — Phase 1 Execution ==="
@@ -34,12 +40,12 @@ echo ""
 
 echo "Running ES baseline..."
 python strategies/bear_es_sweep_1h_baseline.py
-record_artifact "results/es_bear_sweep_1h_baseline.csv" "baseline_csv"
+record_artifact "results/es_bear_sweep_1h_baseline.csv" "baseline_csv" "strategies/bear_es_sweep_1h_baseline.py"
 
 echo ""
 echo "Running NQ baseline..."
 python strategies/bear_nq_sweep_1h_baseline.py
-record_artifact "results/nq_bear_sweep_1h_baseline.csv" "baseline_csv"
+record_artifact "results/nq_bear_sweep_1h_baseline.csv" "baseline_csv" "strategies/bear_nq_sweep_1h_baseline.py"
 
 echo ""
 echo "✓ Baselines complete. Review reports in:"

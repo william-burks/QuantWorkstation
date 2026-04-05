@@ -949,6 +949,7 @@ def main():
         instrument='NQ',
         timeframe='1H',
         direction='bear',
+        logic_type='sweep',
     )
     output_path = write_results_csv(summary_csv, args.results_csv, artifact_name='baseline summary CSV')
     print(f"\nBaseline results saved to {output_path}")
