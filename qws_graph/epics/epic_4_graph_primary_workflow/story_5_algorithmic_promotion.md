@@ -1,5 +1,8 @@
 # Story — Algorithmic Promotion Threshold
 
+## ID
+# QWS-0405
+
 ## Status
 draft
 

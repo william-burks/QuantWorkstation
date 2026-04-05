@@ -71,10 +71,10 @@ Unplanned / patch stories (CLOSED):
 - Objective: close correctness and maintainability gaps in the trial-to-graph write path.
 
 Stories (execution order):
-1. [`story_1_graph_ingestion_schema_consistency.md`](epic_3_%20research_pipeline_integrity/story_1_graph_ingestion_schema_consistency.md) — `draft`
-2. [`story_2_centralized_ingestion_layer.md`](epic_3_%20research_pipeline_integrity/story_2_centralized_ingestion_layer.md) — `draft`
-3. [`story_3_trial_bundle_structure.md`](epic_3_%20research_pipeline_integrity/story_3_trial_bundle_structure.md) — `draft`
-4. [`story_4_epic3_uat_runbook.md`](epic_3_%20research_pipeline_integrity/story_4_epic3_uat_runbook.md) — `draft`
+1. `QWS-0301` [`story_1_graph_ingestion_schema_consistency.md`](epic_3_%20research_pipeline_integrity/story_1_graph_ingestion_schema_consistency.md) — `draft`
+2. `QWS-0302` [`story_2_centralized_ingestion_layer.md`](epic_3_%20research_pipeline_integrity/story_2_centralized_ingestion_layer.md) — `draft`
+3. `QWS-0303` [`story_3_trial_bundle_structure.md`](epic_3_%20research_pipeline_integrity/story_3_trial_bundle_structure.md) — `draft`
+4. `QWS-0304` [`story_4_epic3_uat_runbook.md`](epic_3_%20research_pipeline_integrity/story_4_epic3_uat_runbook.md) — `draft`
 
 ---
 
@@ -83,11 +83,11 @@ Stories (execution order):
 - Objective: controlled shift to graph-primary decision workflows with rollback safety.
 
 Stories (execution order):
-1. [`story_1_decision_state_model.md`](epic_4_graph_primary_workflow/story_1_decision_state_model.md) — `draft`
-2. [`story_2_promotion_and_oos_state_transitions.md`](epic_4_graph_primary_workflow/story_2_promotion_and_oos_state_transitions.md) — `blocked`
-3. [`story_3_graph_to_file_exports.md`](epic_4_graph_primary_workflow/story_3_graph_to_file_exports.md) — `draft`
-4. [`story_4_cutover_guardrails_and_rollback.md`](epic_4_graph_primary_workflow/story_4_cutover_guardrails_and_rollback.md) — `draft`
-5. [`story_5_algorithmic_promotion.md`](epic_4_graph_primary_workflow/story_5_algorithmic_promotion.md) — `draft`
+1. `QWS-0401` [`story_1_decision_state_model.md`](epic_4_graph_primary_workflow/story_1_decision_state_model.md) — `draft`
+2. `QWS-0402` [`story_2_promotion_and_oos_state_transitions.md`](epic_4_graph_primary_workflow/story_2_promotion_and_oos_state_transitions.md) — `blocked`
+3. `QWS-0403` [`story_3_graph_to_file_exports.md`](epic_4_graph_primary_workflow/story_3_graph_to_file_exports.md) — `draft`
+4. `QWS-0404` [`story_4_cutover_guardrails_and_rollback.md`](epic_4_graph_primary_workflow/story_4_cutover_guardrails_and_rollback.md) — `draft`
+5. `QWS-0405` [`story_5_algorithmic_promotion.md`](epic_4_graph_primary_workflow/story_5_algorithmic_promotion.md) — `draft`
 
 ---
 
