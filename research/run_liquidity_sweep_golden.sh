@@ -4,6 +4,16 @@
 
 set -e  # exit on error
 
+# Source graph environment variables from qws_graph/.env.
+# Falls back silently if the file does not exist (allows CI override via exports).
+_QWS_ENV_FILE="${0:A:h:h}/qws_graph/.env"
+if [[ -f "$_QWS_ENV_FILE" ]]; then
+  set -o allexport
+  source "$_QWS_ENV_FILE"
+  set +o allexport
+fi
+unset _QWS_ENV_FILE
+
 record_artifact() {
 	local artifact_file="$1"
 	local artifact_kind="$2"
@@ -39,6 +49,11 @@ python research/trials/futures/liquidity_sweep/golden.py
 record_artifact \
 	"research/trials/futures/liquidity_sweep/golden_results.csv" \
 	"baseline_csv" \
+	"research/trials/futures/liquidity_sweep/golden.py"
+
+record_artifact \
+	"research/trials/futures/liquidity_sweep/cl_bear_liquidity_sweep_1h_golden_champion.md" \
+	"champion_md" \
 	"research/trials/futures/liquidity_sweep/golden.py"
 
 echo ""

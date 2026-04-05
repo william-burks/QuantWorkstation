@@ -8,6 +8,7 @@ Entry/exit logic unchanged from baseline; only sizing differs.
 """
 
 import sys
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -200,6 +201,90 @@ def _write_index_html(
     output_path.write_text(html)
 
 
+def _write_champion_md(results: pd.DataFrame, n_trades: int, output_path: Path) -> bool:
+    """Write a champion_md artifact for qw record ingestion.
+
+    The filename encodes the strategy for parser inference:
+    cl_bear_liquidity_sweep_1h_golden_champion → instrument=CL, direction=bear,
+    logic_type=liquidity-sweep, timeframe=1H.
+
+    Fields that require human or OOS validation (oos_status, fragilities) are
+    populated with explicit placeholder defaults so the Champion model validates.
+    """
+    if results.empty:
+        return False
+
+    row = results.iloc[0]
+    freeze_date = date.today().isoformat()
+
+    sharpe = float(row.get("sharpe", float("nan")))
+    profit_factor = float(row.get("profit_factor", float("nan")))
+    win_rate = float(row.get("win_rate", float("nan")))
+    max_drawdown = float(row.get("max_drawdown", float("nan")))
+    calmar = float(row.get("calmar", float("nan")))
+    ret = float(row.get("return", float("nan")))
+    sizing_mode = str(row.get("sizing_mode", SIZING_CONFIG["mode"]))
+
+    content = f"""# CL Bear Liquidity Sweep 1H — Golden Champion
+
+**Status**: Candidate (pending OOS validation)
+**Freeze Date**: {freeze_date}
+
+---
+
+## Config (Champion)
+
+- Instrument: CL
+- Direction: bear
+- Sweep timeframe: 1H
+- target_r: {CONFIG_OVERRIDES["target_r"]}
+- max_hold_bars: {CONFIG_OVERRIDES["max_hold_bars"]}
+- wick_mode: {CONFIG_OVERRIDES["wick_mode"]}
+- chain_mode: {CONFIG_OVERRIDES["chain_mode"]}
+- allowed_sessions: {", ".join(CONFIG_OVERRIDES["allowed_sessions"])}
+- allowed_dir: {", ".join(CONFIG_OVERRIDES["allowed_dir"])}
+- sizing_mode: {sizing_mode}
+
+---
+
+## IS Metrics (Champion)
+
+- Sample size: {n_trades}
+- Sharpe: {sharpe:.6f}
+- Profit factor: {profit_factor:.6f}
+- Win rate: {win_rate:.6f}
+- Max drawdown: {max_drawdown:.6f}
+- Calmar: {calmar:.6f}
+- Return: {ret:.6f}
+
+Source: `research/trials/futures/liquidity_sweep/golden_results.csv`
+
+---
+
+## Known Fragilities
+
+1. No OOS validation performed — auto-generated champion draft.
+2. Single instrument, single direction (CL bear) — regime sensitivity unknown.
+3. Position sizing mode ({sizing_mode}) scales risk with r_dist; degradation under low-volatility regimes is untested.
+4. Win rate sensitivity: small reductions in average winner size can break expectancy.
+
+---
+
+## OOS Command (Champion)
+
+```zsh
+# Run OOS after reviewing IS metrics above.
+# Add --pivot-from <run_id> once the baseline run_id is known.
+python research/trials/futures/liquidity_sweep/golden.py \\
+  --start-date <oos_start> \\
+  --end-date <oos_end>
+```
+"""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(content, encoding="utf-8")
+    return True
+
+
 def _write_golden_csv(results: pd.DataFrame, output_path: Path) -> bool:
     """Write a graph-ingestable baseline CSV for the golden strategy result."""
     if results.empty:
@@ -329,6 +414,15 @@ def main() -> None:
         print(f"Golden strategy CSV written: {csv_path}")
     else:
         print("Golden strategy CSV not written (no valid results).")
+
+    champion_md_path = (
+        ROOT / "research" / "trials" / "futures" / "liquidity_sweep"
+        / "cl_bear_liquidity_sweep_1h_golden_champion.md"
+    )
+    if _write_champion_md(results, len(trades), champion_md_path):
+        print(f"Champion markdown written: {champion_md_path}")
+    else:
+        print("Champion markdown not written (no valid results).")
 
 
 if __name__ == "__main__":

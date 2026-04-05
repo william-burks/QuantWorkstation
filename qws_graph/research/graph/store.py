@@ -197,7 +197,7 @@ class GraphStore:
         for run_payload, config_payload in zip(payload["runs"], payload["configs"], strict=True):
             run_for_query = {
                 **run_payload,
-                "curator_note": truncate_curator_note(run_payload.get("curator_note")),
+                "curator_note": truncate_curator_note(run_payload.get("curator_note")) or "",
             }
             config_for_query = {
                 **config_payload,
