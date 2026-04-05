@@ -1,7 +1,7 @@
 # Story — Docs Sync: README and Runbook for Epic 2
 
 ## Status
-draft
+CLOSED
 
 ## Priority
 P2 — Documentation Debt. Both `README.md` and `docs/qws_graph_runbook.md` were last updated
@@ -52,23 +52,23 @@ Review every closed story in both `[COMPLETE]` epic directories and update `READ
 ## Acceptance Criteria
 
 ### README.md
-- [ ] "What this project does now" section updated: add query layer, abort, family_id,
+- [x] "What this project does now" section updated: add query layer, abort, family_id,
       significance gate, semantic tier, MCP adapter.
-- [ ] "What this project does not do in V1" section reviewed: remove items that are now
+- [x] "What this project does not do in V1" section reviewed: remove items that are now
       implemented (MCP read path is implemented in Epic 2).
-- [ ] Command Reference updated: `qw query` and `qw abort` documented with flags and exit codes.
-- [ ] `qw record` command reference updated with `--source-file`, `--all`, `--analyze`.
-- [ ] Env vars section added covering Epic 2 additions.
-- [ ] Closed Story Traceability table updated with all Epic 2 closed stories.
+- [x] Command Reference updated: `qw query` and `qw abort` documented with flags and exit codes.
+- [x] `qw record` command reference updated with `--source-file`, `--all`, `--analyze`.
+- [x] Env vars section added covering Epic 2 additions.
+- [x] Closed Story Traceability table updated with all Epic 2 closed stories.
 
 ### docs/qws_graph_runbook.md
-- [ ] Day-1 Operations updated: add `qw query` usage examples for each preset.
-- [ ] Day-1 Operations updated: add `qw abort` usage example.
-- [ ] Day-1 Operations updated: add `qw record --source-file` ingest example.
-- [ ] Day-1 Operations updated: add `--analyze` flag usage with env var prerequisite.
-- [ ] Failure Modes table updated: add semantic tier unavailable, strategy not found (abort).
-- [ ] Verification Checklist updated: add Epic 2 items.
-- [ ] Closed Story Traceability table updated with all Epic 2 closed stories.
+- [x] Day-1 Operations updated: add `qw query` usage examples for each preset.
+- [x] Day-1 Operations updated: add `qw abort` usage example.
+- [x] Day-1 Operations updated: add `qw record --source-file` ingest example.
+- [x] Day-1 Operations updated: add `--analyze` flag usage with env var prerequisite.
+- [x] Failure Modes table updated: add semantic tier unavailable, strategy not found (abort).
+- [x] Verification Checklist updated: add Epic 2 items.
+- [x] Closed Story Traceability table updated with all Epic 2 closed stories.
 
 ## In Scope
 - `README.md` and `docs/qws_graph_runbook.md` only.
@@ -81,9 +81,9 @@ Review every closed story in both `[COMPLETE]` epic directories and update `READ
 - Code changes of any kind.
 
 ## Definition of Done
-- [ ] README and runbook both reflect the current Epic 1 + Epic 2 implemented state.
-- [ ] Traceability tables include all closed stories from both epics.
-- [ ] Story marked CLOSED.
+- [x] README and runbook both reflect the current Epic 1 + Epic 2 implemented state.
+- [x] Traceability tables include all closed stories from both epics.
+- [x] Story marked CLOSED.
 
 ## Dependencies
 - Depends on: all Epic 1 and Epic 2 stories — CLOSED.
