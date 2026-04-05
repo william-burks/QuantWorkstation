@@ -71,7 +71,7 @@ Unplanned / patch stories (CLOSED):
 - Objective: close correctness and maintainability gaps in the trial-to-graph write path.
 
 Stories (execution order):
-1. `QWS-0301` [`story_1_graph_ingestion_schema_consistency.md`](epic_3_%20research_pipeline_integrity/story_1_graph_ingestion_schema_consistency.md) — `CLOSED`
+1. `QWS-0301` [`story_1_graph_ingestion_schema_consistency.md`](epic_3_%20research_pipeline_integrity/story_1_graph_ingestion_schema_consistency.md) — `in_progress`
 2. `QWS-0302` [`story_2_config_run_schema_split.md`](epic_3_%20research_pipeline_integrity/story_2_config_run_schema_split.md) — `draft`
 3. `QWS-0303` [`story_3_centralized_ingestion_layer.md`](epic_3_%20research_pipeline_integrity/story_3_centralized_ingestion_layer.md) — `draft`
 4. `QWS-0304` [`story_4_trial_bundle_structure.md`](epic_3_%20research_pipeline_integrity/story_4_trial_bundle_structure.md) — `draft`

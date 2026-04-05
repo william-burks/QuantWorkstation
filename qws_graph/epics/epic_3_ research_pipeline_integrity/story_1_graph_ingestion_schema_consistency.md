@@ -4,7 +4,7 @@
 # QWS-0301
 
 ## Status
-CLOSED
+IN PROGRESS
 
 ## Priority
 P2 — Correctness. The shell runners and ingestion layer have three gaps that produce
@@ -153,6 +153,15 @@ record_artifact \
 - All three `research/run_liquidity_sweep_*.sh` scripts: add `.env` source block.
 - `golden.py`: write `golden_champion.md` artifact alongside the existing CSV and HTML.
 - `run_liquidity_sweep_golden.sh`: add final `record_artifact` call for `champion_md`.
+- Move `strategies/bear_cl/es/nq_sweep_1h_baseline.py` into `strategies/legacy/` and update
+  the one `importlib` path reference in `liquidity_sweep_adapter.py`.
+- Move all `.csv`, `.html`, and `.md` artifacts from
+  `research/trials/futures/liquidity_sweep/` to `research/results/futures/liquidity_sweep/`.
+- Update `run_liquidity_sweep_baseline.sh` and trial output paths in
+  `01_baseline.py`/`02_position_sizing.py`/`golden.py` to write to the new
+  `research/results/` location.
+- Verify the CSV parser captures `sizing_mode` from artifacts written to the new path
+  (no silent-drop warning after migration).
 
 ## Out of Scope
 - Changes to `CSV_INGEST_QUERY` Cypher (the fix is in Python before the query runs).
@@ -162,11 +171,15 @@ record_artifact \
 - `baseline_results.csv` or `position_sizing` champion promotion.
 
 ## Repo Touchpoints
-- `qws_graph/research/graph/store.py` — line 199: `run_for_query` construction
-- `research/run_liquidity_sweep_baseline.sh`
-- `research/run_liquidity_sweep_golden.sh`
-- `research/run_liquidity_sweep_position_sizing.sh`
-- `research/trials/futures/liquidity_sweep/golden.py` — add `_write_champion_md()`
+- `qws_graph/research/graph/store.py` — `_persist_csv` `run_for_query` construction
+- `research/run_liquidity_sweep_baseline.sh` — `.env` source block + updated artifact paths
+- `research/run_liquidity_sweep_golden.sh` — `.env` source block + champion ingest call
+- `research/run_liquidity_sweep_position_sizing.sh` — `.env` source block
+- `research/trials/futures/liquidity_sweep/golden.py` — add `_write_champion_md()`; update output path
+- `research/trials/futures/liquidity_sweep/01_baseline.py` — update CSV/HTML output path
+- `research/trials/futures/liquidity_sweep/02_position_sizing.py` — update output path
+- `strategies/adapters/liquidity_sweep_adapter.py` — update `_load_legacy_module()` path after legacy move
+- `strategies/legacy/` — new directory; receive `bear_cl/es/nq_sweep_1h_baseline.py`
 - `tests/unit/` — add/extend tests for `curator_note` normalization
 
 ## Implementation Notes
@@ -182,6 +195,8 @@ record_artifact \
   call site in `_persist_csv` so the AI-curation path is unaffected.
 
 ## Acceptance Criteria
+
+### Schema / pipeline (original)
 - [ ] After `MATCH (n) DETACH DELETE n` and a fresh `./research/run_liquidity_sweep_baseline.sh`:
   `MATCH (r:Run) WHERE r.curator_note IS NULL RETURN count(r)` returns `0`.
 - [ ] `qw query --name run_history --param strategy_id=<id>` returns rows without any missing
@@ -192,6 +207,21 @@ record_artifact \
 - [ ] After `./research/run_liquidity_sweep_golden.sh` completes:
   `MATCH (ch:Champion) RETURN ch.champion_id` returns at least one champion.
 - [ ] `qw query --name recent_champions` returns the golden result.
+
+### Tier 1 structural cleanup
+- [ ] **Directory isolation:** `strategies/legacy/` exists and contains
+  `bear_cl_sweep_1h_baseline.py`, `bear_es_sweep_1h_baseline.py`,
+  `bear_nq_sweep_1h_baseline.py`. No bear sweep engine files remain directly under
+  `strategies/`. `liquidity_sweep_adapter.py` import verified working after move.
+- [ ] **Artifact migration:** `research/trials/futures/liquidity_sweep/` contains only
+  `.py` scripts and `README.md`. All `.csv`, `.html`, and `.md` result artifacts exist
+  under `research/results/futures/liquidity_sweep/`.
+- [ ] **Path normalization:** `run_liquidity_sweep_baseline.sh` and the three trial scripts
+  write outputs to `research/results/futures/liquidity_sweep/`. No hardcoded paths point to
+  the old `research/trials/` artifact location.
+- [ ] **Property mapping:** After a baseline ingest from the new artifact path, no
+  `Unknown columns: sizing_mode` warning appears in the ingestion log. `sizing_mode` is
+  present on the ingested nodes (verified via Cypher or `qw query`).
 
 ## Validation
 - Unit test: `_persist_csv` with `curator_note=None` input → persisted `run_for_query`
@@ -206,6 +236,11 @@ record_artifact \
 - [ ] All three shell runners source `.env`.
 - [ ] `golden.py` writes `golden_champion.md`.
 - [ ] `run_liquidity_sweep_golden.sh` ingests the champion artifact.
+- [ ] `strategies/legacy/` contains all three bear sweep engine files; adapter import verified.
+- [ ] `research/trials/futures/liquidity_sweep/` contains scripts only; all artifacts under
+  `research/results/futures/liquidity_sweep/`.
+- [ ] Shell runners and trial output paths updated to `research/results/` location.
+- [ ] No `Unknown columns: sizing_mode` warning on ingest from new artifact path.
 - [ ] End-to-end verification: nuke → baseline ingest → golden run → `recent_champions` returns result.
 
 ## Dependencies
