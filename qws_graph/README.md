@@ -67,72 +67,211 @@ qw abort --strategy es-1h-bear-sweep --reason "OOS degradation exceeds threshold
 
 ## Command Reference
 
+All commands run from the repo root. Neo4j must be running for graph-backed commands.
+
+Exit codes apply to all commands: `0` success, `1` validation/usage error, `2` infrastructure failure.
+
+---
+
 ### `qw record`
-Usage:
+
+Ingest a research artifact into Neo4j (or the offline pending queue).
+
 ```text
-qw record --file <path> --kind <baseline_csv|grid_csv|champion_md|tracker_md> [options]
+qw record --file <path> --kind <kind> [options]
 ```
 
-Current options:
-- `--file` (required)
-- `--kind` (required)
-- `--pivot-from`
-- `--offline`
-- `--timeout-seconds` (default `3`)
-- `--repo-root`
-- `--dry-run`
-- `--source-file`
-- `--all`
-- `--analyze`
+| Flag | Required | Description |
+|---|---|---|
+| `--file` | yes | Path to artifact file |
+| `--kind` | yes | `baseline_csv`, `grid_csv`, `champion_md`, `tracker_md` |
+| `--pivot-from` | no | Explicit pivot run_id for champion ingestion |
+| `--offline` | no | Skip Neo4j; write validated payload to `.qws/pending/` |
+| `--dry-run` | no | Validate only, no write |
+| `--source-file` | no | Strategy `.py` source; derives `family_id` from content hash |
+| `--all` | no | Bypass significance gate for `grid_csv` (ingest all rows) |
+| `--analyze` | no | Run semantic tier analysis (Llama Scout) on `grid_csv` candidates |
+| `--timeout-seconds` | no | Neo4j connection timeout, default `3` |
+| `--repo-root` | no | Repo root override (auto-detected from git) |
 
-Exit codes:
-- `0` success (online persisted or offline queued)
-- `1` parse/validation failure
-- `2` infrastructure failure (Neo4j unavailable without `--offline`)
+**Examples:**
+
+```zsh
+# Ingest a baseline CSV run
+qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv
+
+# Ingest a grid sweep, keep only significant runs
+qw record --file results/es_bear_sweep_1h_grid_v1.csv --kind grid_csv
+
+# Ingest a grid sweep, keep all rows (bypass significance gate)
+qw record --file results/es_bear_sweep_1h_grid_v1.csv --kind grid_csv --all
+
+# Ingest a champion markdown with explicit pivot link
+qw record \
+  --file research/results/futures/liquidity_sweep/cl_bear_liquidity_sweep_1h_golden_champion.md \
+  --kind champion_md \
+  --pivot-from d2f56cf73a2d
+
+# Ingest a champion with family_id derived from strategy source
+qw record \
+  --file research/results/futures/liquidity_sweep/cl_bear_liquidity_sweep_1h_golden_champion.md \
+  --kind champion_md \
+  --source-file strategies/liquidity_sweep/bear_cl_sweep_1h_golden.py
+
+# Validate only, no write
+qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --dry-run
+
+# Queue for later (Neo4j offline)
+qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --offline
+```
+
+---
 
 ### `qw query`
-Usage:
+
+Run a predefined read preset against the graph. Output is NDJSON (one JSON object per line) by default, or wrapped JSON with `--json`.
+
 ```text
 qw query --name <preset> [--param key=value ...] [--json]
 ```
 
-Presets currently implemented:
-- `recent_champions`
-- `strategy_lineage`
-- `run_history`
-- `pending_offline`
-- `downstream_champions`
-- `cross_artifact_correlation`
+**Shortcut:** `--run-history` is an alias for `--name run_history`.
 
-Exit codes:
-- `0` preset ran successfully
-- `1` invalid preset name/params
-- `2` graph connection required but unavailable
+#### Preset reference
+
+| Preset | Required params | Description |
+|---|---|---|
+| `recent_champions` | — | Most recent champions across all strategies, ordered by freeze date |
+| `strategy_lineage` | `strategy_id` | Champion lineage for a single strategy |
+| `run_history` | `strategy_id` | All runs for a strategy with timestamp, Sharpe, drawdown, trade count |
+| `rank_by_evidence` | `strategy_id` | Runs ranked by `sharpe × √total_trades` — filters lucky streaks from real edge |
+| `trace_champion` | `champion_id` | Strategy→Champion lineage for a specific champion |
+| `downstream_champions` | `run_id` | Champions that pivoted from a specific run via explicit PIVOTED_FROM edges |
+| `cross_artifact_correlation` | `family_id` or `strategy_id` | Strategies in the same family |
+| `portfolio_alpha` | — | Aggregate return and Sharpe across all professional/institutional champions |
+| `fragility_report` | — | Champions whose fragility list mentions regime sensitivity |
+| `staleness_report` | — | Champions frozen more than 30 days ago, ordered by age |
+| `instrument_concentration` | — | Champion count and total return aggregated by instrument |
+| `pending_offline` | — | Artifacts queued in `.qws/pending/` (no graph connection required) |
+
+**Examples:**
+
+```zsh
+# Show most recent champions (default limit 20)
+qw query --name recent_champions
+
+# Limit to 5
+qw query --name recent_champions --param limit=5
+
+# Champion lineage for a strategy
+qw query --name strategy_lineage --param strategy_id=cl-1h-bear-liquidity-sweep
+
+# Run history with timestamps and trade counts
+qw query --name run_history --param strategy_id=cl-1h-bear-liquidity-sweep
+
+# Same using the shortcut flag
+qw query --run-history --param strategy_id=cl-1h-bear-liquidity-sweep
+
+# Rank runs by evidence score (Sharpe × √trades) — primary promotion tool
+qw query --name rank_by_evidence --param strategy_id=cl-1h-bear-liquidity-sweep
+
+# Trace a specific champion back to its strategy
+qw query --name trace_champion --param champion_id=0555f1cf1766
+
+# Champions that pivoted from a specific run
+qw query --name downstream_champions --param run_id=d2f56cf73a2d
+
+# Family correlation by family_id (preferred — direct scan)
+qw query --name cross_artifact_correlation --param family_id=a3f1c2b4e5d6
+
+# Family correlation by strategy (resolves family automatically)
+qw query --name cross_artifact_correlation --param strategy_id=cl-1h-bear-liquidity-sweep
+
+# Portfolio-level aggregates
+qw query --name portfolio_alpha
+
+# Champions with regime sensitivity fragility
+qw query --name fragility_report
+
+# Champions frozen more than 30 days ago
+qw query --name staleness_report
+
+# Exposure concentration by instrument
+qw query --name instrument_concentration
+
+# Pending offline queue (no Neo4j needed)
+qw query --name pending_offline
+
+# JSON output (wraps in {"preset": "...", "results": [...]})
+qw query --name recent_champions --json
+
+# Pipe NDJSON into jq
+qw query --name run_history --param strategy_id=cl-1h-bear-liquidity-sweep \
+  | jq 'select(.total_trades >= 10) | {run_id, sharpe, total_trades}'
+```
+
+---
 
 ### `qw abort`
-Usage:
+
+Mark a strategy as ABORTED with a mandatory reason. Writes `Strategy.status`, `Strategy.abort_reason`, `Strategy.aborted_at`.
+
 ```text
 qw abort --strategy <strategy_id> --reason <text> [--timeout-seconds 3]
 ```
 
-Exit codes:
-- `0` strategy found and marked ABORTED
-- `1` validation error or strategy not found
-- `2` infrastructure failure
+```zsh
+# Abort a strategy after OOS failure
+qw abort \
+  --strategy cl-1h-bear-liquidity-sweep \
+  --reason "OOS Sharpe degraded to 0.8 after regime change — edge not confirmed"
+
+# Abort with a shorter reason
+qw abort --strategy es-1h-bear-sweep --reason "Abandoned — superseded by CL sweep"
+```
+
+---
 
 ### `qw reconcile`
-Usage:
+
+Audit ingested artifacts against graph records. Reports pending files not yet written to Neo4j.
+
 ```text
 qw reconcile [--since <ISO8601>] [--json] [--repo-root <path>]
 ```
 
-### Neo4j lifecycle commands
-From `qws_graph/Makefile`:
-- `make neo4j-up`
-- `make neo4j-down`
-- `make neo4j-restart`
-- `make neo4j-logs`
-- `make neo4j-status`
+```zsh
+# Text report
+qw reconcile
+
+# JSON output
+qw reconcile --json
+
+# Filter by ingestion time
+qw reconcile --since 2026-04-01T00:00:00Z
+```
+
+---
+
+### Neo4j lifecycle (`make` from `qws_graph/`)
+
+```zsh
+make neo4j-up        # Start Neo4j container
+make neo4j-down      # Stop Neo4j container
+make neo4j-restart   # Restart container
+make neo4j-status    # Check running state
+make neo4j-logs      # Tail container logs
+```
+
+---
+
+### Graph integrity QA (`research/bin/qa_graph_integrity.sh`)
+
+Runs 5 structural checks against the live graph: connectivity, flat metrics, fragility report, champion lineage trace, and trade count significance. Exits non-zero on any failure. Prints next recommended action.
+
+```zsh
+./research/bin/qa_graph_integrity.sh
+```
 
 ## Environment Variables
 

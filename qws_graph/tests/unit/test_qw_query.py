@@ -78,6 +78,13 @@ class FakeGraphQueryService:
         self.calls.append(("get_instrument_concentration_v1", {}))
         return [{"instrument": "ES", "champion_count": 3, "total_return": 0.45}]
 
+    def get_rank_by_evidence_v1(self, strategy_id: str) -> list[dict[str, Any]]:
+        self.calls.append(("get_rank_by_evidence_v1", {"strategy_id": strategy_id}))
+        return [
+            {"run_id": "r2", "sharpe": 3.0, "total_trades": 16, "evidence_score": 12.0},
+            {"run_id": "r1", "sharpe": 5.0, "total_trades": 2, "evidence_score": 7.07},
+        ]
+
     def close(self) -> None:
         pass
 
@@ -491,15 +498,17 @@ class TestCmdQueryGraphBacked:
         captured = capsys.readouterr()
         assert "Neo4j unavailable" in captured.err
 
-    def test_run_history_text_output_includes_curator_note_sharpe_drawdown(
+    def test_run_history_text_output_includes_timestamp_trades_sharpe_drawdown(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         fake_service = FakeGraphQueryService(
             run_history=[
                 {
                     "run_id": "run-001",
+                    "timestamp": "2026-04-01T10:00:00Z",
                     "sharpe": 1.23,
                     "max_drawdown": -7.8,
+                    "total_trades": 12,
                     "curator_note": "Strong expectancy",
                 }
             ]
@@ -518,8 +527,10 @@ class TestCmdQueryGraphBacked:
 
         assert exit_code == 0
         captured = capsys.readouterr()
+        assert "timestamp=2026-04-01T10:00:00Z" in captured.out
         assert "sharpe=1.23" in captured.out
         assert "max_drawdown=-7.8" in captured.out
+        assert "total_trades=12" in captured.out
         assert "curator_note=Strong expectancy" in captured.out
 
     def test_run_history_shortcut_flag_routes_to_preset(
@@ -636,16 +647,40 @@ class TestRunPresetInstrumentConcentration:
         assert validate_params(spec, {}) == []
 
 
+class TestRunPresetRankByEvidence:
+    def test_routes_to_get_rank_by_evidence_v1(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("rank_by_evidence", {"strategy_id": "cl-1h-bear"}, service=service)
+        assert service.calls[0][0] == "get_rank_by_evidence_v1"
+        assert service.calls[0][1]["strategy_id"] == "cl-1h-bear"
+        assert results[0]["evidence_score"] == 12.0
+
+    def test_results_ordered_by_evidence_score_desc(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("rank_by_evidence", {"strategy_id": "cl-1h-bear"}, service=service)
+        scores = [r["evidence_score"] for r in results]
+        assert scores == sorted(scores, reverse=True)
+
+    def test_missing_strategy_id_raises(self) -> None:
+        spec = resolve_preset("rank_by_evidence")
+        errors = validate_params(spec, {})
+        assert any("strategy_id" in e for e in errors)
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("rank_by_evidence", {"strategy_id": "cl-1h-bear"}, service=None)
+
+
 class TestNewPresetCatalogEntries:
     def test_new_presets_present_in_catalog(self) -> None:
         assert {
             "portfolio_alpha", "fragility_report", "trace_champion",
-            "staleness_report", "instrument_concentration",
+            "staleness_report", "instrument_concentration", "rank_by_evidence",
         }.issubset(set(PRESET_CATALOG))
 
     def test_all_new_presets_require_graph(self) -> None:
         for name in ("portfolio_alpha", "fragility_report", "trace_champion",
-                     "staleness_report", "instrument_concentration"):
+                     "staleness_report", "instrument_concentration", "rank_by_evidence"):
             assert PRESET_CATALOG[name].requires_graph is True
 
     def test_trace_champion_requires_champion_id_param(self) -> None:

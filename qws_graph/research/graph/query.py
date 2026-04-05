@@ -90,7 +90,7 @@ RETURN {
   config_id: c.config_id,
   curator_note: r.curator_note
 } AS result
-ORDER BY r.timestamp DESC, r.run_id ASC
+ORDER BY r.timestamp ASC, r.run_id ASC
 """.strip()
 
 GET_CHAMPION_DETAILS_V1_CYPHER = """
@@ -292,8 +292,23 @@ RETURN {
   tier: ch.tier,
   metrics_sharpe: ch.metrics_sharpe,
   metrics_return: ch.metrics_return,
+  metrics_total_trades: ch.metrics_total_trades,
   pivot_run_id: r.run_id
 } AS result
+""".strip()
+
+GET_RANK_BY_EVIDENCE_V1_CYPHER = """
+MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN]->(r:Run)
+WHERE r.total_trades IS NOT NULL AND r.total_trades > 0
+WITH r, (r.sharpe * sqrt(toFloat(r.total_trades))) AS evidence_score
+RETURN {
+  run_id: r.run_id,
+  timestamp: toString(r.timestamp),
+  sharpe: r.sharpe,
+  total_trades: r.total_trades,
+  evidence_score: evidence_score
+} AS result
+ORDER BY evidence_score DESC
 """.strip()
 
 GET_STALENESS_REPORT_V1_CYPHER = """
@@ -435,6 +450,10 @@ class GraphQueryService:
         with self._driver.session(database=self._database) as session:
             return get_trace_champion_v1(session, champion_id)
 
+    def get_rank_by_evidence_v1(self, strategy_id: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_rank_by_evidence_v1(session, strategy_id)
+
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
     if hasattr(record, "data") and callable(record.data):
@@ -500,7 +519,7 @@ def _sort_run_history(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     without_timestamp = [item for item in items if item["timestamp"] is None]
 
     with_timestamp.sort(key=lambda item: item["run_id"])
-    with_timestamp.sort(key=lambda item: item["timestamp"], reverse=True)
+    with_timestamp.sort(key=lambda item: item["timestamp"])
     without_timestamp.sort(key=lambda item: item["run_id"])
     return with_timestamp + without_timestamp
 
@@ -766,6 +785,11 @@ def get_trace_champion_v1(session: QuerySession, champion_id: str) -> list[dict[
     return _all_results(session, GET_TRACE_CHAMPION_V1_CYPHER, champion_id=champion_id)
 
 
+def get_rank_by_evidence_v1(session: QuerySession, strategy_id: str) -> list[dict[str, Any]]:
+    """Return runs ranked by evidence_score = sharpe * sqrt(total_trades), descending."""
+    return _all_results(session, GET_RANK_BY_EVIDENCE_V1_CYPHER, strategy_id=strategy_id)
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -781,6 +805,7 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_trace_champion_v1": get_trace_champion_v1,
     "get_staleness_report_v1": get_staleness_report_v1,
     "get_instrument_concentration_v1": get_instrument_concentration_v1,
+    "get_rank_by_evidence_v1": get_rank_by_evidence_v1,
 }
 
 
@@ -802,6 +827,7 @@ __all__ = [
     "GET_FRAGILITY_REPORT_V1_CYPHER",
     "GET_INSTRUMENT_CONCENTRATION_V1_CYPHER",
     "GET_PORTFOLIO_ALPHA_V1_CYPHER",
+    "GET_RANK_BY_EVIDENCE_V1_CYPHER",
     "GET_STALENESS_REPORT_V1_CYPHER",
     "GET_RECENT_CHAMPIONS_V1_CYPHER",
     "GET_RUN_HISTORY_V1_CYPHER",
@@ -818,6 +844,7 @@ __all__ = [
     "get_fragility_report_v1",
     "get_instrument_concentration_v1",
     "get_portfolio_alpha_v1",
+    "get_rank_by_evidence_v1",
     "get_staleness_report_v1",
     "get_query_view",
     "get_recent_champions_v1",

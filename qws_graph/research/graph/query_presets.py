@@ -21,6 +21,7 @@ from .query import (
     get_fragility_report_v1,
     get_instrument_concentration_v1,
     get_portfolio_alpha_v1,
+    get_rank_by_evidence_v1,
     get_recent_champions_v1,
     get_run_history_v1,
     get_staleness_report_v1,
@@ -171,6 +172,21 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         ),
         requires_graph=True,
     ),
+    "rank_by_evidence": PresetSpec(
+        name="rank_by_evidence",
+        description=(
+            "Rank runs by evidence_score = sharpe * sqrt(total_trades), descending. "
+            "Separates statistically robust edges from lucky short streaks."
+        ),
+        params=(
+            PresetParam(
+                "strategy_id",
+                required=True,
+                description="Canonical strategy ID to rank runs for",
+            ),
+        ),
+        requires_graph=True,
+    ),
 }
 
 
@@ -257,6 +273,11 @@ def run_preset(
         assert service is not None
         return service.get_trace_champion_v1(champion_id)
 
+    if name == "rank_by_evidence":
+        strategy_id = params["strategy_id"]
+        assert service is not None
+        return service.get_rank_by_evidence_v1(strategy_id)
+
     if name == "staleness_report":
         assert service is not None
         return service.get_staleness_report_v1()
@@ -333,6 +354,7 @@ _PRESET_VIEW_FUNCTIONS = {
     "trace_champion": get_trace_champion_v1,
     "staleness_report": get_staleness_report_v1,
     "instrument_concentration": get_instrument_concentration_v1,
+    "rank_by_evidence": get_rank_by_evidence_v1,
 }
 
 __all__ = [

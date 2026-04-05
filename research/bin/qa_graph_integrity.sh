@@ -75,6 +75,22 @@ else
   _fail "Could not extract latest champion_id for lineage trace"
 fi
 
+# --- Check 5: Champion trade count significance ---
+echo ""
+echo "Check 5: Champion trade count significance"
+if [[ -n "$LATEST_ID" ]]; then
+  CHAMPION_TRADES=$(qw query --name trace_champion --param "champion_id=$LATEST_ID" 2>/dev/null | jq -r '.metrics_total_trades // empty')
+  if [[ -z "$CHAMPION_TRADES" || "$CHAMPION_TRADES" == "null" ]]; then
+    _fail "Champion metrics_total_trades missing — re-ingest champion markdown after golden.py update"
+  elif [[ "$CHAMPION_TRADES" -lt 5 ]]; then
+    _fail "Champion trade count ($CHAMPION_TRADES) below significance threshold of 5 — evidence is thin"
+  else
+    _pass "Champion trade count ($CHAMPION_TRADES) meets significance threshold (≥5)"
+  fi
+else
+  _fail "Could not check trade count — champion_id unavailable"
+fi
+
 # --- Summary ---
 echo ""
 echo "=== QA Summary ==="

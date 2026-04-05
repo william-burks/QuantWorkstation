@@ -517,8 +517,10 @@ def cmd_query(args: argparse.Namespace) -> int:
             for item in results:
                 print(
                     f"run_id={item.get('run_id')} "
+                    f"timestamp={item.get('timestamp')} "
                     f"sharpe={item.get('sharpe')} "
                     f"max_drawdown={item.get('max_drawdown')} "
+                    f"total_trades={item.get('total_trades')} "
                     f"curator_note={item.get('curator_note')}"
                 )
         else:
