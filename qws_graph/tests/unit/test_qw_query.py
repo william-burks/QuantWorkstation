@@ -527,11 +527,12 @@ class TestCmdQueryGraphBacked:
 
         assert exit_code == 0
         captured = capsys.readouterr()
-        assert "timestamp=2026-04-01T10:00:00Z" in captured.out
-        assert "sharpe=1.23" in captured.out
-        assert "max_drawdown=-7.8" in captured.out
-        assert "total_trades=12" in captured.out
-        assert "curator_note=Strong expectancy" in captured.out
+        row = json.loads(captured.out.strip())
+        assert row["timestamp"] == "2026-04-01T10:00:00Z"
+        assert row["sharpe"] == 1.23
+        assert row["max_drawdown"] == -7.8
+        assert row["total_trades"] == 12
+        assert row["curator_note"] == "Strong expectancy"
 
     def test_run_history_shortcut_flag_routes_to_preset(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]

@@ -566,4 +566,10 @@ class TestPresetCatalogStory4:
             "pending_offline",
             "downstream_champions",
             "cross_artifact_correlation",
+            "trace_champion",
+            "portfolio_alpha",
+            "fragility_report",
+            "staleness_report",
+            "instrument_concentration",
+            "rank_by_evidence",
         }

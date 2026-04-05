@@ -7,6 +7,8 @@ Graph V1 sidecar ingestion and read surface for QuantWorkstation. `qws_graph` re
 ### What this project does now
 - Ingests artifact outputs (`baseline_csv`, `grid_csv`, `champion_md`, `tracker_md`) into a graph ledger.
 - Uses deterministic IDs and idempotent Neo4j writes.
+- Applies evolutionary run deduplication: suppresses statistically redundant runs (same trade count, equal/lower Sharpe, within 30 days); preserves longitudinal walk-forward data beyond the 30-day window.
+- Tracks best-evidence-score run per strategy (`Strategy.best_run_id`, `Strategy.best_evidence_score`); archives displaced runs with `Run.was_best = true`.
 - Supports online persistence and explicit offline queueing.
 - Applies grid significance gating with `RunStatsSummary` rollups (`--all` bypass supported).
 - Supports semantic curation with optional analyst pass (`--analyze`) writing `Run.curator_note`.
@@ -28,7 +30,7 @@ Contract source: `qws_graph/docs/graph_v1_contract.md`.
 2. Shell hooks call `qw record ... || true` after artifact creation.
 3. `qw record` parses and validates artifacts into `ResearchArtifact` payloads.
 4. Optional grid curation applies significance gate and optional semantic analyst (`--analyze`).
-5. Online mode persists to Neo4j via idempotent MERGE semantics.
+5. Online mode runs a per-run redundancy pre-check, suppresses statistically dominated runs, then persists survivors via idempotent MERGE semantics. Post-write, the best-evidence-score run is promoted to `Strategy.best_run_id`.
 6. Offline mode writes validated payloads to `.qws/pending/` and writes receipts.
 7. `qw query` and MCP adapter run Neo4j-only read projections.
 8. `qw reconcile` reports pending/missing/drift style audit signals.
@@ -93,6 +95,17 @@ qw record --file <path> --kind <kind> [options]
 | `--analyze` | no | Run semantic tier analysis (Llama Scout) on `grid_csv` candidates |
 | `--timeout-seconds` | no | Neo4j connection timeout, default `3` |
 | `--repo-root` | no | Repo root override (auto-detected from git) |
+
+**Per-run output (evolutionary dedup):**
+
+Each ingested run prints one of three outcomes:
+```
+[PROMOTED] <run_id>  ev=<score>  — new peak evidence score
+[RECORDED] <run_id>  ev=<score>
+[SKIPPED]  <run_id>  ev=<score>  — existing run with total_trades=N has sharpe >= X within 30 days
+```
+
+`ev` = `sharpe × √total_trades` (evidence score proxy for statistical significance). A run is `[SKIPPED]` when an existing run with the same trade count has equal or better Sharpe and was ingested within the last 30 days — re-running the same backtest never bloats the graph. A run more than 30 days newer than any match is always written (longitudinal walk-forward data).
 
 **Examples:**
 

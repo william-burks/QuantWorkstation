@@ -255,7 +255,7 @@ ORDER BY s.instrument ASC, s.timeframe ASC
 
 
 GET_PORTFOLIO_ALPHA_V1_CYPHER = """
-MATCH (ch:Champion)
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
 WHERE ch.tier IN ['professional', 'institutional']
 WITH count(ch) AS champion_count,
      sum(ch.metrics_return) AS total_return,
@@ -270,7 +270,7 @@ RETURN {
 """.strip()
 
 GET_FRAGILITY_REPORT_V1_CYPHER = """
-MATCH (ch:Champion)
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
 WHERE any(f IN ch.fragilities WHERE toLower(f) CONTAINS 'regime')
 RETURN {
   strategy_id: ch.strategy_id,
@@ -312,7 +312,7 @@ ORDER BY evidence_score DESC
 """.strip()
 
 GET_STALENESS_REPORT_V1_CYPHER = """
-MATCH (ch:Champion)
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
 WITH ch, duration.between(ch.freeze_date, date()).days AS days_old
 WHERE days_old > 30
 RETURN {

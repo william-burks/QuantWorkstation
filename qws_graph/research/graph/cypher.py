@@ -58,6 +58,9 @@ MERGE (s:Strategy {strategy_id: $champion.strategy_id})
     s.created_at = datetime()
   SET s.updated_at = datetime()
 
+WITH s
+WHERE $champion.tier <> 'fail'
+
 MERGE (ch:Champion {champion_id: $champion.champion_id})
   ON CREATE SET ch.created_at = datetime()
   SET
@@ -82,7 +85,22 @@ MERGE (ch:Champion {champion_id: $champion.champion_id})
     ch.parser_version = $champion.provenance.parser_version,
     ch.updated_at = datetime()
 
+WITH s, ch
+OPTIONAL MATCH (s)-[old:PRODUCED_CHAMPION]->(prev:Champion)
+  WHERE prev.champion_id <> ch.champion_id
+
+FOREACH (rel IN CASE WHEN old IS NULL THEN [] ELSE [old] END |
+  DELETE rel
+)
+FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
+  REMOVE prev:Champion
+  SET prev:RetiredChampion
+)
+
 MERGE (s)-[:PRODUCED_CHAMPION]->(ch)
+FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
+  CREATE (ch)-[:WAS_CHAMPION]->(prev)
+)
 
 FOREACH (_ IN CASE WHEN $pivot_from_run_id IS NULL THEN [] ELSE [1] END |
   MERGE (r:Run {run_id: $pivot_from_run_id})
@@ -142,6 +160,20 @@ MERGE (b:BlobArtifact {artifact_path: $blob.artifact_path})
     b.ingested_at = datetime($blob.provenance.ingested_at),
     b.updated_at = datetime()
 MERGE (s)-[:HAS_BLOB]->(b)
+""".strip()
+
+
+# ---------------------------------------------------------------------------
+# Evolutionary dedup queries
+# ---------------------------------------------------------------------------
+
+RUN_REDUNDANCY_CHECK_CYPHER = """
+MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN]->(r:Run)
+WHERE r.run_id <> $new_run_id
+  AND r.total_trades = $new_trades
+  AND r.sharpe >= $new_sharpe
+  AND abs(toFloat(datetime($new_timestamp).epochSeconds - r.timestamp.epochSeconds)) / 86400.0 < 30
+RETURN count(r) > 0 AS is_redundant
 """.strip()
 
 
