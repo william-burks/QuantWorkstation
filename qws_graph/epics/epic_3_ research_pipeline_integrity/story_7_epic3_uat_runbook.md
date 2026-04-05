@@ -1,7 +1,7 @@
-# Story 5 — Epic 3 UAT Runbook
+# Story 7 — Epic 3 UAT Runbook
 
 ## ID
-# QWS-0305
+# QWS-0307
 
 ## Status
 draft
@@ -60,7 +60,7 @@ Open a clean subshell with no graph vars set:
 env -i HOME=$HOME PATH=$PATH SHELL=$SHELL zsh
 cd /Users/will/ClaudeProjects/QuantWorkstation
 source .venv/bin/activate
-./research/run_liquidity_sweep_baseline.sh
+./research/bin/run_liquidity_sweep_baseline.sh
 ```
 
 Expected:
@@ -138,7 +138,7 @@ Expected output: `PASS — raised correctly: Missing required graph export field
 Run the baseline again and confirm bundle output:
 
 ```zsh
-./research/run_liquidity_sweep_baseline.sh
+./research/bin/run_liquidity_sweep_baseline.sh
 ```
 
 Expected directory structure:
@@ -180,7 +180,7 @@ RETURN s.strategy_id, b.artifact_path, b.artifact_kind;
 
 Run the golden strategy:
 ```zsh
-./research/run_liquidity_sweep_golden.sh
+./research/bin/run_liquidity_sweep_golden.sh
 ```
 
 Verify Champion node was created:
@@ -208,7 +208,7 @@ RETURN s.strategy_id, ch.champion_id, ch.oos_status;
 
 Re-run `run_liquidity_sweep_baseline.sh` a second time (idempotency):
 ```zsh
-./research/run_liquidity_sweep_baseline.sh
+./research/bin/run_liquidity_sweep_baseline.sh
 ```
 
 ```cypher
@@ -223,7 +223,7 @@ MATCH (n) RETURN labels(n), count(n) ORDER BY count(n) DESC;
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `Neo4j connectivity check failed` on env-clean run | `.env` not sourced by shell runner | Story 1 Part B not implemented — verify `.env` source block in script |
+| `Neo4j connectivity check failed` on env-clean run | `.env` not sourced by shell runner | Story 1 Part B not implemented — verify git-root-anchored preamble in `research/bin/` script |
 | `MATCH (r:Run) WHERE r.curator_note IS NULL` returns non-zero | `curator_note` still set to null | Story 1 Part A not implemented — check `store.py` `_persist_csv` |
 | `grep` finds `instrument.*"CL"` in trial scripts | Script not migrated to `graph_export.py` | Story 2 not implemented for that trial |
 | `runs/<timestamp>/` directory not created | Trial script not parameterized for bundle output | Story 3 not implemented |

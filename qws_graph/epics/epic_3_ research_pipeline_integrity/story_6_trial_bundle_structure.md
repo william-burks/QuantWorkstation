@@ -1,7 +1,7 @@
 # Story — Trial Bundle: Co-located Artifacts per Run
 
 ## ID
-# QWS-0304
+# QWS-0306
 
 ## Status
 draft
