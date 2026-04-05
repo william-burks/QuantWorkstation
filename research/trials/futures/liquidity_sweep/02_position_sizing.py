@@ -79,6 +79,54 @@ def _write_html(results: pd.DataFrame, output_path: Path) -> None:
     output_path.write_text(html)
 
 
+def _write_graph_grid_csv(results: pd.DataFrame, mode_rows: list[dict], trades: pd.DataFrame, output_path: Path) -> bool:
+    """Write a qw-compatible grid CSV for graph ingestion."""
+    if results.empty:
+        return False
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Build per-mode config payloads for traceability in qws_graph.
+    mode_lookup = {str(row.get("label", "")): row for row in mode_rows}
+
+    win_rate = float((trades["pnl_r"].astype(float) > 0).mean()) if not trades.empty else 0.0
+    gross_profit = float(trades.loc[trades["pnl_r"] > 0, "pnl_r"].sum()) if not trades.empty else 0.0
+    gross_loss = float((-trades.loc[trades["pnl_r"] < 0, "pnl_r"].sum())) if not trades.empty else 0.0
+    profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else (999.0 if gross_profit > 0 else 0.0)
+    total_trades = int(len(trades))
+
+    export = results.copy()
+    export["instrument"] = "CL"
+    export["timeframe"] = "1H"
+    export["direction"] = "bear"
+    export["logic_type"] = "liquidity-sweep"
+    export["total_trades"] = total_trades
+    export["win_rate"] = win_rate
+    export["profit_factor"] = profit_factor
+    export["max_drawdown"] = export["max_drawdown"].astype(float)
+    export["sharpe"] = export["sharpe"].astype(float)
+    export["params_json"] = export["label"].astype(str).map(
+        lambda lbl: json.dumps(mode_lookup.get(lbl, {"label": lbl}), sort_keys=True)
+    )
+
+    keep_cols = [
+        "instrument",
+        "timeframe",
+        "direction",
+        "logic_type",
+        "label",
+        "sharpe",
+        "profit_factor",
+        "win_rate",
+        "max_drawdown",
+        "total_trades",
+        "params_json",
+    ]
+    export = export[[c for c in keep_cols if c in export.columns]]
+    export.to_csv(output_path, index=False)
+    return True
+
+
 def main() -> None:
     data = load_data_from_store()
     result = run_with_data(data=data, config_overrides=CONFIG_OVERRIDES)
@@ -109,6 +157,9 @@ def main() -> None:
     curves_df.to_csv(curves_csv, index=False)
     _write_html(summary_df, html_path)
 
+    graph_csv = out_dir / "position_sizing_grid_graph.csv"
+    wrote_graph_csv = _write_graph_grid_csv(summary_df, MODE_ROWS, trades, graph_csv)
+
     payload = {
         "config": CONFIG_OVERRIDES,
         "modes": MODE_ROWS,
@@ -132,6 +183,8 @@ def main() -> None:
     print(f"equity_csv: {curves_csv}")
     print(f"html: {html_path}")
     print(f"summary_json: {json_path}")
+    if wrote_graph_csv:
+        print(f"graph_csv: {graph_csv}")
 
 
 if __name__ == "__main__":

@@ -200,6 +200,43 @@ def _write_index_html(
     output_path.write_text(html)
 
 
+def _write_golden_csv(results: pd.DataFrame, output_path: Path) -> bool:
+    """Write a graph-ingestable baseline CSV for the golden strategy result."""
+    if results.empty:
+        return False
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    export = results.copy()
+
+    # Required strategy metadata for qws_graph CSV parser.
+    export["instrument"] = "CL"
+    export["timeframe"] = "1H"
+    export["direction"] = "bear"
+    export["logic_type"] = "liquidity-sweep"
+
+    # Map trial columns to parser expectations.
+    export["total_trades"] = export["n_trades"]
+    export["win_rate"] = export["win_rate"]
+
+    keep_cols = [
+        "instrument",
+        "timeframe",
+        "direction",
+        "logic_type",
+        "sizing_mode",
+        "sharpe",
+        "profit_factor",
+        "win_rate",
+        "max_drawdown",
+        "total_trades",
+        "return",
+        "calmar",
+    ]
+    export = export[[c for c in keep_cols if c in export.columns]]
+    export.to_csv(output_path, index=False)
+    return True
+
+
 def main() -> None:
     data = load_data_from_store()
     result = run_with_data(data=data, config_overrides=CONFIG_OVERRIDES)
@@ -287,9 +324,17 @@ def main() -> None:
     _write_index_html(metadata, bh, results, tier_assessment, exposure, html_path)
     print(f"\nHTML report written: {html_path}")
 
+    csv_path = ROOT / "research" / "trials" / "futures" / "liquidity_sweep" / "golden_results.csv"
+    if _write_golden_csv(results, csv_path):
+        print(f"Golden strategy CSV written: {csv_path}")
+    else:
+        print("Golden strategy CSV not written (no valid results).")
+
 
 if __name__ == "__main__":
     main()
+
+
 
 
 
