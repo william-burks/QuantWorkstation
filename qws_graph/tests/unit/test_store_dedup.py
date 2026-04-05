@@ -156,7 +156,7 @@ class TestMaybeAutoPromoteChampion:
         store = _make_store()
         fake_session = MagicMock()
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({"champion_id": "oldchamp123", "evidence_score": 15.0})
+            _make_tx_with_single({"champion_id": "oldchamp123", "evidence_score": 15.0, "auto_promoted": True})
         )
         fake_session.execute_write = MagicMock()
 
@@ -167,11 +167,27 @@ class TestMaybeAutoPromoteChampion:
         assert champion_id is not None
         fake_session.execute_write.assert_called_once()
 
+    def test_does_not_auto_promote_over_manual_champion(self):
+        """A manually-curated champion_md must never be overridden by auto-promote."""
+        store = _make_store()
+        fake_session = MagicMock()
+        # auto_promoted is absent (manually curated champion_md)
+        fake_session.execute_read.side_effect = lambda fn: fn(
+            _make_tx_with_single({"champion_id": "manual_champ", "evidence_score": 15.0, "auto_promoted": None})
+        )
+
+        result = store._maybe_auto_promote_champion(
+            fake_session, "s-x", self._make_run_data(4.5, 33), 25.0  # beats evidence=15
+        )
+
+        assert result is None
+        fake_session.execute_write.assert_not_called()
+
     def test_does_not_promote_when_evidence_matches_or_lower(self):
         store = _make_store()
         fake_session = MagicMock()
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({"champion_id": "champion99", "evidence_score": 25.0})
+            _make_tx_with_single({"champion_id": "champion99", "evidence_score": 25.0, "auto_promoted": True})
         )
 
         result = store._maybe_auto_promote_champion(
