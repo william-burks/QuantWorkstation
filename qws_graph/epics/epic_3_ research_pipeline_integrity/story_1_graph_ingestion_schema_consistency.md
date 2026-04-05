@@ -1,7 +1,7 @@
 # Story — Graph Ingestion Schema Consistency
 
 ## Status
-draft
+CLOSED
 
 ## Priority
 P2 — Correctness. The shell runners and ingestion layer have three gaps that produce
