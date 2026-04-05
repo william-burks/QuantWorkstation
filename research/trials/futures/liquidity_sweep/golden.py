@@ -251,6 +251,7 @@ def _write_champion_md(results: pd.DataFrame, n_trades: int, output_path: Path) 
 ## IS Metrics (Champion)
 
 - Sample size: {n_trades}
+- Total Trades: {n_trades}
 - Sharpe: {sharpe:.6f}
 - Profit factor: {profit_factor:.6f}
 - Win rate: {win_rate:.6f}

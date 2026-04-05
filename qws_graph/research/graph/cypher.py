@@ -72,6 +72,7 @@ MERGE (ch:Champion {champion_id: $champion.champion_id})
     ch.metrics_win_rate = $champion.metrics_win_rate,
     ch.metrics_max_drawdown_r = $champion.metrics_max_drawdown_r,
     ch.metrics_sample_size = $champion.metrics_sample_size,
+    ch.metrics_total_trades = $champion.metrics_total_trades,
     ch.oos_status = $champion.oos_status,
     ch.fragilities = $champion.fragilities,
     ch.artifact_path = $champion.artifact_path,
