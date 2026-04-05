@@ -60,7 +60,7 @@ Use this when Neo4j is up and reachable.
 
 ```zsh
 cd /Users/will/ClaudeProjects/QuantWorkstation
-qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv
+qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --source-file strategies/bear_es_sweep_1h_baseline.py
 ```
 
 Expected:
@@ -72,7 +72,7 @@ Use this when Neo4j is intentionally disabled or unavailable.
 
 ```zsh
 cd /Users/will/ClaudeProjects/QuantWorkstation
-qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --offline
+qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --source-file strategies/bear_es_sweep_1h_baseline.py --offline
 ```
 
 Expected:
