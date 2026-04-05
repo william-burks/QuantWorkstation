@@ -217,6 +217,43 @@ RETURN {
 ORDER BY related.instrument ASC, related.timeframe ASC
 """.strip()
 
+GET_FAMILY_CLUSTER_V1_CYPHER = """
+MATCH (s:Strategy {family_id: $family_id})
+CALL {
+  WITH s
+  OPTIONAL MATCH (s)-[:HAS_RUN]->(r:Run)
+  RETURN count(r) AS run_count
+}
+CALL {
+  WITH s
+  OPTIONAL MATCH (s)-[:PRODUCED_CHAMPION]->(ch:Champion)
+  RETURN count(ch) AS champion_count
+}
+CALL {
+  WITH s
+  OPTIONAL MATCH (s)-[:PRODUCED_CHAMPION]->(ch:Champion)
+  WITH ch
+  ORDER BY ch.freeze_date DESC, ch.champion_id ASC
+  RETURN ch.champion_id AS latest_champion_id, ch.freeze_date AS latest_champion_freeze_date
+  LIMIT 1
+}
+RETURN {
+  anchor_strategy_id: $family_id,
+  related_strategy_id: s.strategy_id,
+  instrument: s.instrument,
+  timeframe: s.timeframe,
+  direction: s.direction,
+  logic_type: s.logic_type,
+  family_id: s.family_id,
+  run_count: run_count,
+  champion_count: champion_count,
+  latest_champion_id: latest_champion_id,
+  latest_champion_freeze_date: latest_champion_freeze_date
+} AS result
+ORDER BY s.instrument ASC, s.timeframe ASC
+""".strip()
+
+
 GET_RUN_STATS_SUMMARY_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary)
 RETURN {
@@ -297,9 +334,13 @@ class GraphQueryService:
         with self._driver.session(database=self._database) as session:
             return get_downstream_champions_v1(session, run_id)
 
-    def get_cross_artifact_correlation_v1(self, strategy_id: str) -> list[dict[str, Any]]:
+    def get_cross_artifact_correlation_v1(
+        self,
+        strategy_id: str | None = None,
+        family_id: str | None = None,
+    ) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
-            return get_cross_artifact_correlation_v1(session, strategy_id)
+            return get_cross_artifact_correlation_v1(session, strategy_id=strategy_id, family_id=family_id)
 
     def get_run_stats_summary_v1(self, strategy_id: str) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
@@ -536,18 +577,37 @@ def get_downstream_champions_v1(session: QuerySession, run_id: str) -> list[dict
     ]
 
 
-def get_cross_artifact_correlation_v1(session: QuerySession, strategy_id: str) -> list[dict[str, Any]]:
-    """Return strategies that share ``logic_type`` and ``direction`` with *strategy_id*.
+def get_cross_artifact_correlation_v1(
+    session: QuerySession,
+    strategy_id: str | None = None,
+    family_id: str | None = None,
+) -> list[dict[str, Any]]:
+    """Return correlated strategies by anchor strategy or direct family_id.
 
     Traversal depth: one hop from the anchor ``Strategy`` node to related ``Strategy``
-    nodes matched by shared canonical properties. No file-system reads; no new persisted
-    labels. Returns an empty list when no related strategies exist.
+    nodes matched by shared family or canonical properties. No file-system reads; no
+    new persisted labels.
 
-    Correlation axis: ``logic_type`` + ``direction`` (same strategy family, different
-    instrument/timeframe). Callers may filter further on ``instrument`` or ``timeframe``.
+    Mode A (strategy_id provided): anchors on the given strategy and returns all other
+    strategies in its family. Falls back to ``logic_type + direction`` when
+    ``family_id IS NULL`` on the anchor.
+
+    Mode B (family_id provided): returns ALL strategies with ``strategy.family_id =
+    family_id`` — no anchor required. The ``anchor_strategy_id`` field is set to the
+    ``family_id`` string to make the query axis explicit to callers.
+
+    When both are provided, Mode B (family_id) takes precedence.
+
+    Raises:
+        ValueError: When neither strategy_id nor family_id is provided.
     """
+    if family_id is not None:
+        rows = _all_results(session, GET_FAMILY_CLUSTER_V1_CYPHER, family_id=family_id)
+    elif strategy_id is not None:
+        rows = _all_results(session, GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER, strategy_id=strategy_id)
+    else:
+        raise ValueError("get_cross_artifact_correlation_v1 requires strategy_id or family_id")
 
-    rows = _all_results(session, GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER, strategy_id=strategy_id)
     return [
         CrossArtifactRowV1(
             anchor_strategy_id=str(row["anchor_strategy_id"]),
@@ -619,6 +679,7 @@ __all__ = [
     "GET_CONFIG_LINKAGE_V1_CYPHER",
     "GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER",
     "GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER",
+    "GET_FAMILY_CLUSTER_V1_CYPHER",
     "GET_RECENT_CHAMPIONS_V1_CYPHER",
     "GET_RUN_HISTORY_V1_CYPHER",
     "GET_RUN_STATS_SUMMARY_V1_CYPHER",

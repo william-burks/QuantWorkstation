@@ -151,8 +151,12 @@ class FakeGraphQueryService:
         self.calls.append(("get_downstream_champions_v1", {"run_id": run_id}))
         return self._downstream
 
-    def get_cross_artifact_correlation_v1(self, strategy_id: str) -> list[dict[str, Any]]:
-        self.calls.append(("get_cross_artifact_correlation_v1", {"strategy_id": strategy_id}))
+    def get_cross_artifact_correlation_v1(
+        self,
+        strategy_id: str | None = None,
+        family_id: str | None = None,
+    ) -> list[dict[str, Any]]:
+        self.calls.append(("get_cross_artifact_correlation_v1", {"strategy_id": strategy_id, "family_id": family_id}))
         return self._cross_artifact
 
     def get_strategy_lineage_v1(self, strategy_id: str) -> list[dict[str, Any]]:
@@ -454,12 +458,13 @@ class TestCrossArtifactCorrelation:
         assert spec.name == "cross_artifact_correlation"
         assert spec.requires_graph is True
 
-    def test_cross_artifact_preset_requires_strategy_id(self) -> None:
-        spec = resolve_preset("cross_artifact_correlation")
-        errors = validate_params(spec, {})
-        assert any("strategy_id" in e for e in errors)
+    def test_cross_artifact_preset_requires_at_least_one_param(self) -> None:
+        # validate_params allows empty (both optional); run_preset enforces at-least-one
+        service = FakeGraphQueryService(cross_artifact=[])
+        with pytest.raises(ValueError, match="requires family_id"):
+            run_preset("cross_artifact_correlation", {}, service=service)
 
-    def test_cross_artifact_preset_routes_to_view(self) -> None:
+    def test_cross_artifact_preset_routes_to_view_via_strategy_id(self) -> None:
         result_row = {
             "anchor_strategy_id": "es-1h-bear-sweep",
             "related_strategy_id": "nq-1h-bear-sweep",
@@ -471,8 +476,33 @@ class TestCrossArtifactCorrelation:
             service=service,
         )
         assert service.calls[0][0] == "get_cross_artifact_correlation_v1"
-        assert service.calls[0][1] == {"strategy_id": "es-1h-bear-sweep"}
+        assert service.calls[0][1] == {"strategy_id": "es-1h-bear-sweep", "family_id": None}
         assert results == [result_row]
+
+    def test_cross_artifact_preset_routes_to_view_via_family_id(self) -> None:
+        result_row = {
+            "anchor_strategy_id": "abc123def456",
+            "related_strategy_id": "nq-1h-bear-sweep",
+        }
+        service = FakeGraphQueryService(cross_artifact=[result_row])
+        results = run_preset(
+            "cross_artifact_correlation",
+            {"family_id": "abc123def456"},
+            service=service,
+        )
+        assert service.calls[0][0] == "get_cross_artifact_correlation_v1"
+        assert service.calls[0][1] == {"strategy_id": None, "family_id": "abc123def456"}
+        assert results == [result_row]
+
+    def test_cross_artifact_preset_family_id_takes_precedence(self) -> None:
+        service = FakeGraphQueryService(cross_artifact=[])
+        run_preset(
+            "cross_artifact_correlation",
+            {"strategy_id": "es-1h-bear-sweep", "family_id": "abc123def456"},
+            service=service,
+        )
+        # family_id is passed through; query layer decides precedence
+        assert service.calls[0][1]["family_id"] == "abc123def456"
 
     def test_cross_artifact_preset_empty_when_no_related_strategies(self) -> None:
         service = FakeGraphQueryService(cross_artifact=[])
@@ -532,6 +562,7 @@ class TestPresetCatalogStory4:
         assert set(PRESET_CATALOG) == {
             "recent_champions",
             "strategy_lineage",
+            "run_history",
             "pending_offline",
             "downstream_champions",
             "cross_artifact_correlation",
