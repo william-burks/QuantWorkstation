@@ -247,7 +247,7 @@ record_artifact \
 - No upstream blockers.
 - Champion promotion depends on understanding the `ChampionArtifact` model's required
   fields — review `qws_graph/research/graph/models.py` before implementing part C.
-
+git diff release/26.4.0...HEAD > epics/epic_3_\ research_pipeline_integrity/story_1_2_3_epic_3.diff
 ## Open Questions
 - Should `run_liquidity_sweep_baseline.sh` also promote its top result to Champion, or is
   baseline-as-Run-only the intended contract? (Affects scope of part C.)

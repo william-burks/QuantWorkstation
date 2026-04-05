@@ -431,6 +431,7 @@ class GraphStore:
                 """
                 MATCH (s:Strategy {strategy_id: $sid})-[:PRODUCED_CHAMPION]->(ch:Champion)
                 RETURN ch.champion_id AS champion_id,
+                       ch.auto_promoted AS auto_promoted,
                        COALESCE(
                          ch.best_evidence_score,
                          ch.metrics_sharpe * sqrt(toFloat(COALESCE(ch.metrics_total_trades, 0)))
@@ -443,7 +444,20 @@ class GraphStore:
 
         current = session.execute_read(_read)
 
-        # Gate: only promote if new evidence strictly beats current champion
+        # Compute the champion_id we'd create — deterministic from (strategy, run).
+        new_champ_id = _ids.hash12(strategy_id, run_id)
+
+        # Fast idempotency exit: if the current champion IS this run, nothing to do.
+        if current is not None and current["champion_id"] == new_champ_id:
+            return new_champ_id
+
+        # Respect human curation: a manually-ingested champion_md should never be
+        # silently overridden by the auto-promote gate.  If the researcher has curated
+        # a champion, a new champion_md is the correct path for the next version.
+        if current is not None and not current.get("auto_promoted"):
+            return None
+
+        # Gate: only promote if new evidence strictly beats the current auto-promoted champion.
         if current is not None:
             old_ev = float(current["evidence_score"] or 0.0)
             if evidence_score <= old_ev:
@@ -452,7 +466,6 @@ class GraphStore:
         # Compute tier and build champion payload
         tier = "institutional" if sharpe >= _INSTITUTIONAL_SHARPE_THRESHOLD else "professional"
         today_iso = datetime.date.today().isoformat()
-        new_champ_id = _ids.hash12(strategy_id, run_id)
         total_trades = int(run_data.get("total_trades") or 0)
         total_r = float(run_data.get("total_r") or 0.0)
         profit_factor = float(run_data.get("profit_factor") or 0.0)
@@ -489,6 +502,17 @@ class GraphStore:
                 FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
                   REMOVE prev:Champion
                   SET prev:RetiredChampion
+                )
+
+                // WITH required between FOREACH and MATCH in Cypher.
+                // Carry prev through so the WAS_CHAMPION chain write below works.
+                WITH s, prev
+                // Re-label any existing RetiredChampion with this ID so the
+                // MERGE below finds it rather than creating a duplicate node.
+                OPTIONAL MATCH (rc:RetiredChampion {champion_id: $champion_id})
+                FOREACH (_ IN CASE WHEN rc IS NULL THEN [] ELSE [1] END |
+                  SET rc:Champion
+                  REMOVE rc:RetiredChampion
                 )
 
                 MERGE (ch:Champion {champion_id: $champion_id})
