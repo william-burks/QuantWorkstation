@@ -206,7 +206,8 @@ def cmd_record(args: argparse.Namespace) -> int:
     timeout_seconds = args.timeout_seconds
     repo_root = Path(args.repo_root) if args.repo_root else Path.cwd()
     dry_run = args.dry_run
-    source_file = Path(args.source_file) if getattr(args, "source_file", None) else None
+    raw_source_file = getattr(args, "source_file", None)
+    source_file = Path(raw_source_file) if isinstance(raw_source_file, (str, Path)) and str(raw_source_file).strip() else None
     ingest_all = getattr(args, "all", False)
     analyze = getattr(args, "analyze", False)
 
