@@ -13,3 +13,19 @@ arctic_data/
 venv/
 .idea/
 .vscode/
+
+# macOS and local tooling
+.DS_Store
+.qws/
+qws_graph/.qws/
+qws_graph/node_modules/
+
+# Local patch/diff scratch files
+*.diff
+
+# Generated research outputs
+research/results/registry.json
+research/trials/futures/liquidity_sweep/*.html
+research/trials/futures/liquidity_sweep/*.csv
+research/trials/futures/liquidity_sweep/*.json
+results/
