@@ -18,7 +18,7 @@ from data.store import Store, get_store
 
 def _load_legacy_module() -> Any:
     root = Path(__file__).resolve().parents[2]
-    legacy_path = root / "bear_nypre_after_1h_no_smt_exclude_q2_v2.py"
+    legacy_path = root / "strategies" / "bear_cl_sweep_1h_baseline.py"
     spec = importlib.util.spec_from_file_location("legacy_liquidity_sweep", legacy_path)
     if spec is None or spec.loader is None:
         raise ImportError(f"Unable to load legacy module from {legacy_path}")

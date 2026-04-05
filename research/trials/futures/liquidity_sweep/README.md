@@ -1,6 +1,6 @@
 # Liquidity Sweep Trial
 
-This trial runs `bear_nypre_after_1h_no_smt_exclude_q2_v2.py` logic through
+This trial runs `strategies/bear_cl_sweep_1h_baseline.py` logic through
 `strategies.adapters.liquidity_sweep_adapter` using ArcticDB symbols:
 
 - `CL_continuous_5min`

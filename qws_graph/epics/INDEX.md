@@ -71,10 +71,11 @@ Unplanned / patch stories (CLOSED):
 - Objective: close correctness and maintainability gaps in the trial-to-graph write path.
 
 Stories (execution order):
-1. `QWS-0301` [`story_1_graph_ingestion_schema_consistency.md`](epic_3_%20research_pipeline_integrity/story_1_graph_ingestion_schema_consistency.md) — `draft`
-2. `QWS-0302` [`story_2_centralized_ingestion_layer.md`](epic_3_%20research_pipeline_integrity/story_2_centralized_ingestion_layer.md) — `draft`
-3. `QWS-0303` [`story_3_trial_bundle_structure.md`](epic_3_%20research_pipeline_integrity/story_3_trial_bundle_structure.md) — `draft`
-4. `QWS-0304` [`story_4_epic3_uat_runbook.md`](epic_3_%20research_pipeline_integrity/story_4_epic3_uat_runbook.md) — `draft`
+1. `QWS-0301` [`story_1_graph_ingestion_schema_consistency.md`](epic_3_%20research_pipeline_integrity/story_1_graph_ingestion_schema_consistency.md) — `CLOSED`
+2. `QWS-0302` [`story_2_config_run_schema_split.md`](epic_3_%20research_pipeline_integrity/story_2_config_run_schema_split.md) — `draft`
+3. `QWS-0303` [`story_3_centralized_ingestion_layer.md`](epic_3_%20research_pipeline_integrity/story_3_centralized_ingestion_layer.md) — `draft`
+4. `QWS-0304` [`story_4_trial_bundle_structure.md`](epic_3_%20research_pipeline_integrity/story_4_trial_bundle_structure.md) — `draft`
+5. `QWS-0305` [`story_5_epic3_uat_runbook.md`](epic_3_%20research_pipeline_integrity/story_5_epic3_uat_runbook.md) — `draft`
 
 ---
 
@@ -92,7 +93,8 @@ Stories (execution order):
 ---
 
 ## Current Focus Suggestion
-- Epic 3 Story 1 (schema consistency) is the immediate unblock — run a fresh baseline ingest and verify `qw query --name recent_champions` returns results.
-- Story 2 (centralized ingestion layer) before adding any new trial families.
+- Epic 3 Story 1 (QWS-0301, schema consistency) is CLOSED.
+- Story 2 (QWS-0302, Config/Run schema split) is the current unblock — schema must be clean before the centralized layer is built on top of it.
+- Story 3 (QWS-0303, centralized ingestion layer) before adding any new trial families.
 - Do not begin Epic 4 work until Epic 3 exit criteria are met.
 

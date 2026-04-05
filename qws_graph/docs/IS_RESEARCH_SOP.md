@@ -247,7 +247,7 @@ Maintain one entry per strategy in `registry.json`:
   "oos_windows_run": 0,
   "tier": "professional",
   "trades_per_month_estimate": 2,
-  "champion_file": "stratgies/bear_nypre_after_1h_no_smt_exclude_q2_v2.py"
+  "champion_file": "strategies/bear_cl_sweep_1h_baseline.py"
 }
 ```
 
