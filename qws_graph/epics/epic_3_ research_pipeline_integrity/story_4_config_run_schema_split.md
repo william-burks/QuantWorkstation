@@ -1,7 +1,7 @@
-# Story 2 — Config/Run Schema Split: Domain-Specific Metadata Expansion
+# Story 4 — Config/Run Schema Split: Domain-Specific Metadata Expansion
 
 ## ID
-# QWS-0302
+# QWS-0304
 
 ## Status
 draft

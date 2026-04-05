@@ -1,7 +1,7 @@
 # Story — Centralized Ingestion Layer (Trial-to-Graph Bridge)
 
 ## ID
-# QWS-0303
+# QWS-0305
 
 ## Status
 draft
