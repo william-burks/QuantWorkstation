@@ -221,14 +221,25 @@ class GraphStore:
         session.execute_write(_write)
 
     def _persist_champion(self, session, payload: dict) -> None:
+        metrics = payload["champion"].get("metrics_summary", {})
+        # Promote tier out of metrics_summary as a top-level property.
+        tier = str(metrics.get("tier", "")).lower() or None
+        # Flatten numeric metrics into individual properties for direct Cypher queryability.
+        flat_metrics = {
+            f"metrics_{k}": v
+            for k, v in metrics.items()
+            if isinstance(v, (int, float))
+        }
         champion_payload = {
             **payload["champion"],
+            "tier": tier,
             "metrics_summary_text": json.dumps(
-                payload["champion"].get("metrics_summary", {}),
+                metrics,
                 sort_keys=True,
                 separators=(",", ":"),
                 ensure_ascii=True,
             ),
+            **flat_metrics,
         }
         pivot_from_run_id = champion_payload.get("pivot_from_run_id")
 

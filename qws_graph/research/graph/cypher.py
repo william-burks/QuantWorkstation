@@ -61,8 +61,17 @@ MERGE (s:Strategy {strategy_id: $champion.strategy_id})
 MERGE (ch:Champion {champion_id: $champion.champion_id})
   ON CREATE SET ch.created_at = datetime()
   SET
+    ch.strategy_id = $champion.strategy_id,
     ch.freeze_date = date($champion.freeze_date),
+    ch.tier = $champion.tier,
     ch.metrics_summary = $champion.metrics_summary_text,
+    ch.metrics_sharpe = $champion.metrics_sharpe,
+    ch.metrics_return = $champion.metrics_return,
+    ch.metrics_calmar = $champion.metrics_calmar,
+    ch.metrics_profit_factor = $champion.metrics_profit_factor,
+    ch.metrics_win_rate = $champion.metrics_win_rate,
+    ch.metrics_max_drawdown_r = $champion.metrics_max_drawdown_r,
+    ch.metrics_sample_size = $champion.metrics_sample_size,
     ch.oos_status = $champion.oos_status,
     ch.fragilities = $champion.fragilities,
     ch.artifact_path = $champion.artifact_path,

@@ -58,6 +58,26 @@ class FakeGraphQueryService:
         self.calls.append(("get_run_history_v1", {"strategy_id": strategy_id}))
         return self._run_history
 
+    def get_portfolio_alpha_v1(self) -> list[dict[str, Any]]:
+        self.calls.append(("get_portfolio_alpha_v1", {}))
+        return [{"champion_count": 1, "total_return": 0.1, "avg_sharpe": 4.5, "strategies": ["s1"]}]
+
+    def get_fragility_report_v1(self) -> list[dict[str, Any]]:
+        self.calls.append(("get_fragility_report_v1", {}))
+        return [{"strategy_id": "s1", "champion_id": "c1", "fragilities": ["regime risk"]}]
+
+    def get_trace_champion_v1(self, champion_id: str) -> list[dict[str, Any]]:
+        self.calls.append(("get_trace_champion_v1", {"champion_id": champion_id}))
+        return [{"strategy_id": "s1", "champion_id": champion_id, "tier": "professional"}]
+
+    def get_staleness_report_v1(self) -> list[dict[str, Any]]:
+        self.calls.append(("get_staleness_report_v1", {}))
+        return [{"champion_id": "c1", "strategy_id": "s1", "freeze_date": "2025-01-01", "days_stale": 90}]
+
+    def get_instrument_concentration_v1(self) -> list[dict[str, Any]]:
+        self.calls.append(("get_instrument_concentration_v1", {}))
+        return [{"instrument": "ES", "champion_count": 3, "total_return": 0.45}]
+
     def close(self) -> None:
         pass
 
@@ -521,3 +541,114 @@ class TestCmdQueryGraphBacked:
         assert exit_code == 0
         assert fake_service.calls[0][0] == "get_run_history_v1"
 
+
+
+# ---------------------------------------------------------------------------
+# run_preset — new analytical presets (QWS-0302)
+# ---------------------------------------------------------------------------
+
+class TestRunPresetPortfolioAlpha:
+    def test_routes_to_get_portfolio_alpha_v1(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("portfolio_alpha", {}, service=service)
+        assert len(service.calls) == 1
+        assert service.calls[0][0] == "get_portfolio_alpha_v1"
+        assert results[0]["avg_sharpe"] == 4.5
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("portfolio_alpha", {}, service=None)
+
+    def test_unknown_param_rejected(self) -> None:
+        spec = resolve_preset("portfolio_alpha")
+        errors = validate_params(spec, {"limit": "5"})
+        assert any("unknown param" in e for e in errors)
+
+    def test_no_params_valid(self) -> None:
+        spec = resolve_preset("portfolio_alpha")
+        assert validate_params(spec, {}) == []
+
+
+class TestRunPresetFragilityReport:
+    def test_routes_to_get_fragility_report_v1(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("fragility_report", {}, service=service)
+        assert service.calls[0][0] == "get_fragility_report_v1"
+        assert results[0]["champion_id"] == "c1"
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("fragility_report", {}, service=None)
+
+
+class TestRunPresetTraceChampion:
+    def test_routes_to_get_trace_champion_v1(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("trace_champion", {"champion_id": "abc123"}, service=service)
+        assert service.calls[0][0] == "get_trace_champion_v1"
+        assert service.calls[0][1]["champion_id"] == "abc123"
+        assert results[0]["strategy_id"] == "s1"
+
+    def test_missing_champion_id_raises(self) -> None:
+        spec = resolve_preset("trace_champion")
+        errors = validate_params(spec, {})
+        assert any("champion_id" in e for e in errors)
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("trace_champion", {"champion_id": "abc123"}, service=None)
+
+
+class TestRunPresetStalenessReport:
+    def test_routes_to_get_staleness_report_v1(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("staleness_report", {}, service=service)
+        assert service.calls[0][0] == "get_staleness_report_v1"
+        assert results[0]["days_stale"] == 90
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("staleness_report", {}, service=None)
+
+    def test_no_params_valid(self) -> None:
+        spec = resolve_preset("staleness_report")
+        assert validate_params(spec, {}) == []
+
+    def test_unknown_param_rejected(self) -> None:
+        spec = resolve_preset("staleness_report")
+        errors = validate_params(spec, {"limit": "5"})
+        assert any("unknown param" in e for e in errors)
+
+
+class TestRunPresetInstrumentConcentration:
+    def test_routes_to_get_instrument_concentration_v1(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("instrument_concentration", {}, service=service)
+        assert service.calls[0][0] == "get_instrument_concentration_v1"
+        assert results[0]["instrument"] == "ES"
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("instrument_concentration", {}, service=None)
+
+    def test_no_params_valid(self) -> None:
+        spec = resolve_preset("instrument_concentration")
+        assert validate_params(spec, {}) == []
+
+
+class TestNewPresetCatalogEntries:
+    def test_new_presets_present_in_catalog(self) -> None:
+        assert {
+            "portfolio_alpha", "fragility_report", "trace_champion",
+            "staleness_report", "instrument_concentration",
+        }.issubset(set(PRESET_CATALOG))
+
+    def test_all_new_presets_require_graph(self) -> None:
+        for name in ("portfolio_alpha", "fragility_report", "trace_champion",
+                     "staleness_report", "instrument_concentration"):
+            assert PRESET_CATALOG[name].requires_graph is True
+
+    def test_trace_champion_requires_champion_id_param(self) -> None:
+        spec = resolve_preset("trace_champion")
+        required = {p.name for p in spec.params if p.required}
+        assert "champion_id" in required

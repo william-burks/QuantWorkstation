@@ -18,9 +18,14 @@ from typing import TYPE_CHECKING, Any
 from .query import (
     get_cross_artifact_correlation_v1,
     get_downstream_champions_v1,
+    get_fragility_report_v1,
+    get_instrument_concentration_v1,
+    get_portfolio_alpha_v1,
     get_recent_champions_v1,
     get_run_history_v1,
+    get_staleness_report_v1,
     get_strategy_lineage_v1,
+    get_trace_champion_v1,
 )
 
 if TYPE_CHECKING:
@@ -92,6 +97,55 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
                 "run_id",
                 required=True,
                 description="Canonical run ID to query downstream champions for",
+            ),
+        ),
+        requires_graph=True,
+    ),
+    "staleness_report": PresetSpec(
+        name="staleness_report",
+        description=(
+            "Return Champions frozen more than 30 days ago, ordered by age descending. "
+            "Use to identify strategies that need a fresh walk-forward or OOS check."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
+    "instrument_concentration": PresetSpec(
+        name="instrument_concentration",
+        description=(
+            "Return champion count and total return aggregated by instrument. "
+            "Use to detect over-exposure to a single ticker."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
+    "portfolio_alpha": PresetSpec(
+        name="portfolio_alpha",
+        description=(
+            "Aggregate return and Sharpe across all professional/institutional Champions. "
+            "Returns a single row with champion_count, total_return, avg_sharpe, strategies."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
+    "fragility_report": PresetSpec(
+        name="fragility_report",
+        description="Return Champions whose fragility list mentions regime sensitivity.",
+        params=(),
+        requires_graph=True,
+    ),
+    "trace_champion": PresetSpec(
+        name="trace_champion",
+        description=(
+            "Trace the Strategy→Champion lineage for a specific champion_id. "
+            "Returns strategy_id, artifact_path, tier, metrics_sharpe, metrics_return, "
+            "and pivot_run_id (if an explicit PIVOTED_FROM edge exists)."
+        ),
+        params=(
+            PresetParam(
+                "champion_id",
+                required=True,
+                description="12-char champion_id to trace",
             ),
         ),
         requires_graph=True,
@@ -190,6 +244,27 @@ def run_preset(
         assert service is not None
         return service.get_downstream_champions_v1(run_id)
 
+    if name == "portfolio_alpha":
+        assert service is not None
+        return service.get_portfolio_alpha_v1()
+
+    if name == "fragility_report":
+        assert service is not None
+        return service.get_fragility_report_v1()
+
+    if name == "trace_champion":
+        champion_id = params["champion_id"]
+        assert service is not None
+        return service.get_trace_champion_v1(champion_id)
+
+    if name == "staleness_report":
+        assert service is not None
+        return service.get_staleness_report_v1()
+
+    if name == "instrument_concentration":
+        assert service is not None
+        return service.get_instrument_concentration_v1()
+
     if name == "cross_artifact_correlation":
         strategy_id = params.get("strategy_id")
         family_id = params.get("family_id")
@@ -253,6 +328,11 @@ _PRESET_VIEW_FUNCTIONS = {
     "run_history": get_run_history_v1,
     "downstream_champions": get_downstream_champions_v1,
     "cross_artifact_correlation": get_cross_artifact_correlation_v1,
+    "portfolio_alpha": get_portfolio_alpha_v1,
+    "fragility_report": get_fragility_report_v1,
+    "trace_champion": get_trace_champion_v1,
+    "staleness_report": get_staleness_report_v1,
+    "instrument_concentration": get_instrument_concentration_v1,
 }
 
 __all__ = [
