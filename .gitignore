@@ -29,4 +29,4 @@ research/trials/futures/liquidity_sweep/*.html
 research/trials/futures/liquidity_sweep/*.csv
 research/trials/futures/liquidity_sweep/*.json
 results/
-_qws_graph_misc_docs/
+.qws_misc_docs/
