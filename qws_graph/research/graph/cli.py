@@ -35,7 +35,7 @@ class ReceiptWriter:
         kind: str,
         artifact_path: str,
         artifact_hash: str,
-        status: Literal["persisted", "pending_offline"],
+        status: Literal["persisted", "pending_offline", "skipped"],
         node_counts: dict[str, int],
         relationship_counts: dict[str, int],
         warnings: list[str] | None = None,
@@ -334,7 +334,23 @@ def cmd_record(args: argparse.Namespace) -> int:
         print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
         return 2
 
-    # Write receipt with persisted status
+    # Print per-run evolution outcomes (CSV kinds only)
+    for outcome in result.evolution:
+        ev_str = f"  ev={outcome.evidence_score:.2f}" if outcome.evidence_score is not None else ""
+        if outcome.status == "skipped":
+            print(f"[SKIPPED]  {outcome.run_id}{ev_str}  — {outcome.reason}")
+        elif outcome.status == "promoted":
+            if outcome.champion_id:
+                print(
+                    f"[PROMOTED] {outcome.run_id}{ev_str}"
+                    f"  — new peak evidence score; Champion {outcome.champion_id} auto-promoted"
+                )
+            else:
+                print(f"[PROMOTED] {outcome.run_id}{ev_str}  — new peak evidence score")
+        else:
+            print(f"[RECORDED] {outcome.run_id}{ev_str}")
+
+    # Write receipt
     receipt_writer = ReceiptWriter(repo_root)
     try:
         receipt_writer.write_receipt(
@@ -342,7 +358,7 @@ def cmd_record(args: argparse.Namespace) -> int:
             kind=kind,
             artifact_path=file_path.as_posix(),
             artifact_hash=artifact_hash,
-            status="persisted",
+            status=result.status,
             node_counts=node_counts,
             relationship_counts=relationship_counts,
             warnings=all_warnings,
@@ -351,7 +367,10 @@ def cmd_record(args: argparse.Namespace) -> int:
         print(f"ERROR: Failed to write receipt: {exc}", file=sys.stderr)
         return 2
 
-    print(f"OK: {kind} persisted to Neo4j graph", file=sys.stdout)
+    if result.status == "skipped":
+        print(f"OK: {kind} — all runs statistically redundant (no new information added)")
+    else:
+        print(f"OK: {kind} persisted to Neo4j graph")
     return 0
 
 
@@ -513,19 +532,8 @@ def cmd_query(args: argparse.Namespace) -> int:
     else:
         if not results:
             print(f"No results for preset {name!r}.")
-        if name == "run_history":
-            for item in results:
-                print(
-                    f"run_id={item.get('run_id')} "
-                    f"timestamp={item.get('timestamp')} "
-                    f"sharpe={item.get('sharpe')} "
-                    f"max_drawdown={item.get('max_drawdown')} "
-                    f"total_trades={item.get('total_trades')} "
-                    f"curator_note={item.get('curator_note')}"
-                )
-        else:
-            for item in results:
-                print(json.dumps(item))
+        for item in results:
+            print(json.dumps(item))
 
     return 0
 

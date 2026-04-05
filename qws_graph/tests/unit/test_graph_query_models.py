@@ -225,8 +225,8 @@ class TestQueryFunctions:
 
         result = get_run_history_v1(session, "es-1h-bear-sweep")
 
-        assert [item["run_id"] for item in result] == ["run-003", "run-002"]
-        assert result[1]["config_id"] is None
+        assert [item["run_id"] for item in result] == ["run-002", "run-003"]
+        assert result[0]["config_id"] is None  # run-002 (earlier) has no config_id
 
     def test_champion_details_projection_parses_json_and_handles_missing_pivot(self) -> None:
         session = FakeSession(

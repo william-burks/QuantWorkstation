@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import os
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from neo4j import GraphDatabase
 from neo4j.exceptions import Neo4jError
 
+import datetime
+
 from .analyst import truncate_curator_note
+from . import ids as _ids
 from .cypher import (
     ABORT_STRATEGY_QUERY,
     AUDIT_NULL_FAMILY_ID_QUERY,
@@ -17,9 +20,14 @@ from .cypher import (
     CHAMPION_INGEST_QUERY,
     CSV_INGEST_QUERY,
     PATCH_FAMILY_ID_QUERY,
+    RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
 )
 from .models import ResearchArtifact, RunStatsSummary
+
+
+_PROFESSIONAL_SHARPE_THRESHOLD = 2.0
+_INSTITUTIONAL_SHARPE_THRESHOLD = 3.5
 
 
 class StoreError(RuntimeError):
@@ -31,12 +39,24 @@ class StoreInfraError(StoreError):
 
 
 @dataclass(frozen=True)
+class EvolutionOutcome:
+    """Per-run outcome from the evolutionary dedup gate."""
+
+    run_id: str
+    status: str  # "skipped" | "recorded" | "promoted"
+    reason: str  # non-empty for skipped; describes why it was suppressed
+    evidence_score: float | None  # sharpe * sqrt(total_trades); None when not computable
+    champion_id: str | None = None  # set when this run was auto-promoted to Champion
+
+
+@dataclass(frozen=True)
 class StoreResult:
     """Store write result used for receipts and CLI output."""
 
     status: str
     node_counts: dict[str, int]
     relationship_counts: dict[str, int]
+    evolution: list[EvolutionOutcome] = field(default_factory=list)
 
 
 class GraphStore:
@@ -82,26 +102,113 @@ class GraphStore:
         try:
             with self._driver.session(database=self._database) as session:
                 if artifact.kind in {"baseline_csv", "grid_csv"}:
-                    self._persist_csv(session, payload, summary)
+                    strategy_id = artifact.strategy.strategy_id
+                    evolution_outcomes: list[EvolutionOutcome] = []
+                    skipped_run_ids: set[str] = set()
+
+                    # Pre-check: redundancy gate per run
+                    for run_d in payload["runs"]:
+                        run_id = run_d["run_id"]
+                        total_trades = int(run_d.get("total_trades") or 0)
+                        sharpe = float(run_d.get("sharpe") or 0.0)
+                        timestamp_iso = run_d.get("timestamp", "")
+
+                        is_redundant = self._check_run_redundancy(
+                            session, strategy_id, run_id, total_trades, sharpe, timestamp_iso
+                        )
+
+                        if is_redundant:
+                            ev = sharpe * (total_trades ** 0.5) if total_trades > 0 else 0.0
+                            evolution_outcomes.append(EvolutionOutcome(
+                                run_id=run_id,
+                                status="skipped",
+                                reason=(
+                                    f"existing run with total_trades={total_trades} "
+                                    f"has sharpe >= {sharpe:.3f} within 30 days"
+                                ),
+                                evidence_score=ev,
+                            ))
+                            skipped_run_ids.add(run_id)
+
+                    # Build filtered payload (drop redundant runs)
+                    if skipped_run_ids:
+                        paired = list(zip(payload["runs"], payload["configs"]))
+                        kept = [(r, c) for r, c in paired if r["run_id"] not in skipped_run_ids]
+                        if not kept:
+                            # Reconcile champion for existing best run (retroactive fix)
+                            self._reconcile_champion(session, strategy_id)
+                            return StoreResult(
+                                status="skipped",
+                                node_counts={"Run": 0},
+                                relationship_counts={},
+                                evolution=evolution_outcomes,
+                            )
+                        kept_runs, kept_configs = zip(*kept)
+                        filtered_payload: dict = {
+                            **payload,
+                            "runs": list(kept_runs),
+                            "configs": list(kept_configs),
+                        }
+                    else:
+                        filtered_payload = payload
+
+                    # Write non-redundant rows
+                    self._persist_csv(session, filtered_payload, summary)
+
+                    # Post-write: evidence score promotion
+                    best_run_id, best_ev, displaced_run_id = self._update_best_run(
+                        session, strategy_id
+                    )
+
+                    # Always reconcile champion — works for new peaks and retroactive gaps
+                    auto_champion_id: str | None = self._reconcile_champion(session, strategy_id)
+
+                    for run_d in filtered_payload["runs"]:
+                        run_id = run_d["run_id"]
+                        t = int(run_d.get("total_trades") or 0)
+                        s = float(run_d.get("sharpe") or 0.0)
+                        ev = s * (t ** 0.5) if t > 0 else 0.0
+                        is_promoted = run_id == best_run_id
+                        evolution_outcomes.append(EvolutionOutcome(
+                            run_id=run_id,
+                            status="promoted" if is_promoted else "recorded",
+                            reason="",
+                            evidence_score=ev,
+                            champion_id=auto_champion_id if is_promoted else None,
+                        ))
+
+                    n_written = len(filtered_payload["runs"])
                     node_counts: dict[str, int] = {
                         "Strategy": 1,
-                        "Run": len(artifact.runs),
-                        "Config": len(artifact.configs),
+                        "Run": n_written,
+                        "Config": n_written,
                     }
                     rel_counts: dict[str, int] = {
-                        "HAS_RUN": len(artifact.runs),
-                        "USES_CONFIG": len(artifact.runs),
+                        "HAS_RUN": n_written,
+                        "USES_CONFIG": n_written,
                     }
-                    if summary is not None:
+                    if summary is not None and n_written > 0:
                         node_counts["RunStatsSummary"] = 1
                         rel_counts["HAS_RUN_SUMMARY"] = 1
                     return StoreResult(
                         status="persisted",
                         node_counts=node_counts,
                         relationship_counts=rel_counts,
+                        evolution=evolution_outcomes,
                     )
 
                 if artifact.kind == "champion_md":
+                    champion_tier = str(
+                        (payload.get("champion") or {})
+                        .get("metrics_summary", {})
+                        .get("tier", "")
+                    ).lower()
+                    if champion_tier == "fail":
+                        return StoreResult(
+                            status="skipped",
+                            node_counts={"Champion": 0},
+                            relationship_counts={},
+                        )
                     self._persist_champion(session, payload)
                     rel_counts = {"PRODUCED_CHAMPION": 1}
                     if artifact.champion and artifact.champion.pivot_from_run_id:
@@ -190,6 +297,324 @@ class GraphStore:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001
             raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def _check_run_redundancy(
+        self,
+        session,
+        strategy_id: str,
+        run_id: str,
+        total_trades: int,
+        sharpe: float,
+        timestamp_iso: str,
+    ) -> bool:
+        """Return True if an existing run makes this one redundant.
+
+        Redundant = same ``total_trades``, existing sharpe >= new sharpe, and
+        the timestamps are within 30 days of each other.  The 30-day exception
+        preserves longitudinal walk-forward data while suppressing re-ingests
+        that add no statistical information.
+
+        The run is excluded from its own comparison (by ``run_id``) so
+        re-ingesting the same file is idempotent.
+        """
+        def _read(tx):
+            result = tx.run(
+                RUN_REDUNDANCY_CHECK_CYPHER,
+                strategy_id=strategy_id,
+                new_run_id=run_id,
+                new_trades=total_trades,
+                new_sharpe=sharpe,
+                new_timestamp=timestamp_iso,
+            ).single()
+            return bool(result["is_redundant"]) if result is not None else False
+
+        return session.execute_read(_read)
+
+    def _update_best_run(
+        self,
+        session,
+        strategy_id: str,
+    ) -> tuple[str | None, float | None, str | None]:
+        """Promote the highest evidence-score run to ``Strategy.best_run_id``.
+
+        Evidence score = sharpe × √total_trades.  Archives the previous best
+        run by setting ``Run.was_best = true`` when it is displaced.
+
+        Returns ``(best_run_id, evidence_score, displaced_run_id)``.
+        ``displaced_run_id`` is non-None only when a different run held the
+        top spot before this call.
+        """
+        def _read(tx):
+            s_row = tx.run(
+                "MATCH (s:Strategy {strategy_id: $sid}) RETURN s.best_run_id AS brid",
+                sid=strategy_id,
+            ).single()
+            old_best = s_row["brid"] if s_row else None
+
+            best = tx.run(
+                "MATCH (s:Strategy {strategy_id: $sid})-[:HAS_RUN]->(r:Run) "
+                "WHERE r.total_trades IS NOT NULL AND r.total_trades > 0 "
+                "  AND r.sharpe IS NOT NULL "
+                "WITH r, (r.sharpe * sqrt(toFloat(r.total_trades))) AS ev "
+                "ORDER BY ev DESC LIMIT 1 "
+                "RETURN r.run_id AS run_id, ev AS evidence_score",
+                sid=strategy_id,
+            ).single()
+
+            return old_best, best
+
+        old_best_run_id, best_row = session.execute_read(_read)
+
+        if best_row is None:
+            return None, None, None
+
+        new_best_run_id: str = best_row["run_id"]
+        evidence_score = float(best_row["evidence_score"])
+        displaced = (
+            old_best_run_id
+            if old_best_run_id and old_best_run_id != new_best_run_id
+            else None
+        )
+
+        def _write(tx) -> None:
+            if displaced:
+                tx.run(
+                    "MATCH (r:Run {run_id: $run_id}) SET r.was_best = true",
+                    run_id=displaced,
+                ).consume()
+            tx.run(
+                "MATCH (s:Strategy {strategy_id: $sid}) "
+                "SET s.best_run_id = $best_run_id, "
+                "    s.best_evidence_score = $ev, "
+                "    s.updated_at = datetime()",
+                sid=strategy_id,
+                best_run_id=new_best_run_id,
+                ev=evidence_score,
+            ).consume()
+
+        session.execute_write(_write)
+
+        return new_best_run_id, evidence_score, displaced
+
+    def _maybe_auto_promote_champion(
+        self,
+        session,
+        strategy_id: str,
+        run_data: dict,
+        evidence_score: float,
+    ) -> str | None:
+        """Auto-promote a newly-written run to Champion if it sets a new evidence peak.
+
+        Quality gate: run's Sharpe must be >= PROFESSIONAL threshold (2.0).
+        When promotion happens:
+          - The existing ``PRODUCED_CHAMPION`` relationship is relabelled to
+            ``WAS_CHAMPION`` (lineage preserved, hidden from active queries).
+          - A new Champion node is created with the run's metrics.
+          - A new ``PRODUCED_CHAMPION`` relationship is created.
+          - A ``PIVOTED_FROM`` edge links the Champion to the promoted Run.
+
+        Returns the new ``champion_id`` when promotion occurred, else ``None``.
+        """
+        tier_raw = str(run_data.get("tier", "")).lower()
+        if tier_raw == "fail":
+            return None
+
+        sharpe = float(run_data.get("sharpe") or 0.0)
+        if sharpe < _PROFESSIONAL_SHARPE_THRESHOLD:
+            return None
+
+        run_id = run_data["run_id"]
+
+        # Read current champion's evidence score (if any)
+        def _read(tx):
+            result = tx.run(
+                """
+                MATCH (s:Strategy {strategy_id: $sid})-[:PRODUCED_CHAMPION]->(ch:Champion)
+                RETURN ch.champion_id AS champion_id,
+                       COALESCE(
+                         ch.best_evidence_score,
+                         ch.metrics_sharpe * sqrt(toFloat(COALESCE(ch.metrics_total_trades, 0)))
+                       ) AS evidence_score
+                ORDER BY ch.freeze_date DESC LIMIT 1
+                """,
+                sid=strategy_id,
+            ).single()
+            return result
+
+        current = session.execute_read(_read)
+
+        # Gate: only promote if new evidence strictly beats current champion
+        if current is not None:
+            old_ev = float(current["evidence_score"] or 0.0)
+            if evidence_score <= old_ev:
+                return None
+
+        # Compute tier and build champion payload
+        tier = "institutional" if sharpe >= _INSTITUTIONAL_SHARPE_THRESHOLD else "professional"
+        today_iso = datetime.date.today().isoformat()
+        new_champ_id = _ids.hash12(strategy_id, run_id)
+        total_trades = int(run_data.get("total_trades") or 0)
+        total_r = float(run_data.get("total_r") or 0.0)
+        profit_factor = float(run_data.get("profit_factor") or 0.0)
+        win_rate = float(run_data.get("win_rate") or 0.0)
+        max_drawdown = float(run_data.get("max_drawdown") or 0.0)
+        artifact_path = run_data.get("artifact_path", "")
+        metrics_summary_text = json.dumps(
+            {
+                "auto_promoted": True,
+                "max_drawdown_r": max_drawdown,
+                "profit_factor": profit_factor,
+                "return": total_r,
+                "sample_size": total_trades,
+                "sharpe": sharpe,
+                "tier": tier,
+                "total_trades": total_trades,
+                "win_rate": win_rate,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+
+        def _write(tx) -> None:
+            # Combined: retire existing champion (label swap + delete old rel),
+            # create new Champion, chain new → retired via WAS_CHAMPION.
+            tx.run(
+                """
+                MATCH (s:Strategy {strategy_id: $sid})
+                OPTIONAL MATCH (s)-[old:PRODUCED_CHAMPION]->(prev:Champion)
+
+                FOREACH (rel IN CASE WHEN old IS NULL THEN [] ELSE [old] END |
+                  DELETE rel
+                )
+                FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
+                  REMOVE prev:Champion
+                  SET prev:RetiredChampion
+                )
+
+                MERGE (ch:Champion {champion_id: $champion_id})
+                  ON CREATE SET ch.created_at = datetime()
+                  SET
+                    ch.strategy_id = $sid,
+                    ch.freeze_date = date($freeze_date),
+                    ch.tier = $tier,
+                    ch.metrics_summary = $metrics_summary,
+                    ch.metrics_sharpe = $sharpe,
+                    ch.metrics_total_trades = $total_trades,
+                    ch.metrics_return = $total_r,
+                    ch.metrics_profit_factor = $profit_factor,
+                    ch.metrics_win_rate = $win_rate,
+                    ch.metrics_max_drawdown_r = $max_drawdown,
+                    ch.metrics_sample_size = $total_trades,
+                    ch.best_evidence_score = $evidence_score,
+                    ch.oos_status = 'oos_pending',
+                    ch.fragilities = $fragilities,
+                    ch.artifact_path = $artifact_path,
+                    ch.auto_promoted = true,
+                    ch.updated_at = datetime()
+
+                MERGE (s)-[:PRODUCED_CHAMPION]->(ch)
+                FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
+                  CREATE (ch)-[:WAS_CHAMPION]->(prev)
+                )
+
+                WITH ch
+                MATCH (r:Run {run_id: $run_id})
+                MERGE (ch)-[:PIVOTED_FROM]->(r)
+                """,
+                sid=strategy_id,
+                champion_id=new_champ_id,
+                freeze_date=today_iso,
+                tier=tier,
+                metrics_summary=metrics_summary_text,
+                sharpe=sharpe,
+                total_trades=total_trades,
+                total_r=total_r,
+                profit_factor=profit_factor,
+                win_rate=win_rate,
+                max_drawdown=max_drawdown,
+                evidence_score=evidence_score,
+                fragilities=[
+                    f"Auto-promoted via evidence gate — run_id={run_id}, "
+                    f"evidence_score={evidence_score:.2f} — no OOS validation performed",
+                    "Single promotion cycle; lineage preserved via WAS_CHAMPION edges",
+                ],
+                artifact_path=artifact_path,
+                run_id=run_id,
+            ).consume()
+
+        session.execute_write(_write)
+        return new_champ_id
+
+    def _reconcile_champion(self, session, strategy_id: str) -> str | None:
+        """Enforce One Strategy = One Champion, then ensure the current peak is reflected.
+
+        Step 1 — Flatten: if multiple PRODUCED_CHAMPION edges exist (stale state),
+        retire all but the highest-evidence one atomically.  Each demoted node has its
+        :Champion label swapped to :RetiredChampion and a WAS_CHAMPION edge created
+        from the surviving king.
+
+        Step 2 — Auto-promote: reads the highest evidence-score Run and delegates
+        to :meth:`_maybe_auto_promote_champion`.  Safe to call unconditionally —
+        returns ``None`` when the quality gate blocks promotion or the current
+        champion already holds the peak.
+        """
+        def _flatten(tx) -> None:
+            tx.run(
+                """
+                MATCH (s:Strategy {strategy_id: $sid})-[rel:PRODUCED_CHAMPION]->(c:Champion)
+                WITH s, rel, c,
+                     COALESCE(
+                       c.best_evidence_score,
+                       c.metrics_sharpe * sqrt(toFloat(COALESCE(c.metrics_total_trades, 0)))
+                     ) AS ev
+                ORDER BY ev DESC
+                WITH s, collect(c) AS champs, collect(rel) AS rels
+                WITH s, champs[0] AS king, champs[1..] AS losers, rels[1..] AS loser_rels
+                WHERE size(losers) > 0
+                UNWIND range(0, size(losers) - 1) AS i
+                WITH s, king, losers[i] AS loser, loser_rels[i] AS loser_rel
+                DELETE loser_rel
+                REMOVE loser:Champion
+                SET loser:RetiredChampion
+                CREATE (king)-[:WAS_CHAMPION]->(loser)
+                """,
+                sid=strategy_id,
+            ).consume()
+
+        session.execute_write(_flatten)
+
+        def _read(tx):
+            return tx.run(
+                "MATCH (s:Strategy {strategy_id: $sid})-[:HAS_RUN]->(r:Run) "
+                "WHERE r.total_trades IS NOT NULL AND r.total_trades > 0 "
+                "  AND r.sharpe IS NOT NULL "
+                "WITH r, (r.sharpe * sqrt(toFloat(r.total_trades))) AS ev "
+                "ORDER BY ev DESC LIMIT 1 "
+                "RETURN r.run_id AS run_id, r.sharpe AS sharpe, "
+                "       r.profit_factor AS profit_factor, r.win_rate AS win_rate, "
+                "       r.max_drawdown AS max_drawdown, r.total_trades AS total_trades, "
+                "       r.total_r AS total_r, r.artifact_path AS artifact_path, "
+                "       ev AS evidence_score",
+                sid=strategy_id,
+            ).single()
+
+        best = session.execute_read(_read)
+        if best is None:
+            return None
+
+        run_data = {
+            "run_id": best["run_id"],
+            "sharpe": float(best["sharpe"] or 0.0),
+            "profit_factor": float(best["profit_factor"] or 0.0),
+            "win_rate": float(best["win_rate"] or 0.0),
+            "max_drawdown": float(best["max_drawdown"] or 0.0),
+            "total_trades": int(best["total_trades"] or 0),
+            "total_r": float(best["total_r"] or 0.0),
+            "artifact_path": best["artifact_path"] or "",
+        }
+        return self._maybe_auto_promote_champion(
+            session, strategy_id, run_data, float(best["evidence_score"] or 0.0)
+        )
 
     def _persist_csv(self, session, payload: dict, summary: RunStatsSummary | None = None) -> None:
         rows = []
