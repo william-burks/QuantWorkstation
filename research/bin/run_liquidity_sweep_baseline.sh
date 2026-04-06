@@ -14,6 +14,11 @@ unset _QWS_ENV_FILE
 cd "$_QWS_ROOT"
 unset _QWS_ROOT
 
+RUN_TS="$(date +%Y%m%d-%H%M%S)"
+RUN_DIR="research/results/futures/liquidity_sweep/runs/${RUN_TS}"
+mkdir -p "${RUN_DIR}"
+echo "Run directory: ${RUN_DIR}"
+
 record_artifact() {
 	local artifact_file="$1"
 	local artifact_kind="$2"
@@ -44,17 +49,32 @@ echo "=== Liquidity Sweep Trial — Baseline Execution ==="
 echo ""
 
 echo "Running liquidity sweep baseline..."
-python research/trials/futures/liquidity_sweep/01_baseline.py
+python research/trials/futures/liquidity_sweep/01_baseline.py --output-dir "${RUN_DIR}"
 
-record_artifact \
-	"research/results/futures/liquidity_sweep/baseline_results.csv" \
-	"baseline_csv" \
-	"research/trials/futures/liquidity_sweep/01_baseline.py"
+cat > "${RUN_DIR}/bundle.json" <<EOF
+{
+  "trial": "liquidity_sweep_baseline",
+  "run_ts": "${RUN_TS}",
+  "files": {
+    "csv": "baseline_results.csv",
+    "csv_kind": "baseline_csv",
+    "html": "index.html"
+  }
+}
+EOF
+
+echo "Bundle manifest written: ${RUN_DIR}/bundle.json"
+
+if [[ "${QW_GRAPH_ENABLED:-true}" == "false" ]]; then
+	echo "INFO: QW_GRAPH_ENABLED=false — skipping graph ingest"
+else
+	qw record --bundle "${RUN_DIR}" || true
+fi
 
 echo ""
 echo "✓ Baseline complete. Review:"
-echo "  - research/results/futures/liquidity_sweep/index.html"
-echo "  - research/results/futures/liquidity_sweep/baseline_results.csv"
+echo "  - ${RUN_DIR}/index.html"
+echo "  - ${RUN_DIR}/baseline_results.csv"
 echo ""
 echo "Documentation:"
 echo "  - research/trials/futures/liquidity_sweep/README.md"

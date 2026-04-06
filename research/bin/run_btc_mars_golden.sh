@@ -15,28 +15,27 @@ unset _QWS_ENV_FILE
 cd "$_QWS_ROOT"
 unset _QWS_ROOT
 
-CSV=research/results/crypto/mars/btc_bull_mars_1d_golden_results.csv
-CHAMPION_MD=research/results/crypto/mars/btc_bull_mars_1d_golden_champion.md
+CSV_DIR=research/results/crypto/mars/runs/$(date +%Y%m%d-%H%M%S)
+mkdir -p "$CSV_DIR"
 
-echo "=== BTC Bull MARS 1D Golden ==="
-echo ""
+python research/trials/crypto/mars/golden.py --output-dir "$CSV_DIR"
 
-python research/trials/crypto/mars/golden.py
+cat > "$CSV_DIR/bundle.json" <<EOF
+{
+  "trial": "btc_bull_mars_1d_golden",
+  "run_ts": "$(basename $CSV_DIR)",
+  "files": {
+    "csv": "btc_bull_mars_1d_golden_results.csv",
+    "csv_kind": "baseline_csv",
+    "html": "btc_bull_mars_1d_golden.html",
+    "champion_md": "btc_bull_mars_1d_golden_champion.md"
+  }
+}
+EOF
 
-echo ""
-echo "--- Graph ingest ---"
+echo "Bundle manifest written: $CSV_DIR/bundle.json"
 
-if [[ -f "$CSV" ]]; then
-  qw record --file "$CSV" --kind baseline_csv || true
-else
-  echo "WARNING: CSV not found — skipping baseline_csv ingest"
-fi
-
-if [[ -f "$CHAMPION_MD" ]]; then
-  qw record --file "$CHAMPION_MD" --kind champion_md || true
-else
-  echo "WARNING: Champion MD not found — skipping champion_md ingest"
-fi
+qw record --bundle "$CSV_DIR"
 
 echo ""
 echo "=== Done ==="

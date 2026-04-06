@@ -14,6 +14,11 @@ unset _QWS_ENV_FILE
 cd "$_QWS_ROOT"
 unset _QWS_ROOT
 
+RUN_TS="$(date +%Y%m%d-%H%M%S)"
+RUN_DIR="research/results/futures/liquidity_sweep/runs/${RUN_TS}"
+mkdir -p "${RUN_DIR}"
+echo "Run directory: ${RUN_DIR}"
+
 record_artifact() {
 	local artifact_file="$1"
 	local artifact_kind="$2"
@@ -44,22 +49,40 @@ echo "=== Liquidity Sweep Trial — Golden Strategy Execution ==="
 echo ""
 
 echo "Running liquidity sweep golden strategy..."
-python research/trials/futures/liquidity_sweep/golden.py
+python research/trials/futures/liquidity_sweep/golden.py --output-dir "${RUN_DIR}"
 
-record_artifact \
-	"research/results/futures/liquidity_sweep/golden_results.csv" \
-	"baseline_csv" \
-	"research/trials/futures/liquidity_sweep/golden.py"
+cat > "${RUN_DIR}/bundle.json" <<EOF
+{
+  "trial": "liquidity_sweep_golden",
+  "run_ts": "${RUN_TS}",
+  "files": {
+    "csv": "golden_results.csv",
+    "csv_kind": "baseline_csv",
+    "html": "golden.html"
+  }
+}
+EOF
 
+echo "Bundle manifest written: ${RUN_DIR}/bundle.json"
+
+if [[ "${QW_GRAPH_ENABLED:-true}" == "false" ]]; then
+	echo "INFO: QW_GRAPH_ENABLED=false — skipping graph ingest"
+else
+	qw record --bundle "${RUN_DIR}" || true
+fi
+
+# Champion markdown is co-located in RUN_DIR but not part of the bundle manifest.
+# Record it separately via --file mode.
 record_artifact \
-	"research/results/futures/liquidity_sweep/cl_bear_liquidity_sweep_1h_golden_champion.md" \
+	"${RUN_DIR}/cl_bear_liquidity_sweep_1h_golden_champion.md" \
 	"champion_md" \
 	"research/trials/futures/liquidity_sweep/golden.py"
 
 echo ""
 echo "✓ Golden strategy complete. Review:"
-echo "  - research/results/futures/liquidity_sweep/golden.html"
-echo "  - research/results/futures/liquidity_sweep/golden_results.csv"
+echo "  - ${RUN_DIR}/golden.html"
+echo "  - ${RUN_DIR}/golden_results.csv"
+echo "  - ${RUN_DIR}/cl_bear_liquidity_sweep_1h_golden_champion.md"
 echo ""
 echo "Documentation:"
 echo "  - research/trials/futures/liquidity_sweep/README.md"

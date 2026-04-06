@@ -64,6 +64,7 @@ class Run(BaseModel):
     metrics_return: float | None = None  # CSV column "return" (reserved word)
     tier: str | None = None
     artifact_path: str
+    artifact_path_html: str | None = None  # filesystem path to HTML report; set via patch_run_html_path
     curator_note: str | None = None
     provenance: Provenance
 

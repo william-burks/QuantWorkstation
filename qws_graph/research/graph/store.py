@@ -20,6 +20,7 @@ from .cypher import (
     CHAMPION_INGEST_QUERY,
     CSV_INGEST_QUERY,
     PATCH_FAMILY_ID_QUERY,
+    PATCH_RUN_HTML_PATH_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
 )
@@ -289,6 +290,30 @@ class GraphStore:
             with self._driver.session(database=self._database) as session:
                 def _write(tx):
                     result = tx.run(PATCH_FAMILY_ID_QUERY, strategy_id=strategy_id, family_id=family_id)
+                    return list(result)
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def patch_run_html_path(self, run_id: str, html_path: str) -> bool:
+        """Attach an HTML report path to an existing Run node.
+
+        Idempotent — repeated calls with the same path are safe.  Repeated
+        calls with a different path overwrite the previous value (re-run
+        replaces the report pointer).  Returns ``True`` when the Run node was
+        found and updated, ``False`` when no ``Run`` node with that
+        ``run_id`` exists (e.g., the run was deduplicated/skipped).
+
+        Raises ``StoreInfraError`` on Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx):
+                    result = tx.run(PATCH_RUN_HTML_PATH_QUERY, run_id=run_id, html_path=html_path)
                     return list(result)
 
                 records = session.execute_write(_write)

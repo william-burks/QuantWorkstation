@@ -530,8 +530,8 @@ def run_backtest(data, config):
         if len(window) < 4:
             continue
 
-        mes_win = mes5.reindex(window.index, method='ffill').ffill()
-        mnq_win = mnq5.reindex(window.index, method='ffill').ffill()
+        mes_win = mes5.reindex(window.index, method='ffill').infer_objects(copy=False).ffill()
+        mnq_win = mnq5.reindex(window.index, method='ffill').infer_objects(copy=False).ffill()
         smt_arr = detect_smt(mes_win, mnq_win, direction)
         eq_arr = detect_eq_retrace(window, direction, sweep_close) if not np.isnan(sweep_close) else np.zeros(
             len(window))
@@ -673,7 +673,7 @@ def run_backtest(data, config):
     monthly_index = monthly.index
     if getattr(monthly_index, 'tz', None) is not None:
         monthly.index = monthly_index.tz_localize(None)
-    monthly = monthly['pnl_r'].resample('M').sum()
+    monthly = monthly['pnl_r'].resample('ME').sum()
 
     return {
         'config': dict(config),

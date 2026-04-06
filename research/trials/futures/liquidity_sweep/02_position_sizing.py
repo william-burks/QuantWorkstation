@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -83,6 +84,18 @@ def _write_html(results: pd.DataFrame, output_path: Path) -> None:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description="Liquidity sweep position sizing trial")
+    ap.add_argument(
+        "--output-dir",
+        default=None,
+        metavar="DIR",
+        help="Write all artifacts here (default: research/results/futures/liquidity_sweep/)",
+    )
+    args = ap.parse_args()
+    _default_out = ROOT / "research" / "results" / "futures" / "liquidity_sweep"
+    _out_dir = Path(args.output_dir) if args.output_dir else _default_out
+    _out_dir.mkdir(parents=True, exist_ok=True)
+
     data = load_data_from_store()
     result = run_with_data(data=data, config_overrides=CONFIG_OVERRIDES)
     trades = result.get("trades_df", pd.DataFrame())
@@ -102,17 +115,16 @@ def main() -> None:
         total_hours=int(len(cl1h)),
     )
 
-    out_dir = ROOT / "research" / "results" / "futures" / "liquidity_sweep"
-    summary_csv = out_dir / "position_sizing_results.csv"
-    curves_csv = out_dir / "position_sizing_equity_curves.csv"
-    html_path = out_dir / "position_sizing.html"
-    json_path = out_dir / "position_sizing_summary.json"
+    summary_csv = _out_dir / "position_sizing_results.csv"
+    curves_csv = _out_dir / "position_sizing_equity_curves.csv"
+    html_path = _out_dir / "position_sizing.html"
+    json_path = _out_dir / "position_sizing_summary.json"
 
     summary_df.to_csv(summary_csv, index=False)
     curves_df.to_csv(curves_csv, index=False)
     _write_html(summary_df, html_path)
 
-    graph_csv = out_dir / "position_sizing_grid_graph.csv"
+    graph_csv = _out_dir / "position_sizing_grid_graph.csv"
     wrote_graph_csv = False
     if not summary_df.empty:
         # Compute per-trade metrics from baseline trades (shared across sizing modes).

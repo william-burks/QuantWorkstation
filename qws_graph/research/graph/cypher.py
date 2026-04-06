@@ -205,3 +205,12 @@ RETURN s.strategy_id AS strategy_id
 """.strip()
 
 
+PATCH_RUN_HTML_PATH_QUERY = """
+MATCH (r:Run {run_id: $run_id})
+SET
+  r.artifact_path_html = $html_path,
+  r.updated_at = datetime()
+RETURN r.run_id AS run_id
+""".strip()
+
+

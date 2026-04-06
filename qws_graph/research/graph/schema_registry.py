@@ -97,9 +97,17 @@ RUN_PROPERTIES: set[str] = {
 # stored in any node.  These will NOT produce an "Unknown columns" warning.
 IGNORED_COLUMNS: set[str] = {
     "avg_risk_pct",
+    "beat_bh",
     "bh_exposure_return",
+    "breakeven_win_rate",
+    "exposure_frac",
     "fee_pct_of_gain",
     "fees",
     "gain",
+    "max_hours_in_market",
     "outperformance_x",
+    "sample_size",
+    "total_hours",
+    "mode",
+    "risk_avg"
 }

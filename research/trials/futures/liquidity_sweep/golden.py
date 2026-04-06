@@ -7,6 +7,7 @@ r_dist = larger position size (within bounds).
 Entry/exit logic unchanged from baseline; only sizing differs.
 """
 
+import argparse
 import sys
 from datetime import date
 from pathlib import Path
@@ -292,6 +293,18 @@ python research/trials/futures/liquidity_sweep/golden.py \\
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description="Liquidity sweep golden strategy trial")
+    ap.add_argument(
+        "--output-dir",
+        default=None,
+        metavar="DIR",
+        help="Write all artifacts here (default: research/results/futures/liquidity_sweep/)",
+    )
+    args = ap.parse_args()
+    _default_out = ROOT / "research" / "results" / "futures" / "liquidity_sweep"
+    _out_dir = Path(args.output_dir) if args.output_dir else _default_out
+    _out_dir.mkdir(parents=True, exist_ok=True)
+
     data = load_data_from_store()
     result = run_with_data(data=data, config_overrides=CONFIG_OVERRIDES)
 
@@ -374,11 +387,11 @@ def main() -> None:
     report(results, bh_exposure_adjusted, metadata, top_n=1, full_n=1)
 
     tier_assessment = _tier_assessment_payload(results, bh)
-    html_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "golden.html"
+    html_path = _out_dir / "golden.html"
     _write_index_html(metadata, bh, results, tier_assessment, exposure, html_path)
     print(f"\nHTML report written: {html_path}")
 
-    csv_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "golden_results.csv"
+    csv_path = _out_dir / "golden_results.csv"
     if not results.empty:
         write_baseline_csv(
             results,
@@ -392,10 +405,7 @@ def main() -> None:
     else:
         print("Golden strategy CSV not written (no valid results).")
 
-    champion_md_path = (
-        ROOT / "research" / "results" / "futures" / "liquidity_sweep"
-        / "cl_bear_liquidity_sweep_1h_golden_champion.md"
-    )
+    champion_md_path = _out_dir / "cl_bear_liquidity_sweep_1h_golden_champion.md"
     if _write_champion_md(results, len(trades), champion_md_path):
         print(f"Champion markdown written: {champion_md_path}")
     else:

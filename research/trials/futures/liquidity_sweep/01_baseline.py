@@ -4,6 +4,7 @@ Runs the legacy backtest logic through the project adapter layer so the trial
 lives under research/ with the existing structure.
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -255,6 +256,18 @@ def _write_index_html(
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description="Liquidity sweep baseline trial")
+    ap.add_argument(
+        "--output-dir",
+        default=None,
+        metavar="DIR",
+        help="Write all artifacts here (default: research/results/futures/liquidity_sweep/)",
+    )
+    args = ap.parse_args()
+    _default_out = ROOT / "research" / "results" / "futures" / "liquidity_sweep"
+    _out_dir = Path(args.output_dir) if args.output_dir else _default_out
+    _out_dir.mkdir(parents=True, exist_ok=True)
+
     data = load_data_from_store()
     result = run_with_data(data=data, config_overrides=CONFIG_OVERRIDES)
 
@@ -307,11 +320,11 @@ def main() -> None:
     _print_exposure_normalized(exposure_metrics)
     tier_assessment = _tier_assessment_payload(results, bh)
 
-    html_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "index.html"
+    html_path = _out_dir / "index.html"
     _write_index_html(metadata, bh, results, tier_assessment, exposure_metrics, html_path)
     print(f"\nHTML report written: {html_path}")
 
-    csv_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "baseline_results.csv"
+    csv_path = _out_dir / "baseline_results.csv"
     if not results.empty:
         write_baseline_csv(
             results,

@@ -13,6 +13,7 @@ Produces two graph-ingestable artifacts:
 
 from __future__ import annotations
 
+import argparse
 import sys
 from datetime import date
 from pathlib import Path
@@ -353,6 +354,20 @@ def _write_html(
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description="BTC Bull MARS 1D golden strategy trial")
+    ap.add_argument(
+        "--output-dir",
+        default=None,
+        metavar="DIR",
+        help="Write all artifacts here (default: research/results/crypto/mars/)",
+    )
+    args = ap.parse_args()
+    _out_dir = Path(args.output_dir) if args.output_dir else _OUTPUT_DIR
+    _out_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = _out_dir / "btc_bull_mars_1d_golden_results.csv"
+    champion_md_path = _out_dir / "btc_bull_mars_1d_golden_champion.md"
+    html_path = _out_dir / "btc_bull_mars_1d_golden.html"
+
     bars = get_store().read_bars("crypto", "BTC/USD_1D")
 
     bh_equity = bars["close"] / bars["close"].iloc[0] * BACKTEST_CONFIG["init_cash"]
@@ -418,16 +433,16 @@ def main() -> None:
     tier_assessment = _tier_assessment_payload(results, bh)
     report(results, bh, metadata, top_n=1, full_n=1)
 
-    _write_html(metadata, bh, results, tier_assessment, _HTML_PATH)
-    print(f"\nHTML report:  {_HTML_PATH.relative_to(ROOT)}")
+    _write_html(metadata, bh, results, tier_assessment, html_path)
+    print(f"\nHTML report:  {html_path}")
 
-    if _write_golden_csv(results, _CSV_PATH):
-        print(f"CSV written:  {_CSV_PATH.relative_to(ROOT)}")
+    if _write_golden_csv(results, csv_path):
+        print(f"CSV written:  {csv_path}")
     else:
         print("CSV not written (no valid results).")
 
-    if _write_champion_md(results, n_trades, _CHAMPION_MD_PATH):
-        print(f"Champion MD:  {_CHAMPION_MD_PATH.relative_to(ROOT)}")
+    if _write_champion_md(results, n_trades, champion_md_path):
+        print(f"Champion MD:  {champion_md_path}")
     else:
         print("Champion MD not written (no valid results).")
 

@@ -14,6 +14,11 @@ unset _QWS_ENV_FILE
 cd "$_QWS_ROOT"
 unset _QWS_ROOT
 
+RUN_TS="$(date +%Y%m%d-%H%M%S)"
+RUN_DIR="research/results/futures/liquidity_sweep/runs/${RUN_TS}"
+mkdir -p "${RUN_DIR}"
+echo "Run directory: ${RUN_DIR}"
+
 record_artifact() {
 	local artifact_file="$1"
 	local artifact_kind="$2"
@@ -44,18 +49,33 @@ echo "=== Liquidity Sweep Trial — Position Sizing Execution ==="
 echo ""
 
 echo "Running liquidity sweep position sizing..."
-python research/trials/futures/liquidity_sweep/02_position_sizing.py
+python research/trials/futures/liquidity_sweep/02_position_sizing.py --output-dir "${RUN_DIR}"
 
-record_artifact \
-	"research/results/futures/liquidity_sweep/position_sizing_grid_graph.csv" \
-	"grid_csv" \
-	"research/trials/futures/liquidity_sweep/02_position_sizing.py"
+cat > "${RUN_DIR}/bundle.json" <<EOF
+{
+  "trial": "liquidity_sweep_position_sizing",
+  "run_ts": "${RUN_TS}",
+  "files": {
+    "csv": "position_sizing_grid_graph.csv",
+    "csv_kind": "grid_csv",
+    "html": "position_sizing.html"
+  }
+}
+EOF
+
+echo "Bundle manifest written: ${RUN_DIR}/bundle.json"
+
+if [[ "${QW_GRAPH_ENABLED:-true}" == "false" ]]; then
+	echo "INFO: QW_GRAPH_ENABLED=false — skipping graph ingest"
+else
+	qw record --bundle "${RUN_DIR}" || true
+fi
 
 echo ""
 echo "✓ Position sizing complete. Review:"
-echo "  - research/results/futures/liquidity_sweep/position_sizing.html"
-echo "  - research/results/futures/liquidity_sweep/position_sizing_results.csv"
-echo "  - research/results/futures/liquidity_sweep/position_sizing_grid_graph.csv"
+echo "  - ${RUN_DIR}/position_sizing.html"
+echo "  - ${RUN_DIR}/position_sizing_results.csv"
+echo "  - ${RUN_DIR}/position_sizing_grid_graph.csv"
 echo ""
 echo "Documentation:"
 echo "  - research/trials/futures/liquidity_sweep/README.md"
