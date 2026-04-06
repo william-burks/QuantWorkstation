@@ -214,7 +214,7 @@ nodes:
       artifact_path:
         type: str
         nullable: false
-        description: Relative path of the source CSV file.
+        description: Repo-relative POSIX path of the source CSV file (e.g. research/results/futures/.../baseline.csv).
       curator_note:
         type: str
         nullable: true
@@ -237,13 +237,14 @@ nodes:
         type: str
         nullable: false
         description: Parser version string. "v1" for all V1 artifacts.
-      was_best:
+      peaked_as_best:
         type: bool
         nullable: true
         graph_only: true
         description: >
           Set to true when this run is displaced from Strategy.best_run_id by
-          a higher-evidence run. Absent on runs that were never the best.
+          a higher-evidence run. Permanent audit trail — never cleared. Absent
+          on runs that were never the best.
       created_at:
         type: datetime
         nullable: false
@@ -479,7 +480,7 @@ nodes:
       artifact_path:
         type: str
         nullable: false
-        description: Path to the source artifact (champion markdown or CSV).
+        description: Repo-relative POSIX path to the source artifact (champion markdown or CSV).
       metrics_sharpe:
         type: float
         nullable: true

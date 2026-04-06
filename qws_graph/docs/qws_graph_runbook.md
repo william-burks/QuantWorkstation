@@ -296,6 +296,14 @@ MATCH (n) RETURN count(n);
 // Expected: 0
 ```
 
+Clear the pending offline queue:
+```zsh
+rm -f .qws/pending/*.json
+```
+Expected: directory empty. If `.qws/pending/` is not cleared, pre-existing offline items
+will appear in `qw query --name pending_offline` output and the Phase 7 empty-list check
+will fail even though Phase 5 runners ingested successfully.
+
 ---
 
 ### Phase 1 — Environment Sourcing (QWS-0304)

@@ -66,18 +66,22 @@ Unplanned / patch stories (CLOSED):
 
 ---
 
-## Epic 3 — Research Pipeline Integrity [PLANNED]
-- Epic README: [`epic_3_ research_pipeline_integrity/README.md`](epic_3_%20research_pipeline_integrity/README.md)
+## Epic 3 — Research Pipeline Integrity [COMPLETE]
+- Epic README: [`epic_3_research_pipeline_integrity/README.md`](epic_3_research_pipeline_integrity/README.md)
 - Objective: close correctness and maintainability gaps in the trial-to-graph write path.
 
 Stories (execution order):
-1. `QWS-0301` [`story_1_graph_ingestion_schema_consistency.md`](epic_3_%20research_pipeline_integrity/story_1_graph_ingestion_schema_consistency.md) — `CLOSED`
-2. `QWS-0302` [`story_2_champion_query_presets.md`](epic_3_%20research_pipeline_integrity/story_2_champion_query_presets.md) — `CLOSED`
-3. `QWS-0303` [`story_3_graph_integrity_qa.md`](epic_3_%20research_pipeline_integrity/story_3_graph_integrity_qa.md) — `CLOSED`
-4. `QWS-0304` [`story_4_config_run_schema_split.md`](epic_3_%20research_pipeline_integrity/story_4_config_run_schema_split.md) — `draft`
-5. `QWS-0305` [`story_5_centralized_ingestion_layer.md`](epic_3_%20research_pipeline_integrity/story_5_centralized_ingestion_layer.md) — `draft`
-6. `QWS-0306` [`story_6_trial_bundle_structure.md`](epic_3_%20research_pipeline_integrity/story_6_trial_bundle_structure.md) — `draft`
-7. `QWS-0307` [`story_7_epic3_uat_runbook.md`](epic_3_%20research_pipeline_integrity/story_7_epic3_uat_runbook.md) — `draft`
+1. `QWS-0301` [`story_1_graph_ingestion_schema_consistency.md`](epic_3_research_pipeline_integrity/closed/story_1_graph_ingestion_schema_consistency.md) — `CLOSED`
+2. `QWS-0302` [`story_2_champion_query_presets.md`](epic_3_research_pipeline_integrity/closed/story_2_champion_query_presets.md) — `CLOSED`
+3. `QWS-0303` [`story_3_graph_integrity_qa.md`](epic_3_research_pipeline_integrity/closed/story_3_graph_integrity_qa.md) — `CLOSED`
+4. `QWS-0304` [`story_4_config_run_schema_split.md`](epic_3_research_pipeline_integrity/closed/story_4_config_run_schema_split.md) — `CLOSED`
+5. `QWS-0305` [`story_5_centralized_ingestion_layer.md`](epic_3_research_pipeline_integrity/closed/story_5_centralized_ingestion_layer.md) — `CLOSED`
+6. `QWS-0306` [`story_6_trial_bundle_structure.md`](epic_3_research_pipeline_integrity/closed/story_6_trial_bundle_structure.md) — `CLOSED`
+7. `QWS-0307` [`story_7_epic3_uat_runbook.md`](epic_3_research_pipeline_integrity/closed/story_7_epic3_uat_runbook.md) — `CLOSED`
+
+Unplanned / patch stories (CLOSED):
+- `QWS-0308C` [`story_was_best_property_semantics.md`](epic_3_research_pipeline_integrity/closed/story_was_best_property_semantics.md) — `CLOSED`
+- `QWS-0309C` [`story_artifact_path_normalization.md`](epic_3_research_pipeline_integrity/closed/story_artifact_path_normalization.md) — `CLOSED`
 
 ---
 
@@ -95,8 +99,7 @@ Stories (execution order):
 ---
 
 ## Current Focus Suggestion
-- Epic 3 Stories 1–3 (QWS-0301, QWS-0302, QWS-0303) are CLOSED.
-- Story 4 (QWS-0304, Config/Run schema split) is the current unblock — schema must be clean before the centralized layer is built on top of it.
-- Story 5 (QWS-0305, centralized ingestion layer) before adding any new trial families.
-- Do not begin Epic 4 work until Epic 3 exit criteria are met.
+- Epic 3 is COMPLETE — all 9 stories (QWS-0301 through QWS-0309C) CLOSED.
+- Epic 4 (Graph Primary Workflow) is now unblocked — Epic 3 exit criteria met and UAT verified.
+- Begin with QWS-0401 (decision state model) as the Epic 4 foundation story.
 

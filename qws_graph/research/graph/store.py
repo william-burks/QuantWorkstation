@@ -363,7 +363,7 @@ class GraphStore:
         """Promote the highest evidence-score run to ``Strategy.best_run_id``.
 
         Evidence score = sharpe × √total_trades.  Archives the previous best
-        run by setting ``Run.was_best = true`` when it is displaced.
+        run by setting ``Run.peaked_as_best = true`` when it is displaced.
 
         Returns ``(best_run_id, evidence_score, displaced_run_id)``.
         ``displaced_run_id`` is non-None only when a different run held the
@@ -404,7 +404,7 @@ class GraphStore:
         def _write(tx) -> None:
             if displaced:
                 tx.run(
-                    "MATCH (r:Run {run_id: $run_id}) SET r.was_best = true",
+                    "MATCH (r:Run {run_id: $run_id}) SET r.peaked_as_best = true",
                     run_id=displaced,
                 ).consume()
             tx.run(
@@ -493,6 +493,7 @@ class GraphStore:
         today_iso = datetime.date.today().isoformat()
         total_trades = int(run_data.get("total_trades") or 0)
         total_r = float(run_data.get("total_r") or 0.0)
+        metrics_return = float(run_data.get("metrics_return") or 0.0)
         profit_factor = float(run_data.get("profit_factor") or 0.0)
         win_rate = float(run_data.get("win_rate") or 0.0)
         max_drawdown = float(run_data.get("max_drawdown") or 0.0)
@@ -549,7 +550,7 @@ class GraphStore:
                     ch.metrics_summary = $metrics_summary,
                     ch.metrics_sharpe = $sharpe,
                     ch.metrics_total_trades = $total_trades,
-                    ch.metrics_return = $total_r,
+                    ch.metrics_return = $metrics_return,
                     ch.metrics_profit_factor = $profit_factor,
                     ch.metrics_win_rate = $win_rate,
                     ch.metrics_max_drawdown_r = $max_drawdown,
@@ -577,6 +578,7 @@ class GraphStore:
                 sharpe=sharpe,
                 total_trades=total_trades,
                 total_r=total_r,
+                metrics_return=metrics_return,
                 profit_factor=profit_factor,
                 win_rate=win_rate,
                 max_drawdown=max_drawdown,
@@ -641,7 +643,8 @@ class GraphStore:
                 "RETURN r.run_id AS run_id, r.sharpe AS sharpe, "
                 "       r.profit_factor AS profit_factor, r.win_rate AS win_rate, "
                 "       r.max_drawdown AS max_drawdown, r.total_trades AS total_trades, "
-                "       r.total_r AS total_r, r.artifact_path AS artifact_path, "
+                "       r.total_r AS total_r, r.metrics_return AS metrics_return, "
+                "       r.artifact_path AS artifact_path, "
                 "       ev AS evidence_score",
                 sid=strategy_id,
             ).single()
@@ -658,6 +661,7 @@ class GraphStore:
             "max_drawdown": float(best["max_drawdown"] or 0.0),
             "total_trades": int(best["total_trades"] or 0),
             "total_r": float(best["total_r"] or 0.0),
+            "metrics_return": float(best.get("metrics_return") or 0.0),
             "artifact_path": best["artifact_path"] or "",
         }
         return self._maybe_auto_promote_champion(

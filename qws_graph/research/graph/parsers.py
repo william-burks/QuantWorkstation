@@ -70,7 +70,18 @@ def _file_mtime_iso(path: Path) -> str:
     return datetime.fromtimestamp(path.stat().st_mtime, tz=UTC).isoformat().replace("+00:00", "Z")
 
 
-def _artifact_path_text(path: Path) -> str:
+def _artifact_path_text(path: Path, repo_root: Path | None = None) -> str:
+    """Return a stable string representation of *path* for graph storage.
+
+    When *repo_root* is provided, the path is normalized to a repo-relative
+    POSIX string (e.g. ``research/results/futures/.../baseline.csv``).
+    Absolute paths that fall outside the repo root are stored as-is.
+    """
+    if repo_root is not None:
+        try:
+            return path.resolve().relative_to(repo_root.resolve()).as_posix()
+        except ValueError:
+            pass
     return path.as_posix()
 
 
@@ -191,19 +202,26 @@ class UnknownFieldWarning:
 class CSVParser:
     """Parser for baseline and grid CSV artifacts."""
 
-    def __init__(self, artifact_path: Path, kind: str, ingested_at: datetime | None = None):
+    def __init__(
+        self,
+        artifact_path: Path,
+        kind: str,
+        ingested_at: datetime | None = None,
+        repo_root: Path | None = None,
+    ):
         if kind not in {"baseline_csv", "grid_csv"}:
             raise ValueError(f"kind must be baseline_csv or grid_csv, got {kind}")
         self.artifact_path = Path(artifact_path)
         self.kind = kind
         self.ingested_at = ingested_at or datetime.now(UTC)
+        self.repo_root = repo_root
         self.unknown_warnings = UnknownFieldWarning()
 
     def parse(self) -> tuple[ResearchArtifact, list[str]]:
         if not self.artifact_path.exists():
             raise FileNotFoundError(f"Artifact not found: {self.artifact_path}")
 
-        artifact_path_text = _artifact_path_text(self.artifact_path)
+        artifact_path_text = _artifact_path_text(self.artifact_path, self.repo_root)
         provenance = Provenance(
             artifact_path=artifact_path_text,
             artifact_hash=_file_hash(self.artifact_path),
@@ -413,11 +431,13 @@ class ChampionMarkdownParser:
         registry_path: Path | None = None,
         pivot_from_run_id: str | None = None,
         ingested_at: datetime | None = None,
+        repo_root: Path | None = None,
     ):
         self.artifact_path = Path(artifact_path)
         self.registry_path = Path(registry_path) if registry_path else _default_registry_path(self.artifact_path)
         self.explicit_pivot_from_run_id = pivot_from_run_id
         self.ingested_at = ingested_at or datetime.now(UTC)
+        self.repo_root = repo_root
 
     def parse(self) -> tuple[ResearchArtifact, list[str]]:
         if not self.artifact_path.exists():
@@ -425,7 +445,7 @@ class ChampionMarkdownParser:
 
         content = self.artifact_path.read_text(encoding="utf-8")
         provenance = Provenance(
-            artifact_path=_artifact_path_text(self.artifact_path),
+            artifact_path=_artifact_path_text(self.artifact_path, self.repo_root),
             artifact_hash=hashlib.sha256(content.encode("utf-8")).hexdigest(),
             artifact_mtime_iso=_file_mtime_iso(self.artifact_path),
             ingested_at=self.ingested_at,
@@ -454,7 +474,7 @@ class ChampionMarkdownParser:
             metrics_summary=metrics_summary,
             oos_status=self._resolve_oos_status(),
             fragilities=fragilities,
-            artifact_path=_artifact_path_text(self.artifact_path),
+            artifact_path=_artifact_path_text(self.artifact_path, self.repo_root),
             pivot_from_run_id=pivot_from_run_id,
             provenance=provenance,
         )
@@ -566,7 +586,7 @@ class ChampionMarkdownParser:
         if not isinstance(registry, list):
             return "oos_pending"
         artifact_name = self.artifact_path.name
-        artifact_path = _artifact_path_text(self.artifact_path)
+        artifact_path = _artifact_path_text(self.artifact_path, self.repo_root)
         for entry in registry:
             if not isinstance(entry, dict):
                 continue

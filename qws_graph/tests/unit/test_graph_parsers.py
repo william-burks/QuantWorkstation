@@ -312,6 +312,44 @@ class TestParserIntegration:
         )
 
 
+class TestArtifactPathNormalization:
+    """Unit tests for _artifact_path_text repo-relative normalization (QWS artifact path story)."""
+
+    _fn = staticmethod(parsers_module._artifact_path_text)
+
+    def test_absolute_path_under_repo_root_normalized(self, tmp_path):
+        repo_root = tmp_path / "repo"
+        artifact = repo_root / "research" / "results" / "futures" / "baseline.csv"
+        result = self._fn(artifact, repo_root)
+        assert result == "research/results/futures/baseline.csv"
+
+    def test_absolute_path_outside_repo_root_returned_as_posix(self, tmp_path):
+        repo_root = tmp_path / "repo"
+        artifact = tmp_path / "other" / "baseline.csv"
+        result = self._fn(artifact, repo_root)
+        assert result == artifact.as_posix()
+
+    def test_no_repo_root_returns_path_as_posix(self, tmp_path):
+        artifact = tmp_path / "research" / "results" / "baseline.csv"
+        result = self._fn(artifact, None)
+        assert result == artifact.as_posix()
+
+    def test_relative_path_under_repo_root_normalized(self, tmp_path):
+        # Path constructed relative-style but resolves under repo root
+        repo_root = tmp_path / "repo"
+        artifact = repo_root / "research" / "results" / "baseline.csv"
+        result = self._fn(artifact, repo_root)
+        assert not result.startswith("/")
+        assert result == "research/results/baseline.csv"
+
+    def test_csv_and_champion_md_paths_normalize_consistently(self, tmp_path):
+        repo_root = tmp_path / "repo"
+        csv = repo_root / "research" / "results" / "futures" / "runs" / "20260101-120000" / "baseline.csv"
+        md = repo_root / "research" / "results" / "champions" / "es_bear_v1.md"
+        assert self._fn(csv, repo_root) == "research/results/futures/runs/20260101-120000/baseline.csv"
+        assert self._fn(md, repo_root) == "research/results/champions/es_bear_v1.md"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 

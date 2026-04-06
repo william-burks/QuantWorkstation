@@ -48,10 +48,17 @@ is the prerequisite.
 - HTML files are stored by path reference only — raw HTML content is never written to Neo4j.
 
 ## Stories in execution order
-1. `story_1_graph_ingestion_schema_consistency.md` — schema and wiring fixes (P2)
-2. `story_2_centralized_ingestion_layer.md` — shared CSV export utility (P2)
-3. `story_3_trial_bundle_structure.md` — per-run artifact co-location and bundle ingest (P3)
-4. `story_4_epic3_uat_runbook.md` — operator UAT runbook; gate before marking epic complete
+1. `QWS-0301` `closed/story_1_graph_ingestion_schema_consistency.md` — schema and wiring fixes — `CLOSED`
+2. `QWS-0302` `closed/story_2_champion_query_presets.md` — champion query presets — `CLOSED`
+3. `QWS-0303` `closed/story_3_graph_integrity_qa.md` — graph integrity QA script — `CLOSED`
+4. `QWS-0304` `closed/story_4_config_run_schema_split.md` — Config/Run schema split, env sourcing — `CLOSED`
+5. `QWS-0305` `closed/story_5_centralized_ingestion_layer.md` — shared CSV export utility — `CLOSED`
+6. `QWS-0306` `closed/story_6_trial_bundle_structure.md` — per-run artifact co-location and bundle ingest — `CLOSED`
+7. `QWS-0307` `closed/story_7_epic3_uat_runbook.md` — operator UAT runbook — `CLOSED`
+
+## Unplanned / patch stories (CLOSED)
+- `QWS-0308C` `closed/story_was_best_property_semantics.md` — rename `was_best` → `peaked_as_best` for honest provenance semantics — `CLOSED`
+- `QWS-0309C` `closed/story_artifact_path_normalization.md` — normalize artifact paths to repo-relative at ingest — `CLOSED`
 
 ## Dependencies
 - Epic 1 complete and stable on main (`qw record`, idempotent store, receipts).

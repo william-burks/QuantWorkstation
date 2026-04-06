@@ -260,8 +260,13 @@ class Run(BaseModel):
     max_drawdown: float
     total_trades: int
     total_r: float | None = None
-    artifact_path: str
+    artifact_path: str          # repo-relative POSIX path (e.g. research/results/.../baseline.csv)
     provenance: Provenance
+    # Graph-only properties (set by store.py; not in the parsed payload):
+    # evidence_score: float       — sharpe × √total_trades; computed at write time
+    # was_best: bool (REMOVED)    — renamed to peaked_as_best in this repo
+    # peaked_as_best: bool | None — true when this run was displaced from Strategy.best_run_id;
+    #                               permanent provenance flag, never cleared; absent if never best
 
     @field_validator("win_rate")
     @classmethod
