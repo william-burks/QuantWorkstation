@@ -40,6 +40,7 @@ class TestRecordCommand:
         """Test record with --dry-run on valid CSV."""
         args = mock.MagicMock()
         args.file = str(csv_baseline)
+        args.bundle = None
         args.kind = "baseline_csv"
         args.pivot_from = None
         args.offline = False
@@ -54,6 +55,7 @@ class TestRecordCommand:
         """Test record with --offline writes to pending queue."""
         args = mock.MagicMock()
         args.file = str(csv_baseline)
+        args.bundle = None
         args.kind = "baseline_csv"
         args.pivot_from = None
         args.offline = True
@@ -118,6 +120,7 @@ class TestRecordCommand:
 
         args = mock.MagicMock()
         args.file = str(csv_baseline)
+        args.bundle = None
         args.kind = "baseline_csv"
         args.pivot_from = None
         args.offline = False
@@ -151,6 +154,7 @@ class TestRecordCommand:
 
         args = mock.MagicMock()
         args.file = str(csv_baseline)
+        args.bundle = None
         args.kind = "baseline_csv"
         args.pivot_from = None
         args.offline = False
@@ -178,6 +182,7 @@ class TestRecordCommand:
 
         args = mock.MagicMock()
         args.file = str(champion)
+        args.bundle = None
         args.kind = "champion_md"
         args.pivot_from = None
         args.offline = False

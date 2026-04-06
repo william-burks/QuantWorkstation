@@ -191,6 +191,143 @@ def _keep_approved(artifact: ResearchArtifact) -> ResearchArtifact:
     return artifact.model_copy(update={"runs": approved_runs, "configs": approved_configs})
 
 
+def _read_bundle_manifest(bundle_dir: Path) -> dict:
+    """Read and minimally validate bundle.json from a bundle directory.
+
+    Raises:
+        FileNotFoundError: bundle.json is absent from the directory.
+        ValueError: manifest is missing required fields.
+    """
+    manifest_path = bundle_dir / "bundle.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(
+            f"bundle.json not found in {bundle_dir}. "
+            "Bundle directories must contain a bundle.json manifest written by the shell runner."
+        )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    files = manifest.get("files", {})
+    missing = [k for k in ("csv", "csv_kind") if not files.get(k)]
+    if missing:
+        raise ValueError(
+            f"bundle.json is missing required files fields: {missing}. "
+            f"Expected keys: files.csv, files.csv_kind (and optionally files.html)."
+        )
+    return manifest
+
+
+def _cmd_bundle(args: argparse.Namespace) -> int:
+    """Execute `qw record --bundle <dir>` — two-phase CSV ingest + HTML path patch.
+
+    Exit codes:
+        0: CSV ingested (or already present), html patched if present
+        1: manifest missing, validation failure, or missing CSV file
+        2: Neo4j unavailable
+    """
+    bundle_dir = Path(args.bundle).resolve()
+    if not bundle_dir.is_dir():
+        print(f"ERROR: bundle directory not found: {bundle_dir}", file=sys.stderr)
+        return 1
+
+    if getattr(args, "offline", False):
+        print("ERROR: --offline is not supported with --bundle", file=sys.stderr)
+        return 1
+
+    timeout_seconds = args.timeout_seconds
+    repo_root = Path(args.repo_root) if args.repo_root else Path.cwd()
+    dry_run = args.dry_run
+
+    # Phase 0: read manifest
+    try:
+        manifest = _read_bundle_manifest(bundle_dir)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    files = manifest["files"]
+    csv_filename: str = files["csv"]
+    csv_kind: str = files["csv_kind"]
+    html_filename: str | None = files.get("html")
+
+    csv_path = bundle_dir / csv_filename
+
+    # Phase 1: parse CSV
+    try:
+        artifact, warnings = _parse_artifact(csv_path, csv_kind, repo_root=repo_root)
+    except FileNotFoundError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
+        print(f"ERROR: Validation failed: {exc}", file=sys.stderr)
+        return 1
+
+    for warning in warnings:
+        print(f"WARNING: {warning}", file=sys.stderr)
+
+    run_ids = [r.run_id for r in artifact.runs]
+
+    if dry_run:
+        print(f"OK: bundle dry-run passed — csv={csv_filename} kind={csv_kind} runs={len(run_ids)}")
+        return 0
+
+    # Phase 2: ingest CSV
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(
+            f"WARNING: Neo4j unavailable (timeout after {timeout_seconds}s)",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            result = store.persist_artifact(artifact)
+
+            # Phase 3: patch html path onto all run nodes
+            html_abs_path: str | None = None
+            patched_count = 0
+            if html_filename:
+                html_file = bundle_dir / html_filename
+                if html_file.exists():
+                    html_abs_path = str(html_file)
+                    for run_id in run_ids:
+                        found = store.patch_run_html_path(run_id, html_abs_path)
+                        if found:
+                            patched_count += 1
+                else:
+                    print(
+                        f"WARNING: bundle.json lists html={html_filename!r} "
+                        f"but file not found in {bundle_dir}",
+                        file=sys.stderr,
+                    )
+        finally:
+            store.close()
+    except StoreInfraError as exc:
+        print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
+        return 2
+
+    # Print bundle receipt
+    print(f"BUNDLE: {bundle_dir.name}")
+    print(f"  csv: {csv_filename} ({csv_kind})")
+    for outcome in result.evolution:
+        ev_str = f"  ev={outcome.evidence_score:.2f}" if outcome.evidence_score is not None else ""
+        if outcome.status == "skipped":
+            print(f"  [SKIPPED]  {outcome.run_id}{ev_str} — {outcome.reason}")
+        elif outcome.status == "promoted":
+            champ = f" → Champion {outcome.champion_id}" if outcome.champion_id else ""
+            print(f"  [PROMOTED] {outcome.run_id}{ev_str}{champ}")
+        else:
+            print(f"  [RECORDED] {outcome.run_id}{ev_str}")
+    if html_abs_path:
+        print(f"  html: {html_filename} → artifact_path_html patched ({patched_count}/{len(run_ids)} nodes)")
+    elif html_filename:
+        print(f"  html: {html_filename} (file not found — skipped)")
+    else:
+        print("  html: (none in manifest)")
+
+    return 0
+
+
 def cmd_record(args: argparse.Namespace) -> int:
     """Execute `qw record` command.
 
@@ -199,6 +336,17 @@ def cmd_record(args: argparse.Namespace) -> int:
         1: schema validation failure
         2: infrastructure failure (Neo4j unavailable and --offline not provided)
     """
+    # Dispatch to bundle handler when --bundle is provided
+    if getattr(args, "bundle", None):
+        return _cmd_bundle(args)
+
+    if not args.file:
+        print("ERROR: --file is required when --bundle is not provided", file=sys.stderr)
+        return 1
+    if not args.kind:
+        print("ERROR: --kind is required with --file", file=sys.stderr)
+        return 1
+
     file_path = Path(args.file)
     kind = args.kind
     pivot_from_run_id = args.pivot_from
@@ -552,16 +700,24 @@ def main() -> int:
         "record",
         help="Parse and ingest artifact (CSV or Markdown) to graph or pending queue",
     )
-    record_parser.add_argument(
+    record_mode = record_parser.add_mutually_exclusive_group(required=True)
+    record_mode.add_argument(
         "--file",
-        required=True,
+        default=None,
         help="Path to artifact file (CSV or Markdown)",
+    )
+    record_mode.add_argument(
+        "--bundle",
+        metavar="DIR",
+        default=None,
+        help="Path to bundle directory containing bundle.json manifest",
     )
     record_parser.add_argument(
         "--kind",
-        required=True,
+        required=False,
+        default=None,
         choices=["baseline_csv", "grid_csv", "champion_md", "tracker_md"],
-        help="Artifact kind",
+        help="Artifact kind (required with --file; inferred from bundle.json with --bundle)",
     )
     record_parser.add_argument(
         "--pivot-from",
