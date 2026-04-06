@@ -9,16 +9,22 @@ Navigation and execution index for `qws_graph/epics`.
 - `done` = completed
 
 ## Recommended Sprint Order
-1. **Epic 1 — Ingestion and Index** (`epic_1_ingestion_and_index/`) — `COMPLETE`
-2. **Epic 2 — MCP Read Integration** (`epic_2_mcp_read_integration/`) — `COMPLETE`
-3. **Epic 3 — Research Pipeline Integrity** (`epic_3_ research_pipeline_integrity/`)
-4. **Epic 4 — Graph Primary Workflow** (`epic_4_graph_primary_workflow/`)
+1. **Epic 1 — Ingestion and Index** — `COMPLETE`
+2. **Epic 2 — MCP Read Integration** — `COMPLETE`
+3. **Epic 3 — Research Pipeline Integrity** — `COMPLETE`
+4. **Epic 4 — Workflow Utility** — `PLANNED` ← current
+5. **Epic 5 — Context Enrichment** — `PLANNED`
+6. **Epic 6 — Research Analytics** — `PLANNED`
+7. **Epic 7 — Developer Experience** — `PLANNED` (independent; can run alongside any epic)
 
 ## Dependency Notes
-- Epic 2 starts after Epic 1 is stable on main (`qw record` + idempotent store + reconcile working).
-- Epic 3 starts after Epic 2 read contracts are stable and query projections are finalized.
-- Epic 4 starts after Epic 3 exit criteria are met — graph-primary decisions depend on clean, consistent data.
-- Graph-primary cutover requires explicit rollback playbook and guardrail checks.
+- Epic 4 unblocked now — no prerequisites beyond Epic 3 completion.
+- Epic 5 QWS-0503 (cross-instrument aggregator) requires Epic 4 QWS-0402 (OOS metrics)
+  and Epic 5 QWS-0501 (family_id population) to produce meaningful results.
+- Epic 6 QWS-0601 (hypothesis journaling) has no dependencies.
+- Epic 6 QWS-0602/0603 (analytics scripts) have no graph schema dependencies — can start
+  any time the research data is sufficient.
+- Epic 7 is fully independent and can be worked alongside any other epic.
 
 ---
 
@@ -101,8 +107,43 @@ Cancelled (preserved in `cancelled_stories/`):
 
 ---
 
-## Current Focus Suggestion
-- Epic 3 is COMPLETE — all 9 stories (QWS-0301 through QWS-0309C) CLOSED.
-- Epic 4 (Workflow Utility) is now unblocked. Stories 2 and 3 are independent; Story 1 is the most impactful first pick.
-- Begin with QWS-0402 (OOS outcome tracking) — it closes the only missing lifecycle step in the current ingest flow.
+---
+
+## Epic 5 — Context Enrichment [PLANNED]
+- Epic README: [`epic_5_context_enrichment/README.md`](epic_5_context_enrichment/README.md)
+- Objective: add family identity and regime context to unlock comparative queries.
+
+Stories (execution order):
+1. `QWS-0501` [`story_1_family_id_population.md`](epic_5_context_enrichment/story_1_family_id_population.md) — `draft`
+2. `QWS-0502` [`story_2_regime_tagging.md`](epic_5_context_enrichment/story_2_regime_tagging.md) — `draft`
+3. `QWS-0503` [`story_3_cross_instrument_aggregator.md`](epic_5_context_enrichment/story_3_cross_instrument_aggregator.md) — `draft` _(blocked on QWS-0501 + QWS-0402)_
+4. `QWS-0504` [`story_4_recursive_lineage_traversal.md`](epic_5_context_enrichment/story_4_recursive_lineage_traversal.md) — `draft`
+
+---
+
+## Epic 6 — Research Analytics [PLANNED]
+- Epic README: [`epic_6_research_analytics/README.md`](epic_6_research_analytics/README.md)
+- Objective: compute research insights from graph data; Python does the math, graph provides the index.
+
+Stories:
+1. `QWS-0601` [`story_1_hypothesis_journaling.md`](epic_6_research_analytics/story_1_hypothesis_journaling.md) — `draft`
+2. `QWS-0602` [`story_2_parameter_stability.md`](epic_6_research_analytics/story_2_parameter_stability.md) — `draft`
+3. `QWS-0603` [`story_3_portfolio_correlation.md`](epic_6_research_analytics/story_3_portfolio_correlation.md) — `draft`
+
+---
+
+## Epic 7 — Developer Experience [PLANNED]
+- Epic README: [`epic_7_developer_experience/README.md`](epic_7_developer_experience/README.md)
+- Objective: packaging and automation hygiene; independent of research epics.
+
+Stories:
+1. `QWS-0701` [`story_1_pypi_packaging.md`](epic_7_developer_experience/story_1_pypi_packaging.md) — `ready`
+2. `QWS-0702` [`story_2_ci_graph_integrity.md`](epic_7_developer_experience/story_2_ci_graph_integrity.md) — `draft`
+
+---
+
+## Current Focus
+- **Now:** Epic 4 — begin QWS-0402 (OOS outcome tracking), then QWS-0405, QWS-0406 in any order.
+- **After Epic 4:** Epic 5 QWS-0501 (family_id) + QWS-0502 (regime tagging) are independent and can start immediately — QWS-0502 has zero dependencies.
+- **Parallel track:** Epic 7 QWS-0701 (PyPI packaging) is `ready` and can be picked up any time without blocking research work.
 

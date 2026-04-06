@@ -1,4 +1,7 @@
-# Story: Package Shared Strategy Utilities for PyPI
+# Story 1 — Package Shared Strategy Utilities for PyPI
+
+## ID
+QWS-0701
 
 ## Status
 ready

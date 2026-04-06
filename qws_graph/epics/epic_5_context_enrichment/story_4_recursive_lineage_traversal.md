@@ -1,4 +1,7 @@
-# Story — Recursive Lineage Traversal
+# Story 4 — Recursive Lineage Traversal
+
+## ID
+QWS-0504
 
 ## Status
 draft
