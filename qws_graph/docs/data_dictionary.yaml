@@ -8,8 +8,8 @@
 #   - `csv_column` is the raw CSV header name when it differs from the property name.
 #   - Properties marked `graph_only` are set by the store/lifecycle layer, not parsed
 #     from artifact files.
-#   - Evidence score formula: sharpe * sqrt(total_trades). Used for champion promotion
-#     comparisons only; not stored as a first-class field on Run.
+#   - Evidence score formula: sharpe * sqrt(total_trades). Stored as Run.evidence_score
+#     and used as the primary sort axis for run ranking and champion promotion.
 
 meta:
   version: "1.0"
@@ -164,6 +164,17 @@ nodes:
         description: >
           Number of closed trades in the backtest window. Used as the sample-size
           denominator in evidence_score.
+      evidence_score:
+        type: float
+        nullable: false
+        unit: dimensionless
+        description: >
+          sharpe * sqrt(total_trades). Primary sort axis for run ranking and champion
+          promotion gate. Computed and stored at ingest time; never re-derived in queries.
+          Set to 0.0 when total_trades is 0.
+        indexing_note: >
+          A range index on evidence_score makes top-N run queries sub-millisecond.
+          Recommended: CREATE RANGE INDEX FOR (r:Run) ON (r.evidence_score)
       total_r:
         type: float
         nullable: true
@@ -496,14 +507,12 @@ nodes:
         nullable: true
         unit: fraction (negative)
         description: Max drawdown from metrics_summary.
-      metrics_sample_size:
-        type: int
-        nullable: true
-        description: Number of trades in the champion's backtest window.
       metrics_total_trades:
         type: int
         nullable: true
-        description: Alias of metrics_sample_size. Set by both manual and auto paths.
+        description: >
+          Number of trades in the champion's backtest window. Matches Run.total_trades
+          for the pivoted run. Use this for cross-node joins on trade count.
       metrics_summary:
         type: str
         nullable: false
