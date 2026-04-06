@@ -29,26 +29,22 @@ from .query_models import (
 
 GET_STRATEGY_SUMMARY_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})
-CALL {
-  WITH s
+CALL (s) {
   OPTIONAL MATCH (s)-[:HAS_RUN]->(r:Run)
   RETURN count(r) AS run_count
 }
-CALL {
-  WITH s
+CALL (s) {
   OPTIONAL MATCH (s)-[:HAS_RUN]->(r:Run)
   WITH r
   ORDER BY r.timestamp DESC, r.run_id ASC
   RETURN r.run_id AS latest_run_id, r.timestamp AS latest_run_timestamp
   LIMIT 1
 }
-CALL {
-  WITH s
+CALL (s) {
   OPTIONAL MATCH (s)-[:PRODUCED_CHAMPION]->(ch:Champion)
   RETURN count(ch) AS champion_count
 }
-CALL {
-  WITH s
+CALL (s) {
   OPTIONAL MATCH (s)-[:PRODUCED_CHAMPION]->(ch:Champion)
   WITH ch
   ORDER BY ch.freeze_date DESC, ch.champion_id ASC
@@ -183,18 +179,15 @@ WHERE (
   AND related.direction = anchor.direction
   AND related.strategy_id <> anchor.strategy_id
 )
-CALL {
-  WITH related
+CALL (related) {
   OPTIONAL MATCH (related)-[:HAS_RUN]->(r:Run)
   RETURN count(r) AS run_count
 }
-CALL {
-  WITH related
+CALL (related) {
   OPTIONAL MATCH (related)-[:PRODUCED_CHAMPION]->(ch:Champion)
   RETURN count(ch) AS champion_count
 }
-CALL {
-  WITH related
+CALL (related) {
   OPTIONAL MATCH (related)-[:PRODUCED_CHAMPION]->(ch:Champion)
   WITH ch
   ORDER BY ch.freeze_date DESC, ch.champion_id ASC
@@ -219,18 +212,15 @@ ORDER BY related.instrument ASC, related.timeframe ASC
 
 GET_FAMILY_CLUSTER_V1_CYPHER = """
 MATCH (s:Strategy {family_id: $family_id})
-CALL {
-  WITH s
+CALL (s) {
   OPTIONAL MATCH (s)-[:HAS_RUN]->(r:Run)
   RETURN count(r) AS run_count
 }
-CALL {
-  WITH s
+CALL (s) {
   OPTIONAL MATCH (s)-[:PRODUCED_CHAMPION]->(ch:Champion)
   RETURN count(ch) AS champion_count
 }
-CALL {
-  WITH s
+CALL (s) {
   OPTIONAL MATCH (s)-[:PRODUCED_CHAMPION]->(ch:Champion)
   WITH ch
   ORDER BY ch.freeze_date DESC, ch.champion_id ASC
