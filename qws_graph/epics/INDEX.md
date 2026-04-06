@@ -67,21 +67,21 @@ Unplanned / patch stories (CLOSED):
 ---
 
 ## Epic 3 — Research Pipeline Integrity [COMPLETE]
-- Epic README: [`epic_3_research_pipeline_integrity/README.md`](epic_3_research_pipeline_integrity/README.md)
+- Epic README: [`epic_3_research_pipeline_integrity/README.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/README.md)
 - Objective: close correctness and maintainability gaps in the trial-to-graph write path.
 
 Stories (execution order):
-1. `QWS-0301` [`story_1_graph_ingestion_schema_consistency.md`](epic_3_research_pipeline_integrity/closed/story_1_graph_ingestion_schema_consistency.md) — `CLOSED`
-2. `QWS-0302` [`story_2_champion_query_presets.md`](epic_3_research_pipeline_integrity/closed/story_2_champion_query_presets.md) — `CLOSED`
-3. `QWS-0303` [`story_3_graph_integrity_qa.md`](epic_3_research_pipeline_integrity/closed/story_3_graph_integrity_qa.md) — `CLOSED`
-4. `QWS-0304` [`story_4_config_run_schema_split.md`](epic_3_research_pipeline_integrity/closed/story_4_config_run_schema_split.md) — `CLOSED`
-5. `QWS-0305` [`story_5_centralized_ingestion_layer.md`](epic_3_research_pipeline_integrity/closed/story_5_centralized_ingestion_layer.md) — `CLOSED`
-6. `QWS-0306` [`story_6_trial_bundle_structure.md`](epic_3_research_pipeline_integrity/closed/story_6_trial_bundle_structure.md) — `CLOSED`
-7. `QWS-0307` [`story_7_epic3_uat_runbook.md`](epic_3_research_pipeline_integrity/closed/story_7_epic3_uat_runbook.md) — `CLOSED`
+1. `QWS-0301` [`story_1_graph_ingestion_schema_consistency.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/closed/story_1_graph_ingestion_schema_consistency.md) — `CLOSED`
+2. `QWS-0302` [`story_2_champion_query_presets.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/closed/story_2_champion_query_presets.md) — `CLOSED`
+3. `QWS-0303` [`story_3_graph_integrity_qa.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/closed/story_3_graph_integrity_qa.md) — `CLOSED`
+4. `QWS-0304` [`story_4_config_run_schema_split.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/closed/story_4_config_run_schema_split.md) — `CLOSED`
+5. `QWS-0305` [`story_5_centralized_ingestion_layer.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/closed/story_5_centralized_ingestion_layer.md) — `CLOSED`
+6. `QWS-0306` [`story_6_trial_bundle_structure.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/closed/story_6_trial_bundle_structure.md) — `CLOSED`
+7. `QWS-0307` [`story_7_epic3_uat_runbook.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/closed/story_7_epic3_uat_runbook.md) — `CLOSED`
 
 Unplanned / patch stories (CLOSED):
-- `QWS-0308C` [`story_was_best_property_semantics.md`](epic_3_research_pipeline_integrity/closed/story_was_best_property_semantics.md) — `CLOSED`
-- `QWS-0309C` [`story_artifact_path_normalization.md`](epic_3_research_pipeline_integrity/closed/story_artifact_path_normalization.md) — `CLOSED`
+- `QWS-0308C` [`story_was_best_property_semantics.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/closed/story_was_best_property_semantics.md) — `CLOSED`
+- `QWS-0309C` [`story_artifact_path_normalization.md`](epic_3_research_pipeline_integrity%5BCOMPLETE%5D/closed/story_artifact_path_normalization.md) — `CLOSED`
 
 ---
 
