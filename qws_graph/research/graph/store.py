@@ -528,7 +528,6 @@ class GraphStore:
                     ch.metrics_profit_factor = $profit_factor,
                     ch.metrics_win_rate = $win_rate,
                     ch.metrics_max_drawdown_r = $max_drawdown,
-                    ch.metrics_sample_size = $total_trades,
                     ch.best_evidence_score = $evidence_score,
                     ch.oos_status = 'oos_pending',
                     ch.fragilities = $fragilities,
@@ -644,9 +643,13 @@ class GraphStore:
         rows = []
         strategy_payload = payload["strategy"]
         for run_payload, config_payload in zip(payload["runs"], payload["configs"], strict=True):
+            _sharpe = float(run_payload.get("sharpe") or 0.0)
+            _trades = int(run_payload.get("total_trades") or 0)
+            _ev = _sharpe * (_trades ** 0.5) if _trades > 0 else 0.0
             run_for_query = {
                 **run_payload,
                 "curator_note": truncate_curator_note(run_payload.get("curator_note")) or "",
+                "evidence_score": _ev,
             }
             params_dict = config_payload.get("params_json", {})
             config_for_query = {
