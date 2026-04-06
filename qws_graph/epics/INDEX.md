@@ -85,21 +85,24 @@ Unplanned / patch stories (CLOSED):
 
 ---
 
-## Epic 4 — Graph Primary Workflow [PLANNED]
+## Epic 4 — Workflow Utility [PLANNED]
 - Epic README: [`epic_4_graph_primary_workflow/README.md`](epic_4_graph_primary_workflow/README.md)
-- Objective: controlled shift to graph-primary decision workflows with rollback safety.
+- Objective: close the remaining gaps in the research-to-decision loop with minimal scope.
 
 Stories (execution order):
-1. `QWS-0401` [`story_1_decision_state_model.md`](epic_4_graph_primary_workflow/story_1_decision_state_model.md) — `draft`
-2. `QWS-0402` [`story_2_promotion_and_oos_state_transitions.md`](epic_4_graph_primary_workflow/story_2_promotion_and_oos_state_transitions.md) — `blocked`
-3. `QWS-0403` [`story_3_graph_to_file_exports.md`](epic_4_graph_primary_workflow/story_3_graph_to_file_exports.md) — `draft`
-4. `QWS-0404` [`story_4_cutover_guardrails_and_rollback.md`](epic_4_graph_primary_workflow/story_4_cutover_guardrails_and_rollback.md) — `draft`
-5. `QWS-0405` [`story_5_algorithmic_promotion.md`](epic_4_graph_primary_workflow/story_5_algorithmic_promotion.md) — `draft`
+1. `QWS-0402` [`story_1_oos_outcome_tracking.md`](epic_4_graph_primary_workflow/story_1_oos_outcome_tracking.md) — `draft`
+2. `QWS-0405` [`story_2_promotion_alerts.md`](epic_4_graph_primary_workflow/story_2_promotion_alerts.md) — `draft`
+3. `QWS-0406` [`story_3_workflow_query_presets.md`](epic_4_graph_primary_workflow/story_3_workflow_query_presets.md) — `draft`
+
+Cancelled (preserved in `cancelled_stories/`):
+- `QWS-0401` — Decision-State Model (graph schema is already the state model)
+- `QWS-0403` — Graph-to-File Exports (inverts canonical flow; two-masters problem)
+- `QWS-0404` — Cutover Guardrails (corporate IT concept; not applicable here)
 
 ---
 
 ## Current Focus Suggestion
 - Epic 3 is COMPLETE — all 9 stories (QWS-0301 through QWS-0309C) CLOSED.
-- Epic 4 (Graph Primary Workflow) is now unblocked — Epic 3 exit criteria met and UAT verified.
-- Begin with QWS-0401 (decision state model) as the Epic 4 foundation story.
+- Epic 4 (Workflow Utility) is now unblocked. Stories 2 and 3 are independent; Story 1 is the most impactful first pick.
+- Begin with QWS-0402 (OOS outcome tracking) — it closes the only missing lifecycle step in the current ingest flow.
 
