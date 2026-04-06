@@ -16,6 +16,7 @@ import pandas as pd
 from research.experiments.evaluator import evaluate, report
 from research.experiments.metrics import summary
 from research.experiments.standards import CALMAR, MAX_DRAWDOWN_LIMIT, PROFIT_FACTOR, SHARPE
+from research.graph_export import write_baseline_csv
 from strategies.adapters.liquidity_sweep_adapter import (
     load_data_from_store,
     run_with_data,
@@ -251,46 +252,6 @@ def _write_index_html(
     output_path.write_text(html)
 
 
-def _write_baseline_csv(results: pd.DataFrame, output_path: Path) -> bool:
-    """Write a graph-ingestable baseline CSV artifact when results exist."""
-    if results.empty:
-        return False
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    export = results.copy()
-
-    # Required strategy metadata for qws_graph CSV parser.
-    export["instrument"] = "CL"
-    export["timeframe"] = "1H"
-    export["direction"] = "bear"
-    export["logic_type"] = "liquidity-sweep"
-
-    # qws_graph requires `total_trades` (alias `n`); map from trial output.
-    export["total_trades"] = export["n_trades"]
-
-    keep_cols = [
-        "instrument",
-        "timeframe",
-        "direction",
-        "logic_type",
-        "target_r",
-        "max_hold_bars",
-        "wick_mode",
-        "chain_mode",
-        "sharpe",
-        "profit_factor",
-        "win_rate",
-        "max_drawdown",
-        "total_trades",
-        "total_r",
-        "avg_r_per_trade",
-        "return",
-        "calmar",
-        "tier",
-    ]
-    export = export[[c for c in keep_cols if c in export.columns]]
-    export.to_csv(output_path, index=False)
-    return True
 
 
 def main() -> None:
@@ -351,7 +312,15 @@ def main() -> None:
     print(f"\nHTML report written: {html_path}")
 
     csv_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "baseline_results.csv"
-    if _write_baseline_csv(results, csv_path):
+    if not results.empty:
+        write_baseline_csv(
+            results,
+            output_path=csv_path,
+            instrument="CL",
+            timeframe="1H",
+            direction="bear",
+            logic_type="liquidity-sweep",
+        )
         print(f"Baseline CSV written: {csv_path}")
     else:
         print("Baseline CSV not written (no valid results).")

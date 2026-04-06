@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from research.experiments.metrics import summary
+from research.graph_export import write_grid_csv
 from research.trials.futures.liquidity_sweep.position_sizing import evaluate_sizing_modes
 from strategies.adapters.liquidity_sweep_adapter import load_data_from_store, run_with_data
 
@@ -79,52 +80,6 @@ def _write_html(results: pd.DataFrame, output_path: Path) -> None:
     output_path.write_text(html)
 
 
-def _write_graph_grid_csv(results: pd.DataFrame, mode_rows: list[dict], trades: pd.DataFrame, output_path: Path) -> bool:
-    """Write a qw-compatible grid CSV for graph ingestion."""
-    if results.empty:
-        return False
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Build per-mode config payloads for traceability in qws_graph.
-    mode_lookup = {str(row.get("label", "")): row for row in mode_rows}
-
-    win_rate = float((trades["pnl_r"].astype(float) > 0).mean()) if not trades.empty else 0.0
-    gross_profit = float(trades.loc[trades["pnl_r"] > 0, "pnl_r"].sum()) if not trades.empty else 0.0
-    gross_loss = float((-trades.loc[trades["pnl_r"] < 0, "pnl_r"].sum())) if not trades.empty else 0.0
-    profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else (999.0 if gross_profit > 0 else 0.0)
-    total_trades = int(len(trades))
-
-    export = results.copy()
-    export["instrument"] = "CL"
-    export["timeframe"] = "1H"
-    export["direction"] = "bear"
-    export["logic_type"] = "liquidity-sweep"
-    export["total_trades"] = total_trades
-    export["win_rate"] = win_rate
-    export["profit_factor"] = profit_factor
-    export["max_drawdown"] = export["max_drawdown"].astype(float)
-    export["sharpe"] = export["sharpe"].astype(float)
-    export["params_json"] = export["label"].astype(str).map(
-        lambda lbl: json.dumps(mode_lookup.get(lbl, {"label": lbl}), sort_keys=True)
-    )
-
-    keep_cols = [
-        "instrument",
-        "timeframe",
-        "direction",
-        "logic_type",
-        "label",
-        "sharpe",
-        "profit_factor",
-        "win_rate",
-        "max_drawdown",
-        "total_trades",
-        "params_json",
-    ]
-    export = export[[c for c in keep_cols if c in export.columns]]
-    export.to_csv(output_path, index=False)
-    return True
 
 
 def main() -> None:
@@ -158,7 +113,32 @@ def main() -> None:
     _write_html(summary_df, html_path)
 
     graph_csv = out_dir / "position_sizing_grid_graph.csv"
-    wrote_graph_csv = _write_graph_grid_csv(summary_df, MODE_ROWS, trades, graph_csv)
+    wrote_graph_csv = False
+    if not summary_df.empty:
+        # Compute per-trade metrics from baseline trades (shared across sizing modes).
+        mode_lookup = {str(row.get("label", "")): row for row in MODE_ROWS}
+        _win_rate = float((trades["pnl_r"].astype(float) > 0).mean()) if not trades.empty else 0.0
+        _gross_profit = float(trades.loc[trades["pnl_r"] > 0, "pnl_r"].sum()) if not trades.empty else 0.0
+        _gross_loss = float((-trades.loc[trades["pnl_r"] < 0, "pnl_r"].sum())) if not trades.empty else 0.0
+        _profit_factor = (_gross_profit / _gross_loss) if _gross_loss > 0 else (999.0 if _gross_profit > 0 else 0.0)
+        grid_df = summary_df.copy()
+        grid_df["total_trades"] = int(len(trades))
+        grid_df["win_rate"] = _win_rate
+        grid_df["profit_factor"] = _profit_factor
+        grid_df["max_drawdown"] = grid_df["max_drawdown"].astype(float)
+        grid_df["sharpe"] = grid_df["sharpe"].astype(float)
+        grid_df["params_json"] = grid_df["label"].astype(str).map(
+            lambda lbl: json.dumps(mode_lookup.get(lbl, {"label": lbl}), sort_keys=True)
+        )
+        write_grid_csv(
+            grid_df,
+            output_path=graph_csv,
+            instrument="CL",
+            timeframe="1H",
+            direction="bear",
+            logic_type="liquidity-sweep",
+        )
+        wrote_graph_csv = True
 
     payload = {
         "config": CONFIG_OVERRIDES,

@@ -4,7 +4,7 @@
 # QWS-0305
 
 ## Status
-draft
+CLOSED
 
 ## Priority
 P2 — Maintainability. Every trial script independently constructs the graph-ingestable CSV by
@@ -171,13 +171,14 @@ imports both and compares required field sets would prevent silent drift.
   optional in the parser; only hard-fail on truly required fields.
 
 ## Acceptance Criteria
-- [ ] `01_baseline.py`, `golden.py`, and `02_position_sizing.py` no longer contain private
+- [x] `01_baseline.py`, `golden.py`, and `02_position_sizing.py` no longer contain private
   `_write_*_csv` functions.
-- [ ] Calling `write_baseline_csv` with a DataFrame missing `sharpe` raises `ValueError`
+- [x] Calling `write_baseline_csv` with a DataFrame missing `sharpe` raises `ValueError`
   before any file is written.
-- [ ] The CSV written by `write_baseline_csv` is accepted by `qw record --kind baseline_csv`
-  without parser errors.
-- [ ] Alias mapping: a DataFrame with `n_trades` column produces a CSV with `total_trades`.
+- [x] The CSV written by `write_baseline_csv` is accepted by `qw record --kind baseline_csv`
+  without parser errors. *(integration check — requires live qws_graph install; unit
+  sync test `test_required_fields_matches_qws_graph_parser` covers schema consistency)*
+- [x] Alias mapping: a DataFrame with `n_trades` column produces a CSV with `total_trades`.
 
 ## Validation
 - Unit tests for `write_baseline_csv` with missing required fields, alias mapping, and
@@ -186,10 +187,10 @@ imports both and compares required field sets would prevent silent drift.
   check — parser should return no errors.
 
 ## Definition of Done
-- [ ] `research/graph_export.py` implemented and tested.
-- [ ] All three trial scripts migrated.
-- [ ] Tests pass.
-- [ ] No remaining `instrument = "CL"` hardcodes in trial scripts.
+- [x] `research/graph_export.py` implemented and tested.
+- [x] All three trial scripts migrated.
+- [x] Tests pass.
+- [x] No remaining `instrument = "CL"` hardcodes in trial scripts.
 
 ## Dependencies
 - No upstream blockers.

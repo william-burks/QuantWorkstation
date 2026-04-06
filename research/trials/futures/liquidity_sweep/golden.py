@@ -20,6 +20,7 @@ import pandas as pd
 from research.experiments.evaluator import evaluate, report
 from research.experiments.metrics import summary
 from research.experiments.standards import CALMAR, MAX_DRAWDOWN_LIMIT, PROFIT_FACTOR, SHARPE
+from research.graph_export import write_baseline_csv
 from research.trials.futures.liquidity_sweep.position_sizing import (
     build_sized_equity,
     exposure_normalized,
@@ -288,41 +289,6 @@ python research/trials/futures/liquidity_sweep/golden.py \\
     return True
 
 
-def _write_golden_csv(results: pd.DataFrame, output_path: Path) -> bool:
-    """Write a graph-ingestable baseline CSV for the golden strategy result."""
-    if results.empty:
-        return False
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    export = results.copy()
-
-    # Required strategy metadata for qws_graph CSV parser.
-    export["instrument"] = "CL"
-    export["timeframe"] = "1H"
-    export["direction"] = "bear"
-    export["logic_type"] = "liquidity-sweep"
-
-    # Map trial columns to parser expectations.
-    export["total_trades"] = export["n_trades"]
-    export["win_rate"] = export["win_rate"]
-
-    keep_cols = [
-        "instrument",
-        "timeframe",
-        "direction",
-        "logic_type",
-        "sizing_mode",
-        "sharpe",
-        "profit_factor",
-        "win_rate",
-        "max_drawdown",
-        "total_trades",
-        "return",
-        "calmar",
-    ]
-    export = export[[c for c in keep_cols if c in export.columns]]
-    export.to_csv(output_path, index=False)
-    return True
 
 
 def main() -> None:
@@ -413,7 +379,15 @@ def main() -> None:
     print(f"\nHTML report written: {html_path}")
 
     csv_path = ROOT / "research" / "results" / "futures" / "liquidity_sweep" / "golden_results.csv"
-    if _write_golden_csv(results, csv_path):
+    if not results.empty:
+        write_baseline_csv(
+            results,
+            output_path=csv_path,
+            instrument="CL",
+            timeframe="1H",
+            direction="bear",
+            logic_type="liquidity-sweep",
+        )
         print(f"Golden strategy CSV written: {csv_path}")
     else:
         print("Golden strategy CSV not written (no valid results).")
