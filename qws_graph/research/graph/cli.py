@@ -128,13 +128,14 @@ def _parse_artifact(
         ValueError: Parse or validation error
     """
     if kind in {"baseline_csv", "grid_csv"}:
-        parser = CSVParser(file_path, kind)
+        parser = CSVParser(file_path, kind, repo_root=repo_root)
         return parser.parse()
     elif kind == "champion_md":
         parser = ChampionMarkdownParser(
             file_path,
             registry_path=repo_root / "research" / "results" / "registry.json" if repo_root else None,
             pivot_from_run_id=pivot_from_run_id,
+            repo_root=repo_root,
         )
         return parser.parse()
     elif kind == "tracker_md":
@@ -150,7 +151,7 @@ def _parse_artifact(
 
         from .parsers import _artifact_path_text
 
-        artifact_path_text = _artifact_path_text(file_path)
+        artifact_path_text = _artifact_path_text(file_path, repo_root)
         provenance = Provenance(
             artifact_path=artifact_path_text,
             artifact_hash=artifact_hash,
@@ -283,14 +284,19 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
         try:
             result = store.persist_artifact(artifact)
 
-            # Phase 3: patch html path onto all run nodes
+            # Phase 3: patch html path onto persisted run nodes only.
+            # SKIPPED runs were never written to the graph in this ingest pass,
+            # so their run_id does not exist as a :Run node and MATCH would fail.
+            persisted_run_ids = [
+                o.run_id for o in result.evolution if o.status != "skipped"
+            ]
             html_abs_path: str | None = None
             patched_count = 0
             if html_filename:
                 html_file = bundle_dir / html_filename
                 if html_file.exists():
                     html_abs_path = str(html_file)
-                    for run_id in run_ids:
+                    for run_id in persisted_run_ids:
                         found = store.patch_run_html_path(run_id, html_abs_path)
                         if found:
                             patched_count += 1
@@ -319,7 +325,10 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
         else:
             print(f"  [RECORDED] {outcome.run_id}{ev_str}")
     if html_abs_path:
-        print(f"  html: {html_filename} → artifact_path_html patched ({patched_count}/{len(run_ids)} nodes)")
+        if persisted_run_ids:
+            print(f"  html: {html_filename} → artifact_path_html patched ({patched_count}/{len(persisted_run_ids)} nodes)")
+        else:
+            print(f"  html: {html_filename} → skipped (no new runs persisted)")
     elif html_filename:
         print(f"  html: {html_filename} (file not found — skipped)")
     else:

@@ -8,7 +8,7 @@ Graph V1 sidecar ingestion and read surface for QuantWorkstation. `qws_graph` re
 - Ingests artifact outputs (`baseline_csv`, `grid_csv`, `champion_md`, `tracker_md`) into a graph ledger.
 - Uses deterministic IDs and idempotent Neo4j writes.
 - Applies evolutionary run deduplication: suppresses statistically redundant runs (same trade count, equal/lower Sharpe, within 30 days); preserves longitudinal walk-forward data beyond the 30-day window.
-- Tracks best-evidence-score run per strategy (`Strategy.best_run_id`, `Strategy.best_evidence_score`); archives displaced runs with `Run.was_best = true`.
+- Tracks best-evidence-score run per strategy (`Strategy.best_run_id`, `Strategy.best_evidence_score`); archives displaced runs with `Run.peaked_as_best = true` (permanent provenance flag — never cleared).
 - Supports online persistence and explicit offline queueing.
 - Applies grid significance gating with `RunStatsSummary` rollups (`--all` bypass supported).
 - Supports semantic curation with optional analyst pass (`--analyze`) writing `Run.curator_note`.
