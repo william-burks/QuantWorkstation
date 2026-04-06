@@ -734,7 +734,7 @@ def run_backtest(data, config):
     monthly_index = monthly.index
     if getattr(monthly_index, 'tz', None) is not None:
         monthly.index = monthly_index.tz_localize(None)
-    monthly = monthly['pnl_r'].resample('M').sum()
+    monthly = monthly['pnl_r'].resample('ME').sum()
 
     return {
         'config': dict(config),

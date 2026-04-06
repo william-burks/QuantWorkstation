@@ -17,6 +17,9 @@ unset _QWS_ROOT
 
 CSV_DIR=research/results/crypto/mars/runs/$(date +%Y%m%d-%H%M%S)
 mkdir -p "$CSV_DIR"
+CSV="$CSV_DIR/btc_bull_mars_1d_golden_results.csv"
+CHAMPION_MD="$CSV_DIR/btc_bull_mars_1d_golden_champion.md"
+HTML="$CSV_DIR/btc_bull_mars_1d_golden_report.html"
 
 python research/trials/crypto/mars/golden.py --output-dir "$CSV_DIR"
 

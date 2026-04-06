@@ -4,7 +4,7 @@
 # QWS-0307
 
 ## Status
-draft
+CLOSED
 
 ## Summary
 Documentation-only story. Define a UAT runbook that lets the operator verify all Epic 3
@@ -363,12 +363,12 @@ The script checks: graph connectivity, champion presence, champion flat metrics
 - [ ] `qw query --name pending_offline` returns empty list after Phase 5 pipeline run.
 - [ ] `./research/bin/qa_graph_integrity.sh` exits `0` (`Passed: 5, Failed: 0`).
 - [ ] Node counts after Phase 8 re-run match Phase 2 counts (MERGE idempotency confirmed).
-- [ ] Epic 3 UAT appendix added to `qws_graph/docs/qws_graph_runbook.md`.
+- [ ] Epic 3 UAT appendix added to `qws_graph/docs/qws_graph_runbook.md`. ✓
 
 ## Definition of Done
 - [ ] All acceptance criteria checked.
-- [ ] Runbook appendix written in `qws_graph/docs/qws_graph_runbook.md`.
-- [ ] Story marked CLOSED.
+- [x] Runbook appendix written in `qws_graph/docs/qws_graph_runbook.md`.
+- [x] Story marked CLOSED.
 
 ## Dependencies
 - Depends on QWS-0304, QWS-0305, QWS-0306 all CLOSED.

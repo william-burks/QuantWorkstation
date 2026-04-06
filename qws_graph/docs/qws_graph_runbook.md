@@ -60,7 +60,7 @@ Use this when Neo4j is up and reachable.
 
 ```zsh
 cd /Users/will/ClaudeProjects/QuantWorkstation
-qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --source-file strategies/bear_es_sweep_1h_baseline.py
+qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --source-file strategies/legacy/bear_es_sweep_1h_baseline.py
 ```
 
 Expected:
@@ -72,7 +72,7 @@ Use this when Neo4j is intentionally disabled or unavailable.
 
 ```zsh
 cd /Users/will/ClaudeProjects/QuantWorkstation
-qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --source-file strategies/bear_es_sweep_1h_baseline.py --offline
+qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --source-file strategies/legacy/bear_es_sweep_1h_baseline.py --offline
 ```
 
 Expected:
@@ -88,7 +88,7 @@ cd /Users/will/ClaudeProjects/QuantWorkstation
 qw record \
   --file results/es_bear_sweep_1h_grid_nypre_v1.csv \
   --kind grid_csv \
-  --source-file strategies/rsi_reversion.py
+  --source-file strategies/legacy/bear_es_sweep_1h_baseline.py
 ```
 
 Expected:
@@ -258,6 +258,309 @@ qw reconcile --json
 - [ ] `qw abort` marks target strategy ABORTED and stores reason.
 - [ ] Artifact naming follows parser-inferable convention with timeframe token.
 
+---
+
+## Appendix — Epic 3: Research Pipeline Integrity UAT Verification
+
+End-to-end verification sequence for QWS-0304 (schema registry), QWS-0305 (centralized
+ingestion), and QWS-0306 (trial bundle structure). Execute top-to-bottom from a clean
+Neo4j state. Do not run against a live-data graph.
+
+### Preconditions
+
+Before starting, verify all of the following:
+
+- Neo4j is running: `make neo4j-up && make neo4j-status`
+- Python environment active with all deps: `pip install -e ".[dev]"`
+- `qws_graph/.env` is present and correct (see `qws_graph/env.example` — credentials
+  must match the running Neo4j instance; default `bolt://localhost:7687`)
+- `qw --help` exits `0` (`qw` CLI is on PATH, registered via `qws_graph/pyproject.toml`)
+- `jq --version` exits `0` (required for JSON pipeline examples in Phase 7)
+- Run from the repo root: `cd /path/to/QuantWorkstation`
+- `research/results/` is writable
+- **Neo4j is empty before Phase 0** — do not run UAT against a live-data graph
+
+---
+
+### Phase 0 — Clean State
+
+Nuke the graph:
+```cypher
+// Run in Neo4j Browser (http://localhost:7474)
+MATCH (n) DETACH DELETE n;
+```
+
+Confirm empty:
+```cypher
+MATCH (n) RETURN count(n);
+// Expected: 0
+```
+
+---
+
+### Phase 1 — Environment Sourcing (QWS-0304)
+
+Verify the shell runner sources `qws_graph/.env` without pre-exported graph vars.
+Open a clean subshell with no graph vars set:
+
+```zsh
+env -i HOME=$HOME PATH=$PATH SHELL=$SHELL zsh
+cd /path/to/QuantWorkstation
+source .venv/bin/activate
+./research/bin/run_liquidity_sweep_baseline.sh
+```
+
+Expected:
+- Script completes without `Neo4j connectivity check failed` or similar error.
+- Receipt exists in `.qws/receipts/` with `"status": "persisted"`.
+- Exit `0`.
+
+If connectivity fails, verify `qws_graph/.env` has correct `QW_GRAPH_HOST` and
+`QW_GRAPH_PASSWORD` matching the running Neo4j instance.
+
+---
+
+### Phase 2 — Schema Audit (QWS-0304)
+
+Verify node labels and `curator_note` property (per `graph_v1_contract.md` Run spec,
+`curator_note` must be `""` — empty string — not null):
+
+```cypher
+// Labels are correct — no label-less nodes
+MATCH (n) RETURN labels(n), count(n) ORDER BY count(n) DESC;
+// Expected rows: ['Strategy'], ['Run'], ['Config'] (and optionally ['RunStatsSummary'])
+```
+
+```cypher
+// curator_note is present on all Run nodes (empty string, not null)
+MATCH (r:Run) WHERE r.curator_note IS NULL RETURN count(r) AS missing;
+// Expected: 0
+```
+
+```cypher
+// Spot-check a Run node
+MATCH (r:Run) RETURN r.run_id, r.curator_note, r.sharpe LIMIT 3;
+// Expected: curator_note = "" on each row (not null, not absent)
+```
+
+---
+
+### Phase 3 — Centralized Ingestion Layer (QWS-0305)
+
+Confirm no hardcoded strategy metadata remains in trial scripts:
+
+```zsh
+grep -rn 'instrument.*=.*"CL"' research/trials/
+# Expected: no matches
+grep -rn 'n_trades.*total_trades\|total_trades.*n_trades' research/trials/
+# Expected: no matches
+```
+
+Confirm `research/graph_export.py` exists and the validation gate works:
+
+```zsh
+python - <<'EOF'
+import pandas as pd
+from research.graph_export import write_baseline_csv
+from pathlib import Path
+
+# Missing required field — should raise before writing
+try:
+    write_baseline_csv(
+        pd.DataFrame([{"sharpe": 1.0}]),  # missing profit_factor, win_rate, etc.
+        output_path=Path("/tmp/test_fail.csv"),
+        instrument="CL", timeframe="1H", direction="bear", logic_type="liquidity-sweep",
+    )
+    print("FAIL — should have raised ValueError")
+except ValueError as e:
+    print(f"PASS — raised correctly: {e}")
+EOF
+```
+
+Expected output: `PASS — raised correctly: Missing required graph export fields: {...}`
+
+---
+
+### Phase 4 — Trial Bundle Structure (QWS-0306)
+
+Run the baseline and confirm bundle output:
+
+```zsh
+./research/bin/run_liquidity_sweep_baseline.sh
+```
+
+Expected directory structure:
+```
+research/results/futures/liquidity_sweep/runs/
+  <YYYYMMDD-HHMMSS>/
+    baseline_results.csv
+    index.html
+    bundle.json
+```
+
+Inspect the manifest:
+```zsh
+cat research/results/futures/liquidity_sweep/runs/*/bundle.json | python -m json.tool
+# Expected: "files" key with "csv", "csv_kind", and "html" entries
+```
+
+Ingest via bundle:
+```zsh
+BUNDLE_DIR=$(ls -dt research/results/futures/liquidity_sweep/runs/*/ | head -1)
+qw record --bundle "$BUNDLE_DIR"
+```
+
+Expected:
+- Exit `0`.
+- Receipt written with `"status": "persisted"`.
+- Receipt includes the `run_id` generated post-parse.
+
+Verify HTML path linked on Run node (stored as property, not BlobArtifact):
+```cypher
+MATCH (r:Run) WHERE r.artifact_path_html IS NOT NULL
+RETURN r.run_id, r.artifact_path_html LIMIT 3;
+// Expected: at least one row with a valid filesystem path
+```
+
+---
+
+### Phase 5 — Full Pipeline Run
+
+Run all four trial runners in sequence to populate the graph for query verification:
+
+```zsh
+./research/bin/run_liquidity_sweep_baseline.sh && \
+./research/bin/run_liquidity_sweep_position_sizing.sh && \
+./research/bin/run_liquidity_sweep_golden.sh && \
+./research/bin/run_btc_mars_golden.sh
+```
+
+Expected: all four runners exit `0`. If any fail, stop and diagnose before proceeding
+to Phase 6 — query results depend on data from all four runners.
+
+---
+
+### Phase 6 — Champion Promotion Verification (QWS-0304)
+
+Verify Champion node was created after the golden run:
+```cypher
+MATCH (ch:Champion) RETURN ch.champion_id, ch.oos_status, ch.freeze_date;
+// Expected: at least one Champion node
+```
+
+Verify end-to-end graph shape:
+```cypher
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
+RETURN s.strategy_id, ch.champion_id, ch.oos_status;
+// Expected: at least one Strategy → Champion link
+```
+
+---
+
+### Phase 7 — Query Verification (all `qw query` presets)
+
+Exercise every registered preset. All commands must exit `0`.
+
+**Strategy-scoped:**
+```zsh
+qw query --name recent_champions
+qw query --name recent_champions --param limit=5
+qw query --name recent_champions --json
+qw query --name strategy_lineage --param strategy_id=cl-1h-bear-liquidity-sweep
+qw query --name run_history --param strategy_id=cl-1h-bear-liquidity-sweep
+qw query --run-history --param strategy_id=cl-1h-bear-liquidity-sweep   # shortcut alias — same as above
+qw query --name rank_by_evidence --param strategy_id=cl-1h-bear-liquidity-sweep
+```
+
+**Champion lineage:**
+```zsh
+# Capture a champion_id and run_id from the data ingested in Phase 5:
+CHAMPION_ID=$(qw query --name recent_champions --json | jq -r '.[0].champion_id')
+qw query --name trace_champion --param champion_id=$CHAMPION_ID
+
+RUN_ID=$(qw query --name run_history --param strategy_id=cl-1h-bear-liquidity-sweep \
+  | head -1 | jq -r '.run_id')
+qw query --name downstream_champions --param run_id=$RUN_ID
+# Note: empty list is valid when no --pivot-from was used at ingest
+```
+
+**Family correlation:**
+```zsh
+qw query --name cross_artifact_correlation --param strategy_id=cl-1h-bear-liquidity-sweep
+# Note: returns empty list when no family_id is set (requires --source-file at ingest)
+# If family_id is known:
+# qw query --name cross_artifact_correlation --param family_id=<12-char-hash>
+```
+
+**Portfolio-level:**
+```zsh
+qw query --name portfolio_alpha
+qw query --name fragility_report
+qw query --name staleness_report
+qw query --name instrument_concentration
+```
+
+**Offline queue:**
+```zsh
+qw query --name pending_offline
+# Expected: empty list — no artifacts stuck in queue after full pipeline run
+```
+
+**JSON output and jq pipeline:**
+```zsh
+qw query --name run_history --param strategy_id=cl-1h-bear-liquidity-sweep \
+  | jq 'select(.total_trades >= 10) | {run_id, sharpe, total_trades}'
+```
+
+---
+
+### Phase 8 — Regression Check (idempotency)
+
+Re-run the baseline a second time:
+```zsh
+./research/bin/run_liquidity_sweep_baseline.sh
+```
+
+```cypher
+// Node counts must not double (MERGE semantics)
+MATCH (n) RETURN labels(n), count(n) ORDER BY count(n) DESC;
+// Expected: same counts as after Phase 2
+```
+
+---
+
+### Phase 9 — QA Integrity Script
+
+Run the automated structural integrity check:
+```zsh
+./research/bin/qa_graph_integrity.sh
+```
+
+Expected: `Passed: 5, Failed: 0`
+
+The script checks: graph connectivity, champion presence, champion flat metrics
+(`avg_sharpe` not null), champion lineage trace, and trade count significance (≥ 5).
+
+---
+
+### Epic 3 UAT Failure Modes
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `Neo4j connectivity check failed` on env-clean run | `.env` not sourced by shell runner | QWS-0304 env preamble not implemented — verify git-root-anchored env block in `research/bin/` script |
+| `curator_note IS NULL` returns non-zero | `curator_note` still set to null at ingest | Check `store.py` `_persist_csv` — `curator_note` must default to `""` |
+| `grep` finds `instrument.*"CL"` in trial scripts | Script not migrated to `graph_export.py` | QWS-0305 not implemented for that trial |
+| `runs/<timestamp>/` directory not created | Trial script not parameterized with `--output-dir` | QWS-0306 not implemented for that trial |
+| `qw record --bundle` fails with "no bundle.json" | Manifest not written by shell runner | QWS-0306 manifest generation not implemented |
+| `qw query --name recent_champions` returns empty | Champion not promoted after golden run | Check QWS-0304 auto-promote gate in `store.py` |
+| `artifact_path_html IS NOT NULL` returns 0 rows | HTML patch step not executed after CSV ingest | QWS-0306 two-phase write not working — check `_cmd_bundle` in `cli.py` |
+| `qw query --name <preset>` returns "preset not found" | Preset not registered in PRESET_CATALOG | Check `query_presets.py` — preset may be from a newer story not yet merged |
+| `downstream_champions` returns error (not empty list) | run_id doesn't exist in graph | Use a run_id from `run_history` output, not a hardcoded example value |
+| `qa_graph_integrity.sh` fails Check 2 (avg_sharpe null) | Champion nodes missing flat `metrics_*` properties | Re-ingest champion markdown after confirming `CHAMPION_INGEST_QUERY` sets `ch.metrics_sharpe` |
+| Node counts double on re-run | MERGE semantics broken | Do not fix here — regression in Epic 1 foundations (QWS-0301) |
+
+---
+
 ## Closed Story Traceability
 
 This runbook baseline incorporates closed stories from both complete epic directories.
@@ -286,3 +589,7 @@ This runbook baseline incorporates closed stories from both complete epic direct
 | `qws_graph/epics/epic_2_mcp_read_integration[COMPLETE]/closed/story_family_id_backfill_migration.md` | `family_id` migration/backfill expectations |
 | `qws_graph/epics/epic_2_mcp_read_integration[COMPLETE]/closed/story_semantic_gate_llama4.md` | Semantic analyst fallback and `curator_note` operations |
 | `qws_graph/epics/epic_2_mcp_read_integration[COMPLETE]/closed/story_strategy_family_definitions.md` | Strategy-family taxonomy context for correlation trustworthiness |
+| `qws_graph/epics/epic_3_research_pipeline_integrity/closed/story_4_epic3_schema_registry.md` | Schema registry + Config/Run column routing; `curator_note` default; champion auto-promote gate |
+| `qws_graph/epics/epic_3_research_pipeline_integrity/closed/story_5_epic3_centralized_ingestion.md` | Centralized ingestion layer (`research/graph_export.py`); validation gate expectations |
+| `qws_graph/epics/epic_3_research_pipeline_integrity/closed/story_6_trial_bundle_structure.md` | Trial bundle structure (`qw record --bundle`); per-run `runs/{ts}/`; `artifact_path_html` on `:Run` |
+| `qws_graph/epics/epic_3_research_pipeline_integrity/closed/story_7_epic3_uat_runbook.md` | Epic 3 UAT appendix — 9-phase verification sequence for QWS-0304 through QWS-0306 |

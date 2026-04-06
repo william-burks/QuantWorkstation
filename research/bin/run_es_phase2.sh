@@ -14,6 +14,7 @@ if [[ -f "$_QWS_ENV_FILE" ]]; then
 fi
 unset _QWS_ENV_FILE
 cd "$_QWS_ROOT"
+export PYTHONPATH="${_QWS_ROOT}${PYTHONPATH:+:$PYTHONPATH}"
 unset _QWS_ROOT
 
 # Create results dir if needed
