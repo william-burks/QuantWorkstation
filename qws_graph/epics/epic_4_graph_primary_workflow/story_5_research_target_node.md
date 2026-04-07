@@ -4,7 +4,7 @@
 QWS-0408
 
 ## Status
-draft
+READY
 
 ## Blocked On
 None
@@ -101,5 +101,6 @@ Implemented as an idempotent MERGE on a fixed `target_id = "singleton"` property
 - [ ] `research_targets` query preset returns correct output.
 - [ ] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
 - [ ] Story marked CLOSED.
-- [ ] All affected README files updated to reflect new capabilities.
-- [ ] PROVENANCE_ENGINE.md updated — `ResearchTarget` node moved from `[TARGET]` to `[CURRENT]`.
+- [ ] `docs/MANIFESTO.md` — ResearchTarget description updated from "target state — not yet implemented" to current state.
+- [ ] `qws_graph/docs/qws_graph_runbook.md` — `qw seed --targets` added to Day-1 Operations section.
+- [ ] `docs/PROVENANCE_ENGINE.md` — `ResearchTarget` node moved from `[TARGET]` to `[CURRENT]` node table.
