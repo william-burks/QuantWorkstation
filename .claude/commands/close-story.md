@@ -37,7 +37,7 @@ In `qws_graph/epics/INDEX.md`:
 ## Step 7 — Update BACKLOG_ALIGNMENT.md
 In `docs/BACKLOG_ALIGNMENT.md`:
 1. Find the story row for `$ARGUMENTS` in the Story → Capability Map
-2. Note it as COMPLETE
+2. Note it as CLOSED
 3. Check if any other stories list `$ARGUMENTS` in their "Blocked On" column —
    if so, update those rows to reflect the block is now resolved
 

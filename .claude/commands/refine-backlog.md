@@ -8,7 +8,7 @@ You are running a Product Backlog Refinement (PBR) session for QuantWorkstation.
 
 Read the following files in order:
 1. `docs/MANIFESTO.md` — mission, hard constraints, optimization targets
-2. `docs/PROVENANCE_ENGINE.md` — authoritative graph schema and MCP tool contract
+2. `docs/PROVENANCE_ENGINE.md` — authoritative graph schema and MCP tool contract. **As you read, split into two lists: (a) current — items that exist today, and (b) target — items marked `[TARGET]`, planned but not yet built. Use this split when evaluating stories below.**
 3. `docs/RESEARCH_WORKFLOW.md` — research loop, interaction rules, what good looks like
 4. `docs/BACKLOG_ALIGNMENT.md` — epic status, capability map, not-yet-implemented index
 5. `qws_graph/epics/INDEX.md` — canonical story list and dependencies
@@ -31,7 +31,7 @@ For each draft story in the current epic, rate it: `READY` | `NEEDS WORK` | `BLO
 Readiness criteria:
 - `READY` = has Acceptance Criteria, Repo Touchpoints, clear In/Out of Scope, and no unresolved upstream blockers
 - `NEEDS WORK` = missing one of the above, or scope is ambiguous
-- `BLOCKED` = upstream story not yet complete
+- `BLOCKED` = upstream story not yet complete, or story depends on a `[TARGET]` node/edge/tool that has no implementing story marked CLOSED
 
 For every `NEEDS WORK` story, state the specific gap in one line.
 
