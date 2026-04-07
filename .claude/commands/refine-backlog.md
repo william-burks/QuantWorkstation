@@ -35,6 +35,9 @@ Readiness criteria:
 
 For every `NEEDS WORK` story, state the specific gap in one line.
 
+- Be sure to update story status to the respective readiness level in INDEX.md story_N_*.md and the epic README.md if and only if the story meets the criteria for that level. Do not mark a story `READY` if it has any gaps, even if they seem minor.
+- For `BLOCKED` stories, explicitly call out the blocker (e.g. "Blocked on QWS-0407 closing" or "Blocked on `:ResearchTarget` node existing in the graph").
+
 ---
 
 **Dependency Audit**

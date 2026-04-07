@@ -43,7 +43,7 @@ This epic closes all five gaps and stops there.
 ## Stories in execution order
 1. `QWS-0402` `story_1_oos_outcome_tracking.md` — `qw record --oos` command — **READY**
 2. `QWS-0407` `story_4_significance_gate_properties.md` — frequency gate properties on Run — **READY**
-3. `QWS-0406` `story_3_workflow_query_presets.md` — query presets + deprecations (Phase A unblocked; Phase B gated on QWS-0407) — **READY**
+3. `QWS-0406` `story_3_workflow_query_presets.md` — query presets + deprecations (Phase A unblocked; Phase B gated on QWS-0407) — **BLOCKED**
 4. `QWS-0405` `story_2_promotion_alerts.md` — post-ingest promotion candidate notice — **BLOCKED on QWS-0407**
 5. `QWS-0408` `story_5_research_target_node.md` — ResearchTarget singleton node — **READY** (no dependencies; can run in parallel with any story)
 
