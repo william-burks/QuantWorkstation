@@ -100,6 +100,7 @@ Stories (execution order):
 2. `QWS-0407` [`story_4_significance_gate_properties.md`](epic_4_graph_primary_workflow/story_4_significance_gate_properties.md) — `draft` _(promoted from candidate; unblocks QWS-0405 + QWS-0406 Phase B)_
 3. `QWS-0406` [`story_3_workflow_query_presets.md`](epic_4_graph_primary_workflow/story_3_workflow_query_presets.md) — `draft` _(Phase A unblocked; Phase B blocked on QWS-0407)_
 4. `QWS-0405` [`story_2_promotion_alerts.md`](epic_4_graph_primary_workflow/story_2_promotion_alerts.md) — `draft` _(blocked on QWS-0407)_
+5. `QWS-0408` [`story_5_research_target_node.md`](epic_4_graph_primary_workflow/story_5_research_target_node.md) — `draft` _(promoted from candidate; no dependencies)_
 
 Cancelled (preserved in `cancelled_stories/`):
 - `QWS-0401` — Decision-State Model (graph schema is already the state model)
@@ -130,6 +131,7 @@ Stories:
 1. `QWS-0601` [`story_1_hypothesis_journaling.md`](epic_6_research_analytics/story_1_hypothesis_journaling.md) — `draft`
 2. `QWS-0602` [`story_2_parameter_stability.md`](epic_6_research_analytics/story_2_parameter_stability.md) — `draft`
 3. `QWS-0603` [`story_3_portfolio_correlation.md`](epic_6_research_analytics/story_3_portfolio_correlation.md) — `draft`
+4. `QWS-0604` [`story_4_semantic_hypothesis_deduplication.md`](epic_6_research_analytics/story_4_semantic_hypothesis_deduplication.md) — `draft` _(blocked on QWS-0601 CLOSED)_
 
 ---
 
@@ -143,8 +145,21 @@ Stories:
 
 ---
 
+## Epic 8 — Champion Lifecycle [PLANNED]
+- Epic README: [`epic_8_champion_lifecycle/README.md`](epic_8_champion_lifecycle/README.md)
+- Objective: three-stage champion lifecycle (active → FormerChampion → RetiredChampion), direct replacement link, automated decay detection.
+
+Stories (execution order):
+1. `QWS-0801` [`story_1_former_champion_lifecycle.md`](epic_8_champion_lifecycle/story_1_former_champion_lifecycle.md) — `draft` _(blocked on QWS-0402 CLOSED)_
+2. `QWS-0802` [`story_2_superseded_by_relationship.md`](epic_8_champion_lifecycle/story_2_superseded_by_relationship.md) — `draft` _(independent; no blocking dependencies)_
+3. `QWS-0803` [`story_3_recursive_validation_loop.md`](epic_8_champion_lifecycle/story_3_recursive_validation_loop.md) — `draft` _(blocked on QWS-0801 CLOSED)_
+
+---
+
 ## Current Focus
-- **Now:** Epic 4 — begin QWS-0402 (OOS outcome tracking), then QWS-0405, QWS-0406 in any order.
-- **After Epic 4:** Epic 5 QWS-0501 (family_id) + QWS-0502 (regime tagging) are independent and can start immediately — QWS-0502 has zero dependencies.
+- **Now:** Epic 4 — begin QWS-0402 (OOS outcome tracking), then QWS-0407, QWS-0406, QWS-0405 in order.
+- **QWS-0408** (ResearchTarget node) is unblocked and can be picked up any time within Epic 4.
+- **After Epic 4:** Epic 5 QWS-0501 (family_id) + QWS-0502 (regime tagging) are independent and can start immediately.
+- **Epic 8 QWS-0802** (SUPERSEDED_BY) is unblocked now and can be picked up any time — no dependencies.
 - **Parallel track:** Epic 7 QWS-0701 (PyPI packaging) is `ready` and can be picked up any time without blocking research work.
 

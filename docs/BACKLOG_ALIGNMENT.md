@@ -33,8 +33,10 @@
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | OOS Outcome Tracking | QWS-0402 | `oos_status` updates on Champions; `list_oos_pending`; partial `portfolio_alpha` update (OOS/IS drift flag only) | — |
-| Promotion Alerts | QWS-0405 | Notification when a Trial crosses the dual-hurdle promotion threshold | Significance gate properties story |
-| Workflow Query Presets | QWS-0406 | **New:** `list_oos_pending`, `promotion_candidates` (Tier + Active-Window Frequency; Regime Diversity Score deferred to QWS-0502), `list_aborted` / **Deprecated:** `rank_by_evidence`, `trace_champion`, `fragility_report`, `staleness_report` / **Amended:** all Strategy traversals add `WHERE s.status <> 'ABORTED'` | Significance gate properties story (for `active_window_frequency` filter in `promotion_candidates`) |
+| Promotion Alerts | QWS-0405 | Notification when a Trial crosses the dual-hurdle promotion threshold | QWS-0407 |
+| Workflow Query Presets | QWS-0406 | **New:** `list_oos_pending`, `promotion_candidates` (Tier + Active-Window Frequency; Regime Diversity Score deferred to QWS-0502), `list_aborted` / **Deprecated:** `rank_by_evidence`, `trace_champion`, `fragility_report`, `staleness_report` / **Amended:** all Strategy traversals add `WHERE s.status <> 'ABORTED'` | QWS-0407 (for `active_window_frequency` filter in `promotion_candidates`) |
+| Significance Gate Properties | QWS-0407 | `active_window_frequency`, `duty_cycle`, `first_trade_ts`, `last_trade_ts` on Run node; dual-hurdle gate | — |
+| ResearchTarget Config Node | QWS-0408 | `ResearchTarget` singleton node; `qw seed --targets`; `research_targets` query preset | — |
 
 ### Epic 5 — Context Enrichment
 
@@ -52,6 +54,15 @@
 | Hypothesis Journaling | QWS-0601 | `Hypothesis` node; `SUGGESTED`, `TESTED_AS`, `BRANCHED_FROM` edges; `log_hypothesis`, `check_redundancy`, `hypothesis_audit` MCP tools; full provenance chain from idea to Champion | — |
 | Parameter Stability | QWS-0602 | Stability analysis across Config parameter variations | — |
 | Portfolio Correlation | QWS-0603 | `CORRELATED_WITH` edges on Champions; `portfolio_alpha` gains MaxDD/Calmar filters + OOS/IS drift flag; correlation gate on promotion path | QWS-0402 |
+| Semantic Hypothesis Deduplication | QWS-0604 | `SEMANTICALLY_RELATED` edges between Hypothesis nodes; `similar_hypotheses` preset; `embedding` property on Hypothesis; `qw backfill --embeddings` | QWS-0601 CLOSED |
+
+### Epic 8 — Champion Lifecycle
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| FormerChampion Lifecycle | QWS-0801 | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
+| SUPERSEDED_BY Relationship | QWS-0802 | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
+| Recursive Validation Loop | QWS-0803 | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | QWS-0801 CLOSED |
 
 ### Epic 7 — Developer Experience
 
@@ -71,9 +82,9 @@ the linked story is marked COMPLETE above.
 | Node | Story |
 |---|---|
 | `Hypothesis` | QWS-0601 |
-| `FormerChampion` | New story (see candidates below) |
+| `FormerChampion` | QWS-0801 |
 | `Regime` | QWS-0502 |
-| `ResearchTarget` | New story (see candidates below) |
+| `ResearchTarget` | QWS-0408 |
 
 ### Relationships
 | Relationship | Story |
@@ -81,21 +92,22 @@ the linked story is marked COMPLETE above.
 | `SUGGESTED` | QWS-0601 |
 | `TESTED_AS` | QWS-0601 |
 | `BRANCHED_FROM` | QWS-0601 |
-| `DEGRADED_TO` | New story |
-| `SUPERSEDED_BY` | New story |
-| `RETIRED_TO` (FormerChampion→RetiredChampion) | New story |
+| `DEGRADED_TO` | QWS-0801 |
+| `SUPERSEDED_BY` | QWS-0802 |
+| `RETIRED_TO` (FormerChampion→RetiredChampion) | QWS-0801 |
 | `CORRELATED_WITH` | QWS-0603 |
-| `SEMANTICALLY_RELATED` | New story |
+| `SEMANTICALLY_RELATED` | QWS-0604 |
 
 ### Properties
 | Property | Node | Story |
 |---|---|---|
-| `active_window_frequency` | Run | New story (significance gate amendment) |
-| `duty_cycle` | Run | New story (significance gate amendment) |
-| `first_trade_ts` | Run | New story |
-| `last_trade_ts` | Run | New story |
-| `oos_reason` | FormerChampion / RetiredChampion | New story |
-| `retirement_note` | FormerChampion / RetiredChampion | New story |
+| `active_window_frequency` | Run | QWS-0407 |
+| `duty_cycle` | Run | QWS-0407 |
+| `first_trade_ts` | Run | QWS-0407 |
+| `last_trade_ts` | Run | QWS-0407 |
+| `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
+| `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
+| `embedding` | Hypothesis | QWS-0604 |
 | `status = ARCHIVED` | Strategy | QWS-0406 amendment (ABORTED exists; ARCHIVED is new) |
 
 ### MCP Tools
@@ -105,11 +117,13 @@ the linked story is marked COMPLETE above.
 | `promotion_candidates` | QWS-0406 |
 | `list_aborted` | QWS-0406 |
 | `regime_performance` | QWS-0503 |
-| `former_champions` | New story |
+| `former_champions` | QWS-0801 |
 | `hypothesis_audit` | QWS-0601 |
 | `check_redundancy` | QWS-0601 |
 | `log_hypothesis` | QWS-0601 |
-| `monitor_champion` | New story |
+| `monitor_champion` | QWS-0803 |
+| `research_targets` | QWS-0408 |
+| `similar_hypotheses` | QWS-0604 |
 
 ---
 
@@ -119,12 +133,6 @@ Identified during vision planning — not yet in the backlog. Will decides prior
 
 | Candidate | What it delivers |
 |---|---|
-| **FormerChampion lifecycle** | `FormerChampion` node + `DEGRADED_TO` edge + `RETIRED_TO` (FormerChampion→RetiredChampion) + `oos_reason`/`retirement_note` properties + `former_champions` MCP tool. Three-stage champion decay model. |
-| **Recursive Validation Loop** | `monitor_champion` scheduled skill: re-runs Trial on each Champion with fresh data; auto-creates `DEGRADED_TO` on decay threshold breach; notifies Will |
-| **SUPERSEDED_BY relationship** | Links a Champion to its replacement when a better version of the same idea is promoted |
-| **ResearchTarget config node** | Graph-queryable node storing `sharpe_target`, `max_holding_hours`, `min_trades`, `min_frequency`; defaulted but configurable without code changes |
-| **Significance gate properties** | `active_window_frequency`, `duty_cycle`, `first_trade_ts`, `last_trade_ts` on Run node; enables dual-hurdle promotion gate |
-| **Semantic Hypothesis deduplication** | `SEMANTICALLY_RELATED` edges between Hypothesis nodes via embedding similarity; guards against re-testing the same idea with different wording |
 
 ---
 
@@ -141,10 +149,12 @@ QWS-0501 (family_id)
 QWS-0601 (Hypothesis journaling)
     └── full provenance chain: Hypothesis → Strategy → Trial → Champion
 
-FormerChampion story
-    └── Recursive Validation Loop story
-    └── former_champions MCP tool
-    └── regime_performance (fragility context)
+QWS-0402 (OOS tracking)
+    └── QWS-0801 (FormerChampion lifecycle)
+            └── QWS-0803 (Recursive Validation Loop)
+
+QWS-0601 (Hypothesis journaling)
+    └── QWS-0604 (Semantic Hypothesis deduplication)
 ```
 
 ---
