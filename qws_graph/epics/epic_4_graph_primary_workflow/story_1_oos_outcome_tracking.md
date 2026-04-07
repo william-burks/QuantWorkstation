@@ -4,7 +4,7 @@
 QWS-0402
 
 ## Status
-draft
+READY
 
 ## Summary
 Add `qw record --oos <status> --champion <id>` to record OOS validation outcomes directly
@@ -43,10 +43,19 @@ No markdown file needs to be written or re-ingested.
 
 These must be consistent with any `WHERE ch.oos_status = ...` filters in `query.py`.
 
+## Enum Migration
+The current `data_dictionary.yaml` defines `oos_status` on Champion as `{oos_pending, live_paper, retired}`.
+This story changes the enum to `{oos_pending, oos_pass, oos_fail}`. The `update_champion_oos_status()`
+store method and `data_dictionary.yaml` must both be updated. Existing Champion nodes using the old
+values must be handled — do not silently overwrite: `live_paper` → `oos_pass` (forward-tested, treat
+as validated); `retired` is a lifecycle state, not an OOS outcome — flag and reject if encountered
+via this CLI path with a clear error ("Champion has lifecycle status 'retired'; use qw retire instead").
+
 ## In Scope
 - `qws_graph/research/graph/cli.py` — new `--oos` / `--champion` / `--reason` flags
-- `qws_graph/research/graph/store.py` — `update_champion_oos_status()` method
+- `qws_graph/research/graph/store.py` — `update_champion_oos_status()` method; enum migration handling
 - `qws_graph/docs/graph_v1_contract.md` — add `oos_date` and `oos_reason` to Champion spec
+- `qws_graph/docs/data_dictionary.yaml` — update `oos_status` enum from `{oos_pending, live_paper, retired}` to `{oos_pending, oos_pass, oos_fail}`
 - Unit tests for the store method and CLI flag parsing
 
 ## Out of Scope
@@ -58,6 +67,7 @@ These must be consistent with any `WHERE ch.oos_status = ...` filters in `query.
 - `qws_graph/research/graph/cli.py`
 - `qws_graph/research/graph/store.py`
 - `qws_graph/docs/graph_v1_contract.md`
+- `qws_graph/docs/data_dictionary.yaml`
 - `qws_graph/tests/unit/test_store_oos_update.py` — new
 
 ## Acceptance Criteria
@@ -68,7 +78,7 @@ These must be consistent with any `WHERE ch.oos_status = ...` filters in `query.
 - [ ] `qw record --oos invalid_status --champion <id>` exits non-zero with a clear error.
 - [ ] `qw record --oos oos_pass` without `--champion` exits non-zero.
 - [ ] Receipt written with `kind: oos_update` and `status: persisted`.
-- [ ] `qw query --name staleness_report` reflects updated `oos_status` after the command.
+- [ ] `qw query --name recent_champions` returns the updated Champion with the new `oos_status` value.
 - [ ] Unit tests cover valid transition, invalid status, missing champion ID.
 
 ## Definition of Done

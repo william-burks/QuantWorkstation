@@ -6,6 +6,10 @@ QWS-0405
 ## Status
 draft
 
+## Blocked On
+QWS-0407 — requires `active_window_frequency` property on Run nodes (populated at ingest time)
+and `MIN_ACTIVE_WINDOW_FREQUENCY` constant added to `research/experiments/standards.py`
+
 ## Summary
 After a successful `baseline_csv` ingest, check each persisted Run against the existing
 `standards.py` thresholds and print a promotion candidate notice if any qualify. No new
@@ -42,9 +46,21 @@ Evaluate only `Run` objects whose ingest status is `persisted` (not `skipped`).
 ### Threshold source
 Import directly from `research/experiments/standards.py`:
 ```python
-from research.experiments.standards import SHARPE, PROFIT_FACTOR, MAX_DRAWDOWN_LIMIT, MIN_TRADES_PER_YEAR
+from research.experiments.standards import (
+    SHARPE, PROFIT_FACTOR, MAX_DRAWDOWN_LIMIT, MIN_TRADES_PER_YEAR,
+    MIN_ACTIVE_WINDOW_FREQUENCY,  # added by QWS-0407
+)
 ```
 The `professional` tier keys define the floor. No `promotion_rules.yaml` needed.
+
+Promotion alert fires only when ALL of the following are met:
+- `sharpe >= SHARPE["professional"]`
+- `profit_factor >= PROFIT_FACTOR["professional"]`
+- `total_trades >= 30`
+- `active_window_frequency >= MIN_ACTIVE_WINDOW_FREQUENCY` (0.06 trades/day)
+
+Runs where `active_window_frequency` is null (ingested before QWS-0407) are silently
+excluded — null-safe guard required.
 
 ### Output format
 One block per qualifying run, printed after the normal ingest summary. Silent if no runs
@@ -69,8 +85,11 @@ qualify. Never blocks the ingest (exceptions in the check are caught and suppres
 
 ## Acceptance Criteria
 - [ ] After ingesting a Run with sharpe = 2.3, profit_factor = 2.1, max_drawdown = -0.08,
-  total_trades = 45: promotion candidate block is printed to stdout.
+  total_trades = 45, active_window_frequency = 0.10: promotion candidate block is printed to stdout.
 - [ ] After ingesting a Run with sharpe = 0.9 (below professional threshold): no block printed.
+- [ ] A run with active_window_frequency = 0.03 (below 0.06 floor) and otherwise-passing
+  sharpe/profit_factor/trades produces no alert.
+- [ ] A run where active_window_frequency is null (pre-QWS-0407 legacy run) produces no alert.
 - [ ] Skipped runs (significance gate) produce no alert.
 - [ ] Grid CSV ingests produce no alert.
 - [ ] An exception in the evaluation block does not prevent the receipt from being written.

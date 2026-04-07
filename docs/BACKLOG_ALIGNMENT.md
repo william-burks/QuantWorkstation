@@ -105,6 +105,8 @@ the linked story is marked COMPLETE above.
 | `duty_cycle` | Run | QWS-0407 |
 | `first_trade_ts` | Run | QWS-0407 |
 | `last_trade_ts` | Run | QWS-0407 |
+| `oos_date` | Champion | QWS-0402 |
+| `oos_reason` | Champion | QWS-0402 |
 | `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
 | `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
 | `embedding` | Hypothesis | QWS-0604 |

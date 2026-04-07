@@ -4,7 +4,7 @@
 QWS-0406
 
 ## Status
-draft
+READY
 
 ## Summary
 Deliver the operational query surface for Epic 4: new presets that answer "what do I need
@@ -31,8 +31,12 @@ either redundant, stale, or low-value and should be removed from the MCP surface
 ### Phase A — Ships independently (no external blockers)
 1. `list_oos_pending` — Champions waiting for OOS validation
 2. `list_aborted` — Aborted strategies with cause-of-death
-3. Deprecate `rank_by_evidence`, `trace_champion`, `fragility_report`, `staleness_report`
+3. Deprecate `rank_by_evidence`, `trace_champion` (redundant duplicates — safe to remove now)
 4. Amend all Strategy traversals: add `WHERE s.status <> 'ABORTED'`
+
+### Phase C — Deferred Deprecations (gated on downstream stories)
+- `staleness_report` — defer removal until QWS-0402 is CLOSED (QWS-0402 AC 6 still calls this preset)
+- `fragility_report` — defer removal until QWS-0801 (`former_champions`) and QWS-0503 (`regime_performance`) are CLOSED; removing before replacements exist leaves no fragility surface in the MCP interface
 
 ### Phase B — Gated on QWS-0407 (significance gate properties)
 5. `promotion_candidates` — Runs meeting dual-hurdle gate, not yet promoted
@@ -104,8 +108,15 @@ if called after removal.
 |---|---|
 | `rank_by_evidence` | Redundant — duplicate of `run_history` |
 | `trace_champion` | Redundant — duplicate of `downstream_champions` |
-| `fragility_report` | Stale — relied on deprecated schema property; replaced by distributed fragility signals in `portfolio_alpha`, `former_champions`, `regime_performance` |
-| `staleness_report` | Low value — clutters the MCP interface |
+
+## Phase C — Deferred Deprecations
+
+Do **not** remove these in Phase A. Removal is gated on downstream stories.
+
+| Preset | Removal Gate | Reason for Deferral |
+|---|---|---|
+| `staleness_report` | QWS-0402 CLOSED | Remove alongside the OOS lifecycle story to minimize operator confusion during the transition |
+| `fragility_report` | QWS-0801 + QWS-0503 CLOSED | Replacement signals (`former_champions`, `regime_performance`) don't exist yet; removing leaves no fragility surface in the MCP interface |
 
 ---
 
@@ -182,8 +193,8 @@ at ingest time. See QWS-0407.**
 - [ ] `qw query --name list_aborted` exits `0`; returns Strategies with `status = ABORTED` including `abort_reason`.
 - [ ] `qw query --name rank_by_evidence` raises `PresetNotFound`.
 - [ ] `qw query --name trace_champion` raises `PresetNotFound`.
-- [ ] `qw query --name fragility_report` raises `PresetNotFound`.
-- [ ] `qw query --name staleness_report` raises `PresetNotFound`.
+- [ ] `qw query --name fragility_report` still returns results (not removed in Phase A).
+- [ ] `qw query --name staleness_report` still returns results (not removed in Phase A).
 - [ ] `recent_champions` and `strategy_lineage` exclude ABORTED strategies.
 - [ ] Both Phase A presets return empty list gracefully when no matching data exists.
 
