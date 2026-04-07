@@ -4,7 +4,7 @@
 QWS-0406
 
 ## Status
-READY
+BLOCKED (gated on QWS-0407 for `promotion_candidates` preset; Phase A can ship independently)
 
 ## Summary
 Deliver the operational query surface for Epic 4: new presets that answer "what do I need
