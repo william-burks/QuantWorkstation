@@ -97,8 +97,9 @@ Unplanned / patch stories (CLOSED):
 
 Stories (execution order):
 1. `QWS-0402` [`story_1_oos_outcome_tracking.md`](epic_4_graph_primary_workflow/story_1_oos_outcome_tracking.md) — `draft`
-2. `QWS-0405` [`story_2_promotion_alerts.md`](epic_4_graph_primary_workflow/story_2_promotion_alerts.md) — `draft`
-3. `QWS-0406` [`story_3_workflow_query_presets.md`](epic_4_graph_primary_workflow/story_3_workflow_query_presets.md) — `draft`
+2. `QWS-0407` [`story_4_significance_gate_properties.md`](epic_4_graph_primary_workflow/story_4_significance_gate_properties.md) — `draft` _(promoted from candidate; unblocks QWS-0405 + QWS-0406 Phase B)_
+3. `QWS-0406` [`story_3_workflow_query_presets.md`](epic_4_graph_primary_workflow/story_3_workflow_query_presets.md) — `draft` _(Phase A unblocked; Phase B blocked on QWS-0407)_
+4. `QWS-0405` [`story_2_promotion_alerts.md`](epic_4_graph_primary_workflow/story_2_promotion_alerts.md) — `draft` _(blocked on QWS-0407)_
 
 Cancelled (preserved in `cancelled_stories/`):
 - `QWS-0401` — Decision-State Model (graph schema is already the state model)

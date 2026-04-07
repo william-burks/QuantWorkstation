@@ -1,7 +1,25 @@
 # QuantWorkstation — Claude Code Context
 
-## What this is
-Trading workbench for crypto (Alpaca REST) and futures (IBKR via ib_insync). Manual research-to-execution boundary; paper trading by default.
+## Research Context
+
+Personal systematic trading research exocortex. Graph (Neo4j + `qw` CLI + MCP) is the
+shared brain. Any model with MCP access reads the same research history.
+
+| Need | Document |
+|---|---|
+| Mission, targets, philosophy | `docs/MANIFESTO.md` |
+| Graph schema, MCP tools, provenance chain | `docs/PROVENANCE_ENGINE.md` |
+| Research loop, interaction rules | `docs/RESEARCH_WORKFLOW.md` |
+| Current sprint, what's built vs. planned | `docs/BACKLOG_ALIGNMENT.md` |
+
+**Always-active constraints:**
+- Sharpe ≥ 2.0 | Holding ≤ 4h | Optimize for alpha — not win rate
+- Interface is `qw` CLI + MCP only — no FastAPI
+- Before suggesting a strategy: `qw query --name recent_champions` + `qw query --name list_aborted`
+- Do NOT use nodes/tools marked `[TARGET]` in `PROVENANCE_ENGINE.md` until their story is COMPLETE in `BACKLOG_ALIGNMENT.md`
+- **Current sprint:** Epic 4 — QWS-0402 → QWS-0407 → QWS-0406 (Phase A) → QWS-0406 (Phase B) → QWS-0405
+
+---
 
 ## Modules
 
@@ -17,21 +35,14 @@ Trading workbench for crypto (Alpaca REST) and futures (IBKR via ib_insync). Man
 | `research/experiments/` | sweep, walk_forward, evaluator, metrics, standards |
 | `research/trials/` | Numbered trial scripts (`NN_description.py`) |
 
-## Strategies
-- `ema_crossover.py` — EMA crossover with RSI filter
-- `mars.py` — momentum + SMA trend + ATR screen
-- `rsi_reversion.py` — RSI/Bollinger reversion, max 6-bar hold
-- `dual_tf_trend.py` — dual timeframe trend following
-
 ## Hard rules
 1. **Destructive scripts** — `util/reseed_symbol.py`, `util/reseed_all_stitched.py`, `util/deleteData.py` delete and rewrite ArcticDB symbols. Confirm symbol and timeframe before running.
 2. **No direct lib writes** — always go through `store.write_bars()` / `store.write_signals()`.
 3. **Paper by default** — `alpaca_base_url=https://paper-api.alpaca.markets`, `ibkr_port=4002`. Verify `.env` before any live change.
-4. **`DRAWDOWN_HALT` requires restart** — does not auto-lift. `DAILY_LOSS_HALT` resets at 00:00 UTC via `reset_day()`.
-5. **Risk constants are fixed** — 5% daily loss, 10% trailing DD, 5% per-symbol, 40% total exposure. Do not change without explicit instruction.
-6. **Trial filenames are permanent** — `NN_description.py`; results reference by filename; do not renumber.
-7. **Tests use mock brokers only** — no live connections in `tests/unit/`.
-8. **No auto-commit** — never `git commit` or `git push` without explicit instruction.
+4. **Risk constants are fixed** — 5% daily loss, 10% trailing DD, 5% per-symbol, 40% total exposure. Do not change without explicit instruction.
+5. **Trial filenames are permanent** — `NN_description.py`; results reference by filename; do not renumber.
+6. **Tests use mock brokers only** — no live connections in `tests/unit/`.
+7. **No auto-commit** — never `git commit` or `git push` without explicit instruction.
 
 ## Quick reference
 ```bash
