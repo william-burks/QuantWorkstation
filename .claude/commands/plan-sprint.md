@@ -5,7 +5,7 @@ You are running a Sprint Planning session for QuantWorkstation.
 Read these files in order before doing any analysis:
 1. `docs/BACKLOG_ALIGNMENT.md` — find the **New Story Candidates** section; these are your inputs
 2. `docs/MANIFESTO.md` — hard constraints and optimization targets (Sharpe ≥ 2.0, ≤ 4h holding, alpha focus)
-3. `docs/PROVENANCE_ENGINE.md` — authoritative graph schema; no story may invent nodes/edges/properties that conflict with it
+3. `docs/PROVENANCE_ENGINE.md` — authoritative graph schema; no story may invent nodes/edges/properties that conflict with it. **As you read, build two lists: (a) current — nodes/edges/properties/tools that exist today, and (b) target — items marked `[TARGET]`, which are planned but not yet built. Keep these distinct throughout your analysis.**
 4. `docs/RESEARCH_WORKFLOW.md` — the research loop; every story must advance a step in this loop or explicitly support one
 5. `qws_graph/epics/INDEX.md` — existing epics, story IDs used, current status
 
@@ -25,7 +25,7 @@ For each candidate in the New Story Candidates table, determine:
 
 2. **Manifesto alignment** — does this candidate advance alpha generation, reduce research friction, or enforce the hard constraints? If it does none of these, flag it.
 
-3. **Schema impact** — does it introduce new nodes, edges, or properties? If yes, note which and confirm they don't conflict with PROVENANCE_ENGINE.md.
+3. **Schema impact** — does it introduce new nodes, edges, or properties? If yes, note which and confirm they don't conflict with PROVENANCE_ENGINE.md. If the story depends on a `[TARGET]` item (not yet built), flag that as a hard dependency — the target's implementing story must be CLOSED before this story can start.
 
 4. **Filesystem reality** — for any existing file the story proposes to modify (not create), confirm it exists in the codebase. If the file doesn't exist and isn't marked as new, the story has a phantom touchpoint — flag it before writing.
 
