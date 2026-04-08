@@ -168,7 +168,8 @@ story is marked COMPLETE in `BACKLOG_ALIGNMENT.md`.
 | `champion_id` | str | 12-char hex ID |
 | `metrics_sharpe` | float | Sharpe at time of promotion |
 | `metrics_return` | float | Realized return at time of promotion |
-| `oos_status` | str | `oos_pending \| live_paper \| retired` |
+| `oos_status` | str | `oos_pending \| oos_pass \| oos_fail` |
+| `oos_date` | date | ISO date of last `qw record --oos` call; null until first update |
 | `auto_promoted` | bool | true = auto-gate; null = manually curated (authoritative) |
 | `fragilities` | list[str] | Known failure modes |
 

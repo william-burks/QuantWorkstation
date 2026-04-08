@@ -616,6 +616,31 @@ Edge: `(Strategy)-[:HAS_RUN_SUMMARY]->(RunStatsSummary)`
 Merged idempotently on `summary_id`; when the same CSV is re-ingested after modification
 (mtime changes) a new `summary_id` is generated and a new node is created.
 
+### OOS Outcome Update Contract (QWS-0402)
+
+`qw record --oos <status> --champion <id>` updates two properties on the `Champion` node
+via `update_champion_oos_status()`:
+
+```
+Champion.oos_status  = "oos_pass" | "oos_fail" | "oos_pending"
+Champion.oos_date    = date()     — ISO date of the update (today by default)
+```
+
+These properties are **never written by the champion ingest path** (`CHAMPION_INGEST_QUERY`).
+Re-ingesting a champion markdown does not touch `oos_date`.
+
+Valid `oos_status` values:
+- `oos_pending` — default; no OOS validation performed yet
+- `oos_pass` — OOS validation passed
+- `oos_fail` — OOS validation failed
+
+Migration note: nodes carrying the old enum values (`live_paper`, `retired`) from
+pre-QWS-0402 ingest are handled at write time:
+- `live_paper` → allowed to be updated (forward-tested; treated as validated)
+- `retired` → rejected with a lifecycle error; use `qw retire` for lifecycle transitions
+
+A receipt with `kind: oos_update` and `status: persisted` is written on success.
+
 ### Abort Strategy Contract
 
 `qw abort --strategy <strategy_id> --reason "<reason>"` sets three graph-only properties

@@ -19,7 +19,7 @@ from .models import ResearchArtifact
 from .parsers import CSVParser, ChampionMarkdownParser, research_artifact_payload_hash
 from .query import GraphQueryService
 from .query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params
-from .store import GraphStore, StoreInfraError
+from .store import GraphStore, StoreError, StoreInfraError
 
 
 class ReceiptWriter:
@@ -337,6 +337,94 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
     return 0
 
 
+_VALID_OOS_STATUSES = frozenset({"oos_pending", "oos_pass", "oos_fail"})
+
+
+def _cmd_oos_update(args: argparse.Namespace) -> int:
+    """Execute `qw record --oos <status> --champion <id>`.
+
+    Updates oos_status (and oos_date, optionally oos_reason) on an existing
+    Champion node.  Writes a receipt with kind=oos_update.
+
+    Exit codes:
+        0: champion found and updated, receipt written
+        1: validation error, champion not found, or lifecycle conflict
+        2: infrastructure failure (Neo4j unavailable)
+    """
+    oos_status = args.oos
+    champion_id = getattr(args, "champion", None)
+    timeout_seconds = args.timeout_seconds
+    repo_root = Path(args.repo_root) if args.repo_root else Path.cwd()
+
+    if not champion_id:
+        print("ERROR: --champion is required when --oos is provided", file=sys.stderr)
+        return 1
+
+    if oos_status not in _VALID_OOS_STATUSES:
+        valid = ", ".join(sorted(_VALID_OOS_STATUSES))
+        print(
+            f"ERROR: invalid oos_status {oos_status!r}; must be one of: {valid}",
+            file=sys.stderr,
+        )
+        return 1
+
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(
+            f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            found = store.update_champion_oos_status(
+                champion_id=champion_id,
+                status=oos_status,
+            )
+        finally:
+            store.close()
+    except StoreInfraError as exc:
+        print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
+        return 2
+    except StoreError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    if not found:
+        print(
+            f"ERROR: Champion {champion_id!r} not found in graph",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Synthetic artifact_hash for the receipt (no file involved).
+    op_sig = f"oos_update:{champion_id}:{oos_status}"
+    artifact_hash = hashlib.sha256(op_sig.encode()).hexdigest()
+
+    receipt_writer = ReceiptWriter(repo_root)
+    try:
+        receipt_writer.write_receipt(
+            artifact_id=champion_id,
+            kind="oos_update",
+            artifact_path=f"champion:{champion_id}",
+            artifact_hash=artifact_hash,
+            status="persisted",
+            node_counts={"Champion": 1},
+            relationship_counts={},
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"ERROR: Failed to write receipt: {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        f"OK: Champion {champion_id!r} oos_status={oos_status!r}",
+        file=sys.stdout,
+    )
+    return 0
+
+
 def cmd_record(args: argparse.Namespace) -> int:
     """Execute `qw record` command.
 
@@ -348,6 +436,10 @@ def cmd_record(args: argparse.Namespace) -> int:
     # Dispatch to bundle handler when --bundle is provided
     if getattr(args, "bundle", None):
         return _cmd_bundle(args)
+
+    # Dispatch to OOS update handler when --oos is provided
+    if getattr(args, "oos", None):
+        return _cmd_oos_update(args)
 
     if not args.file:
         print("ERROR: --file is required when --bundle is not provided", file=sys.stderr)
@@ -720,6 +812,18 @@ def main() -> int:
         metavar="DIR",
         default=None,
         help="Path to bundle directory containing bundle.json manifest",
+    )
+    record_mode.add_argument(
+        "--oos",
+        metavar="STATUS",
+        default=None,
+        help="OOS validation outcome to record on a Champion node (oos_pass | oos_fail | oos_pending). Requires --champion.",
+    )
+    record_parser.add_argument(
+        "--champion",
+        default=None,
+        metavar="CHAMPION_ID",
+        help="Champion node ID to update (required with --oos)",
     )
     record_parser.add_argument(
         "--kind",

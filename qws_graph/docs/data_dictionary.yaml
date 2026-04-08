@@ -465,12 +465,23 @@ nodes:
       oos_status:
         type: str
         nullable: false
-        enum: [oos_pending, live_paper, retired]
+        enum: [oos_pending, oos_pass, oos_fail]
         description: >
-          Out-of-sample validation status.
-          oos_pending — not yet validated on live/paper data.
-          live_paper — currently running on paper account.
-          retired — no longer active.
+          Out-of-sample validation status. Set to oos_pending at champion creation;
+          updated via `qw record --oos`.
+          oos_pending — no OOS validation performed yet.
+          oos_pass — OOS validation passed.
+          oos_fail — OOS validation failed (oos_reason recommended).
+          Migration note: nodes carrying old values (live_paper, retired) from
+          pre-QWS-0402 ingest are handled at update time — live_paper is allowed;
+          retired raises a lifecycle error.
+      oos_date:
+        type: date
+        nullable: true
+        graph_only: true
+        description: >
+          ISO date on which `qw record --oos` was last run for this Champion.
+          Null until the first OOS update. Never set by the champion ingest path.
       fragilities:
         type: list[str]
         nullable: false
