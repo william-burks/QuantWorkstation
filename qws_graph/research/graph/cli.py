@@ -19,7 +19,7 @@ from .models import ResearchArtifact
 from .parsers import CSVParser, ChampionMarkdownParser, research_artifact_payload_hash
 from .query import GraphQueryService
 from .query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params
-from .store import GraphStore, StoreError, StoreInfraError
+from .store import RESEARCH_TARGET_ALLOWED_KEYS, GraphStore, StoreError, StoreInfraError
 
 
 class ReceiptWriter:
@@ -339,6 +339,8 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
 
 _VALID_OOS_STATUSES = frozenset({"oos_pending", "oos_pass", "oos_fail"})
 
+_TARGET_INT_KEYS = frozenset({"max_holding_hours", "min_trades"})
+
 
 def _cmd_oos_update(args: argparse.Namespace) -> int:
     """Execute `qw record --oos <status> --champion <id>`.
@@ -422,6 +424,69 @@ def _cmd_oos_update(args: argparse.Namespace) -> int:
         f"OK: Champion {champion_id!r} oos_status={oos_status!r}",
         file=sys.stdout,
     )
+    return 0
+
+
+def cmd_seed(args: argparse.Namespace) -> int:
+    """Execute `qw seed --targets` command.
+
+    Creates or updates the singleton ResearchTarget node in the graph.
+
+    Exit codes:
+        0: node seeded successfully
+        1: validation error (unknown key)
+        2: infrastructure failure (Neo4j unavailable)
+    """
+    if not args.targets:
+        print("ERROR: --targets is required", file=sys.stderr)
+        return 1
+
+    raw_sets: list[str] = args.set or []
+    overrides: dict[str, float | int] = {}
+    for kv in raw_sets:
+        if "=" not in kv:
+            print(f"ERROR: --set must be key=value, got: {kv!r}", file=sys.stderr)
+            return 1
+        k, _, v = kv.partition("=")
+        k = k.strip()
+        if k not in RESEARCH_TARGET_ALLOWED_KEYS:
+            print(
+                f"ERROR: unknown target key {k!r}. "
+                f"Allowed: {sorted(RESEARCH_TARGET_ALLOWED_KEYS)}",
+                file=sys.stderr,
+            )
+            return 1
+        try:
+            overrides[k] = int(float(v)) if k in _TARGET_INT_KEYS else float(v)
+        except ValueError:
+            print(f"ERROR: --set {k}={v!r}: value must be numeric", file=sys.stderr)
+            return 1
+
+    timeout_seconds = getattr(args, "timeout_seconds", 3)
+
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(
+            f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            store.ensure_research_target(overrides=overrides or None)
+        finally:
+            store.close()
+    except StoreInfraError as exc:
+        print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
+        return 2
+
+    if overrides:
+        kv_str = ", ".join(f"{k}={v}" for k, v in overrides.items())
+        print(f"OK: ResearchTarget seeded ({kv_str})", file=sys.stdout)
+    else:
+        print("OK: ResearchTarget seeded", file=sys.stdout)
     return 0
 
 
@@ -876,6 +941,35 @@ def main() -> int:
         help="Invoke semantic tier analysis (Llama Scout) for grid_csv; uses QW_AI_ANALYST_ENDPOINT env var",
     )
     record_parser.set_defaults(func=cmd_record)
+
+    # `qw seed` subcommand
+    seed_parser = subparsers.add_parser(
+        "seed",
+        help="Seed or update singleton configuration nodes in the graph",
+    )
+    seed_parser.add_argument(
+        "--targets",
+        action="store_true",
+        help="Seed or update the ResearchTarget singleton node with promotion thresholds",
+    )
+    seed_parser.add_argument(
+        "--set",
+        action="append",
+        metavar="KEY=VALUE",
+        default=None,
+        dest="set",
+        help=(
+            "Override a specific target property (repeatable). "
+            f"Allowed keys: {sorted(RESEARCH_TARGET_ALLOWED_KEYS)}"
+        ),
+    )
+    seed_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    seed_parser.set_defaults(func=cmd_seed)
 
     # `qw abort` subcommand
     abort_parser = subparsers.add_parser(

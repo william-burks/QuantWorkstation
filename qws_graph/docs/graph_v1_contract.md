@@ -641,6 +641,46 @@ pre-QWS-0402 ingest are handled at write time:
 
 A receipt with `kind: oos_update` and `status: persisted` is written on success.
 
+### ResearchTarget Singleton Contract (QWS-0408)
+
+`qw seed --targets` creates or updates the singleton `ResearchTarget` node via
+`ensure_research_target()`. The node is identified by the fixed property `target_id = "singleton"`.
+
+Seeding Cypher (abbreviated):
+```cypher
+MERGE (rt:ResearchTarget {target_id: "singleton"})
+ON CREATE SET
+  rt.sharpe_professional = 2.0,
+  rt.sharpe_institutional = 3.5,
+  rt.max_holding_hours = 4,
+  rt.min_trades = 30,
+  rt.min_active_window_frequency = 0.06,
+  rt.profit_factor_min = 1.3,
+  rt.calmar_min = 1.5,
+  rt.max_drawdown_floor = -0.20,
+  rt.correlation_gate = 0.30,
+  rt.created_at = datetime()
+SET rt.updated_at = datetime()
+```
+
+Override (applied after seed in the same transaction when `--set` flags are provided):
+```cypher
+MATCH (rt:ResearchTarget {target_id: "singleton"})
+SET rt += $overrides
+```
+
+Exit codes for `qw seed --targets`:
+- `0`: node seeded or already current
+- `1`: unknown `--set` key
+- `2`: Neo4j unavailable
+
+`qw query --name research_targets` returns all properties via `get_research_targets_v1()`.
+Empty result means the node has not yet been seeded — run `qw seed --targets` first.
+
+The `standards.py` enforcement logic is **not** updated by this contract — the graph node
+is the read surface only. Changing promotion thresholds still requires a code change to
+`standards.py` in addition to updating the graph node.
+
 ### Abort Strategy Contract
 
 `qw abort --strategy <strategy_id> --reason "<reason>"` sets three graph-only properties

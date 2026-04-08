@@ -364,6 +364,23 @@ RETURN {
 ORDER BY champion_count DESC
 """.strip()
 
+GET_RESEARCH_TARGETS_V1_CYPHER = """
+MATCH (rt:ResearchTarget {target_id: "singleton"})
+RETURN {
+  sharpe_professional: rt.sharpe_professional,
+  sharpe_institutional: rt.sharpe_institutional,
+  max_holding_hours: rt.max_holding_hours,
+  min_trades: rt.min_trades,
+  min_active_window_frequency: rt.min_active_window_frequency,
+  profit_factor_min: rt.profit_factor_min,
+  calmar_min: rt.calmar_min,
+  max_drawdown_floor: rt.max_drawdown_floor,
+  correlation_gate: rt.correlation_gate,
+  updated_at: toString(rt.updated_at)
+} AS result
+""".strip()
+
+
 GET_RUN_STATS_SUMMARY_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary)
 RETURN {
@@ -491,6 +508,10 @@ class GraphQueryService:
                 min_sharpe=min_sharpe,
                 min_profit_factor=min_profit_factor,
             )
+
+    def get_research_targets_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_research_targets_v1(session)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -847,6 +868,15 @@ def get_promotion_candidates_v1(
     )
 
 
+def get_research_targets_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return all properties of the singleton ResearchTarget node.
+
+    Returns a list with one dict when the node exists, empty list when not yet seeded.
+    Use ``qw seed --targets`` to create the node.
+    """
+    return _all_results(session, GET_RESEARCH_TARGETS_V1_CYPHER)
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -864,6 +894,7 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_list_oos_pending_v1": get_list_oos_pending_v1,
     "get_list_aborted_v1": get_list_aborted_v1,
     "get_promotion_candidates_v1": get_promotion_candidates_v1,
+    "get_research_targets_v1": get_research_targets_v1,
 }
 
 
@@ -888,6 +919,7 @@ __all__ = [
     "GET_LIST_OOS_PENDING_V1_CYPHER",
     "GET_PORTFOLIO_ALPHA_V1_CYPHER",
     "GET_PROMOTION_CANDIDATES_V1_CYPHER",
+    "GET_RESEARCH_TARGETS_V1_CYPHER",
     "GET_STALENESS_REPORT_V1_CYPHER",
     "GET_RECENT_CHAMPIONS_V1_CYPHER",
     "GET_RUN_HISTORY_V1_CYPHER",
@@ -906,6 +938,7 @@ __all__ = [
     "get_list_oos_pending_v1",
     "get_portfolio_alpha_v1",
     "get_promotion_candidates_v1",
+    "get_research_targets_v1",
     "get_staleness_report_v1",
     "get_query_view",
     "get_recent_champions_v1",
