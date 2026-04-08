@@ -57,6 +57,8 @@ def _make_artifact(sharpe: float = 1.5, total_trades: int = 30):
         win_rate=0.55,
         max_drawdown=-0.08,
         total_trades=total_trades,
+        first_trade_ts=datetime(2024, 1, 2, 10, 0, 0, tzinfo=UTC),
+        last_trade_ts=datetime(2025, 10, 1, 16, 0, 0, tzinfo=UTC),
         artifact_path="research/results/test/result.csv",
         provenance=prov,
     )

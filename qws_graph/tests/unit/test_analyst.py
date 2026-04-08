@@ -58,6 +58,8 @@ def _test_run(idx: int, sharpe: float = 1.2) -> Run:
         win_rate=0.4,
         max_drawdown=-7.0,
         total_trades=40 + idx,
+        first_trade_ts=datetime(2024, 1, 2, 10, 0, 0, tzinfo=UTC),
+        last_trade_ts=datetime(2025, 10, 1, 16, 0, 0, tzinfo=UTC),
         artifact_path="results/test.csv",
         curator_note=None,
         provenance=_fixed_provenance(),

@@ -27,6 +27,8 @@ CSV_REQUIRED_ALIASES: dict[str, tuple[str, ...]] = {
     "profit_factor": ("profit_factor",),
     "sharpe": ("sharpe",),
     "max_drawdown": ("max_drawdown", "max_dd"),
+    "first_trade_ts": ("first_trade_ts",),
+    "last_trade_ts": ("last_trade_ts",),
 }
 
 CSV_OPTIONAL_ALIASES: dict[str, tuple[str, ...]] = {
@@ -164,6 +166,43 @@ def _parse_datetime(value: str) -> datetime:
     raise ValueError(f"could not parse timestamp {value!r}")
 
 
+def _compute_frequency_stats(
+    total_trades: int,
+    first_trade_ts: datetime,
+    last_trade_ts: datetime,
+    backtest_start: datetime | None,
+    backtest_end: datetime | None,
+) -> tuple[float | None, float | None]:
+    """Compute active_window_frequency and duty_cycle from trade timestamps.
+
+    active_window_frequency = total_trades / active_days
+        where active_days = (last_trade_ts - first_trade_ts).total_seconds() / 86400
+
+    duty_cycle = active_days / total_backtest_days
+        where total_backtest_days = (backtest_end - backtest_start).total_seconds() / 86400
+        Only computed when backtest_start and backtest_end are present.
+
+    active_window_frequency is None on the zero-duration edge case (first == last).
+    """
+    active_seconds = (last_trade_ts - first_trade_ts).total_seconds()
+    active_days = active_seconds / 86400.0
+
+    if active_days <= 0.0:
+        # Zero-duration: first and last trade at the same instant — frequency undefined.
+        return None, None
+
+    active_window_frequency = total_trades / active_days
+
+    duty_cycle: float | None = None
+    if backtest_start is not None and backtest_end is not None:
+        total_seconds = (backtest_end - backtest_start).total_seconds()
+        total_backtest_days = total_seconds / 86400.0
+        if total_backtest_days > 0.0:
+            duty_cycle = active_days / total_backtest_days
+
+    return active_window_frequency, duty_cycle
+
+
 def _payload_for_hash(artifact: ResearchArtifact) -> dict[str, Any]:
     payload = artifact.model_dump(mode="json")
     for run in payload.get("runs", []):
@@ -260,6 +299,14 @@ class CSVParser:
                 risk_params=risk_params,
             )
             timestamp = self._resolve_timestamp(row, provenance.artifact_mtime_iso)
+            run_total_trades = self._read_int(row, reader.fieldnames, "total_trades")
+            first_trade_ts = self._read_required_datetime(row, reader.fieldnames, "first_trade_ts")
+            last_trade_ts = self._read_required_datetime(row, reader.fieldnames, "last_trade_ts")
+            backtest_start = self._read_raw_datetime(row, "backtest_start")
+            backtest_end = self._read_raw_datetime(row, "backtest_end")
+            active_window_frequency, duty_cycle = _compute_frequency_stats(
+                run_total_trades, first_trade_ts, last_trade_ts, backtest_start, backtest_end
+            )
             run_obj = Run(
                 run_id=run_id(
                     strategy.strategy_id,
@@ -272,11 +319,15 @@ class CSVParser:
                 profit_factor=self._read_float(row, reader.fieldnames, "profit_factor"),
                 win_rate=self._read_fraction(row, reader.fieldnames, "win_rate"),
                 max_drawdown=self._read_float(row, reader.fieldnames, "max_drawdown"),
-                total_trades=self._read_int(row, reader.fieldnames, "total_trades"),
+                total_trades=run_total_trades,
                 total_r=self._read_optional_float(row, reader.fieldnames, "total_r"),
                 calmar=self._read_optional_float(row, reader.fieldnames, "calmar"),
                 metrics_return=self._read_optional_float(row, reader.fieldnames, "metrics_return"),
                 tier=self._read_optional_str(row, reader.fieldnames, "tier"),
+                first_trade_ts=first_trade_ts,
+                last_trade_ts=last_trade_ts,
+                active_window_frequency=active_window_frequency,
+                duty_cycle=duty_cycle,
                 artifact_path=artifact_path_text,
                 provenance=provenance,
             )
@@ -420,6 +471,20 @@ class CSVParser:
             return None
         value = (row.get(column) or "").strip()
         return value or None
+
+    def _read_required_datetime(self, row: dict[str, str], fieldnames: Iterable[str], field: str) -> datetime:
+        """Read a required ISO-8601 datetime from a recognized required alias column."""
+        column = _find_column(fieldnames, CSV_REQUIRED_ALIASES[field])
+        if column is None or not (row.get(column) or "").strip():
+            raise ValueError(f"missing required field value: {field}")
+        return _parse_datetime(row[column])
+
+    def _read_raw_datetime(self, row: dict[str, str], column_name: str) -> datetime | None:
+        """Read an optional datetime from a column accessed by exact name (ignored columns)."""
+        col = _find_column(row.keys(), (column_name,))
+        if col is None or not (row.get(col) or "").strip():
+            return None
+        return _parse_datetime(row[col])
 
 
 class ChampionMarkdownParser:

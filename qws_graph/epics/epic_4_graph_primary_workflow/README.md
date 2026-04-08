@@ -41,8 +41,8 @@ This epic closes all five gaps and stops there.
 - Deprecation of two redundant presets: `rank_by_evidence`, `trace_champion`.
 
 ## Stories in execution order
-1. `QWS-0402` `story_1_oos_outcome_tracking.md` — `qw record --oos` command — **CLOSED**
-2. `QWS-0407` `story_4_significance_gate_properties.md` — frequency gate properties on Run — **READY**
+1. `QWS-0402` `closed/story_1_oos_outcome_tracking.md` — `qw record --oos` command — **CLOSED**
+2. `QWS-0407` `closed/story_4_significance_gate_properties.md` — frequency gate properties on Run — **CLOSED**
 3. `QWS-0406` `story_3_workflow_query_presets.md` — query presets + deprecations (Phase A unblocked; Phase B gated on QWS-0407) — **BLOCKED**
 4. `QWS-0405` `story_2_promotion_alerts.md` — post-ingest promotion candidate notice — **BLOCKED on QWS-0407**
 5. `QWS-0408` `story_5_research_target_node.md` — ResearchTarget singleton node — **READY** (no dependencies; can run in parallel with any story)
@@ -70,5 +70,7 @@ reference.
 - A qualifying run at ingest time produces a visible promotion notice (dual-hurdle gate enforced).
 - `qw query --name list_oos_pending`, `list_aborted`, and `promotion_candidates` all return
   actionable results from the live graph.
-- `Run.active_window_frequency` and `Run.duty_cycle` are populated on all new ingest runs.
+- `Run.first_trade_ts` and `Run.last_trade_ts` are required CSV columns; missing either fails parse.
+- `Run.active_window_frequency` is populated on all new ingest runs (null only on zero-duration edge case).
+- `Run.duty_cycle` is populated when `backtest_start`/`backtest_end` are emitted by the runner; null otherwise.
 - `qw seed --targets` and `qw query --name research_targets` are functional.

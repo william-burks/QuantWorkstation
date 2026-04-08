@@ -4,7 +4,7 @@
 QWS-0405
 
 ## Status
-BLOCKED (pending QWS-0407)
+READY
 
 ## Blocked On
 QWS-0407 — requires `active_window_frequency` property on Run nodes (populated at ingest time)

@@ -131,6 +131,8 @@ class TestModels:
             total_trades=25,
             artifact_path="results/test.csv",
             provenance=provenance,
+            first_trade_ts=datetime(2024, 1, 2, 10, 0, tzinfo=UTC),
+            last_trade_ts=datetime(2025, 10, 1, 16, 0, tzinfo=UTC),
         )
         with pytest.raises(ValueError, match="at least one config"):
             ResearchArtifact(kind="baseline_csv", strategy=strategy, runs=[run], configs=[])
@@ -186,8 +188,8 @@ class TestCsvParser:
     def test_missing_required_columns_fail_validation(self, tmp_path: Path):
         csv_path = tmp_path / "broken.csv"
         csv_path.write_text(
-            "instrument,timeframe,direction,logic_type,total_trades,win_rate,profit_factor,max_drawdown\n"
-            "ES,1H,bear,baseline,88,0.38,1.12,-7.2\n",
+            "instrument,timeframe,direction,logic_type,total_trades,win_rate,profit_factor,max_drawdown,first_trade_ts,last_trade_ts\n"
+            "ES,1H,bear,baseline,88,0.38,1.12,-7.2,2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n",
             encoding="utf-8",
         )
 
@@ -197,8 +199,8 @@ class TestCsvParser:
     def test_unknown_columns_are_ignored_and_reported(self, tmp_path: Path):
         csv_path = tmp_path / "es_bear_baseline_extra.csv"
         csv_path.write_text(
-            "instrument,timeframe,direction,logic_type,target_r,total_trades,win_rate,profit_factor,sharpe,max_drawdown,notes\n"
-            "ES,1H,bear,baseline,1.0,88,0.38,1.12,0.88,-7.2,ignore me\n",
+            "instrument,timeframe,direction,logic_type,target_r,total_trades,win_rate,profit_factor,sharpe,max_drawdown,first_trade_ts,last_trade_ts,notes\n"
+            "ES,1H,bear,baseline,1.0,88,0.38,1.12,0.88,-7.2,2024-01-02T10:00:00Z,2025-10-01T16:00:00Z,ignore me\n",
             encoding="utf-8",
         )
 
@@ -348,6 +350,82 @@ class TestArtifactPathNormalization:
         md = repo_root / "research" / "results" / "champions" / "es_bear_v1.md"
         assert self._fn(csv, repo_root) == "research/results/futures/runs/20260101-120000/baseline.csv"
         assert self._fn(md, repo_root) == "research/results/champions/es_bear_v1.md"
+
+
+class TestSignificanceGateProperties:
+    """Tests for QWS-0407: active_window_frequency and duty_cycle computation."""
+
+    def _make_csv(self, tmp_path, extra_header="", extra_vals="", n_trades=60,
+                  first_ts="2024-01-01T00:00:00Z", last_ts="2024-07-01T00:00:00Z"):
+        """Build a minimal valid CSV with timestamp columns."""
+        path = tmp_path / "es_bear_baseline_test.csv"
+        path.write_text(
+            f"instrument,timeframe,direction,logic_type,total_trades,win_rate,profit_factor,sharpe,max_drawdown,first_trade_ts,last_trade_ts{extra_header}\n"
+            f"ES,1H,bear,baseline,{n_trades},0.50,1.50,1.20,-0.10,{first_ts},{last_ts}{extra_vals}\n",
+            encoding="utf-8",
+        )
+        return path
+
+    def test_active_window_frequency_computed_correctly(self, tmp_path):
+        path = self._make_csv(tmp_path)
+        artifact, warnings = CSVParser(path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+
+        run = artifact.runs[0]
+        # first=2024-01-01, last=2024-07-01: 182 days (Jan31+Feb29+Mar31+Apr30+May31+Jun30=182)
+        expected_active_days = 182.0
+        expected_freq = 60 / expected_active_days
+        assert run.active_window_frequency == pytest.approx(expected_freq)
+
+    def test_duty_cycle_computed_when_backtest_range_present(self, tmp_path):
+        path = self._make_csv(
+            tmp_path,
+            extra_header=",backtest_start,backtest_end",
+            extra_vals=",2024-01-01T00:00:00Z,2024-12-31T00:00:00Z",
+        )
+        artifact, _ = CSVParser(path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+
+        run = artifact.runs[0]
+        # active_days=182, total_backtest_days=(Dec31-Jan1)=365
+        assert run.duty_cycle == pytest.approx(182.0 / 365.0)
+
+    def test_duty_cycle_null_when_backtest_range_absent(self, tmp_path):
+        path = self._make_csv(tmp_path)
+        artifact, _ = CSVParser(path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+
+        assert artifact.runs[0].duty_cycle is None
+
+    def test_missing_first_trade_ts_raises(self, tmp_path):
+        path = tmp_path / "broken.csv"
+        path.write_text(
+            "instrument,timeframe,direction,logic_type,total_trades,win_rate,profit_factor,sharpe,max_drawdown,last_trade_ts\n"
+            "ES,1H,bear,baseline,60,0.50,1.50,1.20,-0.10,2024-07-01T00:00:00Z\n",
+            encoding="utf-8",
+        )
+        with pytest.raises(ValueError, match="first_trade_ts"):
+            CSVParser(path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+
+    def test_missing_last_trade_ts_raises(self, tmp_path):
+        path = tmp_path / "broken.csv"
+        path.write_text(
+            "instrument,timeframe,direction,logic_type,total_trades,win_rate,profit_factor,sharpe,max_drawdown,first_trade_ts\n"
+            "ES,1H,bear,baseline,60,0.50,1.50,1.20,-0.10,2024-01-01T00:00:00Z\n",
+            encoding="utf-8",
+        )
+        with pytest.raises(ValueError, match="last_trade_ts"):
+            CSVParser(path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+
+    def test_zero_duration_yields_null_frequency(self, tmp_path):
+        # first == last → zero active window → active_window_frequency is None
+        path = self._make_csv(
+            tmp_path,
+            first_ts="2024-01-01T00:00:00Z",
+            last_ts="2024-01-01T00:00:00Z",
+        )
+        artifact, _ = CSVParser(path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+
+        run = artifact.runs[0]
+        assert run.active_window_frequency is None
+        assert run.duty_cycle is None
 
 
 if __name__ == "__main__":

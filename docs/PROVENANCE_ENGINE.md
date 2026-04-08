@@ -156,10 +156,10 @@ story is marked COMPLETE in `BACKLOG_ALIGNMENT.md`.
 
 | Property | Type | Formula / Source | Purpose |
 |---|---|---|---|
-| `active_window_frequency` | float | `total_trades / (last_trade_ts − first_trade_ts)` in days | Trades-per-day over the active window only. Prevents dilution from flat regime gaps. Required for the significance gate (≥ 0.06). |
-| `duty_cycle` | float | `active_days / total_backtest_days` | Fraction of backtest period in which the target regime was present. Portfolio heat signal — not a promotion gate. |
-| `first_trade_ts` | datetime | Sourced from trade log | Timestamp of first closed trade. Anchor for active-window calculation. |
-| `last_trade_ts` | datetime | Sourced from trade log | Timestamp of last closed trade. Anchor for active-window calculation. |
+| `active_window_frequency` | float | `total_trades / (last_trade_ts − first_trade_ts)` in trades/day | Trades-per-day over the active window only. Prevents dilution from flat regime gaps. Required for the significance gate (≥ 0.06). Null only on zero-duration edge case. |
+| `duty_cycle` | float \| null | `active_days / total_backtest_days` | Fraction of backtest period in which the target regime was present. Null when `backtest_start`/`backtest_end` not emitted by runner. Portfolio heat signal — not a promotion gate. |
+| `first_trade_ts` | datetime | Required CSV column; sourced from trade log | Timestamp of first closed trade. Required — parse fails if absent. Anchor for active-window calculation. |
+| `last_trade_ts` | datetime | Required CSV column; sourced from trade log | Timestamp of last closed trade. Required — parse fails if absent. Anchor for active-window calculation. |
 
 ### Champion — key query properties
 
