@@ -4,7 +4,7 @@
 QWS-0408
 
 ## Status
-READY
+CLOSED
 
 ## Blocked On
 None
@@ -86,21 +86,21 @@ Implemented as an idempotent MERGE on a fixed `target_id = "singleton"` property
 - `qws_graph/tests/unit/test_store_research_target.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw seed --targets` exits `0` and creates a `ResearchTarget` node with all default values.
-- [ ] Running `qw seed --targets` a second time is idempotent — node properties are unchanged.
-- [ ] `qw seed --targets --set sharpe_professional=2.5` updates `sharpe_professional` to `2.5`
+- [x] `qw seed --targets` exits `0` and creates a `ResearchTarget` node with all default values.
+- [x] Running `qw seed --targets` a second time is idempotent — node properties are unchanged.
+- [x] `qw seed --targets --set sharpe_professional=2.5` updates `sharpe_professional` to `2.5`
   without modifying other properties.
-- [ ] `qw seed --targets --set unknown_key=1.0` exits non-zero with a clear error.
-- [ ] `qw query --name research_targets` returns a single row with all properties.
-- [ ] `updated_at` is refreshed on every `qw seed --targets` call.
-- [ ] Unit tests cover: first-time seed, idempotent re-seed, `--set` override, unknown key error.
+- [x] `qw seed --targets --set unknown_key=1.0` exits non-zero with a clear error.
+- [x] `qw query --name research_targets` returns a single row with all properties.
+- [x] `updated_at` is refreshed on every `qw seed --targets` call.
+- [x] Unit tests cover: first-time seed, idempotent re-seed, `--set` override, unknown key error.
 
 ## Definition of Done
-- [ ] `ensure_research_target()` store method implemented and unit tested.
-- [ ] `qw seed --targets` CLI subcommand wired up.
-- [ ] `research_targets` query preset returns correct output.
-- [ ] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
-- [ ] Story marked CLOSED.
-- [ ] `docs/MANIFESTO.md` — ResearchTarget description updated from "target state — not yet implemented" to current state.
-- [ ] `qws_graph/docs/qws_graph_runbook.md` — `qw seed --targets` added to Day-1 Operations section.
-- [ ] `docs/PROVENANCE_ENGINE.md` — `ResearchTarget` node moved from `[TARGET]` to `[CURRENT]` node table.
+- [x] `ensure_research_target()` store method implemented and unit tested.
+- [x] `qw seed --targets` CLI subcommand wired up.
+- [x] `research_targets` query preset returns correct output.
+- [x] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
+- [x] Story marked CLOSED.
+- [x] `docs/MANIFESTO.md` — ResearchTarget description updated from "target state — not yet implemented" to current state.
+- [x] `qws_graph/docs/qws_graph_runbook.md` — `qw seed --targets` added to Day-1 Operations section.
+- [x] `docs/PROVENANCE_ENGINE.md` — `ResearchTarget` node moved from `[TARGET]` to `[CURRENT]` node table.

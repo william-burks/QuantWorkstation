@@ -19,8 +19,10 @@ from .cypher import (
     BLOB_INGEST_QUERY,
     CHAMPION_INGEST_QUERY,
     CSV_INGEST_QUERY,
+    ENSURE_RESEARCH_TARGET_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
     PATCH_FAMILY_ID_QUERY,
+    PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
@@ -31,6 +33,20 @@ from .models import ResearchArtifact, RunStatsSummary
 
 _PROFESSIONAL_SHARPE_THRESHOLD = 2.0
 _INSTITUTIONAL_SHARPE_THRESHOLD = 3.5
+
+_RESEARCH_TARGET_DEFAULTS: dict[str, float | int] = {
+    "sharpe_professional": 2.0,
+    "sharpe_institutional": 3.5,
+    "max_holding_hours": 4,
+    "min_trades": 30,
+    "min_active_window_frequency": 0.06,
+    "profit_factor_min": 1.3,
+    "calmar_min": 1.5,
+    "max_drawdown_floor": -0.20,
+    "correlation_gate": 0.30,
+}
+
+RESEARCH_TARGET_ALLOWED_KEYS: frozenset[str] = frozenset(_RESEARCH_TARGET_DEFAULTS)
 
 
 class StoreError(RuntimeError):
@@ -375,6 +391,41 @@ class GraphStore:
 
         except StoreError:
             raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def ensure_research_target(
+        self,
+        overrides: dict[str, float | int] | None = None,
+    ) -> None:
+        """Create or update the singleton ResearchTarget node.
+
+        On first call: creates the node with all default values.
+        On subsequent calls with no overrides: idempotent — only ``updated_at`` changes.
+        On calls with overrides: applies each key=value pair on top of existing values.
+
+        Raises:
+            ValueError: When overrides contains keys not in RESEARCH_TARGET_ALLOWED_KEYS.
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        if overrides:
+            unknown = set(overrides) - RESEARCH_TARGET_ALLOWED_KEYS
+            if unknown:
+                raise ValueError(
+                    f"Unknown ResearchTarget keys: {sorted(unknown)}. "
+                    f"Allowed: {sorted(RESEARCH_TARGET_ALLOWED_KEYS)}"
+                )
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx) -> None:
+                    tx.run(ENSURE_RESEARCH_TARGET_QUERY, **_RESEARCH_TARGET_DEFAULTS).consume()
+                    if overrides:
+                        tx.run(PATCH_RESEARCH_TARGET_QUERY, overrides=overrides).consume()
+
+                session.execute_write(_write)
         except Neo4jError as exc:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001

@@ -45,7 +45,7 @@ This epic closes all five gaps and stops there.
 2. `QWS-0407` `closed/story_4_significance_gate_properties.md` — frequency gate properties on Run — **CLOSED**
 3. `QWS-0406` `story_3_workflow_query_presets.md` — query presets + deprecations (Phase A unblocked; Phase B gated on QWS-0407) — **BLOCKED**
 4. `QWS-0405` `story_2_promotion_alerts.md` — post-ingest promotion candidate notice — **BLOCKED on QWS-0407**
-5. `QWS-0408` `story_5_research_target_node.md` — ResearchTarget singleton node — **READY** (no dependencies; can run in parallel with any story)
+5. `QWS-0408` `closed/story_5_research_target_node.md` — ResearchTarget singleton node — **CLOSED**
 
 ## Dependencies
 - Epic 3 complete (graph has clean, consistent Champion and Run nodes).

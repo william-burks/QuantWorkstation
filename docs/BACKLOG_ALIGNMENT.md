@@ -36,7 +36,7 @@
 | Promotion Alerts | QWS-0405               | Notification when a Trial crosses the dual-hurdle promotion threshold | QWS-0407 |
 | Workflow Query Presets | QWS-0406 (**CLOSED**)  | **New:** `list_oos_pending`, `promotion_candidates` (Tier + Active-Window Frequency; Regime Diversity Score deferred to QWS-0502), `list_aborted` / **Deprecated:** `rank_by_evidence`, `trace_champion` / **Retained:** `fragility_report`, `staleness_report` (deferred) / **Amended:** all Strategy traversals add `WHERE s.status <> 'ABORTED'` | — |
 | Significance Gate Properties | QWS-0407 (**CLOSED**)  | `active_window_frequency`, `duty_cycle`, `first_trade_ts`, `last_trade_ts` on Run node; dual-hurdle gate | — |
-| ResearchTarget Config Node | QWS-0408               | `ResearchTarget` singleton node; `qw seed --targets`; `research_targets` query preset | — |
+| ResearchTarget Config Node | QWS-0408 (**CLOSED**)  | `ResearchTarget` singleton node; `qw seed --targets`; `research_targets` query preset | — |
 
 ### Epic 5 — Context Enrichment
 

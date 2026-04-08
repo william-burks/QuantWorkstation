@@ -219,6 +219,33 @@ RETURN r.run_id AS run_id
 
 
 # ---------------------------------------------------------------------------
+# ResearchTarget singleton queries (QWS-0408)
+# ---------------------------------------------------------------------------
+
+ENSURE_RESEARCH_TARGET_QUERY = """
+MERGE (rt:ResearchTarget {target_id: "singleton"})
+ON CREATE SET
+  rt.sharpe_professional = $sharpe_professional,
+  rt.sharpe_institutional = $sharpe_institutional,
+  rt.max_holding_hours = $max_holding_hours,
+  rt.min_trades = $min_trades,
+  rt.min_active_window_frequency = $min_active_window_frequency,
+  rt.profit_factor_min = $profit_factor_min,
+  rt.calmar_min = $calmar_min,
+  rt.max_drawdown_floor = $max_drawdown_floor,
+  rt.correlation_gate = $correlation_gate,
+  rt.created_at = datetime()
+SET rt.updated_at = datetime()
+""".strip()
+
+
+PATCH_RESEARCH_TARGET_QUERY = """
+MATCH (rt:ResearchTarget {target_id: "singleton"})
+SET rt += $overrides
+""".strip()
+
+
+# ---------------------------------------------------------------------------
 # OOS outcome update queries (QWS-0402)
 # ---------------------------------------------------------------------------
 

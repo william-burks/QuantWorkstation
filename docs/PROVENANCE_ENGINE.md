@@ -59,6 +59,7 @@ Current state maps onto a subset of this chain. Target additions are marked.
 | `RetiredChampion` | `RetiredChampion` | Displaced Champion. Never deleted — relabeled atomically. Full lineage preserved. |
 | `RunStatsSummary` | `RunStatsSummary` | Aggregate stats for grid-sweep rows below the significance gate. |
 | `BlobArtifact` | `BlobArtifact` | Raw unstructured artifact (tracker markdown). Preserves provenance without parsing. |
+| `ResearchTarget` | `ResearchTarget` | Singleton config node: promotion thresholds. Seeded via `qw seed --targets`; queried via `research_targets` preset. |
 
 **Vocabulary note:** "Trial" is the conceptual term for what the code calls `Run`. The node label in
 Neo4j is `:Run`. When reading code or writing Cypher, use `Run`. When reasoning about the lifecycle,
@@ -91,7 +92,6 @@ provenance in the graph.
 | `Hypothesis` | QWS-0601 | The Spark: an unproven theory about a market inefficiency |
 | `FormerChampion` | New story needed | Decay watch: alpha slipping but still monitored; sits between Champion and RetiredChampion |
 | `Regime` | QWS-0502 | Market context node: `volatility_state`, `trend_state` (e.g., "Mean Reversion in High Vol") |
-| `ResearchTarget` | New story needed | Config node: `sharpe_target`, `max_holding_hours`; defaulted, rarely changed, graph-queryable |
 
 ---
 

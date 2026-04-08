@@ -55,6 +55,29 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
+### Seed ResearchTarget node
+Run once after Neo4j is up to seed the promotion thresholds into the graph.
+Idempotent — safe to run again without side effects.
+
+```zsh
+cd /Users/will/ClaudeProjects/QuantWorkstation
+qw seed --targets
+```
+
+Expected:
+- Exit `0` on success.
+- Output: `OK: ResearchTarget seeded`
+
+To verify:
+```zsh
+qw query --name research_targets
+```
+
+To override a threshold:
+```zsh
+qw seed --targets --set sharpe_professional=2.5
+```
+
 ### Online ingestion path
 Use this when Neo4j is up and reachable.
 

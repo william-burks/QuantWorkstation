@@ -25,6 +25,7 @@ from .query import (
     get_portfolio_alpha_v1,
     get_promotion_candidates_v1,
     get_recent_champions_v1,
+    get_research_targets_v1,
     get_run_history_v1,
     get_staleness_report_v1,
     get_strategy_lineage_v1,
@@ -196,6 +197,16 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         ),
         requires_graph=True,
     ),
+    "research_targets": PresetSpec(
+        name="research_targets",
+        description=(
+            "Return all properties of the singleton ResearchTarget node (promotion thresholds). "
+            "Returns one row when seeded, empty when not yet seeded. "
+            "Seed with: qw seed --targets"
+        ),
+        params=(),
+        requires_graph=True,
+    ),
 }
 
 
@@ -315,6 +326,10 @@ def run_preset(
             family_id=family_id,
         )
 
+    if name == "research_targets":
+        assert service is not None
+        return service.get_research_targets_v1()
+
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 
 
@@ -372,6 +387,7 @@ _PRESET_VIEW_FUNCTIONS = {
     "list_oos_pending": get_list_oos_pending_v1,
     "list_aborted": get_list_aborted_v1,
     "promotion_candidates": get_promotion_candidates_v1,
+    "research_targets": get_research_targets_v1,
 }
 
 __all__ = [

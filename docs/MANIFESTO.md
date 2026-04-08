@@ -79,7 +79,9 @@ reduce execution slippage, and make regime sensitivity more visible.
 
 ## Quantitative Targets
 
-Stored as a `ResearchTarget` node in the graph (target state — not yet implemented).
+Stored as a `ResearchTarget` singleton node in the graph. Seed with `qw seed --targets`;
+query with `qw query --name research_targets`. Override any threshold with
+`qw seed --targets --set <key>=<value>` (e.g. `--set sharpe_professional=2.5`).
 Defaulted values, rarely changed:
 
 | Target | Value | Tier |

@@ -670,6 +670,84 @@ nodes:
         type: datetime
         nullable: false
 
+  ResearchTarget:
+    description: >
+      Singleton configuration node that stores quantitative promotion targets.
+      One node per graph, identified by target_id = "singleton". Makes research
+      constraints graph-queryable without requiring code changes. Seeded via
+      `qw seed --targets`; updated with `qw seed --targets --set key=value`.
+      The store layer (standards.py) remains the enforcement authority; this node
+      provides the read surface for MCP clients and the `research_targets` query preset.
+    id_key: target_id
+    id_value: "singleton"
+    labels: ["ResearchTarget"]
+    properties:
+      target_id:
+        type: str
+        nullable: false
+        value: "singleton"
+        description: Fixed key used for the idempotent MERGE. Always "singleton".
+      sharpe_professional:
+        type: float
+        nullable: false
+        default: 2.0
+        description: Minimum Sharpe ratio for Professional tier promotion.
+      sharpe_institutional:
+        type: float
+        nullable: false
+        default: 3.5
+        description: Minimum Sharpe ratio for Institutional tier promotion.
+      max_holding_hours:
+        type: int
+        nullable: false
+        default: 4
+        unit: hours
+        description: Maximum holding period in hours. Strategies exceeding this are excluded.
+      min_trades:
+        type: int
+        nullable: false
+        default: 30
+        description: Absolute trade count floor. Runs with fewer trades are excluded.
+      min_active_window_frequency:
+        type: float
+        nullable: false
+        default: 0.06
+        unit: trades/day
+        description: >
+          Minimum trade density over the active window. Runs below this threshold
+          are excluded from promotion_candidates. Matches the gate in standards.py.
+      profit_factor_min:
+        type: float
+        nullable: false
+        default: 1.3
+        description: Minimum profit factor (gross_profit / gross_loss).
+      calmar_min:
+        type: float
+        nullable: false
+        default: 1.5
+        description: Minimum Calmar ratio (annualized_return / abs(max_drawdown)).
+      max_drawdown_floor:
+        type: float
+        nullable: false
+        default: -0.20
+        unit: fraction (negative)
+        description: Worst acceptable peak-to-trough drawdown (e.g. -0.20 = -20%).
+      correlation_gate:
+        type: float
+        nullable: false
+        default: 0.30
+        description: Maximum correlation to active Champions. Gate not yet enforced at ingest.
+      updated_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+        description: Timestamp refreshed on every `qw seed --targets` call.
+      created_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+        description: Neo4j server time at first MERGE.
+
   BlobArtifact:
     description: >
       Raw unstructured artifact attachment. Used for tracker markdown files that
