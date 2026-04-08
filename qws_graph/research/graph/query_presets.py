@@ -20,13 +20,14 @@ from .query import (
     get_downstream_champions_v1,
     get_fragility_report_v1,
     get_instrument_concentration_v1,
+    get_list_aborted_v1,
+    get_list_oos_pending_v1,
     get_portfolio_alpha_v1,
-    get_rank_by_evidence_v1,
+    get_promotion_candidates_v1,
     get_recent_champions_v1,
     get_run_history_v1,
     get_staleness_report_v1,
     get_strategy_lineage_v1,
-    get_trace_champion_v1,
 )
 
 if TYPE_CHECKING:
@@ -135,18 +136,41 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         params=(),
         requires_graph=True,
     ),
-    "trace_champion": PresetSpec(
-        name="trace_champion",
+    "list_oos_pending": PresetSpec(
+        name="list_oos_pending",
         description=(
-            "Trace the Strategy→Champion lineage for a specific champion_id. "
-            "Returns strategy_id, artifact_path, tier, metrics_sharpe, metrics_return, "
-            "and pivot_run_id (if an explicit PIVOTED_FROM edge exists)."
+            "Return Champions waiting for OOS validation (oos_status = oos_pending), "
+            "oldest freeze_date first. Excludes ABORTED strategies."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
+    "list_aborted": PresetSpec(
+        name="list_aborted",
+        description=(
+            "Return all Strategies with status = ABORTED, including abort_reason. "
+            "Ordered by aborted_at DESC. Used before suggesting new strategies."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
+    "promotion_candidates": PresetSpec(
+        name="promotion_candidates",
+        description=(
+            "Return Run nodes that pass the dual-hurdle significance gate and have no linked "
+            "Champion. Hard gates: total_trades >= 30, active_window_frequency >= 0.06. "
+            "Ordered by evidence_score (sharpe * sqrt(total_trades)) descending."
         ),
         params=(
             PresetParam(
-                "champion_id",
-                required=True,
-                description="12-char champion_id to trace",
+                "min_sharpe",
+                required=False,
+                description="Minimum Sharpe ratio (default 2.0)",
+            ),
+            PresetParam(
+                "min_profit_factor",
+                required=False,
+                description="Minimum profit factor (default 1.3)",
             ),
         ),
         requires_graph=True,
@@ -168,21 +192,6 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
                 "strategy_id",
                 required=False,
                 description="Anchor strategy ID — resolves family automatically (Mode A)",
-            ),
-        ),
-        requires_graph=True,
-    ),
-    "rank_by_evidence": PresetSpec(
-        name="rank_by_evidence",
-        description=(
-            "Rank runs by evidence_score = sharpe * sqrt(total_trades), descending. "
-            "Separates statistically robust edges from lucky short streaks."
-        ),
-        params=(
-            PresetParam(
-                "strategy_id",
-                required=True,
-                description="Canonical strategy ID to rank runs for",
             ),
         ),
         requires_graph=True,
@@ -268,15 +277,22 @@ def run_preset(
         assert service is not None
         return service.get_fragility_report_v1()
 
-    if name == "trace_champion":
-        champion_id = params["champion_id"]
+    if name == "list_oos_pending":
         assert service is not None
-        return service.get_trace_champion_v1(champion_id)
+        return service.get_list_oos_pending_v1()
 
-    if name == "rank_by_evidence":
-        strategy_id = params["strategy_id"]
+    if name == "list_aborted":
         assert service is not None
-        return service.get_rank_by_evidence_v1(strategy_id)
+        return service.get_list_aborted_v1()
+
+    if name == "promotion_candidates":
+        min_sharpe = float(params.get("min_sharpe", "2.0"))
+        min_profit_factor = float(params.get("min_profit_factor", "1.3"))
+        assert service is not None
+        return service.get_promotion_candidates_v1(
+            min_sharpe=min_sharpe,
+            min_profit_factor=min_profit_factor,
+        )
 
     if name == "staleness_report":
         assert service is not None
@@ -351,10 +367,11 @@ _PRESET_VIEW_FUNCTIONS = {
     "cross_artifact_correlation": get_cross_artifact_correlation_v1,
     "portfolio_alpha": get_portfolio_alpha_v1,
     "fragility_report": get_fragility_report_v1,
-    "trace_champion": get_trace_champion_v1,
     "staleness_report": get_staleness_report_v1,
     "instrument_concentration": get_instrument_concentration_v1,
-    "rank_by_evidence": get_rank_by_evidence_v1,
+    "list_oos_pending": get_list_oos_pending_v1,
+    "list_aborted": get_list_aborted_v1,
+    "promotion_candidates": get_promotion_candidates_v1,
 }
 
 __all__ = [

@@ -98,7 +98,7 @@ Unplanned / patch stories (CLOSED):
 Stories (execution order):
 1. `QWS-0402` [`story_1_oos_outcome_tracking.md`](epic_4_graph_primary_workflow/closed/story_1_oos_outcome_tracking.md) — `CLOSED`
 2. `QWS-0407` [`story_4_significance_gate_properties.md`](epic_4_graph_primary_workflow/closed/story_4_significance_gate_properties.md) — `CLOSED`
-3. `QWS-0406` [`story_3_workflow_query_presets.md`](epic_4_graph_primary_workflow/story_3_workflow_query_presets.md) — `READY`
+3. `QWS-0406` [`story_3_workflow_query_presets.md`](epic_4_graph_primary_workflow/closed/story_3_workflow_query_presets.md) — `CLOSED`
 4. `QWS-0405` [`story_2_promotion_alerts.md`](epic_4_graph_primary_workflow/story_2_promotion_alerts.md) — `READY` _(unblocked by QWS-0407 CLOSED)
 5. `QWS-0408` [`story_5_research_target_node.md`](epic_4_graph_primary_workflow/story_5_research_target_node.md) — `READY` _(promoted from candidate; no dependencies)_
 
@@ -157,8 +157,7 @@ Stories (execution order):
 ---
 
 ## Current Focus
-- **Now:** Epic 4 — QWS-0402 CLOSED; next is QWS-0407 (significance gate properties), then QWS-0406 (Phase A), QWS-0406 (Phase B) + QWS-0405 after QWS-0407.
-- **QWS-0408** (ResearchTarget node) is unblocked and can be picked up any time within Epic 4.
+- **Now:** Epic 4 — QWS-0406 CLOSED; next is QWS-0405 (promotion alerts) or QWS-0408 (ResearchTarget node), both READY.
 - **After Epic 4:** Epic 5 QWS-0501 (family_id) + QWS-0502 (regime tagging) are independent and can start immediately.
 - **Epic 8 QWS-0802** (SUPERSEDED_BY) is unblocked now and can be picked up any time — no dependencies.
 - **Parallel track:** Epic 7 QWS-0701 (PyPI packaging) is `ready` and can be picked up any time without blocking research work.

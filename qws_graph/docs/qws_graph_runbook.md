@@ -166,6 +166,25 @@ cd /Users/will/ClaudeProjects/QuantWorkstation
 qw query --name cross_artifact_correlation --param strategy_id=es-1h-bear-sweep --json
 ```
 
+Champions awaiting OOS validation (oldest first):
+```zsh
+cd /Users/will/ClaudeProjects/QuantWorkstation
+qw query --name list_oos_pending --json
+```
+
+Aborted strategies with cause-of-death:
+```zsh
+cd /Users/will/ClaudeProjects/QuantWorkstation
+qw query --name list_aborted --json
+```
+
+Promotion candidates (dual-hurdle gate, no linked champion):
+```zsh
+cd /Users/will/ClaudeProjects/QuantWorkstation
+qw query --name promotion_candidates --json
+qw query --name promotion_candidates --param min_sharpe=2.5 --json
+```
+
 ### Shell entrypoint behavior
 Current hook behavior in the two scripts:
 - `research/bin/run_es_nq_bear_sweep_1h_baseline.sh`
@@ -477,15 +496,10 @@ qw query --name recent_champions --json
 qw query --name strategy_lineage --param strategy_id=cl-1h-bear-liquidity-sweep
 qw query --name run_history --param strategy_id=cl-1h-bear-liquidity-sweep
 qw query --run-history --param strategy_id=cl-1h-bear-liquidity-sweep   # shortcut alias — same as above
-qw query --name rank_by_evidence --param strategy_id=cl-1h-bear-liquidity-sweep
 ```
 
 **Champion lineage:**
 ```zsh
-# Capture a champion_id and run_id from the data ingested in Phase 5:
-CHAMPION_ID=$(qw query --name recent_champions --json | jq -r '.[0].champion_id')
-qw query --name trace_champion --param champion_id=$CHAMPION_ID
-
 RUN_ID=$(qw query --name run_history --param strategy_id=cl-1h-bear-liquidity-sweep \
   | head -1 | jq -r '.run_id')
 qw query --name downstream_champions --param run_id=$RUN_ID
@@ -508,10 +522,33 @@ qw query --name staleness_report
 qw query --name instrument_concentration
 ```
 
+**Workflow / operational (QWS-0406):**
+```zsh
+qw query --name list_oos_pending
+# Expected: Champions with oos_status=oos_pending, oldest first. Empty list if none pending.
+
+qw query --name list_aborted
+# Expected: ABORTED strategies with abort_reason. Empty list if none aborted.
+
+qw query --name promotion_candidates
+# Expected: Runs meeting dual-hurdle gate with no linked Champion. Empty list if none qualify.
+qw query --name promotion_candidates --param min_sharpe=2.5
+# Expected: same shape, filtered to sharpe >= 2.5
+```
+
 **Offline queue:**
 ```zsh
 qw query --name pending_offline
 # Expected: empty list — no artifacts stuck in queue after full pipeline run
+```
+
+**Removed presets (must raise PresetNotFound):**
+```zsh
+qw query --name rank_by_evidence --param strategy_id=cl-1h-bear-liquidity-sweep
+# Expected: exit 1 — "unknown preset: 'rank_by_evidence'"
+
+qw query --name trace_champion --param champion_id=abc123
+# Expected: exit 1 — "unknown preset: 'trace_champion'"
 ```
 
 **JSON output and jq pipeline:**

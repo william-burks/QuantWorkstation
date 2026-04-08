@@ -4,7 +4,7 @@
 QWS-0406
 
 ## Status
-READY
+CLOSED
 
 ## Summary
 Deliver the operational query surface for Epic 4: new presets that answer "what do I need
@@ -189,26 +189,26 @@ at ingest time. See QWS-0407.**
 ## Acceptance Criteria
 
 ### Phase A
-- [ ] `qw query --name list_oos_pending` exits `0`; returns Champions with `oos_status = oos_pending`.
-- [ ] `qw query --name list_aborted` exits `0`; returns Strategies with `status = ABORTED` including `abort_reason`.
-- [ ] `qw query --name rank_by_evidence` raises `PresetNotFound`.
-- [ ] `qw query --name trace_champion` raises `PresetNotFound`.
-- [ ] `qw query --name fragility_report` still returns results (not removed in Phase A).
-- [ ] `qw query --name staleness_report` still returns results (not removed in Phase A).
-- [ ] `recent_champions` and `strategy_lineage` exclude ABORTED strategies.
-- [ ] Both Phase A presets return empty list gracefully when no matching data exists.
+- [x] `qw query --name list_oos_pending` exits `0`; returns Champions with `oos_status = oos_pending`.
+- [x] `qw query --name list_aborted` exits `0`; returns Strategies with `status = ABORTED` including `abort_reason`.
+- [x] `qw query --name rank_by_evidence` raises `PresetNotFound`.
+- [x] `qw query --name trace_champion` raises `PresetNotFound`.
+- [x] `qw query --name fragility_report` still returns results (not removed in Phase A).
+- [x] `qw query --name staleness_report` still returns results (not removed in Phase A).
+- [x] `recent_champions` and `strategy_lineage` exclude ABORTED strategies.
+- [x] Both Phase A presets return empty list gracefully when no matching data exists.
 
 ### Phase B (after QWS-0407)
-- [ ] `qw query --name promotion_candidates` exits `0`; excludes runs with `total_trades < 30`.
-- [ ] `qw query --name promotion_candidates` excludes runs with `active_window_frequency < 0.06`.
-- [ ] Output includes `tier` column (Professional / Institutional).
-- [ ] Output includes `active_window_frequency` and `duty_cycle` columns.
-- [ ] `qw query --name promotion_candidates --param min_sharpe=2.5` filters correctly.
-- [ ] A run with a linked Champion via `PIVOTED_FROM` does not appear in output.
-- [ ] Empty list returned gracefully when no candidates exist.
+- [x] `qw query --name promotion_candidates` exits `0`; excludes runs with `total_trades < 30`.
+- [x] `qw query --name promotion_candidates` excludes runs with `active_window_frequency < 0.06`.
+- [x] Output includes `tier` column (Professional / Institutional).
+- [x] Output includes `active_window_frequency` and `duty_cycle` columns.
+- [x] `qw query --name promotion_candidates --param min_sharpe=2.5` filters correctly.
+- [x] A run with a linked Champion via `PIVOTED_FROM` does not appear in output.
+- [x] Empty list returned gracefully when no candidates exist.
 
 ## Definition of Done
-- [ ] Phase A implemented and tested.
-- [ ] Phase B implemented and tested (after QWS-0407 complete).
-- [ ] Runbook Day-1 Operations section updated.
-- [ ] Story marked CLOSED.
+- [x] Phase A implemented and tested.
+- [x] Phase B implemented and tested (after QWS-0407 complete).
+- [x] Runbook Day-1 Operations section updated.
+- [x] Story marked CLOSED.

@@ -71,6 +71,7 @@ RETURN {
 
 GET_RUN_HISTORY_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN]->(r:Run)
+WHERE s.status <> 'ABORTED'
 OPTIONAL MATCH (r)-[:USES_CONFIG]->(c:Config)
 RETURN {
   strategy_id: s.strategy_id,
@@ -120,6 +121,7 @@ LIMIT 1
 
 GET_STRATEGY_LINEAGE_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})-[:PRODUCED_CHAMPION]->(ch:Champion)
+WHERE s.status <> 'ABORTED'
 OPTIONAL MATCH (ch)-[:PIVOTED_FROM]->(r:Run)
 OPTIONAL MATCH (r)-[:USES_CONFIG]->(c:Config)
 RETURN {
@@ -137,6 +139,7 @@ ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 
 GET_RECENT_CHAMPIONS_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
+WHERE s.status <> 'ABORTED'
 OPTIONAL MATCH (ch)-[:PIVOTED_FROM]->(r:Run)
 RETURN {
   champion_id: ch.champion_id,
@@ -153,6 +156,7 @@ ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 
 GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)-[:PIVOTED_FROM]->(r:Run {run_id: $run_id})
+WHERE s.status <> 'ABORTED'
 RETURN {
   champion_id: ch.champion_id,
   strategy_id: s.strategy_id,
@@ -170,15 +174,19 @@ GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER = """
 MATCH (anchor:Strategy {strategy_id: $strategy_id})
 MATCH (related:Strategy)
 WHERE (
-  anchor.family_id IS NOT NULL
-  AND related.family_id = anchor.family_id
-  AND related.strategy_id <> anchor.strategy_id
-) OR (
-  anchor.family_id IS NULL
-  AND related.logic_type = anchor.logic_type
-  AND related.direction = anchor.direction
-  AND related.strategy_id <> anchor.strategy_id
+  (
+    anchor.family_id IS NOT NULL
+    AND related.family_id = anchor.family_id
+    AND related.strategy_id <> anchor.strategy_id
+  ) OR (
+    anchor.family_id IS NULL
+    AND related.logic_type = anchor.logic_type
+    AND related.direction = anchor.direction
+    AND related.strategy_id <> anchor.strategy_id
+  )
 )
+AND anchor.status <> 'ABORTED'
+AND related.status <> 'ABORTED'
 CALL (related) {
   OPTIONAL MATCH (related)-[:HAS_RUN]->(r:Run)
   RETURN count(r) AS run_count
@@ -212,6 +220,7 @@ ORDER BY related.instrument ASC, related.timeframe ASC
 
 GET_FAMILY_CLUSTER_V1_CYPHER = """
 MATCH (s:Strategy {family_id: $family_id})
+WHERE s.status <> 'ABORTED'
 CALL (s) {
   OPTIONAL MATCH (s)-[:HAS_RUN]->(r:Run)
   RETURN count(r) AS run_count
@@ -247,6 +256,7 @@ ORDER BY s.instrument ASC, s.timeframe ASC
 GET_PORTFOLIO_ALPHA_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
 WHERE ch.tier IN ['professional', 'institutional']
+  AND s.status <> 'ABORTED'
 WITH count(ch) AS champion_count,
      sum(ch.metrics_return) AS total_return,
      avg(ch.metrics_sharpe) AS avg_sharpe,
@@ -272,37 +282,62 @@ RETURN {
 ORDER BY ch.strategy_id ASC
 """.strip()
 
-GET_TRACE_CHAMPION_V1_CYPHER = """
-MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion {champion_id: $champion_id})
-OPTIONAL MATCH (ch)-[:PIVOTED_FROM]->(r:Run)
+GET_LIST_OOS_PENDING_V1_CYPHER = """
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
+WHERE ch.oos_status = 'oos_pending'
+  AND s.status <> 'ABORTED'
 RETURN {
-  strategy_id: s.strategy_id,
   champion_id: ch.champion_id,
-  artifact_path: ch.artifact_path,
-  tier: ch.tier,
+  strategy_id: ch.strategy_id,
+  freeze_date: toString(ch.freeze_date),
   metrics_sharpe: ch.metrics_sharpe,
-  metrics_return: ch.metrics_return,
   metrics_total_trades: ch.metrics_total_trades,
-  pivot_run_id: r.run_id
+  days_pending: duration.between(ch.freeze_date, date()).days
 } AS result
+ORDER BY ch.freeze_date ASC
 """.strip()
 
-GET_RANK_BY_EVIDENCE_V1_CYPHER = """
-MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN]->(r:Run)
-WHERE r.total_trades IS NOT NULL AND r.total_trades > 0
-WITH r, (r.sharpe * sqrt(toFloat(r.total_trades))) AS evidence_score
+GET_LIST_ABORTED_V1_CYPHER = """
+MATCH (s:Strategy)
+WHERE s.status = 'ABORTED'
+RETURN {
+  strategy_id: s.strategy_id,
+  instrument: s.instrument,
+  direction: s.direction,
+  logic_type: s.logic_type,
+  abort_reason: s.abort_reason,
+  aborted_at: toString(s.aborted_at)
+} AS result
+ORDER BY s.aborted_at DESC
+""".strip()
+
+GET_PROMOTION_CANDIDATES_V1_CYPHER = """
+MATCH (s:Strategy)-[:HAS_RUN]->(r:Run)
+WHERE s.status <> 'ABORTED'
+  AND r.sharpe >= $min_sharpe
+  AND r.profit_factor >= $min_profit_factor
+  AND r.total_trades >= 30
+  AND r.active_window_frequency >= 0.06
+  AND NOT EXISTS { MATCH (ch:Champion)-[:PIVOTED_FROM]->(r) }
+WITH r, s, (r.sharpe * sqrt(toFloat(r.total_trades))) AS evidence_score
+ORDER BY evidence_score DESC
 RETURN {
   run_id: r.run_id,
-  timestamp: toString(r.timestamp),
+  strategy_id: s.strategy_id,
   sharpe: r.sharpe,
+  tier: r.tier,
+  profit_factor: r.profit_factor,
   total_trades: r.total_trades,
-  evidence_score: evidence_score
+  active_window_frequency: r.active_window_frequency,
+  duty_cycle: r.duty_cycle,
+  evidence_score: evidence_score,
+  ingested_at: toString(r.ingested_at)
 } AS result
-ORDER BY evidence_score DESC
 """.strip()
 
 GET_STALENESS_REPORT_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
+WHERE s.status <> 'ABORTED'
 WITH ch, duration.between(ch.freeze_date, date()).days AS days_old
 WHERE days_old > 30
 RETURN {
@@ -317,6 +352,7 @@ ORDER BY days_old DESC
 
 GET_INSTRUMENT_CONCENTRATION_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
+WHERE s.status <> 'ABORTED'
 WITH s.instrument AS instrument,
      count(ch) AS champion_count,
      sum(ch.metrics_return) AS total_return
@@ -436,13 +472,25 @@ class GraphQueryService:
         with self._driver.session(database=self._database) as session:
             return get_fragility_report_v1(session)
 
-    def get_trace_champion_v1(self, champion_id: str) -> list[dict[str, Any]]:
+    def get_list_oos_pending_v1(self) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
-            return get_trace_champion_v1(session, champion_id)
+            return get_list_oos_pending_v1(session)
 
-    def get_rank_by_evidence_v1(self, strategy_id: str) -> list[dict[str, Any]]:
+    def get_list_aborted_v1(self) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
-            return get_rank_by_evidence_v1(session, strategy_id)
+            return get_list_aborted_v1(session)
+
+    def get_promotion_candidates_v1(
+        self,
+        min_sharpe: float = 2.0,
+        min_profit_factor: float = 1.3,
+    ) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_promotion_candidates_v1(
+                session,
+                min_sharpe=min_sharpe,
+                min_profit_factor=min_profit_factor,
+            )
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -770,14 +818,33 @@ def get_fragility_report_v1(session: QuerySession) -> list[dict[str, Any]]:
     return _all_results(session, GET_FRAGILITY_REPORT_V1_CYPHER)
 
 
-def get_trace_champion_v1(session: QuerySession, champion_id: str) -> list[dict[str, Any]]:
-    """Return the Strategy→Champion lineage for a specific champion_id."""
-    return _all_results(session, GET_TRACE_CHAMPION_V1_CYPHER, champion_id=champion_id)
+def get_list_oos_pending_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return Champions with oos_status = oos_pending, oldest freeze_date first."""
+    return _all_results(session, GET_LIST_OOS_PENDING_V1_CYPHER)
 
 
-def get_rank_by_evidence_v1(session: QuerySession, strategy_id: str) -> list[dict[str, Any]]:
-    """Return runs ranked by evidence_score = sharpe * sqrt(total_trades), descending."""
-    return _all_results(session, GET_RANK_BY_EVIDENCE_V1_CYPHER, strategy_id=strategy_id)
+def get_list_aborted_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return all Strategies with status = ABORTED, most recently aborted first."""
+    return _all_results(session, GET_LIST_ABORTED_V1_CYPHER)
+
+
+def get_promotion_candidates_v1(
+    session: QuerySession,
+    min_sharpe: float = 2.0,
+    min_profit_factor: float = 1.3,
+) -> list[dict[str, Any]]:
+    """Return Run nodes that pass the dual-hurdle gate and have no linked Champion.
+
+    Hard gates (not overridable): total_trades >= 30, active_window_frequency >= 0.06.
+    Overridable via params: min_sharpe (default 2.0), min_profit_factor (default 1.3).
+    Ordered by evidence_score (sharpe * sqrt(total_trades)) descending.
+    """
+    return _all_results(
+        session,
+        GET_PROMOTION_CANDIDATES_V1_CYPHER,
+        min_sharpe=min_sharpe,
+        min_profit_factor=min_profit_factor,
+    )
 
 
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
@@ -792,10 +859,11 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_run_stats_summary_v1": get_run_stats_summary_v1,
     "get_portfolio_alpha_v1": get_portfolio_alpha_v1,
     "get_fragility_report_v1": get_fragility_report_v1,
-    "get_trace_champion_v1": get_trace_champion_v1,
     "get_staleness_report_v1": get_staleness_report_v1,
     "get_instrument_concentration_v1": get_instrument_concentration_v1,
-    "get_rank_by_evidence_v1": get_rank_by_evidence_v1,
+    "get_list_oos_pending_v1": get_list_oos_pending_v1,
+    "get_list_aborted_v1": get_list_aborted_v1,
+    "get_promotion_candidates_v1": get_promotion_candidates_v1,
 }
 
 
@@ -816,15 +884,16 @@ __all__ = [
     "GET_FAMILY_CLUSTER_V1_CYPHER",
     "GET_FRAGILITY_REPORT_V1_CYPHER",
     "GET_INSTRUMENT_CONCENTRATION_V1_CYPHER",
+    "GET_LIST_ABORTED_V1_CYPHER",
+    "GET_LIST_OOS_PENDING_V1_CYPHER",
     "GET_PORTFOLIO_ALPHA_V1_CYPHER",
-    "GET_RANK_BY_EVIDENCE_V1_CYPHER",
+    "GET_PROMOTION_CANDIDATES_V1_CYPHER",
     "GET_STALENESS_REPORT_V1_CYPHER",
     "GET_RECENT_CHAMPIONS_V1_CYPHER",
     "GET_RUN_HISTORY_V1_CYPHER",
     "GET_RUN_STATS_SUMMARY_V1_CYPHER",
     "GET_STRATEGY_LINEAGE_V1_CYPHER",
     "GET_STRATEGY_SUMMARY_V1_CYPHER",
-    "GET_TRACE_CHAMPION_V1_CYPHER",
     "GraphQueryService",
     "QUERY_VIEW_REGISTRY",
     "get_champion_details_v1",
@@ -833,8 +902,10 @@ __all__ = [
     "get_downstream_champions_v1",
     "get_fragility_report_v1",
     "get_instrument_concentration_v1",
+    "get_list_aborted_v1",
+    "get_list_oos_pending_v1",
     "get_portfolio_alpha_v1",
-    "get_rank_by_evidence_v1",
+    "get_promotion_candidates_v1",
     "get_staleness_report_v1",
     "get_query_view",
     "get_recent_champions_v1",
@@ -842,7 +913,6 @@ __all__ = [
     "get_run_stats_summary_v1",
     "get_strategy_lineage_v1",
     "get_strategy_summary_v1",
-    "get_trace_champion_v1",
 ]
 
 

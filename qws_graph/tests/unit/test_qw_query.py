@@ -25,6 +25,7 @@ from research.graph.query_presets import (
     _run_pending_offline,
     _extract_artifact_path,
 )
+
 from research.graph.cli import cmd_query
 
 
@@ -66,10 +67,6 @@ class FakeGraphQueryService:
         self.calls.append(("get_fragility_report_v1", {}))
         return [{"strategy_id": "s1", "champion_id": "c1", "fragilities": ["regime risk"]}]
 
-    def get_trace_champion_v1(self, champion_id: str) -> list[dict[str, Any]]:
-        self.calls.append(("get_trace_champion_v1", {"champion_id": champion_id}))
-        return [{"strategy_id": "s1", "champion_id": champion_id, "tier": "professional"}]
-
     def get_staleness_report_v1(self) -> list[dict[str, Any]]:
         self.calls.append(("get_staleness_report_v1", {}))
         return [{"champion_id": "c1", "strategy_id": "s1", "freeze_date": "2025-01-01", "days_stale": 90}]
@@ -78,11 +75,53 @@ class FakeGraphQueryService:
         self.calls.append(("get_instrument_concentration_v1", {}))
         return [{"instrument": "ES", "champion_count": 3, "total_return": 0.45}]
 
-    def get_rank_by_evidence_v1(self, strategy_id: str) -> list[dict[str, Any]]:
-        self.calls.append(("get_rank_by_evidence_v1", {"strategy_id": strategy_id}))
+    def get_list_oos_pending_v1(self) -> list[dict[str, Any]]:
+        self.calls.append(("get_list_oos_pending_v1", {}))
         return [
-            {"run_id": "r2", "sharpe": 3.0, "total_trades": 16, "evidence_score": 12.0},
-            {"run_id": "r1", "sharpe": 5.0, "total_trades": 2, "evidence_score": 7.07},
+            {
+                "champion_id": "c1",
+                "strategy_id": "es-1h-bear-sweep",
+                "freeze_date": "2026-01-01",
+                "metrics_sharpe": 3.5,
+                "metrics_total_trades": 45,
+                "days_pending": 97,
+            }
+        ]
+
+    def get_list_aborted_v1(self) -> list[dict[str, Any]]:
+        self.calls.append(("get_list_aborted_v1", {}))
+        return [
+            {
+                "strategy_id": "cl-1h-bear-sweep",
+                "instrument": "CL",
+                "direction": "bear",
+                "logic_type": "liquidity_sweep",
+                "abort_reason": "Sharpe below threshold after 3 runs",
+                "aborted_at": "2025-12-01",
+            }
+        ]
+
+    def get_promotion_candidates_v1(
+        self,
+        min_sharpe: float = 2.0,
+        min_profit_factor: float = 1.3,
+    ) -> list[dict[str, Any]]:
+        self.calls.append(
+            ("get_promotion_candidates_v1", {"min_sharpe": min_sharpe, "min_profit_factor": min_profit_factor})
+        )
+        return [
+            {
+                "run_id": "run-001",
+                "strategy_id": "es-1h-bear-sweep",
+                "sharpe": 2.8,
+                "tier": "professional",
+                "profit_factor": 1.5,
+                "total_trades": 42,
+                "active_window_frequency": 0.12,
+                "duty_cycle": 0.35,
+                "evidence_score": 18.14,
+                "ingested_at": "2026-03-01T10:00:00",
+            }
         ]
 
     def close(self) -> None:
@@ -593,22 +632,13 @@ class TestRunPresetFragilityReport:
             run_preset("fragility_report", {}, service=None)
 
 
-class TestRunPresetTraceChampion:
-    def test_routes_to_get_trace_champion_v1(self) -> None:
-        service = FakeGraphQueryService()
-        results = run_preset("trace_champion", {"champion_id": "abc123"}, service=service)
-        assert service.calls[0][0] == "get_trace_champion_v1"
-        assert service.calls[0][1]["champion_id"] == "abc123"
-        assert results[0]["strategy_id"] == "s1"
+class TestRemovedPresetTraceChampion:
+    def test_trace_champion_raises_unknown_preset(self) -> None:
+        with pytest.raises(ValueError, match="unknown preset"):
+            run_preset("trace_champion", {"champion_id": "abc123"})
 
-    def test_missing_champion_id_raises(self) -> None:
-        spec = resolve_preset("trace_champion")
-        errors = validate_params(spec, {})
-        assert any("champion_id" in e for e in errors)
-
-    def test_no_service_raises_runtime_error(self) -> None:
-        with pytest.raises(RuntimeError, match="requires a graph connection"):
-            run_preset("trace_champion", {"champion_id": "abc123"}, service=None)
+    def test_trace_champion_not_in_catalog(self) -> None:
+        assert "trace_champion" not in PRESET_CATALOG
 
 
 class TestRunPresetStalenessReport:
@@ -648,43 +678,194 @@ class TestRunPresetInstrumentConcentration:
         assert validate_params(spec, {}) == []
 
 
-class TestRunPresetRankByEvidence:
-    def test_routes_to_get_rank_by_evidence_v1(self) -> None:
-        service = FakeGraphQueryService()
-        results = run_preset("rank_by_evidence", {"strategy_id": "cl-1h-bear"}, service=service)
-        assert service.calls[0][0] == "get_rank_by_evidence_v1"
-        assert service.calls[0][1]["strategy_id"] == "cl-1h-bear"
-        assert results[0]["evidence_score"] == 12.0
+class TestRemovedPresetRankByEvidence:
+    def test_rank_by_evidence_raises_unknown_preset(self) -> None:
+        with pytest.raises(ValueError, match="unknown preset"):
+            run_preset("rank_by_evidence", {"strategy_id": "cl-1h-bear"})
 
-    def test_results_ordered_by_evidence_score_desc(self) -> None:
-        service = FakeGraphQueryService()
-        results = run_preset("rank_by_evidence", {"strategy_id": "cl-1h-bear"}, service=service)
-        scores = [r["evidence_score"] for r in results]
-        assert scores == sorted(scores, reverse=True)
-
-    def test_missing_strategy_id_raises(self) -> None:
-        spec = resolve_preset("rank_by_evidence")
-        errors = validate_params(spec, {})
-        assert any("strategy_id" in e for e in errors)
-
-    def test_no_service_raises_runtime_error(self) -> None:
-        with pytest.raises(RuntimeError, match="requires a graph connection"):
-            run_preset("rank_by_evidence", {"strategy_id": "cl-1h-bear"}, service=None)
+    def test_rank_by_evidence_not_in_catalog(self) -> None:
+        assert "rank_by_evidence" not in PRESET_CATALOG
 
 
 class TestNewPresetCatalogEntries:
-    def test_new_presets_present_in_catalog(self) -> None:
+    def test_analytical_presets_present_in_catalog(self) -> None:
         assert {
-            "portfolio_alpha", "fragility_report", "trace_champion",
-            "staleness_report", "instrument_concentration", "rank_by_evidence",
+            "portfolio_alpha", "fragility_report",
+            "staleness_report", "instrument_concentration",
         }.issubset(set(PRESET_CATALOG))
 
-    def test_all_new_presets_require_graph(self) -> None:
-        for name in ("portfolio_alpha", "fragility_report", "trace_champion",
-                     "staleness_report", "instrument_concentration", "rank_by_evidence"):
+    def test_workflow_presets_present_in_catalog(self) -> None:
+        assert {
+            "list_oos_pending", "list_aborted", "promotion_candidates",
+        }.issubset(set(PRESET_CATALOG))
+
+    def test_all_graph_presets_require_graph(self) -> None:
+        for name in ("portfolio_alpha", "fragility_report", "staleness_report",
+                     "instrument_concentration", "list_oos_pending", "list_aborted",
+                     "promotion_candidates"):
             assert PRESET_CATALOG[name].requires_graph is True
 
-    def test_trace_champion_requires_champion_id_param(self) -> None:
-        spec = resolve_preset("trace_champion")
+    def test_promotion_candidates_has_optional_params(self) -> None:
+        spec = resolve_preset("promotion_candidates")
+        param_names = {p.name for p in spec.params}
+        assert param_names == {"min_sharpe", "min_profit_factor"}
+
+    def test_promotion_candidates_params_are_optional(self) -> None:
+        spec = resolve_preset("promotion_candidates")
         required = {p.name for p in spec.params if p.required}
-        assert "champion_id" in required
+        assert required == set()
+
+
+# ---------------------------------------------------------------------------
+# run_preset — QWS-0406 workflow presets
+# ---------------------------------------------------------------------------
+
+class TestRunPresetListOosPending:
+    def test_routes_to_get_list_oos_pending_v1(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("list_oos_pending", {}, service=service)
+        assert len(service.calls) == 1
+        assert service.calls[0][0] == "get_list_oos_pending_v1"
+        assert results[0]["champion_id"] == "c1"
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("list_oos_pending", {}, service=None)
+
+    def test_no_params_valid(self) -> None:
+        spec = resolve_preset("list_oos_pending")
+        assert validate_params(spec, {}) == []
+
+    def test_unknown_param_rejected(self) -> None:
+        spec = resolve_preset("list_oos_pending")
+        errors = validate_params(spec, {"limit": "5"})
+        assert any("unknown param" in e for e in errors)
+
+    def test_empty_result_returned_gracefully(self) -> None:
+        class EmptyService(FakeGraphQueryService):
+            def get_list_oos_pending_v1(self) -> list[dict[str, Any]]:
+                self.calls.append(("get_list_oos_pending_v1", {}))
+                return []
+
+        service = EmptyService()
+        results = run_preset("list_oos_pending", {}, service=service)
+        assert results == []
+
+    def test_output_contains_expected_fields(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("list_oos_pending", {}, service=service)
+        row = results[0]
+        assert {"champion_id", "strategy_id", "freeze_date", "metrics_sharpe",
+                "metrics_total_trades", "days_pending"}.issubset(row.keys())
+
+
+class TestRunPresetListAborted:
+    def test_routes_to_get_list_aborted_v1(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("list_aborted", {}, service=service)
+        assert len(service.calls) == 1
+        assert service.calls[0][0] == "get_list_aborted_v1"
+        assert results[0]["strategy_id"] == "cl-1h-bear-sweep"
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("list_aborted", {}, service=None)
+
+    def test_no_params_valid(self) -> None:
+        spec = resolve_preset("list_aborted")
+        assert validate_params(spec, {}) == []
+
+    def test_unknown_param_rejected(self) -> None:
+        spec = resolve_preset("list_aborted")
+        errors = validate_params(spec, {"instrument": "CL"})
+        assert any("unknown param" in e for e in errors)
+
+    def test_empty_result_returned_gracefully(self) -> None:
+        class EmptyService(FakeGraphQueryService):
+            def get_list_aborted_v1(self) -> list[dict[str, Any]]:
+                self.calls.append(("get_list_aborted_v1", {}))
+                return []
+
+        service = EmptyService()
+        results = run_preset("list_aborted", {}, service=service)
+        assert results == []
+
+    def test_output_contains_expected_fields(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("list_aborted", {}, service=service)
+        row = results[0]
+        assert {"strategy_id", "instrument", "direction", "logic_type",
+                "abort_reason", "aborted_at"}.issubset(row.keys())
+
+
+class TestRunPresetPromotionCandidates:
+    def test_routes_to_get_promotion_candidates_v1(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("promotion_candidates", {}, service=service)
+        assert len(service.calls) == 1
+        assert service.calls[0][0] == "get_promotion_candidates_v1"
+        assert results[0]["run_id"] == "run-001"
+
+    def test_default_params_passed_through(self) -> None:
+        service = FakeGraphQueryService()
+        run_preset("promotion_candidates", {}, service=service)
+        call_kwargs = service.calls[0][1]
+        assert call_kwargs["min_sharpe"] == 2.0
+        assert call_kwargs["min_profit_factor"] == 1.3
+
+    def test_min_sharpe_param_passed_through(self) -> None:
+        service = FakeGraphQueryService()
+        run_preset("promotion_candidates", {"min_sharpe": "2.5"}, service=service)
+        assert service.calls[0][1]["min_sharpe"] == 2.5
+
+    def test_min_profit_factor_param_passed_through(self) -> None:
+        service = FakeGraphQueryService()
+        run_preset("promotion_candidates", {"min_profit_factor": "1.5"}, service=service)
+        assert service.calls[0][1]["min_profit_factor"] == 1.5
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("promotion_candidates", {}, service=None)
+
+    def test_no_params_valid(self) -> None:
+        spec = resolve_preset("promotion_candidates")
+        assert validate_params(spec, {}) == []
+
+    def test_unknown_param_rejected(self) -> None:
+        spec = resolve_preset("promotion_candidates")
+        errors = validate_params(spec, {"min_trades": "30"})
+        assert any("unknown param" in e for e in errors)
+
+    def test_empty_result_returned_gracefully(self) -> None:
+        class EmptyService(FakeGraphQueryService):
+            def get_promotion_candidates_v1(
+                self,
+                min_sharpe: float = 2.0,
+                min_profit_factor: float = 1.3,
+            ) -> list[dict[str, Any]]:
+                self.calls.append(("get_promotion_candidates_v1", {}))
+                return []
+
+        service = EmptyService()
+        results = run_preset("promotion_candidates", {}, service=service)
+        assert results == []
+
+    def test_output_contains_expected_fields(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("promotion_candidates", {}, service=service)
+        row = results[0]
+        assert {"run_id", "strategy_id", "sharpe", "tier", "profit_factor",
+                "total_trades", "active_window_frequency", "duty_cycle",
+                "evidence_score", "ingested_at"}.issubset(row.keys())
+
+    def test_output_includes_tier_column(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("promotion_candidates", {}, service=service)
+        assert results[0]["tier"] == "professional"
+
+    def test_output_includes_frequency_and_duty_cycle(self) -> None:
+        service = FakeGraphQueryService()
+        results = run_preset("promotion_candidates", {}, service=service)
+        row = results[0]
+        assert row["active_window_frequency"] == 0.12
+        assert row["duty_cycle"] == 0.35
