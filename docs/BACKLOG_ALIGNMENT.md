@@ -32,7 +32,7 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| OOS Outcome Tracking | QWS-0402 | `oos_status` updates on Champions; `list_oos_pending`; partial `portfolio_alpha` update (OOS/IS drift flag only) | — |
+| OOS Outcome Tracking | QWS-0402 | `oos_status` and `oos_date` on Champion node; `qw record --oos` CLI path; `list_oos_pending` (delivered by QWS-0406) | — |
 | Promotion Alerts | QWS-0405 | Notification when a Trial crosses the dual-hurdle promotion threshold | QWS-0407 |
 | Workflow Query Presets | QWS-0406 | **New:** `list_oos_pending`, `promotion_candidates` (Tier + Active-Window Frequency; Regime Diversity Score deferred to QWS-0502), `list_aborted` / **Deprecated:** `rank_by_evidence`, `trace_champion`, `fragility_report`, `staleness_report` / **Amended:** all Strategy traversals add `WHERE s.status <> 'ABORTED'` | QWS-0407 (for `active_window_frequency` filter in `promotion_candidates`) |
 | Significance Gate Properties | QWS-0407 | `active_window_frequency`, `duty_cycle`, `first_trade_ts`, `last_trade_ts` on Run node; dual-hurdle gate | — |
@@ -44,7 +44,7 @@
 |---|---|---|---|
 | family_id Population | QWS-0501 | Populates `Strategy.family_id`; enables `cross_artifact_correlation` to return meaningful results | — |
 | Regime Tagging | QWS-0502 | `Regime` node; `regime_performance` tool with Diversity Score; "Regime Specialist" fragility class | — |
-| Cross-Instrument Aggregator | QWS-0503 | `regime_performance` full output; performance table across instruments grouped by regime | QWS-0501 + QWS-0402 |
+| Cross-Instrument Aggregator | QWS-0503 | `regime_performance` full output; performance table across instruments grouped by regime | QWS-0501 |
 | Recursive Lineage Traversal | QWS-0504 | `downstream_champions` gains `depth` param for multi-hop traversal | — |
 
 ### Epic 6 — Research Analytics
@@ -53,7 +53,7 @@
 |---|---|---|---|
 | Hypothesis Journaling | QWS-0601 | `Hypothesis` node; `SUGGESTED`, `TESTED_AS`, `BRANCHED_FROM` edges; `log_hypothesis`, `check_redundancy`, `hypothesis_audit` MCP tools; full provenance chain from idea to Champion | — |
 | Parameter Stability | QWS-0602 | Stability analysis across Config parameter variations | — |
-| Portfolio Correlation | QWS-0603 | `CORRELATED_WITH` edges on Champions; `portfolio_alpha` gains MaxDD/Calmar filters + OOS/IS drift flag; correlation gate on promotion path | QWS-0402 |
+| Portfolio Correlation | QWS-0603 | `CORRELATED_WITH` edges on Champions; `portfolio_alpha` gains MaxDD/Calmar filters + OOS/IS drift flag; correlation gate on promotion path | — |
 | Semantic Hypothesis Deduplication | QWS-0604 | `SEMANTICALLY_RELATED` edges between Hypothesis nodes; `similar_hypotheses` preset; `embedding` property on Hypothesis; `qw backfill --embeddings` | QWS-0601 CLOSED |
 
 ### Epic 8 — Champion Lifecycle
@@ -105,8 +105,6 @@ the linked story is marked COMPLETE above.
 | `duty_cycle` | Run | QWS-0407 |
 | `first_trade_ts` | Run | QWS-0407 |
 | `last_trade_ts` | Run | QWS-0407 |
-| `oos_date` | Champion | QWS-0402 |
-| `oos_reason` | Champion | QWS-0402 |
 | `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
 | `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
 | `embedding` | Hypothesis | QWS-0604 |

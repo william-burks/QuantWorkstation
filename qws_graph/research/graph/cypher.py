@@ -214,3 +214,23 @@ RETURN r.run_id AS run_id
 """.strip()
 
 
+# ---------------------------------------------------------------------------
+# OOS outcome update queries (QWS-0402)
+# ---------------------------------------------------------------------------
+
+GET_CHAMPION_OOS_STATUS_QUERY = """
+MATCH (ch:Champion {champion_id: $champion_id})
+RETURN ch.champion_id AS champion_id, ch.oos_status AS oos_status
+""".strip()
+
+
+UPDATE_CHAMPION_OOS_STATUS_QUERY = """
+MATCH (ch:Champion {champion_id: $champion_id})
+SET
+  ch.oos_status = $oos_status,
+  ch.oos_date = date($oos_date),
+  ch.updated_at = datetime()
+RETURN ch.champion_id AS champion_id
+""".strip()
+
+

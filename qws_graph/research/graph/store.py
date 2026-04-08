@@ -19,10 +19,12 @@ from .cypher import (
     BLOB_INGEST_QUERY,
     CHAMPION_INGEST_QUERY,
     CSV_INGEST_QUERY,
+    GET_CHAMPION_OOS_STATUS_QUERY,
     PATCH_FAMILY_ID_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
+    UPDATE_CHAMPION_OOS_STATUS_QUERY,
 )
 from .models import ResearchArtifact, RunStatsSummary
 
@@ -318,6 +320,61 @@ class GraphStore:
 
                 records = session.execute_write(_write)
                 return len(records) > 0
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def update_champion_oos_status(
+        self,
+        champion_id: str,
+        status: str,
+        oos_date: str | None = None,
+    ) -> bool:
+        """Update oos_status and oos_date on a Champion node.
+
+        Returns ``True`` when the champion was found and updated, ``False`` when no
+        ``Champion`` node with that ``champion_id`` exists.
+
+        Raises ``StoreError`` when the champion currently carries
+        ``oos_status = 'retired'`` — that is a lifecycle state, not an OOS outcome.
+        Raises ``StoreInfraError`` on Neo4j connectivity or execution failure.
+        """
+        from datetime import date as _date
+
+        resolved_date = oos_date or _date.today().isoformat()
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx):
+                    result = tx.run(GET_CHAMPION_OOS_STATUS_QUERY, champion_id=champion_id).single()
+                    return result
+
+                row = session.execute_read(_read)
+                if row is None:
+                    return False
+
+                current_oos = row["oos_status"]
+                if current_oos == "retired":
+                    raise StoreError(
+                        f"Champion {champion_id!r} has lifecycle status 'retired'; "
+                        "use qw retire instead"
+                    )
+
+                def _write(tx):
+                    result = tx.run(
+                        UPDATE_CHAMPION_OOS_STATUS_QUERY,
+                        champion_id=champion_id,
+                        oos_status=status,
+                        oos_date=resolved_date,
+                    )
+                    return list(result)
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+
+        except StoreError:
+            raise
         except Neo4jError as exc:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001

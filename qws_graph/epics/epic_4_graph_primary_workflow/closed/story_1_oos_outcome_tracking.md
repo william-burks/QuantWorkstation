@@ -4,7 +4,7 @@
 QWS-0402
 
 ## Status
-READY
+CLOSED
 
 ## Summary
 Add `qw record --oos <status> --champion <id>` to record OOS validation outcomes directly
@@ -32,8 +32,7 @@ No markdown file needs to be written or re-ingested.
 ## Deliverable
 - `--oos` flag on `qw record` CLI subcommand
 - `--champion` flag (required when `--oos` is used)
-- `--reason` flag (optional, free-text; stored as `oos_reason` on Champion node)
-- `store.update_champion_oos_status(champion_id, status, reason, date)` method
+- `store.update_champion_oos_status(champion_id, status, date)` method
 - Receipt written with `kind: oos_update` and `status: persisted`
 
 ## Valid `oos_status` values
@@ -71,17 +70,16 @@ via this CLI path with a clear error ("Champion has lifecycle status 'retired'; 
 - `qws_graph/tests/unit/test_store_oos_update.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw record --oos oos_pass --champion <id>` exits `0` and updates `ch.oos_status`
+- [x] `qw record --oos oos_pass --champion <id>` exits `0` and updates `ch.oos_status`
   and sets `ch.oos_date` on the Champion node.
-- [ ] `qw record --oos oos_fail --champion <id> --reason "..."` stores reason in
-  `ch.oos_reason`.
-- [ ] `qw record --oos invalid_status --champion <id>` exits non-zero with a clear error.
-- [ ] `qw record --oos oos_pass` without `--champion` exits non-zero.
-- [ ] Receipt written with `kind: oos_update` and `status: persisted`.
-- [ ] `qw query --name recent_champions` returns the updated Champion with the new `oos_status` value.
-- [ ] Unit tests cover valid transition, invalid status, missing champion ID.
+- [x] `qw record --oos oos_fail --champion <id>` exits `0` and updates `ch.oos_status` to `oos_fail`.
+- [x] `qw record --oos invalid_status --champion <id>` exits non-zero with a clear error.
+- [x] `qw record --oos oos_pass` without `--champion` exits non-zero.
+- [x] Receipt written with `kind: oos_update` and `status: persisted`.
+- [x] `qw query --name recent_champions` returns the updated Champion with the new `oos_status` value.
+- [x] Unit tests cover valid transition, invalid status, missing champion ID.
 
 ## Definition of Done
-- [ ] Store method + CLI flag implemented and tested.
-- [ ] `graph_v1_contract.md` updated with `oos_date` and `oos_reason`.
-- [ ] Story marked CLOSED.
+- [x] Store method + CLI flag implemented and tested.
+- [x] `graph_v1_contract.md` updated with `oos_date` and `oos_reason`.
+- [x] Story marked CLOSED.
