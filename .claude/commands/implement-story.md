@@ -30,7 +30,8 @@ any Python file. Fix all failures before continuing to the next criterion.
 
 ## Step 5 — Update story status
 Once all Acceptance Criteria are checked:
-1. Change the story's `## Status` field from `draft` to `TESTING`
+1. Change the story's `## Status` field from `READY` to `TESTING`
+2. Change the story's `Status` from `READY` to `TESTING` in the epic README and docs/BACKLOG_ALIGNMENT.md
 2. Run `git add` on the story file
 
 ## Step 6 — Report
