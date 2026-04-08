@@ -81,6 +81,7 @@ def _run_backtest(
     equity = np.empty(n, dtype=float)
     equity[0] = init_cash
     trade_pnl: list[float] = []
+    trade_entry_ts: list[pd.Timestamp] = []
 
     cash = float(init_cash)
     in_trade = False
@@ -113,6 +114,7 @@ def _run_backtest(
             in_trade = True
             entry_idx = i
             entry_price = close[i]
+            trade_entry_ts.append(bars.index[i])
             cash = cash * (1.0 - fees)  # entry fee
             equity[i] = cash
 
@@ -124,7 +126,7 @@ def _run_backtest(
         trade_pnl.append(net_pct * cash)
 
     equity_series = pd.Series(equity, index=bars.index)
-    return equity_series, pd.Series(trade_pnl)
+    return equity_series, pd.Series(trade_pnl), trade_entry_ts
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -290,6 +292,7 @@ def _write_golden_csv(results: pd.DataFrame, output_path: Path) -> bool:
         "mom_period", "trend_period", "atr_period", "vol_threshold",
         "sharpe", "profit_factor", "win_rate", "max_drawdown",
         "total_trades", "return", "calmar",
+        "first_trade_ts", "last_trade_ts", "backtest_start", "backtest_end",
     ]
     export = export[[c for c in keep_cols if c in export.columns]]
     export.to_csv(output_path, index=False)
@@ -391,7 +394,7 @@ def main() -> None:
     strategy = MARS(**CONFIG)
     signals = strategy.generate_signals(bars)
 
-    equity, trade_pnl = _run_backtest(
+    equity, trade_pnl, trade_entry_ts = _run_backtest(
         signals,
         bars,
         init_cash=BACKTEST_CONFIG["init_cash"],
@@ -426,6 +429,10 @@ def main() -> None:
         "n_trades": n_trades,
         "gain": round(gain, 2),
         "fees": round(fees_dollar, 2),
+        "first_trade_ts": pd.Timestamp(trade_entry_ts[0]).isoformat() if trade_entry_ts else None,
+        "last_trade_ts": pd.Timestamp(trade_entry_ts[-1]).isoformat() if trade_entry_ts else None,
+        "backtest_start": pd.Timestamp(bars.index.min()).isoformat(),
+        "backtest_end": pd.Timestamp(bars.index.max()).isoformat(),
     }
     results = pd.DataFrame([row])
     results = evaluate(results, bh)

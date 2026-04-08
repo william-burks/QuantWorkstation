@@ -45,6 +45,8 @@ REQUIRED_FIELDS: frozenset[str] = frozenset({
     "profit_factor",
     "win_rate",
     "max_drawdown",
+    "first_trade_ts",
+    "last_trade_ts",
 })
 
 VALID_DIRECTIONS: frozenset[str] = frozenset({"long", "short", "bear", "bull"})

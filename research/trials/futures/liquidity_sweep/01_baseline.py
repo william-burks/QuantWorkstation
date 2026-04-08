@@ -87,6 +87,8 @@ def _legacy_result_to_row(result: dict, config: dict) -> dict:
         "calmar": _to_builtin(proxy.get("calmar", float("nan"))),
         "gain": float("nan"),
         "fees": float("nan"),
+        "first_trade_ts": pd.Timestamp(trades_df["entry_time"].min()).isoformat() if not trades_df.empty else None,
+        "last_trade_ts": pd.Timestamp(trades_df["entry_time"].max()).isoformat() if not trades_df.empty else None,
     }
 
 
@@ -296,6 +298,8 @@ def main() -> None:
     results = pd.DataFrame(rows)
 
     if not results.empty:
+        results["backtest_start"] = cl1h.index.min().isoformat()
+        results["backtest_end"] = cl1h.index.max().isoformat()
         results = evaluate(results, bh)
     report(results, bh, metadata, top_n=1, full_n=1)
 

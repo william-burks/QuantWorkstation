@@ -211,6 +211,45 @@ nodes:
           Sharpe >= 2.0 AND profit_factor >= 1.3 AND calmar >= 1.5 AND
           max_drawdown > -0.20. FAIL if any threshold is missed.
         csv_column: tier
+      first_trade_ts:
+        type: datetime
+        nullable: false
+        description: >
+          Timestamp of the first closed trade in the backtest window. Required CSV
+          column emitted by runner scripts. Anchor for active_window_frequency
+          and duty_cycle computation. Parse fails if absent.
+        csv_column: first_trade_ts
+      last_trade_ts:
+        type: datetime
+        nullable: false
+        description: >
+          Timestamp of the last closed trade in the backtest window. Required CSV
+          column emitted by runner scripts. Anchor for active_window_frequency
+          and duty_cycle computation. Parse fails if absent.
+        csv_column: last_trade_ts
+      active_window_frequency:
+        type: float
+        nullable: true
+        unit: trades/day
+        description: >
+          total_trades / (last_trade_ts − first_trade_ts) in days. Measures
+          trade density over the active window only, ignoring flat pre/post
+          regime gaps. Required by the significance gate: runs with
+          active_window_frequency < 0.06 are excluded from promotion_candidates.
+          Null only on the zero-duration edge case (first_trade_ts == last_trade_ts).
+        formula: "total_trades / active_days where active_days = (last_trade_ts - first_trade_ts).total_seconds() / 86400"
+        gate: ">= 0.06 trades/day required for promotion (MIN_ACTIVE_WINDOW_FREQUENCY in standards.py)"
+      duty_cycle:
+        type: float
+        nullable: true
+        unit: fraction [0.0, 1.0]
+        description: >
+          active_days / total_backtest_days. Fraction of the full backtest period
+          during which the strategy was actively trading. Surfaced in query output
+          to distinguish Regime Specialist (low duty_cycle, high frequency) from
+          Robust Performer (high duty_cycle). Not a promotion gate. Null when
+          backtest_start and backtest_end are not present in the CSV.
+        formula: "active_days / total_backtest_days where total_backtest_days = (backtest_end - backtest_start).total_seconds() / 86400"
       artifact_path:
         type: str
         nullable: false
@@ -788,6 +827,8 @@ csv_columns:
     profit_factor: { type: float, destination: Run.profit_factor }
     max_drawdown:  { type: float, destination: Run.max_drawdown, aliases: [max_dd] }
     total_trades:  { type: int, destination: Run.total_trades, aliases: [n] }
+    first_trade_ts: { type: datetime, destination: Run.first_trade_ts }
+    last_trade_ts:  { type: datetime, destination: Run.last_trade_ts }
 
   optional_run_columns:
     timestamp:    { type: str, destination: Run.timestamp, aliases: [recorded_at, run_at] }
@@ -842,7 +883,7 @@ csv_columns:
 
   ignored_columns:
     description: Accepted without warning; not stored in any node.
-    columns: [avg_risk_pct, bh_exposure_return, fee_pct_of_gain, fees, gain, outperformance_x]
+    columns: [avg_risk_pct, backtest_end, backtest_start, bh_exposure_return, fee_pct_of_gain, fees, gain, outperformance_x]
 
 # ---------------------------------------------------------------------------
 # Key distinctions for agents

@@ -115,11 +115,13 @@ class TestCsvParserSchemaRouting:
             "instrument,timeframe,direction,logic_type,"
             "target_r,wick_mode,sizing_mode,"
             "total_trades,win_rate,profit_factor,sharpe,max_drawdown,"
-            "calmar,return,tier\n"
+            "calmar,return,tier,"
+            "first_trade_ts,last_trade_ts\n"
             "CL,1H,bear,liquidity-sweep,"
             "1.25,exclude_q2,rdist_vol_target,"
             "32,0.65625,2.136028,4.58565,-0.028805,"
-            "27.312855,0.099539,professional\n",
+            "27.312855,0.099539,professional,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n",
             encoding="utf-8",
         )
 
@@ -135,10 +137,12 @@ class TestCsvParserSchemaRouting:
         csv_path.write_text(
             "instrument,timeframe,direction,logic_type,"
             "atr_period,mom_period,trend_period,vol_threshold,"
-            "total_trades,win_rate,profit_factor,sharpe,max_drawdown\n"
+            "total_trades,win_rate,profit_factor,sharpe,max_drawdown,"
+            "first_trade_ts,last_trade_ts\n"
             "BTC,1D,bull,mars,"
             "14,20,50,0.05,"
-            "26,0.307692,0.937264,0.278891,-0.724867\n",
+            "26,0.307692,0.937264,0.278891,-0.724867,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n",
             encoding="utf-8",
         )
 
@@ -155,10 +159,12 @@ class TestCsvParserSchemaRouting:
         csv_path.write_text(
             "instrument,timeframe,direction,logic_type,"
             "label,target_r,sizing_mode,"
-            "total_trades,win_rate,profit_factor,sharpe,max_drawdown\n"
+            "total_trades,win_rate,profit_factor,sharpe,max_drawdown,"
+            "first_trade_ts,last_trade_ts\n"
             "CL,1H,bear,liquidity-sweep,"
             "loss_streak_2_half,1.25,rdist_vol_target,"
-            "32,0.65625,2.064049,4.919603,-0.020557\n",
+            "32,0.65625,2.064049,4.919603,-0.020557,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n",
             encoding="utf-8",
         )
 
@@ -173,10 +179,12 @@ class TestCsvParserSchemaRouting:
         csv_path.write_text(
             "instrument,timeframe,direction,logic_type,"
             "target_r,total_trades,win_rate,profit_factor,sharpe,max_drawdown,"
-            "gain,fees,fee_pct_of_gain\n"
+            "gain,fees,fee_pct_of_gain,"
+            "first_trade_ts,last_trade_ts\n"
             "CL,1H,bear,liquidity-sweep,"
             "1.25,32,0.65625,2.136028,4.58565,-0.028805,"
-            "NaN,NaN,NaN\n",
+            "NaN,NaN,NaN,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n",
             encoding="utf-8",
         )
 
@@ -189,10 +197,12 @@ class TestCsvParserSchemaRouting:
         csv_path.write_text(
             "instrument,timeframe,direction,logic_type,"
             "total_trades,win_rate,profit_factor,sharpe,max_drawdown,"
-            "notes,experimental_flag\n"
+            "notes,experimental_flag,"
+            "first_trade_ts,last_trade_ts\n"
             "ES,1H,bear,baseline,"
             "88,0.38,1.12,0.88,-7.2,"
-            "some note,yes\n",
+            "some note,yes,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n",
             encoding="utf-8",
         )
 
@@ -207,9 +217,11 @@ class TestCsvParserSchemaRouting:
         csv_path = tmp_path / "es_bear_baseline_regression.csv"
         csv_path.write_text(
             "instrument,timeframe,direction,logic_type,"
-            "total_trades,win_rate,profit_factor,sharpe,max_drawdown\n"
+            "total_trades,win_rate,profit_factor,sharpe,max_drawdown,"
+            "first_trade_ts,last_trade_ts\n"
             "ES,1H,bear,baseline,"
-            "88,0.38,1.12,0.88,-7.2\n",
+            "88,0.38,1.12,0.88,-7.2,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n",
             encoding="utf-8",
         )
 

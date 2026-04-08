@@ -113,9 +113,11 @@ class TestCmdBundleErrors:
         """Dry-run with a parseable CSV should exit 0 without touching Neo4j."""
         csv_content = (
             "instrument,timeframe,direction,logic_type,"
-            "total_trades,win_rate,profit_factor,sharpe,max_drawdown\n"
+            "total_trades,win_rate,profit_factor,sharpe,max_drawdown,"
+            "first_trade_ts,last_trade_ts\n"
             "CL,1H,bear,liquidity-sweep,"
-            "32,0.65625,2.136028,4.58565,-0.028805\n"
+            "32,0.65625,2.136028,4.58565,-0.028805,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n"
         )
         (tmp_path / "results.csv").write_text(csv_content)
         manifest = {

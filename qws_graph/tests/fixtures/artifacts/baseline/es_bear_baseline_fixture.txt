@@ -1,3 +1,3 @@
-instrument,timeframe,direction,logic_type,allowed_sessions,target_r,wick_mode,atr_mult_stop,max_hold_bars,total_trades,win_rate,avg_r,total_r,profit_factor,sharpe,max_drawdown,timestamp
-ES,1H,bear,baseline,"NY_PRE,LONDON",1.0,none,0.5,36,88,0.3864,0.0450,3.96,1.12,0.88,-7.2,2026-04-01T10:00:00Z
-ES,1H,bear,baseline,NY_PRE,1.25,q3_q4_only,0.5,36,64,0.4375,0.0610,3.90,1.17,1.02,-6.4,2026-04-01T10:00:00Z
+instrument,timeframe,direction,logic_type,allowed_sessions,target_r,wick_mode,atr_mult_stop,max_hold_bars,total_trades,win_rate,avg_r,total_r,profit_factor,sharpe,max_drawdown,timestamp,first_trade_ts,last_trade_ts,backtest_start,backtest_end
+ES,1H,bear,baseline,"NY_PRE,LONDON",1.0,none,0.5,36,88,0.3864,0.0450,3.96,1.12,0.88,-7.2,2026-04-01T10:00:00Z,2024-01-02T10:00:00Z,2025-10-01T16:00:00Z,2024-01-02T00:00:00Z,2025-10-02T00:00:00Z
+ES,1H,bear,baseline,NY_PRE,1.25,q3_q4_only,0.5,36,64,0.4375,0.0610,3.90,1.17,1.02,-6.4,2026-04-01T10:00:00Z,2024-01-02T10:00:00Z,2025-10-01T16:00:00Z,2024-01-02T00:00:00Z,2025-10-02T00:00:00Z

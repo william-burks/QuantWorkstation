@@ -4,7 +4,7 @@
 QWS-0407
 
 ## Status
-READY
+CLOSED
 
 ## Summary
 Add `active_window_frequency`, `duty_cycle`, `first_trade_ts`, and `last_trade_ts` to
@@ -70,23 +70,23 @@ This means runner scripts (golden.py and sibling runners) must be updated as par
 - `research/trials/futures/liquidity_sweep/02_position_sizing.py` — new columns required
 
 ## Acceptance Criteria
-- [ ] `Run.active_window_frequency` is populated at ingest for any CSV that contains `first_trade_ts` and `last_trade_ts`.
-- [ ] `Run.duty_cycle` is populated at ingest when total backtest date range is derivable.
-- [ ] A CSV without `first_trade_ts` / `last_trade_ts` ingests without error; properties are null.
-- [ ] `active_window_frequency` matches manual calculation: `total_trades / active_days`.
-- [ ] `duty_cycle` matches manual calculation: `active_days / total_backtest_days`.
-- [ ] Unit tests cover: normal case, missing columns (null handling), zero-duration edge case.
-- [ ] `data_dictionary.yaml` documents all four properties with formulas and units.
+- [x] `Run.active_window_frequency` is populated at ingest for any CSV that contains `first_trade_ts` and `last_trade_ts`.
+- [x] `Run.duty_cycle` is populated at ingest when `backtest_start` and `backtest_end` are present; null otherwise.
+- [x] A CSV missing `first_trade_ts` or `last_trade_ts` fails parse with a clear error (required columns).
+- [x] `active_window_frequency` matches manual calculation: `total_trades / active_days`.
+- [x] `duty_cycle` matches manual calculation: `active_days / total_backtest_days`.
+- [x] Unit tests cover: normal case, missing required columns (parse error), zero-duration edge case (active_window_frequency is null).
+- [x] `data_dictionary.yaml` documents all four properties with formulas and units.
 
 ## Acceptance Criteria (additional)
-- [ ] `MIN_ACTIVE_WINDOW_FREQUENCY = 0.06` constant exists in `research/experiments/standards.py`.
-- [ ] `research/trials/futures/liquidity_sweep/golden.py` CSV output includes `first_trade_ts` and `last_trade_ts` columns.
+- [x] `MIN_ACTIVE_WINDOW_FREQUENCY = 0.06` constant exists in `research/experiments/standards.py`.
+- [x] `research/trials/futures/liquidity_sweep/golden.py` CSV output includes `first_trade_ts` and `last_trade_ts` columns.
 
 ## Definition of Done
-- [ ] Path B confirmed and documented — runner CSV output extended.
-- [ ] Properties computed and stored at ingest.
-- [ ] Null-safe handling verified.
-- [ ] Tests green.
-- [ ] `data_dictionary.yaml` updated.
-- [ ] `MIN_ACTIVE_WINDOW_FREQUENCY` constant added to `standards.py`.
-- [ ] Story marked CLOSED — unblocks QWS-0406 Phase B and QWS-0405.
+- [x] Path B confirmed and documented — runner CSV output extended.
+- [x] Properties computed and stored at ingest.
+- [x] Null-safe handling verified.
+- [x] Tests green.
+- [x] `data_dictionary.yaml` updated.
+- [x] `MIN_ACTIVE_WINDOW_FREQUENCY` constant added to `standards.py`.
+- [x] Story marked CLOSED — unblocks QWS-0406 Phase B and QWS-0405.

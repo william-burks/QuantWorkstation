@@ -367,6 +367,10 @@ def main() -> None:
         "n_trades": len(trades),
         "gain": float("nan"),
         "fees": float("nan"),
+        "first_trade_ts": pd.Timestamp(trades["entry_time"].min()).isoformat(),
+        "last_trade_ts": pd.Timestamp(trades["entry_time"].max()).isoformat(),
+        "backtest_start": pd.Timestamp(cl1h.index.min()).isoformat(),
+        "backtest_end": pd.Timestamp(cl1h.index.max()).isoformat(),
         **exposure,
     }
     results = pd.DataFrame([row])

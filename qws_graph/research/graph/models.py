@@ -63,6 +63,10 @@ class Run(BaseModel):
     calmar: float | None = None
     metrics_return: float | None = None  # CSV column "return" (reserved word)
     tier: str | None = None
+    first_trade_ts: datetime  # timestamp of first closed trade; required CSV column
+    last_trade_ts: datetime   # timestamp of last closed trade; required CSV column
+    active_window_frequency: float | None = None  # total_trades / active_days (trades/day); null on zero-duration edge case
+    duty_cycle: float | None = None  # active_days / total_backtest_days; null when backtest_start/end not provided
     artifact_path: str
     artifact_path_html: str | None = None  # filesystem path to HTML report; set via patch_run_html_path
     curator_note: str | None = None

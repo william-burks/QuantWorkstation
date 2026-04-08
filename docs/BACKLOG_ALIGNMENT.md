@@ -35,7 +35,7 @@
 | OOS Outcome Tracking | QWS-0402 | `oos_status` and `oos_date` on Champion node; `qw record --oos` CLI path; `list_oos_pending` (delivered by QWS-0406) | — |
 | Promotion Alerts | QWS-0405 | Notification when a Trial crosses the dual-hurdle promotion threshold | QWS-0407 |
 | Workflow Query Presets | QWS-0406 | **New:** `list_oos_pending`, `promotion_candidates` (Tier + Active-Window Frequency; Regime Diversity Score deferred to QWS-0502), `list_aborted` / **Deprecated:** `rank_by_evidence`, `trace_champion`, `fragility_report`, `staleness_report` / **Amended:** all Strategy traversals add `WHERE s.status <> 'ABORTED'` | QWS-0407 (for `active_window_frequency` filter in `promotion_candidates`) |
-| Significance Gate Properties | QWS-0407 | `active_window_frequency`, `duty_cycle`, `first_trade_ts`, `last_trade_ts` on Run node; dual-hurdle gate | — |
+| Significance Gate Properties | QWS-0407 (**CLOSED**) | `active_window_frequency`, `duty_cycle`, `first_trade_ts`, `last_trade_ts` on Run node; dual-hurdle gate | — |
 | ResearchTarget Config Node | QWS-0408 | `ResearchTarget` singleton node; `qw seed --targets`; `research_targets` query preset | — |
 
 ### Epic 5 — Context Enrichment
@@ -101,10 +101,6 @@ the linked story is marked COMPLETE above.
 ### Properties
 | Property | Node | Story |
 |---|---|---|
-| `active_window_frequency` | Run | QWS-0407 |
-| `duty_cycle` | Run | QWS-0407 |
-| `first_trade_ts` | Run | QWS-0407 |
-| `last_trade_ts` | Run | QWS-0407 |
 | `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
 | `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
 | `embedding` | Hypothesis | QWS-0604 |

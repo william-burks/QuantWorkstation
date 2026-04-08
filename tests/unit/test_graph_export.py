@@ -32,6 +32,8 @@ def _minimal_df(**overrides) -> pd.DataFrame:
         "profit_factor": 1.8,
         "max_drawdown": -0.12,
         "total_trades": 40,
+        "first_trade_ts": "2024-01-02T10:00:00Z",
+        "last_trade_ts": "2025-10-01T16:00:00Z",
     }
     row.update(overrides)
     return pd.DataFrame([row])
@@ -193,6 +195,8 @@ class TestWriteGridCsv:
                 "profit_factor": 1.5,
                 "max_drawdown": -0.10,
                 "total_trades": 30,
+                "first_trade_ts": "2024-01-02T10:00:00Z",
+                "last_trade_ts": "2025-10-01T16:00:00Z",
                 "params_json": {"label": "mode_a", "sizing_mode": "flat"},
             },
             {
@@ -202,6 +206,8 @@ class TestWriteGridCsv:
                 "profit_factor": 2.0,
                 "max_drawdown": -0.07,
                 "total_trades": 30,
+                "first_trade_ts": "2024-01-02T10:00:00Z",
+                "last_trade_ts": "2025-10-01T16:00:00Z",
                 "params_json": {"label": "mode_b", "sizing_mode": "rdist"},
             },
         ])

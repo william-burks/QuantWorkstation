@@ -139,6 +139,11 @@ def main() -> None:
         grid_df["profit_factor"] = _profit_factor
         grid_df["max_drawdown"] = grid_df["max_drawdown"].astype(float)
         grid_df["sharpe"] = grid_df["sharpe"].astype(float)
+        if not trades.empty:
+            grid_df["first_trade_ts"] = pd.Timestamp(trades["entry_time"].min()).isoformat()
+            grid_df["last_trade_ts"] = pd.Timestamp(trades["entry_time"].max()).isoformat()
+            grid_df["backtest_start"] = cl1h.index.min().isoformat()
+            grid_df["backtest_end"] = cl1h.index.max().isoformat()
         grid_df["params_json"] = grid_df["label"].astype(str).map(
             lambda lbl: json.dumps(mode_lookup.get(lbl, {"label": lbl}), sort_keys=True)
         )

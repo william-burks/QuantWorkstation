@@ -97,9 +97,9 @@ Unplanned / patch stories (CLOSED):
 
 Stories (execution order):
 1. `QWS-0402` [`story_1_oos_outcome_tracking.md`](epic_4_graph_primary_workflow/closed/story_1_oos_outcome_tracking.md) — `CLOSED`
-2. `QWS-0407` [`story_4_significance_gate_properties.md`](epic_4_graph_primary_workflow/story_4_significance_gate_properties.md) — `READY` _(promoted from candidate; unblocks QWS-0405 + QWS-0406 Phase B)_
-3. `QWS-0406` [`story_3_workflow_query_presets.md`](epic_4_graph_primary_workflow/story_3_workflow_query_presets.md) — `BLOCKED` _(Phase A unblocked; Phase B blocked on QWS-0407)_
-4. `QWS-0405` [`story_2_promotion_alerts.md`](epic_4_graph_primary_workflow/story_2_promotion_alerts.md) — `BLOCKED` _(blocked on QWS-0407)_
+2. `QWS-0407` [`story_4_significance_gate_properties.md`](epic_4_graph_primary_workflow/closed/story_4_significance_gate_properties.md) — `CLOSED`
+3. `QWS-0406` [`story_3_workflow_query_presets.md`](epic_4_graph_primary_workflow/story_3_workflow_query_presets.md) — `READY`
+4. `QWS-0405` [`story_2_promotion_alerts.md`](epic_4_graph_primary_workflow/story_2_promotion_alerts.md) — `READY` _(unblocked by QWS-0407 CLOSED)
 5. `QWS-0408` [`story_5_research_target_node.md`](epic_4_graph_primary_workflow/story_5_research_target_node.md) — `READY` _(promoted from candidate; no dependencies)_
 
 Cancelled (preserved in `cancelled_stories/`):

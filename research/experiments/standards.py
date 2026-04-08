@@ -37,3 +37,8 @@ MIN_TRADES_PER_YEAR: int = 12       # Below this trade count = unreliable
 
 # --- Tier ordering (best → worst) ---
 TIERS: list[str] = ["institutional", "professional", "pass", "fail"]
+
+# --- Significance gate: minimum active-window trade frequency ---
+# A run with active_window_frequency below this threshold does not qualify
+# for the promotion_candidates preset, regardless of Sharpe or trade count.
+MIN_ACTIVE_WINDOW_FREQUENCY: float = 0.06  # trades/day over the active window
