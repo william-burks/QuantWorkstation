@@ -4,16 +4,7 @@
 
 set -e
 
-_QWS_ROOT="$(git -C "${0:A:h}" rev-parse --show-toplevel 2>/dev/null || echo "${0:A:h:h:h}")"
-_QWS_ENV_FILE="$_QWS_ROOT/qws_graph/.env"
-if [[ -f "$_QWS_ENV_FILE" ]]; then
-  set -o allexport
-  source "$_QWS_ENV_FILE"
-  set +o allexport
-fi
-unset _QWS_ENV_FILE
-cd "$_QWS_ROOT"
-unset _QWS_ROOT
+source "${0:A:h}/_qws_env.sh"
 
 CSV_DIR=research/results/crypto/mars/runs/$(date +%Y%m%d-%H%M%S)
 mkdir -p "$CSV_DIR"

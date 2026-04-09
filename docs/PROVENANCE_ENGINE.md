@@ -149,6 +149,23 @@ name — `BRANCHED_FROM` — to avoid ambiguity. The Hypothesis points BACK to w
 | `artifact_path` | str | Repo-relative POSIX path to source CSV |
 | `peaked_as_best` | bool | Permanent flag: was ever Strategy.best_run_id |
 
+### RunStatsSummary — key query properties
+
+One node per script execution (per unique artifact path) for grid CSV ingests. Links to the
+owning `Strategy` via `HAS_RUN_SUMMARY`.
+
+| Property | Type | Description |
+|---|---|---|
+| `summary_id` | str | `hash12(strategy_id, artifact_path, artifact_mtime_iso)` |
+| `trial_number` | int | Monotonically increasing execution counter scoped to the Strategy. Incremented once per script execution. Frozen at first write — idempotent on re-ingest. Use to track research progression: "trial 3 was the golden run; trial 7 the next refinement." |
+| `total_run_count` | int | Total rows in the source CSV |
+| `selected_run_count` | int | Rows that passed the significance gate and became `Run` nodes |
+| `rolled_up_run_count` | int | Rows summarized (not promoted to `Run`) |
+| `sharpe_mean` | float | Mean Sharpe across all rows |
+| `sharpe_max` | float | Best Sharpe in the batch |
+| `sharpe_min` | float | Worst Sharpe in the batch |
+| `ingested_at` | datetime | Timestamp of `qw record` execution |
+
 ### [TARGET] Trial — Properties to Be Added
 
 These properties do not exist in the current schema. Do not query them until the implementing

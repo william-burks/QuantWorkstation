@@ -121,7 +121,9 @@ RUN_STATS_SUMMARY_QUERY = """
 MERGE (s:Strategy {strategy_id: $summary.strategy_id})
   SET s.updated_at = datetime()
 MERGE (rss:RunStatsSummary {summary_id: $summary.summary_id})
-  ON CREATE SET rss.created_at = datetime()
+  ON CREATE SET
+    rss.created_at = datetime(),
+    rss.trial_number = $summary.trial_number
   SET
     rss.strategy_id = $summary.strategy_id,
     rss.artifact_path = $summary.artifact_path,

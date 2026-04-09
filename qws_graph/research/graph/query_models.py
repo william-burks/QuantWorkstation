@@ -138,6 +138,7 @@ class RunStatsSummaryV1(QueryModelV1):
     sharpe_min: float
     max_drawdown_worst: float
     ingested_at: str
+    trial_number: int
 
 
 __all__ = [

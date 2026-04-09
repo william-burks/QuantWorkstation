@@ -5,41 +5,12 @@
 
 set -e
 
-_QWS_ROOT="$(git -C "${0:A:h}" rev-parse --show-toplevel 2>/dev/null || echo "${0:A:h:h:h}")"
-_QWS_ENV_FILE="$_QWS_ROOT/qws_graph/.env"
-if [[ -f "$_QWS_ENV_FILE" ]]; then
-  set -o allexport
-  source "$_QWS_ENV_FILE"
-  set +o allexport
-fi
-unset _QWS_ENV_FILE
-cd "$_QWS_ROOT"
-export PYTHONPATH="${_QWS_ROOT}${PYTHONPATH:+:$PYTHONPATH}"
-unset _QWS_ROOT
+source "${0:A:h}/_qws_env.sh"
+
+export PYTHONPATH="${PWD}${PYTHONPATH:+:$PYTHONPATH}"
 
 # Create results dir if needed
 mkdir -p results
-
-record_artifact() {
-    local artifact_file="$1"
-    local artifact_kind="$2"
-
-    # Python CSV writes may still be buffered when the process exits; give the
-    # filesystem a moment to sync before checking for the artifact.
-    sleep 1
-
-    if [[ ! -f "$artifact_file" ]]; then
-        echo "WARNING: expected artifact not found for graph hook: $artifact_file" >&2
-        return
-    fi
-
-    if [[ "${QW_GRAPH_ENABLED:-true}" == "false" ]]; then
-        qw record --file "$artifact_file" --kind "$artifact_kind" --offline || true
-        return
-    fi
-
-    qw record --file "$artifact_file" --kind "$artifact_kind" || true
-}
 
 # Logging function
 log_test() {

@@ -807,7 +807,13 @@ class GraphStore:
         def _write(tx) -> None:
             tx.run(CSV_INGEST_QUERY, rows=rows).consume()
             if summary is not None:
-                summary_payload = summary.model_dump(mode="json")
+                result = tx.run(
+                    "MATCH (:Strategy {strategy_id: $sid})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary) "
+                    "RETURN coalesce(max(rss.trial_number), 0) AS max_trial",
+                    sid=summary.strategy_id,
+                ).single()
+                next_trial = (result["max_trial"] if result else 0) + 1
+                summary_payload = {**summary.model_dump(mode="json"), "trial_number": next_trial}
                 tx.run(RUN_STATS_SUMMARY_QUERY, summary=summary_payload).consume()
 
         session.execute_write(_write)

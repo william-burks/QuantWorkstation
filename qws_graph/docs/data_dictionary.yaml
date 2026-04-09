@@ -669,6 +669,15 @@ nodes:
       ingested_at:
         type: datetime
         nullable: false
+      trial_number:
+        type: int
+        nullable: false
+        description: >
+          Monotonically increasing execution counter scoped to the Strategy.
+          Incremented once per script execution (i.e. per RunStatsSummary node).
+          Frozen at first write (ON CREATE SET) — idempotent on re-ingest.
+          Lets you track research progression: "trial 3 was the golden run that
+          beat threshold; trial 7 was the next refinement attempt."
 
   ResearchTarget:
     description: >

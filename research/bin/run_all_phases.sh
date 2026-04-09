@@ -7,13 +7,13 @@ echo "=== PHASE 1-3: ES/NQ Bear Sweep Isolation ==="
 ./research/bin/run_es_phase2.sh all
 
 echo "=== PHASE 4: Liquidity Sweep Baseline ==="
-./research/bin/run_liquidity_sweep_baseline.sh
+./research/bin/run_liquidity_sweep.sh research/trials/futures/liquidity_sweep/baseline.py
 
 echo "=== PHASE 5: Liquidity Sweep Position Sizing ==="
-./research/bin/run_liquidity_sweep_position_sizing.sh
+./research/bin/run_liquidity_sweep.sh research/trials/futures/liquidity_sweep/02_position_sizing.py
 
 echo "=== PHASE 6: Liquidity Sweep Golden ==="
-./research/bin/run_liquidity_sweep_golden.sh
+./research/bin/run_liquidity_sweep.sh research/trials/futures/liquidity_sweep/golden.py
 
 echo "=== PHASE 7: BTC Mars Golden ==="
 ./research/bin/run_btc_mars_golden.sh
