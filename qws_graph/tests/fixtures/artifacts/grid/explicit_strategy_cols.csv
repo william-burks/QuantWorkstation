@@ -1,0 +1,4 @@
+instrument,timeframe,direction,logic_type,target_r,max_hold_bars,wick_mode,atr_mult_stop,total_trades,win_rate,profit_factor,sharpe,max_drawdown,first_trade_ts,last_trade_ts
+ES,1H,bear,liquidity-sweep,1.25,24,exclude_q2,0.5,99,0.37,1.16,1.37,-8.69,2024-01-02T10:00:00Z,2025-10-01T16:00:00Z
+ES,1H,bear,liquidity-sweep,1.50,24,exclude_q2,0.5,96,0.33,1.12,1.14,-8.29,2024-01-02T10:00:00Z,2025-10-01T16:00:00Z
+ES,1H,bear,liquidity-sweep,1.75,24,exclude_q2,0.3,56,0.36,1.11,0.96,-8.51,2024-01-02T10:00:00Z,2025-10-01T16:00:00Z

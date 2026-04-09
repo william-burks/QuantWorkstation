@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 4 — Workflow Utility (QWS-0402, QWS-0405, QWS-0406)
+> Current sprint: Epic 5 — Context Enrichment (QWS-0501, QWS-0502)
 > ```
 
 ---
@@ -19,8 +19,8 @@
 | Epic 1 — Ingestion & Index | **COMPLETE** | Neo4j ingestion pipeline, CLI, shell hooks |
 | Epic 2 — MCP Read Integration | **COMPLETE** | Query presets, MCP tools, semantic gate |
 | Epic 3 — Research Pipeline Integrity | **COMPLETE** | Schema consistency, Trial bundle, UAT runbook |
-| Epic 4 — Workflow Utility | **PLANNED ← current** | OOS tracking, promotion alerts, query interface |
-| Epic 5 — Context Enrichment | **PLANNED** | family_id, Regime tagging, cross-instrument aggregation |
+| Epic 4 — Workflow Utility | **COMPLETE** | OOS tracking, promotion alerts, query interface |
+| Epic 5 — Context Enrichment | **PLANNED ← current** | family_id, Regime tagging, cross-instrument aggregation |
 | Epic 6 — Research Analytics | **PLANNED** | Hypothesis journaling, parameter stability, portfolio correlation |
 | Epic 7 — Developer Experience | **PLANNED** | PyPI packaging, CI integrity gate |
 
@@ -33,7 +33,7 @@
 | Story | ID                     | Capabilities Unlocked | Blocked On |
 |---|------------------------|---|---|
 | OOS Outcome Tracking | QWS-0402 (**CLOSED**)  | `oos_status` and `oos_date` on Champion node; `qw record --oos` CLI path; `list_oos_pending` (delivered by QWS-0406) | — |
-| Promotion Alerts | QWS-0405 (**TESTING**) | Notification when a Trial crosses the dual-hurdle promotion threshold | — |
+| Promotion Alerts | QWS-0405 (**CLOSED**) | Notification when a Trial crosses the dual-hurdle promotion threshold | — |
 | Workflow Query Presets | QWS-0406 (**CLOSED**)  | **New:** `list_oos_pending`, `promotion_candidates` (Tier + Active-Window Frequency; Regime Diversity Score deferred to QWS-0502), `list_aborted` / **Deprecated:** `rank_by_evidence`, `trace_champion` / **Retained:** `fragility_report`, `staleness_report` (deferred) / **Amended:** all Strategy traversals add `WHERE s.status <> 'ABORTED'` | — |
 | Significance Gate Properties | QWS-0407 (**CLOSED**)  | `active_window_frequency`, `duty_cycle`, `first_trade_ts`, `last_trade_ts` on Run node; dual-hurdle gate | — |
 | ResearchTarget Config Node | QWS-0408 (**CLOSED**)  | `ResearchTarget` singleton node; `qw seed --targets`; `research_targets` query preset | — |
@@ -84,7 +84,6 @@ the linked story is marked COMPLETE above.
 | `Hypothesis` | QWS-0601 |
 | `FormerChampion` | QWS-0801 |
 | `Regime` | QWS-0502 |
-| `ResearchTarget` | QWS-0408 |
 
 ### Relationships
 | Relationship | Story |
@@ -109,16 +108,12 @@ the linked story is marked COMPLETE above.
 ### MCP Tools
 | Tool | Story |
 |---|---|
-| `list_oos_pending` | QWS-0406 |
-| `promotion_candidates` | QWS-0406 |
-| `list_aborted` | QWS-0406 |
 | `regime_performance` | QWS-0503 |
 | `former_champions` | QWS-0801 |
 | `hypothesis_audit` | QWS-0601 |
 | `check_redundancy` | QWS-0601 |
 | `log_hypothesis` | QWS-0601 |
 | `monitor_champion` | QWS-0803 |
-| `research_targets` | QWS-0408 |
 | `similar_hypotheses` | QWS-0604 |
 
 ---
