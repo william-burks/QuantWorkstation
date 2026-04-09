@@ -60,6 +60,7 @@ class E2ECase:
     expect_strategy_aborted: bool = False  # strategy_id has status=ABORTED
     expect_research_target: bool = False   # ResearchTarget singleton node exists in graph
     expect_query_nonempty: bool = False    # stdout does not contain "No results"
+    expect_trial_number: int = 0           # max trial_number on RunStatsSummary for strategy_id (0 = skip)
 
 
 CASES: list[E2ECase] = [
@@ -232,6 +233,7 @@ CASES: list[E2ECase] = [
         strategy_id="es-1h-bear-sweep",
         expect_promotion=False,
         expect_run_count=3,
+        expect_trial_number=1,
     ),
     E2ECase(
         # runner queries a real run_id for es-1h-bear-sweep and passes --pivot-from at ingest
@@ -260,6 +262,20 @@ CASES: list[E2ECase] = [
         strategy_id="es-1h-bear-sweep",
         expect_promotion=False,
         expect_blob=True,
+    ),
+
+    # -----------------------------------------------------------------------
+    # trial_number — monotonic per-strategy execution counter on RunStatsSummary
+    # -----------------------------------------------------------------------
+    E2ECase(
+        # Second grid ingest for es-1h-bear-sweep. The first was the champion pivot
+        # setup above (trial 1). This execution must get trial_number=2.
+        name="es-1h-bear-sweep grid v2 → trial_number increments to 2",
+        kind="grid_csv",
+        fixture=FIXTURES / "grid" / "es_bear_sweep_1h_grid_v2_fixture.csv",
+        strategy_id="es-1h-bear-sweep",
+        expect_promotion=False,
+        expect_trial_number=2,
     ),
 ]
 
@@ -405,6 +421,17 @@ def _research_target_exists(driver) -> bool:
         return bool(result and result["c"] > 0)
 
 
+def _max_trial_number(driver, strategy_id: str) -> int | None:
+    """Return the highest trial_number on any RunStatsSummary for this strategy."""
+    with driver.session(database="neo4j") as s:
+        result = s.run(
+            "OPTIONAL MATCH (:Strategy {strategy_id: $sid})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary) "
+            "RETURN max(rss.trial_number) AS max_trial",
+            sid=strategy_id,
+        ).single()
+        return result["max_trial"] if result else None
+
+
 def _delete_nodes_by_element_ids(driver, eids: set[str]) -> int:
     if not eids:
         return 0
@@ -526,6 +553,14 @@ def _check(result: CaseResult, driver) -> None:
     if case.expect_research_target:
         if not _research_target_exists(driver):
             result.failures.append("expected ResearchTarget node in graph — not found")
+
+    # trial_number on RunStatsSummary
+    if case.expect_trial_number > 0:
+        actual = _max_trial_number(driver, case.strategy_id)
+        if actual != case.expect_trial_number:
+            result.failures.append(
+                f"expected max trial_number={case.expect_trial_number} for {case.strategy_id}, got {actual!r}"
+            )
 
 
 # ---------------------------------------------------------------------------

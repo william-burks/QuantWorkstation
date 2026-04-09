@@ -394,9 +394,10 @@ RETURN {
   sharpe_max: rss.sharpe_max,
   sharpe_min: rss.sharpe_min,
   max_drawdown_worst: rss.max_drawdown_worst,
-  ingested_at: rss.ingested_at
+  ingested_at: rss.ingested_at,
+  trial_number: rss.trial_number
 } AS result
-ORDER BY rss.ingested_at DESC
+ORDER BY rss.trial_number ASC
 """.strip()
 
 
@@ -814,6 +815,7 @@ def get_run_stats_summary_v1(session: QuerySession, strategy_id: str) -> list[di
             sharpe_min=float(row["sharpe_min"]),
             max_drawdown_worst=float(row["max_drawdown_worst"]),
             ingested_at=str(_normalize_temporal(row["ingested_at"])),
+            trial_number=int(row["trial_number"]) if row.get("trial_number") is not None else 0,
         ).model_dump(mode="json")
         for row in rows
     ]
