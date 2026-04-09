@@ -78,6 +78,33 @@ To override a threshold:
 qw seed --targets --set sharpe_professional=2.5
 ```
 
+### Seed demo graph
+Populates a deterministic set of dummy nodes covering all query preset scenarios.
+Idempotent — safe to re-run. All nodes carry `is_demo=true`.
+
+```zsh
+qw seed --demo
+```
+
+Expected: `OK: demo graph seeded`
+
+Covers: `cross_artifact_correlation`, `runs_by_regime`, `regime_performance`,
+`compare_strategy_performance`, `downstream_champions`, `portfolio_alpha`,
+`list_oos_pending`, `promotion_candidates`, `list_aborted`, `run_history`,
+`instrument_concentration`, `recent_champions`.
+
+Demo nodes created:
+- `demo-strategy-alpha` (ES, bear) + `demo-strategy-beta` (CL, bear) — shared `family_id`
+- `demo-strategy-gamma` (NQ, bull) — ABORTED with `abort_reason`
+- `demo_run_001..004` — runs with regime labels and `active_window_frequency`
+- `demo_champ_001` (oos_pending) + `demo_champ_002` (oos_pass) + `demo_retired_champ_001`
+- `demo_run_004` — promotion candidate (dual-hurdle pass, not yet promoted)
+
+Teardown:
+```zsh
+qw seed --demo --teardown
+```
+
 ### Online ingestion path
 Use this when Neo4j is up and reachable.
 

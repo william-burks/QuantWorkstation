@@ -4,7 +4,7 @@
 QWS-0504
 
 ## Status
-draft
+READY
 
 ## Priority
 P3 — Feature Enhancement. The current depth=1 bound is safe and correct for V1. This is a
@@ -75,27 +75,30 @@ OPTIONAL MATCH chain = (ch)-[:PIVOTED_FROM*1..$depth]->(r:Run)
 
 ### CLI Surface
 ```zsh
-# Default (depth=1, unchanged)
+# Default (depth=1, Champions only — unchanged behaviour)
 qw query --name downstream_champions --param run_id=abc123
 
-# Recursive (depth=5)
+# Multi-hop, Champions only
 qw query --name downstream_champions --param run_id=abc123 --param depth=5
 
-# Full ancestry (depth=10, max)
-qw query --name downstream_champions --param run_id=abc123 --param depth=10
-```
+# Multi-hop, include RetiredChampion nodes
+qw query --name downstream_champions --param run_id=abc123 --param depth=5 --param include_retired=true
 
-The `--param recursive=true` shorthand described in earlier notes is not preferred; an explicit
-`depth=N` is more precise and avoids boolean flag ambiguity. If `recursive=true` is needed as
-an alias, it maps to `depth=10` (the hard maximum).
+# Strategy lineage with depth
+qw query --name strategy_lineage --param strategy_id=cl-1h-bear-liquidity-sweep --param depth=3
+```
 
 ## In Scope
 - `depth` parameter on `get_downstream_champions_v1(session, run_id, depth=1)`.
-- Variable-length Cypher path `[:PIVOTED_FROM*1..$depth]`.
-- `depth` param added to `downstream_champions` preset in `PRESET_CATALOG`.
-- Validation: `depth` must be an integer in `1..10`; error returned otherwise.
-- Optional: `depth` param on `get_strategy_lineage_v1` (evaluate during implementation).
-- Tests covering `depth=1` (unchanged), `depth=3` (multi-hop), `depth=11` (rejected).
+- `include_retired` parameter on `get_downstream_champions_v1(session, run_id, depth=1, include_retired=False)`.
+  When `True`, `:RetiredChampion` nodes are included in results with a `node_type` field
+  (`"champion"` or `"retired_champion"`). When `False` (default), only `:Champion` nodes returned.
+- Variable-length Cypher path `[:PIVOTED_FROM*1..$depth]` on both functions.
+- `depth` and `include_retired` params added to `downstream_champions` preset in `PRESET_CATALOG`.
+- `depth` parameter on `get_strategy_lineage_v1(session, strategy_id, depth=1)`.
+- Validation: `depth` must be an integer in `1..10`; error returned otherwise. Same rule applies to both functions.
+- Tests covering `depth=1` (unchanged), `depth=3` (multi-hop), `depth=11` (rejected),
+  `include_retired=True` (RetiredChampion nodes present + `node_type` field), `include_retired=False` (Champions only).
 
 ## Out of Scope
 - Recursive traversal on `HAS_RUN` or `USES_CONFIG` edges.
@@ -104,10 +107,10 @@ an alias, it maps to `depth=10` (the hard maximum).
 - Changes to `get_recent_champions_v1` or `get_cross_artifact_correlation_v1`.
 
 ## Repo Touchpoints
-- `research/graph/query.py` — `GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER`, `get_downstream_champions_v1`
-- `research/graph/query_presets.py` — `downstream_champions` preset params
-- `research/graph/cli.py` — no change needed (depth comes through `--param depth=N`)
-- `tests/unit/test_lineage_queries.py` — extend existing tests
+- `qws_graph/research/graph/query.py` — `GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER`, `get_downstream_champions_v1`, `get_strategy_lineage_v1`
+- `qws_graph/research/graph/query_presets.py` — `downstream_champions` preset params (`depth`, `include_retired`)
+- `qws_graph/research/graph/cli.py` — no change needed (params come through `--param`)
+- `qws_graph/tests/unit/test_lineage_queries.py` — extend existing tests
 
 ## Implementation Notes
 - Keep `depth` as a Python `int` parameter, not a string. The preset layer receives
@@ -127,8 +130,14 @@ an alias, it maps to `depth=10` (the hard maximum).
   champions reachable within 3 `PIVOTED_FROM` hops.
 - [ ] `depth=11` returns a deterministic `INVALID_PARAMS` error; no graph query executed.
 - [ ] Default `depth=1` is preserved when the parameter is omitted.
+- [ ] `include_retired=false` (default) returns only `:Champion` nodes; no `node_type` field required.
+- [ ] `include_retired=true` returns `:Champion` and `:RetiredChampion` nodes; every row
+  includes a `node_type` field (`"champion"` or `"retired_champion"`).
+- [ ] `get_strategy_lineage_v1` accepts `depth` param (default 1, max 10); same validation as `downstream_champions`.
+- [ ] `qw query --name strategy_lineage --param strategy_id=<id> --param depth=3` traverses
+  multi-generation champion ancestry for the strategy.
 - [ ] Cypher uses variable-length path `[:PIVOTED_FROM*1..$depth]`; no unbounded `[*]`.
-- [ ] Docstring documents the depth bound and the hard cap.
+- [ ] Docstrings document depth bound, hard cap, and `include_retired` semantics.
 
 ## Validation
 - Unit tests with `FakeSession` responses for `depth=1`, `depth=3`, `depth=10`.
@@ -146,12 +155,13 @@ an alias, it maps to `depth=10` (the hard maximum).
   — this must ship first to ensure the base query is bounded before depth expansion.
 - Enables: Full multi-generation champion ancestry tracing for research SOP.
 
-## Open Questions
-- Should `get_strategy_lineage_v1` also gain a `depth` parameter in this story, or is it
-  a separate follow-on? (Scope decision for implementation planning.)
-- Is `depth=10` the right hard cap, or should it be configurable via env var?
-- Should the recursive results include intermediate `Run` nodes in the path, or only the
-  terminal `Champion` nodes at each generation?
+## Design Decisions (resolved)
+
+| Question | Decision |
+|---|---|
+| Does `get_strategy_lineage_v1` gain `depth` in this story? | Yes — included in scope. Complexity is low: same variable-length pattern applied to the lineage traversal. |
+| Hard cap value | `depth=10`. Not configurable via env var — hard-coded in validation. |
+| Intermediate nodes in results | Add optional `include_retired` param (default `false`). When `false`: only `:Champion` nodes returned (backward compatible). When `true`: `:Champion` and `:RetiredChampion` nodes both returned, each row includes `node_type` field (`"champion"` or `"retired_champion"`). |
 
 ## Notes
 The existing `test_lineage_queries.py::TestTraversalDepthBounded` tests assert that no

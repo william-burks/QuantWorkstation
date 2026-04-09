@@ -491,15 +491,45 @@ def _cmd_oos_update(args: argparse.Namespace) -> int:
 
 
 def cmd_seed(args: argparse.Namespace) -> int:
-    """Execute `qw seed --targets` command.
+    """Execute `qw seed` command.
 
-    Creates or updates the singleton ResearchTarget node in the graph.
+    Supports two modes:
+      --targets           Create/update the singleton ResearchTarget node.
+      --demo [--teardown] Seed or remove deterministic demo provenance graph.
 
     Exit codes:
-        0: node seeded successfully
-        1: validation error (unknown key)
+        0: seeded/removed successfully
+        1: validation error or unrecognised mode
         2: infrastructure failure (Neo4j unavailable)
     """
+    is_demo: bool = getattr(args, "demo", False)
+    is_teardown: bool = getattr(args, "teardown", False)
+
+    if is_demo:
+        timeout_seconds = getattr(args, "timeout_seconds", 3)
+        connector = NeoConnector(timeout_seconds=timeout_seconds)
+        if not connector.is_available():
+            print(
+                f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)",
+                file=sys.stderr,
+            )
+            return 2
+        try:
+            store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+            try:
+                if is_teardown:
+                    store.teardown_demo_graph()
+                    print("OK: demo graph torn down", file=sys.stdout)
+                else:
+                    store.seed_demo_graph()
+                    print("OK: demo graph seeded", file=sys.stdout)
+            finally:
+                store.close()
+        except StoreInfraError as exc:
+            print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
+            return 2
+        return 0
+
     if not args.targets:
         print("ERROR: --targets is required", file=sys.stderr)
         return 1
@@ -1025,6 +1055,20 @@ def main() -> int:
         "--targets",
         action="store_true",
         help="Seed or update the ResearchTarget singleton node with promotion thresholds",
+    )
+    seed_parser.add_argument(
+        "--demo",
+        action="store_true",
+        help=(
+            "Seed a deterministic demo provenance graph (idempotent). "
+            "Creates demo-strategy-alpha/beta/gamma, demo runs, champions, and a retired champion. "
+            "All nodes carry is_demo=true. Use --teardown to remove."
+        ),
+    )
+    seed_parser.add_argument(
+        "--teardown",
+        action="store_true",
+        help="Remove all demo nodes (requires --demo). Deletes nodes where is_demo=true.",
     )
     seed_parser.add_argument(
         "--set",

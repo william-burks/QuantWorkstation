@@ -4,7 +4,7 @@
 QWS-0502
 
 ## Status
-draft
+READY
 
 ## Summary
 Add an optional `--regime` flag to `qw record` that stores a regime label as a string
