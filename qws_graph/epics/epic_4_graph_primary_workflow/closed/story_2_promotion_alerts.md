@@ -4,7 +4,7 @@
 QWS-0405
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 QWS-0407 — requires `active_window_frequency` property on Run nodes (populated at ingest time)
@@ -98,4 +98,4 @@ qualify. Never blocks the ingest (exceptions in the check are caught and suppres
 ## Definition of Done
 - [x] Evaluation logic implemented and unit tested.
 - [x] Post-ingest hook live in `cli.py`.
-- [ ] Story marked CLOSED.
+- [x] Story marked CLOSED.

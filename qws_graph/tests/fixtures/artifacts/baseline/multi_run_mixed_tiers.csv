@@ -1,0 +1,5 @@
+target_r,max_hold_bars,wick_mode,chain_mode,total_trades,win_rate,profit_factor,sharpe,max_drawdown,first_trade_ts,last_trade_ts,instrument,timeframe,direction,logic_type
+1.25,24,exclude_q2,no_smt_in_chain,45,0.60,3.10,2.60,-0.06,2024-01-01T00:00:00Z,2025-06-01T00:00:00Z,CL,1H,bear,liquidity-sweep
+1.50,24,exclude_q2,no_smt_in_chain,38,0.55,2.30,2.20,-0.09,2024-01-01T00:00:00Z,2025-06-01T00:00:00Z,CL,1H,bear,liquidity-sweep
+1.75,24,exclude_q2,no_smt_in_chain,32,0.31,1.30,0.80,-0.15,2024-01-01T00:00:00Z,2025-06-01T00:00:00Z,CL,1H,bear,liquidity-sweep
+2.00,24,exclude_q2,no_smt_in_chain,40,0.58,2.80,2.50,-0.07,2024-06-01T00:00:00Z,2024-06-01T00:00:00Z,CL,1H,bear,liquidity-sweep

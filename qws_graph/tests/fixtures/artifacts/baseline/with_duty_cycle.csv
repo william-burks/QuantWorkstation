@@ -1,0 +1,2 @@
+target_r,max_hold_bars,wick_mode,total_trades,win_rate,profit_factor,sharpe,max_drawdown,first_trade_ts,last_trade_ts,backtest_start,backtest_end,instrument,timeframe,direction,logic_type
+1.25,36,none,60,0.50,1.50,1.80,-0.08,2024-01-01T00:00:00Z,2024-07-01T00:00:00Z,2024-01-01T00:00:00Z,2024-12-31T00:00:00Z,ES,1H,bear,baseline
