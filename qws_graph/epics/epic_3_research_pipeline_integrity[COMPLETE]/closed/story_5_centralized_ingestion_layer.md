@@ -4,7 +4,7 @@
 # QWS-0305
 
 ## Status
-COMPLETE
+CLOSED
 
 ## Priority
 P2 — Maintainability. Every trial script independently constructs the graph-ingestable CSV by

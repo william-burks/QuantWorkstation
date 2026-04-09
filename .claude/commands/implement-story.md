@@ -1,5 +1,7 @@
 Implement the QuantWorkstation story identified by: $ARGUMENTS
 
+Invoke skill: caveman
+
 ## Step 1 — Locate and read the story
 Search `qws_graph/epics/` for a story file containing the ID `$ARGUMENTS`.
 Read the full story file. If Status is not `draft` or `ready`, stop and report why.

@@ -1,5 +1,7 @@
 Close the QuantWorkstation story identified by: $ARGUMENTS
 
+Invoke skill: caveman
+
 ## Step 1 — Locate and verify status
 Find the story file in `qws_graph/epics/` containing ID `$ARGUMENTS`.
 Read the full story file.

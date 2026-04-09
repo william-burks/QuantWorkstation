@@ -1,5 +1,7 @@
 You are beginning a research session for QuantWorkstation.
 
+Invoke skill: caveman
+
 Before doing anything else, read these four documents in order:
 1. `docs/MANIFESTO.md` — mission, quantitative targets, philosophy
 2. `docs/PROVENANCE_ENGINE.md` — graph schema, MCP tools, what's built vs. target
