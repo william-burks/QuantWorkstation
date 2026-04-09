@@ -15,11 +15,70 @@ from typing import Any, Literal
 
 from . import ids as _ids
 from .curator import apply_significance_gate
-from .models import ResearchArtifact
+from .models import ResearchArtifact, Run
 from .parsers import CSVParser, ChampionMarkdownParser, research_artifact_payload_hash
 from .query import GraphQueryService
 from .query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params
 from .store import RESEARCH_TARGET_ALLOWED_KEYS, GraphStore, StoreError, StoreInfraError
+
+# Promotion alert thresholds — imported read-only from standards.py
+# fmt: off
+try:
+    from research.experiments.standards import (
+        SHARPE as _SHARPE,
+        PROFIT_FACTOR as _PROFIT_FACTOR,
+        MIN_ACTIVE_WINDOW_FREQUENCY as _MIN_AWF,
+    )
+except ImportError:  # standards.py not on path in some test environments
+    _SHARPE: dict[str, float] = {"professional": 1.5, "institutional": 2.5}
+    _PROFIT_FACTOR: dict[str, float] = {"professional": 1.75, "institutional": 3.0}
+    _MIN_AWF: float = 0.06
+# fmt: on
+
+_PROMOTION_MIN_TRADES: int = 30
+
+
+def _evaluate_promotion_candidates(
+    runs: list[Run],
+    persisted_run_ids: set[str],
+) -> list[str]:
+    """Return formatted alert strings for baseline_csv runs that clear the professional tier.
+
+    Evaluates only persisted runs (not skipped). Runs with null active_window_frequency
+    are silently excluded. Exceptions are not raised — callers should catch them.
+    """
+    alerts: list[str] = []
+    for run in runs:
+        if run.run_id not in persisted_run_ids:
+            continue
+        awf = run.active_window_frequency
+        if awf is None:
+            continue
+        if run.sharpe < _SHARPE["professional"]:
+            continue
+        if run.profit_factor < _PROFIT_FACTOR["professional"]:
+            continue
+        if run.total_trades < _PROMOTION_MIN_TRADES:
+            continue
+        if awf < _MIN_AWF:
+            continue
+
+        # Determine tier from the minimum of sharpe / profit_factor tiers
+        if (
+            run.sharpe >= _SHARPE["institutional"]
+            and run.profit_factor >= _PROFIT_FACTOR["institutional"]
+        ):
+            tier = "institutional"
+        else:
+            tier = "professional"
+
+        block = (
+            f"[PROMOTION CANDIDATE] run_id={run.run_id}\n"
+            f"  sharpe={run.sharpe:.2f}  profit_factor={run.profit_factor:.2f}"
+            f"  win_rate={run.win_rate:.2f}  trades={run.total_trades}  tier={tier}"
+        )
+        alerts.append(block)
+    return alerts
 
 
 class ReceiptWriter:
@@ -685,6 +744,17 @@ def cmd_record(args: argparse.Namespace) -> int:
         print(f"OK: {kind} — all runs statistically redundant (no new information added)")
     else:
         print(f"OK: {kind} persisted to Neo4j graph")
+
+    # Promotion alert — baseline_csv only; exceptions are suppressed so receipt is always written
+    if kind == "baseline_csv":
+        try:
+            persisted_ids = {o.run_id for o in result.evolution if o.status != "skipped"}
+            alerts = _evaluate_promotion_candidates(artifact.runs, persisted_ids)
+            for alert in alerts:
+                print(alert)
+        except Exception:  # noqa: BLE001
+            pass
+
     return 0
 
 

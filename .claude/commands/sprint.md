@@ -2,7 +2,9 @@ Read the following two files:
 1. `docs/BACKLOG_ALIGNMENT.md`
 2. `qws_graph/epics/INDEX.md`
 
-Then report concisely:
+Invoke skill: caveman
+
+Then report the following:
 
 **Current Sprint**
 - Which epic is active and why

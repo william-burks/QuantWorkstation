@@ -1,0 +1,2 @@
+target_r,max_hold_bars,wick_mode,chain_mode,sample_size,total_r,avg_r_per_trade,breakeven_win_rate,sharpe,profit_factor,win_rate,total_trades,return,max_drawdown,calmar,gain,fees,first_trade_ts,last_trade_ts,backtest_start,backtest_end,tier,beat_bh,fee_pct_of_gain,instrument,timeframe,direction,logic_type
+1.25,24,exclude_q2,no_smt_in_chain,32,8.3,0.259,0.444444,4.80,1.79,0.3125,32,0.081,-0.027,23.9,,,2025-01-15T18:50:00-05:00,2026-03-12T19:15:00-04:00,2023-12-25T18:00:00-05:00,2026-03-20T16:00:00-04:00,professional,True,,CL,1H,bear,liquidity-sweep

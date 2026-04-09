@@ -4,7 +4,7 @@
 QWS-0405
 
 ## Status
-READY
+TESTING
 
 ## Blocked On
 QWS-0407 — requires `active_window_frequency` property on Run nodes (populated at ingest time)
@@ -84,18 +84,18 @@ qualify. Never blocks the ingest (exceptions in the check are caught and suppres
 - `qws_graph/tests/unit/test_promotion_alerts.py` — new
 
 ## Acceptance Criteria
-- [ ] After ingesting a Run with sharpe = 2.3, profit_factor = 2.1, max_drawdown = -0.08,
+- [x] After ingesting a Run with sharpe = 2.3, profit_factor = 2.1, max_drawdown = -0.08,
   total_trades = 45, active_window_frequency = 0.10: promotion candidate block is printed to stdout.
-- [ ] After ingesting a Run with sharpe = 0.9 (below professional threshold): no block printed.
-- [ ] A run with active_window_frequency = 0.03 (below 0.06 floor) and otherwise-passing
+- [x] After ingesting a Run with sharpe = 0.9 (below professional threshold): no block printed.
+- [x] A run with active_window_frequency = 0.03 (below 0.06 floor) and otherwise-passing
   sharpe/profit_factor/trades produces no alert.
-- [ ] A run where active_window_frequency is null (pre-QWS-0407 legacy run) produces no alert.
-- [ ] Skipped runs (significance gate) produce no alert.
-- [ ] Grid CSV ingests produce no alert.
-- [ ] An exception in the evaluation block does not prevent the receipt from being written.
-- [ ] Output is silent when no run qualifies (no "no candidates" message).
+- [x] A run where active_window_frequency is null (pre-QWS-0407 legacy run) produces no alert.
+- [x] Skipped runs (significance gate) produce no alert.
+- [x] Grid CSV ingests produce no alert.
+- [x] An exception in the evaluation block does not prevent the receipt from being written.
+- [x] Output is silent when no run qualifies (no "no candidates" message).
 
 ## Definition of Done
-- [ ] Evaluation logic implemented and unit tested.
-- [ ] Post-ingest hook live in `cli.py`.
+- [x] Evaluation logic implemented and unit tested.
+- [x] Post-ingest hook live in `cli.py`.
 - [ ] Story marked CLOSED.

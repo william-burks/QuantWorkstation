@@ -1,5 +1,7 @@
 You are running a Product Backlog Refinement (PBR) session for QuantWorkstation.
 
+Invoke skill: caveman
+
 ## Strict Validation Rules
 1. SCHEMA DRIFT: Any property/node/edge not in PROVENANCE_ENGINE.md = NEEDS WORK.
 2. DEAD TOUCHPOINTS: Any file path in Repo Touchpoints that does not exist AND is not annotated `— new` = NEEDS WORK.

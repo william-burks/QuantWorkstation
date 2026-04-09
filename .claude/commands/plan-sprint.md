@@ -1,5 +1,7 @@
 You are running a Sprint Planning session for QuantWorkstation.
 
+Invoke skill: caveman
+
 ## Phase 1 — Load Context
 
 Read these files in order before doing any analysis:
