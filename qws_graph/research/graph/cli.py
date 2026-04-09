@@ -220,11 +220,15 @@ def _parse_artifact(
         )
 
         # Infer strategy from artifact path
+        from .ids import strategy_id as make_strategy_id
         from .parsers import _infer_strategy_from_artifact_name
 
         inferred = _infer_strategy_from_artifact_name(file_path.stem)
         strategy = Strategy(
-            strategy_id=f"{inferred['instrument']}-{inferred['timeframe']}-{inferred['direction']}-{inferred['logic_type']}",
+            strategy_id=make_strategy_id(
+                inferred["instrument"], inferred["timeframe"],
+                inferred["direction"], inferred["logic_type"],
+            ),
             instrument=inferred["instrument"],
             timeframe=inferred["timeframe"],
             direction=inferred["direction"],  # type: ignore

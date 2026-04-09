@@ -815,7 +815,7 @@ class GraphStore:
     def _persist_champion(self, session, payload: dict) -> None:
         metrics = payload["champion"].get("metrics_summary", {})
         # Promote tier out of metrics_summary as a top-level property.
-        tier = str(metrics.get("tier", "")).lower() or None
+        tier = str(metrics.get("tier", "")).lower() or "pass"
         # Flatten numeric metrics into individual properties for direct Cypher queryability.
         flat_metrics = {
             f"metrics_{k}": v
