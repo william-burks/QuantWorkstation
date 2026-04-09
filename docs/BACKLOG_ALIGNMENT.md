@@ -42,9 +42,10 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
+| OOS Sharpe Amendment | QWS-0402C (**patch**) | `metrics_oos_sharpe` on Champion node; `--sharpe` flag on `qw record --oos` | — |
 | family_id Population | QWS-0501 | Populates `Strategy.family_id`; enables `cross_artifact_correlation` to return meaningful results | — |
-| Regime Tagging | QWS-0502 | `Regime` node; `regime_performance` tool with Diversity Score; "Regime Specialist" fragility class | — |
-| Cross-Instrument Aggregator | QWS-0503 | `regime_performance` full output; performance table across instruments grouped by regime | QWS-0501 |
+| Regime Tagging | QWS-0502 | `Regime` node; `IN_REGIME` edge (Run→Regime); `--regime` flag; `runs_by_regime` preset; partial `regime_performance` (single-strategy Diversity Score; "Regime Specialist" fragility class) | — |
+| Cross-Instrument Aggregator | QWS-0503 | Full `regime_performance` output — portfolio-wide performance table across instruments grouped by regime. Extends QWS-0502 partial preset. | QWS-0501, QWS-0402C |
 | Recursive Lineage Traversal | QWS-0504 | `downstream_champions` gains `depth` param for multi-hop traversal | — |
 
 ### Epic 6 — Research Analytics
@@ -100,6 +101,7 @@ the linked story is marked COMPLETE above.
 ### Properties
 | Property | Node | Story |
 |---|---|---|
+| `metrics_oos_sharpe` | Champion | QWS-0402C |
 | `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
 | `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
 | `embedding` | Hypothesis | QWS-0604 |
@@ -124,6 +126,7 @@ Identified during vision planning — not yet in the backlog. Will decides prior
 
 | Candidate | What it delivers |
 |---|---|
+| *(shipped inline)* `qw seed --demo` | Deterministic demo provenance graph covering all Epic 5 query preset scenarios. Implemented in `cypher.py`, `store.py`, `cli.py`. Documented in runbook. |
 
 ---
 

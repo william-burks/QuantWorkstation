@@ -19,6 +19,8 @@ from .cypher import (
     BLOB_INGEST_QUERY,
     CHAMPION_INGEST_QUERY,
     CSV_INGEST_QUERY,
+    DEMO_SEED_CYPHER,
+    DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
     PATCH_FAMILY_ID_QUERY,
@@ -426,6 +428,37 @@ class GraphStore:
                         tx.run(PATCH_RESEARCH_TARGET_QUERY, overrides=overrides).consume()
 
                 session.execute_write(_write)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def seed_demo_graph(self) -> None:
+        """Populate deterministic demo nodes for query preset validation.
+
+        Idempotent — uses MERGE throughout. All nodes carry ``is_demo=true``
+        so they can be removed cleanly via :meth:`teardown_demo_graph`.
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                session.execute_write(lambda tx: tx.run(DEMO_SEED_CYPHER).consume())
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def teardown_demo_graph(self) -> None:
+        """Remove all nodes where ``is_demo=true`` and their relationships.
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                session.execute_write(lambda tx: tx.run(DEMO_TEARDOWN_CYPHER).consume())
         except Neo4jError as exc:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001

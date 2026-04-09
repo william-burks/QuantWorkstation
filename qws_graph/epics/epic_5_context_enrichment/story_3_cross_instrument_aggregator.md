@@ -19,9 +19,9 @@ researcher must issue separate `run_history` queries per strategy and mentally j
 ## Dependencies
 - **QWS-0501** (family_id population) must be CLOSED first — `family_id` is the grouping
   key for strategy logic. Without it this query returns no cross-instrument groupings.
-- **QWS-0402** (OOS outcome tracking) must store OOS Sharpe at record time for the
-  `oos_sharpe` column to be non-null. If QWS-0402 doesn't yet capture OOS metrics, the
-  column returns NULL and the preset notes this in its output schema docs.
+- **QWS-0402C** (OOS Sharpe amendment) must be CLOSED first — stores `metrics_oos_sharpe`
+  on Champion at `qw record --oos --sharpe` time. Without it the `oos_sharpe` column is
+  permanently null.
 
 ## Goal
 ```zsh
@@ -55,8 +55,14 @@ RETURN s.logic_type        AS logic_type,
 ORDER BY s.logic_type, ch.metrics_sharpe DESC
 ```
 
-Note: `ch.metrics_oos_sharpe` is only populated after QWS-0402 adds OOS metric storage.
-The preset is valid before then — `oos_sharpe` column will be null.
+Note: `ch.metrics_oos_sharpe` is populated by QWS-0402C (`qw record --oos --sharpe <float>`).
+This story is blocked on QWS-0402C CLOSED — the column should be non-null before shipping.
+
+## Repo Touchpoints
+- `qws_graph/research/graph/query_presets.py` — `compare_strategy_performance` preset
+- `qws_graph/research/graph/query.py` — Cypher for preset
+- `qws_graph/docs/qws_graph_runbook.md` — Day-1 entry for `compare_strategy_performance`
+- `qws_graph/tests/unit/test_qw_query.py` — extend with multi-instrument mock data tests — new tests
 
 ## In Scope
 - `compare_strategy_performance` preset in `query_presets.py` and `query.py`

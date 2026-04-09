@@ -1,4 +1,4 @@
-Read the following two files:
+we neeRead the following two files:
 1. `docs/BACKLOG_ALIGNMENT.md`
 2. `qws_graph/epics/INDEX.md`
 

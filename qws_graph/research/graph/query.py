@@ -71,7 +71,7 @@ RETURN {
 
 GET_RUN_HISTORY_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN]->(r:Run)
-WHERE s.status <> 'ABORTED'
+WHERE coalesce(s.status, '') <> 'ABORTED'
 OPTIONAL MATCH (r)-[:USES_CONFIG]->(c:Config)
 RETURN {
   strategy_id: s.strategy_id,
@@ -121,7 +121,7 @@ LIMIT 1
 
 GET_STRATEGY_LINEAGE_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})-[:PRODUCED_CHAMPION]->(ch:Champion)
-WHERE s.status <> 'ABORTED'
+WHERE coalesce(s.status, '') <> 'ABORTED'
 OPTIONAL MATCH (ch)-[:PIVOTED_FROM]->(r:Run)
 OPTIONAL MATCH (r)-[:USES_CONFIG]->(c:Config)
 RETURN {
@@ -139,7 +139,7 @@ ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 
 GET_RECENT_CHAMPIONS_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
-WHERE s.status <> 'ABORTED'
+WHERE coalesce(s.status, '') <> 'ABORTED'
 OPTIONAL MATCH (ch)-[:PIVOTED_FROM]->(r:Run)
 RETURN {
   champion_id: ch.champion_id,
@@ -156,7 +156,7 @@ ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 
 GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)-[:PIVOTED_FROM]->(r:Run {run_id: $run_id})
-WHERE s.status <> 'ABORTED'
+WHERE coalesce(s.status, '') <> 'ABORTED'
 RETURN {
   champion_id: ch.champion_id,
   strategy_id: s.strategy_id,
@@ -185,8 +185,8 @@ WHERE (
     AND related.strategy_id <> anchor.strategy_id
   )
 )
-AND anchor.status <> 'ABORTED'
-AND related.status <> 'ABORTED'
+AND coalesce(anchor.status, '') <> 'ABORTED'
+AND coalesce(related.status, '') <> 'ABORTED'
 CALL (related) {
   OPTIONAL MATCH (related)-[:HAS_RUN]->(r:Run)
   RETURN count(r) AS run_count
@@ -220,7 +220,7 @@ ORDER BY related.instrument ASC, related.timeframe ASC
 
 GET_FAMILY_CLUSTER_V1_CYPHER = """
 MATCH (s:Strategy {family_id: $family_id})
-WHERE s.status <> 'ABORTED'
+WHERE coalesce(s.status, '') <> 'ABORTED'
 CALL (s) {
   OPTIONAL MATCH (s)-[:HAS_RUN]->(r:Run)
   RETURN count(r) AS run_count
@@ -313,7 +313,7 @@ ORDER BY s.aborted_at DESC
 
 GET_PROMOTION_CANDIDATES_V1_CYPHER = """
 MATCH (s:Strategy)-[:HAS_RUN]->(r:Run)
-WHERE s.status <> 'ABORTED'
+WHERE coalesce(s.status, '') <> 'ABORTED'
   AND r.sharpe >= $min_sharpe
   AND r.profit_factor >= $min_profit_factor
   AND r.total_trades >= 30
@@ -337,7 +337,7 @@ RETURN {
 
 GET_STALENESS_REPORT_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
-WHERE s.status <> 'ABORTED'
+WHERE coalesce(s.status, '') <> 'ABORTED'
 WITH ch, duration.between(ch.freeze_date, date()).days AS days_old
 WHERE days_old > 30
 RETURN {
@@ -352,7 +352,7 @@ ORDER BY days_old DESC
 
 GET_INSTRUMENT_CONCENTRATION_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
-WHERE s.status <> 'ABORTED'
+WHERE coalesce(s.status, '') <> 'ABORTED'
 WITH s.instrument AS instrument,
      count(ch) AS champion_count,
      sum(ch.metrics_return) AS total_return

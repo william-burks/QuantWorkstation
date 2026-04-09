@@ -4,7 +4,7 @@
 QWS-0501
 
 ## Status
-draft
+READY
 
 ## Summary
 Fix the four production shell runners to pass `--source-file` at ingest time so that
@@ -45,6 +45,14 @@ The `--source-file` flag just needs to reference the same path.
   pipeline runners).
 - Backfilling `family_id` on existing Strategy nodes (will be set on next pipeline run
   via MERGE semantics).
+
+## Repo Touchpoints
+- `research/bin/run_liquidity_sweep_baseline.sh` — add `--source-file`
+- `research/bin/run_liquidity_sweep_position_sizing.sh` — add `--source-file`
+- `research/bin/run_liquidity_sweep_golden.sh` — add `--source-file`
+- `research/bin/run_btc_mars_golden.sh` — add `--source-file`
+
+No changes to `cli.py`, `store.py`, or `parsers.py` — `--source-file` confirmed present and working.
 
 ## Acceptance Criteria
 - [ ] All four production runners pass `--source-file` to `qw record`.

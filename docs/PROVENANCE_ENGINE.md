@@ -166,6 +166,12 @@ owning `Strategy` via `HAS_RUN_SUMMARY`.
 | `sharpe_min` | float | Worst Sharpe in the batch |
 | `ingested_at` | datetime | Timestamp of `qw record` execution |
 
+### [TARGET] Champion — Properties to Be Added
+
+| Property | Type | Formula / Source | Purpose |
+|---|---|---|---|
+| `metrics_oos_sharpe` | float \| null | `--sharpe` arg on `qw record --oos` | OOS Sharpe at validation time. Enables IS/OOS drift signal. Null until first `qw record --oos --sharpe` call. | QWS-0402C |
+
 ### [TARGET] Trial — Properties to Be Added
 
 These properties do not exist in the current schema. Do not query them until the implementing
@@ -183,12 +189,24 @@ story is marked COMPLETE in `BACKLOG_ALIGNMENT.md`.
 | Property | Type | Description |
 |---|---|---|
 | `champion_id` | str | 12-char hex ID |
+| `strategy_id` | str | FK to parent Strategy node |
 | `metrics_sharpe` | float | Sharpe at time of promotion |
 | `metrics_return` | float | Realized return at time of promotion |
+| `metrics_total_trades` | int | Trade count at time of promotion |
+| `metrics_win_rate` | float | Win rate at time of promotion |
+| `metrics_profit_factor` | float | Gross profit / gross loss at time of promotion |
+| `metrics_max_drawdown_r` | float | Max drawdown in R-multiples at time of promotion |
+| `best_evidence_score` | float | `sharpe * sqrt(total_trades)` at time of promotion |
+| `tier` | str | `professional \| institutional` |
+| `freeze_date` | date | Date Champion was locked (promotion date) |
+| `artifact_path` | str | Repo-relative POSIX path to source CSV |
+| `metrics_summary` | str | JSON blob of all metrics at promotion time |
 | `oos_status` | str | `oos_pending \| oos_pass \| oos_fail` |
 | `oos_date` | date | ISO date of last `qw record --oos` call; null until first update |
 | `auto_promoted` | bool | true = auto-gate; null = manually curated (authoritative) |
 | `fragilities` | list[str] | Known failure modes |
+| `created_at` | datetime | Timestamp of node creation |
+| `updated_at` | datetime | Timestamp of last node update |
 
 ---
 
