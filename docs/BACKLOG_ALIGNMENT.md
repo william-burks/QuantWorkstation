@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 5 — Context Enrichment (QWS-0501, QWS-0502)
+> Current sprint: Epic 5 — Context Enrichment (QWS-0502 regime tagging; QWS-0501 CLOSED)
 > ```
 
 ---
@@ -43,9 +43,9 @@
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | OOS Sharpe Amendment | QWS-0402C (**CLOSED**) | `metrics_oos_sharpe` on Champion node; `--sharpe` flag on `qw record --oos` | — |
-| family_id Population | QWS-0501 | Populates `Strategy.family_id`; enables `cross_artifact_correlation` to return meaningful results | — |
+| family_id Population | QWS-0501 (**CLOSED**) | Populates `Strategy.family_id`; enables `cross_artifact_correlation` to return meaningful results | — |
 | Regime Tagging | QWS-0502 | `Regime` node; `IN_REGIME` edge (Run→Regime); `--regime` flag; `runs_by_regime` preset; partial `regime_performance` (single-strategy Diversity Score; "Regime Specialist" fragility class) | — |
-| Cross-Instrument Aggregator | QWS-0503 | Full `regime_performance` output — portfolio-wide performance table across instruments grouped by regime. Extends QWS-0502 partial preset. | QWS-0501, QWS-0402C |
+| Cross-Instrument Aggregator | QWS-0503 | Full `regime_performance` output — portfolio-wide performance table across instruments grouped by regime. Extends QWS-0502 partial preset. | ~~QWS-0501~~, ~~QWS-0402C~~ — both CLOSED; unblocked |
 | Recursive Lineage Traversal | QWS-0504 | `downstream_champions` gains `depth` param for multi-hop traversal | — |
 
 ### Epic 6 — Research Analytics

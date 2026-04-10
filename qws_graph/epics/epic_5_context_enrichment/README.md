@@ -18,7 +18,7 @@ Two concrete blockers exist today:
    during high-volatility periods" because that context was never recorded.
 
 ## Stories in execution order
-1. `QWS-0501` `story_1_family_id_population.md` — fix runners to populate `family_id`
+1. `QWS-0501` `story_1_family_id_population.md` — fix runners to populate `family_id` (**TESTING**)
 2. `QWS-0502` `story_2_regime_tagging.md` — `--regime` flag, `regime` property on Run
 3. `QWS-0503` `story_3_cross_instrument_aggregator.md` — `compare_strategy_performance` preset
 4. `QWS-0504` `story_4_recursive_lineage_traversal.md` — depth param on `downstream_champions`

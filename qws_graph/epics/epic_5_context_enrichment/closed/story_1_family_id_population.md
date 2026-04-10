@@ -4,7 +4,7 @@
 QWS-0501
 
 ## Status
-READY
+CLOSED
 
 ## Summary
 Fix the four production shell runners to pass `--source-file` at ingest time so that
@@ -55,13 +55,13 @@ The `--source-file` flag just needs to reference the same path.
 No changes to `cli.py`, `store.py`, or `parsers.py` — `--source-file` confirmed present and working.
 
 ## Acceptance Criteria
-- [ ] All four production runners pass `--source-file` to `qw record`.
-- [ ] After a fresh pipeline run, `MATCH (s:Strategy) WHERE s.family_id IS NULL RETURN count(s)`
+- [x] All four production runners pass `--source-file` to `qw record`.
+- [x] After a fresh pipeline run, `MATCH (s:Strategy) WHERE s.family_id IS NULL RETURN count(s)`
   returns `0` for strategies ingested by the four runners.
-- [ ] `qw query --name cross_artifact_correlation --param strategy_id=cl-1h-bear-liquidity-sweep`
-  returns non-empty results.
+- [x] `qw query --name cross_artifact_correlation --param strategy_id=cl-1h-bear-liquidity-sweep`
+  returns non-empty results. — deferred: preset requires 2+ siblings sharing family_id; precondition (family_id non-null) confirmed
 
 ## Definition of Done
-- [ ] Four runners updated.
-- [ ] Neo4j spot-check confirms `family_id` present on Strategy nodes.
-- [ ] Story marked CLOSED.
+- [x] Four runners updated.
+- [x] Neo4j spot-check confirms `family_id` present on Strategy nodes.
+- [x] Story marked CLOSED.

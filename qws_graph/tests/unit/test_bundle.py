@@ -16,6 +16,10 @@ if str(QWS_GRAPH_ROOT) not in sys.path:
 from research.graph.cli import _read_bundle_manifest, _cmd_bundle
 from research.graph.store import GraphStore
 
+_STRATEGY_FIXTURE = (
+    Path(__file__).resolve().parents[1] / "fixtures" / "strategies" / "strategy_source_fixture.py"
+)
+
 
 # ---------------------------------------------------------------------------
 # _read_bundle_manifest
@@ -130,6 +134,116 @@ class TestCmdBundleErrors:
         args = self._make_args(str(tmp_path), dry_run=True)
         rc = _cmd_bundle(args)
         assert rc == 0
+
+    def test_source_file_attaches_family_id_on_bundle(self, tmp_path: Path):
+        """--source-file on --bundle sets family_id on the Strategy before persist."""
+        import argparse
+        from unittest.mock import patch, MagicMock
+
+        csv_content = (
+            "instrument,timeframe,direction,logic_type,"
+            "total_trades,win_rate,profit_factor,sharpe,max_drawdown,"
+            "first_trade_ts,last_trade_ts\n"
+            "CL,1H,bear,liquidity-sweep,"
+            "32,0.65625,2.136028,4.58565,-0.028805,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n"
+        )
+        csv_path = tmp_path / "results.csv"
+        csv_path.write_text(csv_content)
+
+        source_py = _STRATEGY_FIXTURE
+
+        manifest = {
+            "trial": "test",
+            "run_ts": "20260405-120000",
+            "files": {"csv": "results.csv", "csv_kind": "baseline_csv"},
+        }
+        (tmp_path / "bundle.json").write_text(json.dumps(manifest))
+
+        captured_artifact = {}
+
+        def fake_persist(artifact):
+            captured_artifact["family_id"] = artifact.strategy.family_id
+            result = MagicMock()
+            result.evolution = []
+            return result
+
+        args = argparse.Namespace(
+            bundle=str(tmp_path),
+            offline=False,
+            dry_run=False,
+            timeout_seconds=3,
+            repo_root=None,
+            file=None,
+            kind=None,
+            source_file=str(source_py),
+        )
+
+        with patch("research.graph.cli.NeoConnector") as mock_connector, \
+             patch("research.graph.cli.GraphStore.from_env") as mock_store_factory:
+            mock_connector.return_value.is_available.return_value = True
+            mock_store = MagicMock()
+            mock_store.persist_artifact.side_effect = fake_persist
+            mock_store_factory.return_value.__enter__ = MagicMock(return_value=mock_store)
+            mock_store_factory.return_value.__exit__ = MagicMock(return_value=False)
+            mock_store_factory.return_value = mock_store
+
+            rc = _cmd_bundle(args)
+
+        assert rc == 0
+        assert captured_artifact["family_id"] is not None, "family_id must be set when --source-file is provided"
+
+    def test_bundle_without_source_file_leaves_family_id_none(self, tmp_path: Path):
+        """Omitting --source-file leaves family_id as None (existing behavior unchanged)."""
+        import argparse
+        from unittest.mock import patch, MagicMock
+
+        csv_content = (
+            "instrument,timeframe,direction,logic_type,"
+            "total_trades,win_rate,profit_factor,sharpe,max_drawdown,"
+            "first_trade_ts,last_trade_ts\n"
+            "CL,1H,bear,liquidity-sweep,"
+            "32,0.65625,2.136028,4.58565,-0.028805,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z\n"
+        )
+        (tmp_path / "results.csv").write_text(csv_content)
+        manifest = {
+            "trial": "test",
+            "run_ts": "20260405-120000",
+            "files": {"csv": "results.csv", "csv_kind": "baseline_csv"},
+        }
+        (tmp_path / "bundle.json").write_text(json.dumps(manifest))
+
+        captured_artifact = {}
+
+        def fake_persist(artifact):
+            captured_artifact["family_id"] = artifact.strategy.family_id
+            result = MagicMock()
+            result.evolution = []
+            return result
+
+        args = argparse.Namespace(
+            bundle=str(tmp_path),
+            offline=False,
+            dry_run=False,
+            timeout_seconds=3,
+            repo_root=None,
+            file=None,
+            kind=None,
+            source_file=None,
+        )
+
+        with patch("research.graph.cli.NeoConnector") as mock_connector, \
+             patch("research.graph.cli.GraphStore.from_env") as mock_store_factory:
+            mock_connector.return_value.is_available.return_value = True
+            mock_store = MagicMock()
+            mock_store.persist_artifact.side_effect = fake_persist
+            mock_store_factory.return_value = mock_store
+
+            rc = _cmd_bundle(args)
+
+        assert rc == 0
+        assert captured_artifact["family_id"] is None, "family_id must remain None when --source-file is not provided"
 
 
 # ---------------------------------------------------------------------------

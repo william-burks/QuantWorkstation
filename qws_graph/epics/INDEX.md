@@ -117,9 +117,9 @@ Cancelled (preserved in `cancelled_stories/`):
 
 Stories (execution order):
 0. `QWS-0402C` [`story_0_oos_sharpe_amendment.md`](epic_5_context_enrichment/closed/story_0_oos_sharpe_amendment.md) — `CLOSED` _(patch: amends QWS-0402; prerequisite for QWS-0503 oos_sharpe column)_
-1. `QWS-0501` [`story_1_family_id_population.md`](epic_5_context_enrichment/story_1_family_id_population.md) — `ready`
+1. `QWS-0501` [`story_1_family_id_population.md`](epic_5_context_enrichment/closed/story_1_family_id_population.md) — `CLOSED`
 2. `QWS-0502` [`story_2_regime_tagging.md`](epic_5_context_enrichment/story_2_regime_tagging.md) — `ready`
-3. `QWS-0503` [`story_3_cross_instrument_aggregator.md`](epic_5_context_enrichment/story_3_cross_instrument_aggregator.md) — `blocked` _(blocked on QWS-0501 + QWS-0402C)_
+3. `QWS-0503` [`story_3_cross_instrument_aggregator.md`](epic_5_context_enrichment/story_3_cross_instrument_aggregator.md) — `ready` _(QWS-0501 + QWS-0402C both CLOSED)_
 4. `QWS-0504` [`story_4_recursive_lineage_traversal.md`](epic_5_context_enrichment/story_4_recursive_lineage_traversal.md) — `ready`
 
 ---
@@ -158,8 +158,8 @@ Stories (execution order):
 ---
 
 ## Current Focus
-- **Now:** Epic 4 is COMPLETE.
-- **After Epic 4:** Epic 5 QWS-0501 (family_id) + QWS-0502 (regime tagging) are independent and can start immediately.
-- **Epic 8 QWS-0802** (SUPERSEDED_BY) is unblocked now and can be picked up any time — no dependencies.
+- **Now:** Epic 5 — QWS-0501 CLOSED. Active: QWS-0502 (regime tagging).
+- **Unblocked by QWS-0501:** QWS-0503 (cross-instrument aggregator) is now `ready`.
+- **Epic 8 QWS-0802** (SUPERSEDED_BY) is unblocked and can be picked up any time — no dependencies.
 - **Parallel track:** Epic 7 QWS-0701 (PyPI packaging) is `ready` and can be picked up any time without blocking research work.
 

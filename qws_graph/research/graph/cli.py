@@ -331,6 +331,25 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
     for warning in warnings:
         print(f"WARNING: {warning}", file=sys.stderr)
 
+    # Attach family_id when --source-file is provided
+    raw_source_file = getattr(args, "source_file", None)
+    source_file = Path(raw_source_file) if isinstance(raw_source_file, (str, Path)) and str(raw_source_file).strip() else None
+    if source_file is not None:
+        try:
+            src_bytes = source_file.read_bytes()
+        except OSError as exc:
+            print(f"ERROR: Cannot read source file: {exc}", file=sys.stderr)
+            return 1
+        src_hash = _ids.source_hash(src_bytes)
+        fid = _ids.family_id(
+            artifact.strategy.logic_type,
+            artifact.strategy.direction,
+            src_hash,
+        )
+        artifact = artifact.model_copy(
+            update={"strategy": artifact.strategy.model_copy(update={"family_id": fid})}
+        )
+
     run_ids = [r.run_id for r in artifact.runs]
 
     if dry_run:
