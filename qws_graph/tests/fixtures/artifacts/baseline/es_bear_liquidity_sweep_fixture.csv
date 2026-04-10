@@ -1,0 +1,2 @@
+target_r,max_hold_bars,wick_mode,chain_mode,total_trades,win_rate,profit_factor,sharpe,max_drawdown,first_trade_ts,last_trade_ts,instrument,timeframe,direction,logic_type
+1.25,24,exclude_q2,no_smt_in_chain,41,0.5854,2.210,2.38,-0.052,2024-01-02T10:00:00Z,2025-10-01T16:00:00Z,ES,1H,bear,liquidity-sweep

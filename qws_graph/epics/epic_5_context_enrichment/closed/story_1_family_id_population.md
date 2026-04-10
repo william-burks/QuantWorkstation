@@ -59,7 +59,7 @@ No changes to `cli.py`, `store.py`, or `parsers.py` — `--source-file` confirme
 - [x] After a fresh pipeline run, `MATCH (s:Strategy) WHERE s.family_id IS NULL RETURN count(s)`
   returns `0` for strategies ingested by the four runners.
 - [x] `qw query --name cross_artifact_correlation --param strategy_id=cl-1h-bear-liquidity-sweep`
-  returns non-empty results. — deferred: preset requires 2+ siblings sharing family_id; precondition (family_id non-null) confirmed
+  returns non-empty results. — verified: ES-1H-bear-liquidity-sweep returned as sibling (family_id=bccc97a53853)
 
 ## Definition of Done
 - [x] Four runners updated.
