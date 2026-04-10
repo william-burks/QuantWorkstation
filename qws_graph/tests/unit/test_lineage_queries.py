@@ -25,18 +25,19 @@ from research.graph.query import (
     GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER,
     GET_STRATEGY_LINEAGE_V1_CYPHER,
     QUERY_VIEW_REGISTRY,
+    _build_downstream_cypher,
+    _build_lineage_cypher,
     get_cross_artifact_correlation_v1,
     get_downstream_champions_v1,
     get_strategy_lineage_v1,
 )
-from research.graph.query_models import CrossArtifactRowV1, StrategyLineageV1
+from research.graph.query_models import CrossArtifactRowV1
 from research.graph.query_presets import (
     PRESET_CATALOG,
+    resolve_preset,
     run_preset,
     validate_params,
-    resolve_preset,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fake session helpers (same pattern as test_graph_query_models.py)
@@ -147,8 +148,13 @@ class FakeGraphQueryService:
         self._strategy_lineage = strategy_lineage or []
         self.calls: list[tuple[str, dict[str, Any]]] = []
 
-    def get_downstream_champions_v1(self, run_id: str) -> list[dict[str, Any]]:
-        self.calls.append(("get_downstream_champions_v1", {"run_id": run_id}))
+    def get_downstream_champions_v1(
+        self,
+        run_id: str,
+        depth: int = 1,
+        include_retired: bool = False,
+    ) -> list[dict[str, Any]]:
+        self.calls.append(("get_downstream_champions_v1", {"run_id": run_id, "depth": depth, "include_retired": include_retired}))
         return self._downstream
 
     def get_cross_artifact_correlation_v1(
@@ -159,8 +165,8 @@ class FakeGraphQueryService:
         self.calls.append(("get_cross_artifact_correlation_v1", {"strategy_id": strategy_id, "family_id": family_id}))
         return self._cross_artifact
 
-    def get_strategy_lineage_v1(self, strategy_id: str) -> list[dict[str, Any]]:
-        self.calls.append(("get_strategy_lineage_v1", {"strategy_id": strategy_id}))
+    def get_strategy_lineage_v1(self, strategy_id: str, depth: int = 1) -> list[dict[str, Any]]:
+        self.calls.append(("get_strategy_lineage_v1", {"strategy_id": strategy_id, "depth": depth}))
         return self._strategy_lineage
 
     def get_recent_champions_v1(self, limit: int = 20) -> list[dict[str, Any]]:
@@ -314,15 +320,25 @@ class TestDownstreamChampionsNoPivotEdge:
 # ---------------------------------------------------------------------------
 
 class TestTraversalDepthBounded:
-    def test_get_strategy_lineage_cypher_is_single_hop(self) -> None:
-        # The Cypher must not contain variable-length path patterns like [*..N].
-        # Depth is fixed: Strategy→Champion→Run (one hop beyond the anchor).
-        assert "[*" not in GET_STRATEGY_LINEAGE_V1_CYPHER
+    def test_get_strategy_lineage_cypher_uses_bounded_variable_length(self) -> None:
+        # QWS-0504: Cypher must use variable-length path with depth inlined as literal.
+        # The exported constant is the depth=1 form.
+        assert "PIVOTED_FROM*1..1" in GET_STRATEGY_LINEAGE_V1_CYPHER
         assert "PIVOTED_FROM" in GET_STRATEGY_LINEAGE_V1_CYPHER
+        # depth=3 form uses *1..3
+        assert "PIVOTED_FROM*1..3" in _build_lineage_cypher(3)
+        # Must NOT use unbounded [*]
+        import re
+        unbounded = re.search(r"\[:\w+\s*\*\s*]", GET_STRATEGY_LINEAGE_V1_CYPHER)
+        assert unbounded is None, "Cypher must not contain unbounded variable-length paths"
 
-    def test_get_downstream_champions_cypher_is_single_hop(self) -> None:
-        assert "[*" not in GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER
+    def test_get_downstream_champions_cypher_uses_bounded_variable_length(self) -> None:
+        assert "PIVOTED_FROM*1..1" in GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER
         assert "PIVOTED_FROM" in GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER
+        assert "PIVOTED_FROM*1..5" in _build_downstream_cypher(5)
+        import re
+        unbounded = re.search(r"\[:\w+\s*\*\s*]", GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER)
+        assert unbounded is None, "Cypher must not contain unbounded variable-length paths"
 
     def test_get_cross_artifact_cypher_is_single_hop(self) -> None:
         assert "[*" not in GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER
@@ -339,6 +355,138 @@ class TestTraversalDepthBounded:
         # Verify docstring states explicit-pivot-only policy.
         doc = get_downstream_champions_v1.__doc__ or ""
         assert "explicit" in doc.lower() or "PIVOTED_FROM" in doc
+
+
+# ---------------------------------------------------------------------------
+# QWS-0504 — depth param, include_retired, validation
+# ---------------------------------------------------------------------------
+
+class TestDepthParameter:
+    """AC coverage for QWS-0504: depth param + include_retired on downstream_champions
+    and depth param on strategy_lineage."""
+
+    # --- get_downstream_champions_v1 depth validation ---
+    # depth is inlined in the Cypher string (not a session parameter), so we
+    # check the query string content rather than session.calls[*][1]["depth"].
+
+    def test_depth_1_is_default(self) -> None:
+        session = FakeSession({GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: []})
+        get_downstream_champions_v1(session, "run-001")
+        assert "*1..1" in session.calls[0][0]
+
+    def test_depth_passed_to_cypher(self) -> None:
+        cypher = _build_downstream_cypher(3)
+        session = FakeSession({cypher: []})
+        get_downstream_champions_v1(session, "run-001", depth=3)
+        assert "*1..3" in session.calls[0][0]
+
+    def test_depth_10_accepted(self) -> None:
+        cypher = _build_downstream_cypher(10)
+        session = FakeSession({cypher: []})
+        get_downstream_champions_v1(session, "run-001", depth=10)
+        assert "*1..10" in session.calls[0][0]
+
+    def test_depth_0_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_downstream_champions_v1(session, "run-001", depth=0)
+
+    def test_depth_11_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_downstream_champions_v1(session, "run-001", depth=11)
+
+    def test_depth_negative_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_downstream_champions_v1(session, "run-001", depth=-1)
+
+    # --- include_retired ---
+
+    def test_include_retired_false_no_node_type(self) -> None:
+        session = FakeSession({
+            GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+            ]
+        })
+        rows = get_downstream_champions_v1(session, "run-001", include_retired=False)
+        assert len(rows) == 1
+        assert "node_type" not in rows[0]
+
+    def test_include_retired_true_adds_node_type_champion(self) -> None:
+        session = FakeSession({
+            GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+                _champion_record("champ-002", "nq-1h-bear-sweep", "2026-03-01"),
+            ]
+        })
+        rows = get_downstream_champions_v1(session, "run-001", include_retired=True)
+        assert len(rows) == 2
+        assert all(r["node_type"] == "champion" for r in rows)
+
+    def test_include_retired_false_is_default(self) -> None:
+        session = FakeSession({
+            GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+            ]
+        })
+        rows = get_downstream_champions_v1(session, "run-001")
+        assert "node_type" not in rows[0]
+
+    # --- get_strategy_lineage_v1 depth validation ---
+
+    def test_lineage_depth_1_is_default(self) -> None:
+        session = FakeSession({GET_STRATEGY_LINEAGE_V1_CYPHER: []})
+        get_strategy_lineage_v1(session, "es-1h-bear-sweep")
+        assert "*1..1" in session.calls[0][0]
+
+    def test_lineage_depth_passed_to_cypher(self) -> None:
+        cypher = _build_lineage_cypher(3)
+        session = FakeSession({cypher: []})
+        get_strategy_lineage_v1(session, "es-1h-bear-sweep", depth=3)
+        assert "*1..3" in session.calls[0][0]
+
+    def test_lineage_depth_11_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_strategy_lineage_v1(session, "es-1h-bear-sweep", depth=11)
+
+    def test_lineage_depth_0_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_strategy_lineage_v1(session, "es-1h-bear-sweep", depth=0)
+
+    # --- preset routing ---
+
+    def test_downstream_preset_passes_depth_to_service(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[])
+        run_preset("downstream_champions", {"run_id": "run-001", "depth": "3"}, service=service)
+        assert service.calls[0][1]["depth"] == 3
+
+    def test_downstream_preset_default_depth_1(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[])
+        run_preset("downstream_champions", {"run_id": "run-001"}, service=service)
+        assert service.calls[0][1]["depth"] == 1
+
+    def test_downstream_preset_include_retired_true(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[])
+        run_preset("downstream_champions", {"run_id": "run-001", "include_retired": "true"}, service=service)
+        assert service.calls[0][1]["include_retired"] is True
+
+    def test_downstream_preset_include_retired_default_false(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[])
+        run_preset("downstream_champions", {"run_id": "run-001"}, service=service)
+        assert service.calls[0][1]["include_retired"] is False
+
+    def test_strategy_lineage_preset_passes_depth(self) -> None:
+        service = FakeGraphQueryService(strategy_lineage=[])
+        run_preset("strategy_lineage", {"strategy_id": "es-1h-bear-sweep", "depth": "2"}, service=service)
+        assert service.calls[0][1]["depth"] == 2
+
+    def test_strategy_lineage_preset_default_depth_1(self) -> None:
+        service = FakeGraphQueryService(strategy_lineage=[])
+        run_preset("strategy_lineage", {"strategy_id": "es-1h-bear-sweep"}, service=service)
+        assert service.calls[0][1]["depth"] == 1
 
 
 # ---------------------------------------------------------------------------

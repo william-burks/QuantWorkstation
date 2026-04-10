@@ -4,7 +4,7 @@
 QWS-0504
 
 ## Status
-READY
+CLOSED
 
 ## Priority
 P3 — Feature Enhancement. The current depth=1 bound is safe and correct for V1. This is a
@@ -124,20 +124,20 @@ qw query --name strategy_lineage --param strategy_id=cl-1h-bear-liquidity-sweep 
   (verify via unit test snapshot).
 
 ## Acceptance Criteria
-- [ ] `qw query --name downstream_champions --param run_id=<id> --param depth=1` returns
+- [x] `qw query --name downstream_champions --param run_id=<id> --param depth=1` returns
   the same results as the current implementation (regression-safe).
-- [ ] `qw query --name downstream_champions --param run_id=<id> --param depth=3` returns
+- [x] `qw query --name downstream_champions --param run_id=<id> --param depth=3` returns
   champions reachable within 3 `PIVOTED_FROM` hops.
-- [ ] `depth=11` returns a deterministic `INVALID_PARAMS` error; no graph query executed.
-- [ ] Default `depth=1` is preserved when the parameter is omitted.
-- [ ] `include_retired=false` (default) returns only `:Champion` nodes; no `node_type` field required.
-- [ ] `include_retired=true` returns `:Champion` and `:RetiredChampion` nodes; every row
+- [x] `depth=11` returns a deterministic `INVALID_PARAMS` error; no graph query executed.
+- [x] Default `depth=1` is preserved when the parameter is omitted.
+- [x] `include_retired=false` (default) returns only `:Champion` nodes; no `node_type` field required.
+- [x] `include_retired=true` returns `:Champion` and `:RetiredChampion` nodes; every row
   includes a `node_type` field (`"champion"` or `"retired_champion"`).
-- [ ] `get_strategy_lineage_v1` accepts `depth` param (default 1, max 10); same validation as `downstream_champions`.
-- [ ] `qw query --name strategy_lineage --param strategy_id=<id> --param depth=3` traverses
+- [x] `get_strategy_lineage_v1` accepts `depth` param (default 1, max 10); same validation as `downstream_champions`.
+- [x] `qw query --name strategy_lineage --param strategy_id=<id> --param depth=3` traverses
   multi-generation champion ancestry for the strategy.
-- [ ] Cypher uses variable-length path `[:PIVOTED_FROM*1..$depth]`; no unbounded `[*]`.
-- [ ] Docstrings document depth bound, hard cap, and `include_retired` semantics.
+- [x] Cypher uses variable-length path `[:PIVOTED_FROM*1..$depth]`; no unbounded `[*]`.
+- [x] Docstrings document depth bound, hard cap, and `include_retired` semantics.
 
 ## Validation
 - Unit tests with `FakeSession` responses for `depth=1`, `depth=3`, `depth=10`.
@@ -145,10 +145,10 @@ qw query --name strategy_lineage --param strategy_id=cl-1h-bear-liquidity-sweep 
 - Integration check on seeded graph with a known 2-generation champion chain.
 
 ## Definition of Done
-- [ ] `depth` parameter implemented and tested.
-- [ ] `downstream_champions` preset docs updated (description and param list).
-- [ ] Existing `test_lineage_queries.py` tests remain green at `depth=1`.
-- [ ] Story marked CLOSED after test suite passes.
+- [x] `depth` parameter implemented and tested.
+- [x] `downstream_champions` preset docs updated (description and param list).
+- [x] Existing `test_lineage_queries.py` tests remain green at `depth=1`.
+- [x] Story marked CLOSED after test suite passes.
 
 ## Dependencies
 - Depends on: `spike_lean_neighborhood_optimization.md` V1 patch (max_results safety cap)

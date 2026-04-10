@@ -63,12 +63,21 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
     ),
     "strategy_lineage": PresetSpec(
         name="strategy_lineage",
-        description="Return champion lineage rows for a single strategy.",
+        description=(
+            "Return champion lineage rows for a single strategy. "
+            "At depth=1 (default) shows the direct pivot run per champion. "
+            "At depth>1 each ancestor hop produces its own row."
+        ),
         params=(
             PresetParam(
                 "strategy_id",
                 required=True,
                 description="Canonical strategy ID (e.g. es-1h-bear-sweep)",
+            ),
+            PresetParam(
+                "depth",
+                required=False,
+                description="Ancestor chain depth 1-10 (default 1)",
             ),
         ),
         requires_graph=True,
@@ -95,13 +104,25 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         name="downstream_champions",
         description=(
             "Return champions that pivoted from a specific run via explicit PIVOTED_FROM edges. "
-            "Returns empty list when no explicit pivot edges exist for the run."
+            "Returns empty list when no explicit pivot edges exist for the run. "
+            "depth=1 (default) returns direct children only; depth 2-10 follows the ancestry chain. "
+            "include_retired=true adds node_type field to each row."
         ),
         params=(
             PresetParam(
                 "run_id",
                 required=True,
                 description="Canonical run ID to query downstream champions for",
+            ),
+            PresetParam(
+                "depth",
+                required=False,
+                description="Traversal depth 1-10 (default 1); depth>10 returns an error",
+            ),
+            PresetParam(
+                "include_retired",
+                required=False,
+                description="Include RetiredChampion nodes and node_type field (true/false, default false)",
             ),
         ),
         requires_graph=True,
@@ -299,8 +320,9 @@ def run_preset(
 
     if name == "strategy_lineage":
         strategy_id = params["strategy_id"]
+        depth = int(params.get("depth") or "1")
         assert service is not None
-        return service.get_strategy_lineage_v1(strategy_id)
+        return service.get_strategy_lineage_v1(strategy_id, depth=depth)
 
     if name == "run_history":
         strategy_id = params["strategy_id"]
@@ -312,8 +334,10 @@ def run_preset(
 
     if name == "downstream_champions":
         run_id = params["run_id"]
+        depth = int(params.get("depth") or "1")
+        include_retired = (params.get("include_retired") or "false").lower() == "true"
         assert service is not None
-        return service.get_downstream_champions_v1(run_id)
+        return service.get_downstream_champions_v1(run_id, depth=depth, include_retired=include_retired)
 
     if name == "portfolio_alpha":
         assert service is not None
@@ -349,16 +373,16 @@ def run_preset(
         return service.get_instrument_concentration_v1()
 
     if name == "cross_artifact_correlation":
-        strategy_id = params.get("strategy_id")
-        family_id = params.get("family_id")
-        if not strategy_id and not family_id:
+        corr_strategy_id: str | None = params.get("strategy_id")
+        corr_family_id: str | None = params.get("family_id")
+        if not corr_strategy_id and not corr_family_id:
             raise ValueError(
                 "cross_artifact_correlation requires family_id (preferred) or strategy_id"
             )
         assert service is not None
         return service.get_cross_artifact_correlation_v1(
-            strategy_id=strategy_id,
-            family_id=family_id,
+            strategy_id=corr_strategy_id,
+            family_id=corr_family_id,
         )
 
     if name == "research_targets":
@@ -372,8 +396,8 @@ def run_preset(
 
     if name == "regime_performance":
         assert service is not None
-        strategy_id = params.get("strategy_id") or None
-        return service.get_regime_performance_v1(strategy_id=strategy_id)
+        regime_strategy_id: str | None = params.get("strategy_id") or None
+        return service.get_regime_performance_v1(strategy_id=regime_strategy_id)
 
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 
@@ -404,15 +428,18 @@ def _extract_artifact_path(payload: dict[str, Any]) -> str | None:
     """Extract artifact_path from a ResearchArtifact model_dump payload."""
     runs = payload.get("runs")
     if isinstance(runs, list) and runs:
-        return runs[0].get("artifact_path")
+        val = runs[0].get("artifact_path")
+        return str(val) if val is not None else None
 
     champion = payload.get("champion")
     if isinstance(champion, dict):
-        return champion.get("artifact_path")
+        val = champion.get("artifact_path")
+        return str(val) if val is not None else None
 
     blob = payload.get("blob")
     if isinstance(blob, dict):
-        return blob.get("artifact_path")
+        val = blob.get("artifact_path")
+        return str(val) if val is not None else None
 
     return None
 

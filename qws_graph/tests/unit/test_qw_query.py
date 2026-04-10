@@ -5,10 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from io import StringIO
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -16,18 +15,15 @@ QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
 if str(QWS_GRAPH_ROOT) not in sys.path:
     sys.path.insert(0, str(QWS_GRAPH_ROOT))
 
+from research.graph.cli import cmd_query
 from research.graph.query_presets import (
     PRESET_CATALOG,
     PresetSpec,
+    _extract_artifact_path,
     resolve_preset,
     run_preset,
     validate_params,
-    _run_pending_offline,
-    _extract_artifact_path,
 )
-
-from research.graph.cli import cmd_query
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -51,8 +47,8 @@ class FakeGraphQueryService:
         self.calls.append(("get_recent_champions_v1", {"limit": limit}))
         return self._recent_champions[:limit]
 
-    def get_strategy_lineage_v1(self, strategy_id: str) -> list[dict[str, Any]]:
-        self.calls.append(("get_strategy_lineage_v1", {"strategy_id": strategy_id}))
+    def get_strategy_lineage_v1(self, strategy_id: str, depth: int = 1) -> list[dict[str, Any]]:
+        self.calls.append(("get_strategy_lineage_v1", {"strategy_id": strategy_id, "depth": depth}))
         return self._strategy_lineage
 
     def get_run_history_v1(self, strategy_id: str) -> list[dict[str, Any]]:

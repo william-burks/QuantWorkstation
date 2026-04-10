@@ -120,7 +120,7 @@ Stories (execution order):
 1. `QWS-0501` [`story_1_family_id_population.md`](epic_5_context_enrichment/closed/story_1_family_id_population.md) — `CLOSED`
 2. `QWS-0502` [`story_2_regime_tagging.md`](epic_5_context_enrichment/closed/story_2_regime_tagging.md) — `CLOSED`
 3. `QWS-0503` [`story_3_cross_instrument_aggregator.md`](epic_5_context_enrichment/closed/story_3_cross_instrument_aggregator.md) — `CLOSED`
-4. `QWS-0504` [`story_4_recursive_lineage_traversal.md`](epic_5_context_enrichment/story_4_recursive_lineage_traversal.md) — `ready`
+4. `QWS-0504` [`story_4_recursive_lineage_traversal.md`](epic_5_context_enrichment/closed/story_4_recursive_lineage_traversal.md) — `CLOSED`
 
 ---
 
@@ -158,7 +158,10 @@ Stories (execution order):
 ---
 
 ## Current Focus
-- **Now:** Epic 5 — QWS-0504 (recursive lineage) next.
-- **Epic 8 QWS-0802** (SUPERSEDED_BY) is unblocked and can be picked up any time — no dependencies.
-- **Parallel track:** Epic 7 QWS-0701 (PyPI packaging) is `ready` and can be picked up any time without blocking research work.
+- **Epic 5 COMPLETE** — all 5 stories CLOSED.
+- **Next options (all unblocked):**
+  - QWS-0601 (Hypothesis Journaling) — starts Epic 6; unlocks QWS-0604
+  - QWS-0802 (SUPERSEDED_BY) — lightest lift; no dependencies
+  - QWS-0801 (FormerChampion Lifecycle) — starts Epic 8
+  - QWS-0701 (PyPI Packaging) — independent; can run alongside any epic
 

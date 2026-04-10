@@ -26,7 +26,6 @@ from .query_models import (
     StrategySummaryV1,
 )
 
-
 GET_STRATEGY_SUMMARY_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})
 CALL (s) {
@@ -119,24 +118,6 @@ RETURN {
 LIMIT 1
 """.strip()
 
-GET_STRATEGY_LINEAGE_V1_CYPHER = """
-MATCH (s:Strategy {strategy_id: $strategy_id})-[:PRODUCED_CHAMPION]->(ch:Champion)
-WHERE coalesce(s.status, '') <> 'ABORTED'
-OPTIONAL MATCH (ch)-[:PIVOTED_FROM]->(r:Run)
-OPTIONAL MATCH (r)-[:USES_CONFIG]->(c:Config)
-RETURN {
-  strategy_id: s.strategy_id,
-  champion_id: ch.champion_id,
-  freeze_date: ch.freeze_date,
-  oos_status: ch.oos_status,
-  pivot_from_run_id: r.run_id,
-  pivot_run_timestamp: r.timestamp,
-  pivot_run_artifact_path: r.artifact_path,
-  pivot_config_id: c.config_id
-} AS result
-ORDER BY ch.freeze_date DESC, ch.champion_id ASC
-""".strip()
-
 GET_RECENT_CHAMPIONS_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
 WHERE coalesce(s.status, '') <> 'ABORTED'
@@ -154,10 +135,21 @@ RETURN {
 ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 """.strip()
 
-GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER = """
-MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)-[:PIVOTED_FROM]->(r:Run {run_id: $run_id})
+_DEPTH_MAX = 10
+
+
+def _build_downstream_cypher(depth: int) -> str:
+    """Return downstream-champions Cypher with depth bound inlined as a literal.
+
+    Neo4j does not support parameters in variable-length relationship bounds
+    (``*1..$depth`` is rejected). The depth value is validated before this
+    function is called, so inlining it as a literal is safe.
+    """
+    return f"""
+MATCH (ch:Champion)-[:PIVOTED_FROM*1..{depth}]->(r:Run {{run_id: $run_id}})
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch)
 WHERE coalesce(s.status, '') <> 'ABORTED'
-RETURN {
+RETURN {{
   champion_id: ch.champion_id,
   strategy_id: s.strategy_id,
   freeze_date: ch.freeze_date,
@@ -166,9 +158,38 @@ RETURN {
   artifact_path: ch.artifact_path,
   pivot_from_run_id: r.run_id,
   metrics_summary: ch.metrics_summary
-} AS result
+}} AS result
 ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 """.strip()
+
+
+def _build_lineage_cypher(depth: int) -> str:
+    """Return strategy-lineage Cypher with depth bound inlined as a literal.
+
+    See ``_build_downstream_cypher`` for why inlining is required.
+    """
+    return f"""
+MATCH (s:Strategy {{strategy_id: $strategy_id}})-[:PRODUCED_CHAMPION]->(ch:Champion)
+WHERE coalesce(s.status, '') <> 'ABORTED'
+OPTIONAL MATCH (ch)-[:PIVOTED_FROM*1..{depth}]->(r:Run)
+OPTIONAL MATCH (r)-[:USES_CONFIG]->(c:Config)
+RETURN {{
+  strategy_id: s.strategy_id,
+  champion_id: ch.champion_id,
+  freeze_date: ch.freeze_date,
+  oos_status: ch.oos_status,
+  pivot_from_run_id: r.run_id,
+  pivot_run_timestamp: r.timestamp,
+  pivot_run_artifact_path: r.artifact_path,
+  pivot_config_id: c.config_id
+}} AS result
+ORDER BY ch.freeze_date DESC, ch.champion_id ASC
+""".strip()
+
+
+# Canonical depth=1 forms — used as stable exports for tests and registry.
+GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER = _build_downstream_cypher(1)
+GET_STRATEGY_LINEAGE_V1_CYPHER = _build_lineage_cypher(1)
 
 GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER = """
 MATCH (anchor:Strategy {strategy_id: $strategy_id})
@@ -492,17 +513,24 @@ class GraphQueryService:
         with self._driver.session(database=self._database) as session:
             return get_config_linkage_v1(session, run_id)
 
-    def get_strategy_lineage_v1(self, strategy_id: str) -> list[dict[str, Any]]:
+    def get_strategy_lineage_v1(self, strategy_id: str, depth: int = 1) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
-            return get_strategy_lineage_v1(session, strategy_id)
+            return get_strategy_lineage_v1(session, strategy_id, depth=depth)
 
     def get_recent_champions_v1(self, limit: int = 20) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_recent_champions_v1(session, limit=limit)
 
-    def get_downstream_champions_v1(self, run_id: str) -> list[dict[str, Any]]:
+    def get_downstream_champions_v1(
+        self,
+        run_id: str,
+        depth: int = 1,
+        include_retired: bool = False,
+    ) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
-            return get_downstream_champions_v1(session, run_id)
+            return get_downstream_champions_v1(
+                session, run_id, depth=depth, include_retired=include_retired
+            )
 
     def get_cross_artifact_correlation_v1(
         self,
@@ -731,10 +759,26 @@ def get_config_linkage_v1(session: QuerySession, run_id: str) -> dict[str, Any] 
     return model.model_dump(mode="json")
 
 
-def get_strategy_lineage_v1(session: QuerySession, strategy_id: str) -> list[dict[str, Any]]:
-    """Return champion lineage rows for a strategy with explicit optional pivots."""
+def get_strategy_lineage_v1(
+    session: QuerySession,
+    strategy_id: str,
+    depth: int = 1,
+) -> list[dict[str, Any]]:
+    """Return champion lineage rows for a strategy with explicit optional pivots.
 
-    rows = _all_results(session, GET_STRATEGY_LINEAGE_V1_CYPHER, strategy_id=strategy_id)
+    Args:
+        strategy_id: Canonical strategy ID to query.
+        depth: Ancestor chain depth (1–10). Default 1 returns only direct pivot
+               run per champion. At depth > 1 each row represents one ancestor hop,
+               so a champion with a 2-hop chain produces two rows. Hard cap at 10.
+
+    Raises:
+        ValueError: When depth is outside the range 1–10.
+    """
+    if not (1 <= depth <= _DEPTH_MAX):
+        raise ValueError(f"depth must be between 1 and {_DEPTH_MAX}, got {depth}")
+
+    rows = _all_results(session, _build_lineage_cypher(depth), strategy_id=strategy_id)
     items = [
         StrategyLineageV1(
             strategy_id=str(row["strategy_id"]),
@@ -771,16 +815,34 @@ def get_recent_champions_v1(session: QuerySession, limit: int = 20) -> list[dict
     return items[:limit]
 
 
-def get_downstream_champions_v1(session: QuerySession, run_id: str) -> list[dict[str, Any]]:
-    """Return champions that pivoted from *run_id* via an explicit PIVOTED_FROM edge.
+def get_downstream_champions_v1(
+    session: QuerySession,
+    run_id: str,
+    depth: int = 1,
+    include_retired: bool = False,
+) -> list[dict[str, Any]]:
+    """Return champions that pivoted from *run_id* via explicit PIVOTED_FROM edges.
 
-    Traversal depth: one hop (``Champion-[:PIVOTED_FROM]->Run``).
+    Args:
+        run_id: Target run to find downstream champions for.
+        depth: Traversal depth (1–10). Default 1 matches only direct children
+               (``Champion-[:PIVOTED_FROM]->Run``). Hard cap at 10 to prevent
+               runaway graph scans.
+        include_retired: When True, every row includes a ``node_type`` field
+                         (``"champion"``). RetiredChampion nodes will be included
+                         once QWS-0801 is implemented. Default False.
+
     Returns an empty list when no explicit pivot edges exist for *run_id*.
     Only PIVOTED_FROM edges written at ingest time are traversed; no inferred pivots.
-    """
 
-    rows = _all_results(session, GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER, run_id=run_id)
-    return [
+    Raises:
+        ValueError: When depth is outside the range 1–10.
+    """
+    if not (1 <= depth <= _DEPTH_MAX):
+        raise ValueError(f"depth must be between 1 and {_DEPTH_MAX}, got {depth}")
+
+    rows = _all_results(session, _build_downstream_cypher(depth), run_id=run_id)
+    results = [
         ChampionDetailsV1(
             champion_id=str(row["champion_id"]),
             strategy_id=str(row["strategy_id"]),
@@ -793,6 +855,10 @@ def get_downstream_champions_v1(session: QuerySession, run_id: str) -> list[dict
         ).model_dump(mode="json")
         for row in rows
     ]
+    if include_retired:
+        for r in results:
+            r["node_type"] = "champion"
+    return results
 
 
 def get_cross_artifact_correlation_v1(
@@ -990,6 +1056,8 @@ __all__ = [
     "GET_CONFIG_LINKAGE_V1_CYPHER",
     "GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER",
     "GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER",
+    "_build_downstream_cypher",
+    "_build_lineage_cypher",
     "GET_FAMILY_CLUSTER_V1_CYPHER",
     "GET_FRAGILITY_REPORT_V1_CYPHER",
     "GET_INSTRUMENT_CONCENTRATION_V1_CYPHER",
