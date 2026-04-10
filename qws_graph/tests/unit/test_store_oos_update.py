@@ -4,6 +4,7 @@ Covers:
 - store.update_champion_oos_status() — valid transition, lifecycle conflict (retired),
   champion not found
 - _cmd_oos_update / cmd_record --oos — CLI flag parsing, exit codes, receipt writing
+- QWS-0402C: --sharpe propagation, negative rejection, receipt oos_sharpe key
 """
 
 from __future__ import annotations
@@ -46,6 +47,7 @@ class FakeGraphStore:
         champion_id: str,
         status: str,
         oos_date: str | None = None,
+        sharpe: float | None = None,
     ) -> bool:
         if self._raise_infra:
             raise StoreInfraError("fake infra failure")
@@ -60,6 +62,7 @@ class FakeGraphStore:
             "champion_id": champion_id,
             "status": status,
             "oos_date": oos_date,
+            "sharpe": sharpe,
         })
         return True
 
@@ -82,6 +85,7 @@ def _run_oos(
     champion_exists: bool = True,
     current_oos_status: str = "oos_pending",
     raise_infra: bool = False,
+    sharpe: float | None = None,
     tmp_path: Path | None = None,
     monkeypatch=None,
 ) -> tuple[int, FakeGraphStore]:
@@ -107,6 +111,7 @@ def _run_oos(
     args = Namespace(
         oos=oos_status,
         champion=champion_id,
+        sharpe=sharpe,
         bundle=None,
         file=None,
         timeout_seconds=3,
@@ -199,6 +204,7 @@ class TestOosCliValidation:
         args = Namespace(
             oos="oos_pass",
             champion=None,
+            sharpe=None,
             bundle=None,
             file=None,
             timeout_seconds=3,
@@ -240,6 +246,7 @@ class TestOosReceipt:
         receipt = json.loads((tmp_path / ".qws" / "receipts" / "abc123def456.json").read_text())
         assert receipt["kind"] == "oos_update"
         assert receipt["status"] == "persisted"
+        assert receipt["oos_sharpe"] is None
 
     def test_no_receipt_on_failure(self, monkeypatch, tmp_path) -> None:
         _run_oos(champion_exists=False, monkeypatch=monkeypatch, tmp_path=tmp_path)
@@ -258,3 +265,46 @@ class TestValidOosStatuses:
     def test_old_enum_values_excluded(self) -> None:
         assert "live_paper" not in _VALID_OOS_STATUSES
         assert "retired" not in _VALID_OOS_STATUSES
+
+
+# ---------------------------------------------------------------------------
+# QWS-0402C: --sharpe propagation
+# ---------------------------------------------------------------------------
+
+class TestOosSharpePropagation:
+    def test_sharpe_stored_when_passed(self, monkeypatch, tmp_path) -> None:
+        code, store = _run_oos(
+            sharpe=3.21, monkeypatch=monkeypatch, tmp_path=tmp_path
+        )
+        assert code == 0
+        assert store.updates[0]["sharpe"] == 3.21
+
+    def test_sharpe_absent_is_none(self, monkeypatch, tmp_path) -> None:
+        code, store = _run_oos(monkeypatch=monkeypatch, tmp_path=tmp_path)
+        assert code == 0
+        assert store.updates[0]["sharpe"] is None
+
+    def test_sharpe_stored_on_oos_fail(self, monkeypatch, tmp_path) -> None:
+        code, store = _run_oos(
+            oos_status="oos_fail", sharpe=0.8,
+            monkeypatch=monkeypatch, tmp_path=tmp_path,
+        )
+        assert code == 0
+        assert store.updates[0]["sharpe"] == 0.8
+
+    def test_sharpe_negative_rejected(self, monkeypatch, tmp_path, capsys) -> None:
+        code, store = _run_oos(
+            sharpe=-1.0, monkeypatch=monkeypatch, tmp_path=tmp_path
+        )
+        assert code == 1
+        assert len(store.updates) == 0
+        err = capsys.readouterr().err
+        assert "non-negative" in err.lower() or "--sharpe" in err
+
+    def test_sharpe_in_receipt_payload(self, monkeypatch, tmp_path) -> None:
+        _run_oos(
+            sharpe=3.21, champion_id="abc123def456",
+            monkeypatch=monkeypatch, tmp_path=tmp_path,
+        )
+        receipt = json.loads((tmp_path / ".qws" / "receipts" / "abc123def456.json").read_text())
+        assert receipt["oos_sharpe"] == 3.21

@@ -348,8 +348,15 @@ class GraphStore:
         champion_id: str,
         status: str,
         oos_date: str | None = None,
+        sharpe: float | None = None,
     ) -> bool:
-        """Update oos_status and oos_date on a Champion node.
+        """Update oos_status, oos_date, and optionally metrics_oos_sharpe on a Champion node.
+
+        Args:
+            champion_id: Target Champion node ID.
+            status: New oos_status value.
+            oos_date: ISO date; defaults to today.
+            sharpe: OOS Sharpe ratio. Stored as ``metrics_oos_sharpe`` when not None.
 
         Returns ``True`` when the champion was found and updated, ``False`` when no
         ``Champion`` node with that ``champion_id`` exists.
@@ -385,6 +392,7 @@ class GraphStore:
                         champion_id=champion_id,
                         oos_status=status,
                         oos_date=resolved_date,
+                        oos_sharpe=sharpe,
                     )
                     return list(result)
 

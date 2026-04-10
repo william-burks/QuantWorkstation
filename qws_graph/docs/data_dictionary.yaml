@@ -521,6 +521,15 @@ nodes:
         description: >
           ISO date on which `qw record --oos` was last run for this Champion.
           Null until the first OOS update. Never set by the champion ingest path.
+      metrics_oos_sharpe:
+        type: float
+        nullable: true
+        graph_only: true
+        description: >
+          OOS Sharpe ratio recorded via `qw record --oos --sharpe <value>`.
+          Null until first `--sharpe` call. Enables IS/OOS drift analysis
+          in compare_strategy_performance (QWS-0503) and portfolio_alpha
+          (QWS-0603). Must be non-negative.
       fragilities:
         type: list[str]
         nullable: false

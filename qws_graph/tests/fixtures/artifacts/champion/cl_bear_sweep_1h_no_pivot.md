@@ -60,4 +60,9 @@ python strategies/bear_cl_sweep_1h_baseline.py \
   --start-date 2025-01-01 \
   --end-date 2025-06-30 \
   --results-csv research/results/futures/liquidity_sweep/oos/cl_bear_sweep_1h_oos_window1.csv
+
+# Record OOS result:
+qw record --oos oos_pass \
+  --champion <champion_id> \
+  --sharpe 3.10          # optional — records OOS Sharpe for drift analysis
 ```

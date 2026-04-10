@@ -262,6 +262,7 @@ MATCH (ch:Champion {champion_id: $champion_id})
 SET
   ch.oos_status = $oos_status,
   ch.oos_date = date($oos_date),
+  ch.metrics_oos_sharpe = $oos_sharpe,
   ch.updated_at = datetime()
 RETURN ch.champion_id AS champion_id
 """.strip()

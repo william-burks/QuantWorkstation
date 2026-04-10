@@ -616,23 +616,27 @@ Edge: `(Strategy)-[:HAS_RUN_SUMMARY]->(RunStatsSummary)`
 Merged idempotently on `summary_id`; when the same CSV is re-ingested after modification
 (mtime changes) a new `summary_id` is generated and a new node is created.
 
-### OOS Outcome Update Contract (QWS-0402)
+### OOS Outcome Update Contract (QWS-0402 + QWS-0402C)
 
-`qw record --oos <status> --champion <id>` updates two properties on the `Champion` node
-via `update_champion_oos_status()`:
+`qw record --oos <status> --champion <id> [--sharpe <float>]` updates properties on
+the `Champion` node via `update_champion_oos_status()`:
 
 ```
-Champion.oos_status  = "oos_pass" | "oos_fail" | "oos_pending"
-Champion.oos_date    = date()     — ISO date of the update (today by default)
+Champion.oos_status       = "oos_pass" | "oos_fail" | "oos_pending"
+Champion.oos_date         = date()     — ISO date of the update (today by default)
+Champion.metrics_oos_sharpe = <float>  — set when --sharpe is provided; otherwise unchanged
 ```
 
 These properties are **never written by the champion ingest path** (`CHAMPION_INGEST_QUERY`).
-Re-ingesting a champion markdown does not touch `oos_date`.
+Re-ingesting a champion markdown does not touch `oos_date` or `metrics_oos_sharpe`.
 
 Valid `oos_status` values:
 - `oos_pending` — default; no OOS validation performed yet
 - `oos_pass` — OOS validation passed
 - `oos_fail` — OOS validation failed
+
+`--sharpe` is optional. When absent, `metrics_oos_sharpe` remains null (backwards-compatible).
+When present, must be non-negative (negative values rejected with exit code 1).
 
 Migration note: nodes carrying the old enum values (`live_paper`, `retired`) from
 pre-QWS-0402 ingest are handled at write time:
@@ -640,6 +644,7 @@ pre-QWS-0402 ingest are handled at write time:
 - `retired` → rejected with a lifecycle error; use `qw retire` for lifecycle transitions
 
 A receipt with `kind: oos_update` and `status: persisted` is written on success.
+The receipt includes an `oos_sharpe` key: float when `--sharpe` was provided, null when absent.
 
 ### ResearchTarget Singleton Contract (QWS-0408)
 
@@ -800,6 +805,9 @@ Options:
 - `--file <path>`: artifact path (required)
 - `--kind <kind>`: artifact kind (required)
 - `--pivot-from <run_id>`: explicit pivot link for champion ingestion
+- `--oos <status>`: OOS validation outcome (oos_pass | oos_fail | oos_pending), requires --champion
+- `--champion <id>`: Champion node ID (required with --oos)
+- `--sharpe <float>`: OOS Sharpe ratio to store on Champion (optional with --oos; must be non-negative)
 - `--offline`: skip Neo4j write; write pending payload
 - `--timeout-seconds <int>`: Neo4j timeout (default 3)
 - `--repo-root <path>`: optional repo root override

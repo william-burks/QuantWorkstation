@@ -98,11 +98,12 @@ class ReceiptWriter:
         node_counts: dict[str, int],
         relationship_counts: dict[str, int],
         warnings: list[str] | None = None,
+        oos_sharpe: float | None = None,
     ) -> None:
         """Write a receipt JSON file for a successful ingest."""
         self.receipts_dir.mkdir(parents=True, exist_ok=True)
 
-        receipt = {
+        receipt: dict[str, Any] = {
             "id": artifact_id,
             "kind": kind,
             "artifact_path": artifact_path,
@@ -113,6 +114,9 @@ class ReceiptWriter:
             "relationship_counts": relationship_counts,
             "warnings": warnings or [],
         }
+        # Include oos_sharpe in oos_update receipts (float when passed, null when absent)
+        if kind == "oos_update":
+            receipt["oos_sharpe"] = oos_sharpe
 
         receipt_path = self.receipts_dir / f"{artifact_id}.json"
         receipt_path.write_text(json.dumps(receipt, indent=2), encoding="utf-8")
@@ -406,10 +410,10 @@ _TARGET_INT_KEYS = frozenset({"max_holding_hours", "min_trades"})
 
 
 def _cmd_oos_update(args: argparse.Namespace) -> int:
-    """Execute `qw record --oos <status> --champion <id>`.
+    """Execute `qw record --oos <status> --champion <id> [--sharpe <float>]`.
 
-    Updates oos_status (and oos_date, optionally oos_reason) on an existing
-    Champion node.  Writes a receipt with kind=oos_update.
+    Updates oos_status (and oos_date, optionally metrics_oos_sharpe) on an
+    existing Champion node.  Writes a receipt with kind=oos_update.
 
     Exit codes:
         0: champion found and updated, receipt written
@@ -418,6 +422,7 @@ def _cmd_oos_update(args: argparse.Namespace) -> int:
     """
     oos_status = args.oos
     champion_id = getattr(args, "champion", None)
+    sharpe: float | None = getattr(args, "sharpe", None)
     timeout_seconds = args.timeout_seconds
     repo_root = Path(args.repo_root) if args.repo_root else Path.cwd()
 
@@ -429,6 +434,14 @@ def _cmd_oos_update(args: argparse.Namespace) -> int:
         valid = ", ".join(sorted(_VALID_OOS_STATUSES))
         print(
             f"ERROR: invalid oos_status {oos_status!r}; must be one of: {valid}",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Validate --sharpe: must be non-negative when provided
+    if sharpe is not None and sharpe < 0:
+        print(
+            f"ERROR: --sharpe must be non-negative, got {sharpe}",
             file=sys.stderr,
         )
         return 1
@@ -447,6 +460,7 @@ def _cmd_oos_update(args: argparse.Namespace) -> int:
             found = store.update_champion_oos_status(
                 champion_id=champion_id,
                 status=oos_status,
+                sharpe=sharpe,
             )
         finally:
             store.close()
@@ -468,6 +482,7 @@ def _cmd_oos_update(args: argparse.Namespace) -> int:
     op_sig = f"oos_update:{champion_id}:{oos_status}"
     artifact_hash = hashlib.sha256(op_sig.encode()).hexdigest()
 
+    # Build receipt with oos_sharpe key
     receipt_writer = ReceiptWriter(repo_root)
     try:
         receipt_writer.write_receipt(
@@ -478,6 +493,7 @@ def _cmd_oos_update(args: argparse.Namespace) -> int:
             status="persisted",
             node_counts={"Champion": 1},
             relationship_counts={},
+            oos_sharpe=sharpe,
         )
     except Exception as exc:  # noqa: BLE001
         print(f"ERROR: Failed to write receipt: {exc}", file=sys.stderr)
@@ -993,6 +1009,13 @@ def main() -> int:
         default=None,
         metavar="CHAMPION_ID",
         help="Champion node ID to update (required with --oos)",
+    )
+    record_parser.add_argument(
+        "--sharpe",
+        type=float,
+        default=None,
+        metavar="FLOAT",
+        help="OOS Sharpe ratio to store on Champion (optional with --oos; must be non-negative)",
     )
     record_parser.add_argument(
         "--kind",

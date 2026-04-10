@@ -62,5 +62,10 @@ python strategies/bear_es_sweep_1h_baseline.py \
   --end-date 2024-06-30 \
   --results-csv results/es_bear_sweep_1h_oos_window1.csv \
   --pivot-from a1b2c3d4e5f6
+
+# Record OOS result:
+qw record --oos oos_pass \
+  --champion <champion_id> \
+  --sharpe 2.84          # optional — records OOS Sharpe for drift analysis
 ```
 

@@ -4,7 +4,7 @@
 QWS-0402C
 
 ## Status
-READY
+CLOSED
 
 ## Summary
 Amend `qw record --oos` to accept an optional `--sharpe <float>` argument. Store
@@ -91,23 +91,23 @@ qw record --oos pass \
 ```
 
 ## Acceptance Criteria
-- [ ] `qw record --oos pass --champion <id> --sharpe 3.21` stores `metrics_oos_sharpe = 3.21`
+- [x] `qw record --oos pass --champion <id> --sharpe 3.21` stores `metrics_oos_sharpe = 3.21`
   on the Champion node.
-- [ ] `qw record --oos pass --champion <id>` (no `--sharpe`) leaves `metrics_oos_sharpe` null,
+- [x] `qw record --oos pass --champion <id>` (no `--sharpe`) leaves `metrics_oos_sharpe` null,
   not an error.
-- [ ] `qw record --oos fail --champion <id> --sharpe 0.8` stores `metrics_oos_sharpe = 0.8`
+- [x] `qw record --oos fail --champion <id> --sharpe 0.8` stores `metrics_oos_sharpe = 0.8`
   (fail with a Sharpe is valid — records what OOS actually produced).
-- [ ] `qw record --oos pass --champion <id> --sharpe -1.0` returns exit code 1 with a clear
+- [x] `qw record --oos pass --champion <id> --sharpe -1.0` returns exit code 1 with a clear
   error message (negative Sharpe rejected).
-- [ ] Receipt JSON includes `oos_sharpe` key: float when passed, null when absent.
-- [ ] `data_dictionary.yaml` documents `metrics_oos_sharpe` as nullable float on Champion.
-- [ ] `graph_v1_contract.md` Champion property table includes `metrics_oos_sharpe`.
-- [ ] All three champion fixtures show `--sharpe` as an optional flag in OOS Command block.
-- [ ] All existing `test_store_oos_update.py` tests remain green (backwards-compatible).
+- [x] Receipt JSON includes `oos_sharpe` key: float when passed, null when absent.
+- [x] `data_dictionary.yaml` documents `metrics_oos_sharpe` as nullable float on Champion.
+- [x] `graph_v1_contract.md` Champion property table includes `metrics_oos_sharpe`.
+- [x] All three champion fixtures show `--sharpe` as an optional flag in OOS Command block.
+- [x] All existing `test_store_oos_update.py` tests remain green (backwards-compatible).
 
 ## Definition of Done
-- [ ] CLI flag, store write implemented and tested.
-- [ ] All new test cases pass; all existing OOS tests remain green.
-- [ ] `data_dictionary.yaml`, `graph_v1_contract.md`, runbook updated.
-- [ ] Champion fixtures updated.
-- [ ] Story marked CLOSED.
+- [x] CLI flag, store write implemented and tested.
+- [x] All new test cases pass; all existing OOS tests remain green.
+- [x] `data_dictionary.yaml`, `graph_v1_contract.md`, runbook updated.
+- [x] Champion fixtures updated.
+- [x] Story marked CLOSED.

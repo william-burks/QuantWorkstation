@@ -168,6 +168,28 @@ Expected:
 - If analyst endpoint is reachable, selected runs may include `curator_note` values.
 - If analyst endpoint is unavailable, CLI logs warning and falls back to math tier.
 
+### Record OOS validation result
+Record an OOS outcome on a Champion node:
+```zsh
+cd /Users/will/ClaudeProjects/QuantWorkstation
+qw record --oos oos_pass --champion 0555f1cf1766
+```
+
+With OOS Sharpe for drift analysis:
+```zsh
+qw record --oos oos_pass --champion 0555f1cf1766 --sharpe 2.84
+```
+
+OOS fail with Sharpe (valid — records what OOS actually produced):
+```zsh
+qw record --oos oos_fail --champion 0555f1cf1766 --sharpe 0.8
+```
+
+Expected:
+- Exit `0` on success; receipt written to `.qws/receipts/<champion_id>.json`.
+- `--sharpe` is optional. When absent, `metrics_oos_sharpe` remains null.
+- `--sharpe` must be non-negative. Negative values rejected with exit `1`.
+
 ### Abort a strategy family
 ```zsh
 cd /Users/will/ClaudeProjects/QuantWorkstation

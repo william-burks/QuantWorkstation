@@ -116,7 +116,7 @@ Cancelled (preserved in `cancelled_stories/`):
 - Objective: add family identity and regime context to unlock comparative queries.
 
 Stories (execution order):
-0. `QWS-0402C` [`story_0_oos_sharpe_amendment.md`](epic_5_context_enrichment/story_0_oos_sharpe_amendment.md) — `ready` _(patch: amends QWS-0402; prerequisite for QWS-0503 oos_sharpe column)_
+0. `QWS-0402C` [`story_0_oos_sharpe_amendment.md`](epic_5_context_enrichment/closed/story_0_oos_sharpe_amendment.md) — `CLOSED` _(patch: amends QWS-0402; prerequisite for QWS-0503 oos_sharpe column)_
 1. `QWS-0501` [`story_1_family_id_population.md`](epic_5_context_enrichment/story_1_family_id_population.md) — `ready`
 2. `QWS-0502` [`story_2_regime_tagging.md`](epic_5_context_enrichment/story_2_regime_tagging.md) — `ready`
 3. `QWS-0503` [`story_3_cross_instrument_aggregator.md`](epic_5_context_enrichment/story_3_cross_instrument_aggregator.md) — `blocked` _(blocked on QWS-0501 + QWS-0402C)_

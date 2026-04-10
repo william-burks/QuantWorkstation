@@ -51,5 +51,10 @@ The 4H bull sweep setup keeps the sample small but cleaner, and the Q1 wick filt
 
 ```zsh
 python strategies/nq_bull_sweep_4h_q1_only_v1.py --live --pivot-from c3d4e5f6a1b2
+
+# Record OOS result:
+qw record --oos oos_pass \
+  --champion <champion_id> \
+  --sharpe 1.85          # optional — records OOS Sharpe for drift analysis
 ```
 
