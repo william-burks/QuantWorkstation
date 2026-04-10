@@ -25,6 +25,7 @@ from .query import (
     get_portfolio_alpha_v1,
     get_promotion_candidates_v1,
     get_recent_champions_v1,
+    get_regime_performance_v1,
     get_research_targets_v1,
     get_run_history_v1,
     get_runs_by_regime_v1,
@@ -224,6 +225,23 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         ),
         requires_graph=True,
     ),
+    "regime_performance": PresetSpec(
+        name="regime_performance",
+        description=(
+            "Portfolio-wide regime performance table. Groups runs by (strategy, regime) and "
+            "computes Regime Diversity Score — count of distinct regimes where the strategy's "
+            "best Sharpe met the 2.0 threshold. Score=1 → Regime Specialist (fragility flag). "
+            "Score≥3 → Regime Robust. Pass strategy_id to narrow to one strategy."
+        ),
+        params=(
+            PresetParam(
+                "strategy_id",
+                required=False,
+                description="Filter to a single strategy_id (optional)",
+            ),
+        ),
+        requires_graph=True,
+    ),
 }
 
 
@@ -352,6 +370,11 @@ def run_preset(
         assert service is not None
         return service.get_runs_by_regime_v1(regime=regime)
 
+    if name == "regime_performance":
+        assert service is not None
+        strategy_id = params.get("strategy_id") or None
+        return service.get_regime_performance_v1(strategy_id=strategy_id)
+
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 
 
@@ -411,6 +434,7 @@ _PRESET_VIEW_FUNCTIONS = {
     "promotion_candidates": get_promotion_candidates_v1,
     "research_targets": get_research_targets_v1,
     "runs_by_regime": get_runs_by_regime_v1,
+    "regime_performance": get_regime_performance_v1,
 }
 
 __all__ = [

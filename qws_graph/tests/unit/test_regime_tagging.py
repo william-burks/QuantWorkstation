@@ -297,6 +297,139 @@ class TestRunsByRegimePreset:
         assert errors == []
 
 
+class FakeRegimePerformanceService:
+    """Minimal duck-type for regime_performance routing tests."""
+
+    def __init__(self, rows: list[dict[str, Any]] | None = None) -> None:
+        self._rows = rows or []
+        self.calls: list[tuple[str, dict[str, Any]]] = []
+
+    def get_runs_by_regime_v1(self, regime: str) -> list[dict[str, Any]]:  # required by duck-type
+        return []
+
+    def get_regime_performance_v1(self, strategy_id: str | None = None) -> list[dict[str, Any]]:
+        self.calls.append(("get_regime_performance_v1", {"strategy_id": strategy_id}))
+        if strategy_id is None:
+            return self._rows
+        return [r for r in self._rows if r.get("strategy_id") == strategy_id]
+
+    def close(self) -> None:
+        pass
+
+
+class TestRegimePerformancePreset:
+    """AC#1–AC#6 unit-level coverage for regime_performance preset."""
+
+    def _make_rows(self) -> list[dict[str, Any]]:
+        """Two strategies: alpha in 1 regime (Specialist), beta in 3 (Robust)."""
+        return [
+            {
+                "strategy_id": "es-alpha",
+                "instrument": "ES",
+                "family_id": "family-sweep",
+                "regime": "high_vol",
+                "best_sharpe": 3.1,
+                "run_count": 5,
+                "diversity_score": 1,
+                "fragility_class": "Regime Specialist",
+            },
+            {
+                "strategy_id": "es-beta",
+                "instrument": "ES",
+                "family_id": "family-trend",
+                "regime": "high_vol",
+                "best_sharpe": 2.5,
+                "run_count": 3,
+                "diversity_score": 3,
+                "fragility_class": "Regime Robust",
+            },
+            {
+                "strategy_id": "es-beta",
+                "instrument": "ES",
+                "family_id": "family-trend",
+                "regime": "trend_down",
+                "best_sharpe": 2.1,
+                "run_count": 2,
+                "diversity_score": 3,
+                "fragility_class": "Regime Robust",
+            },
+            {
+                "strategy_id": "es-beta",
+                "instrument": "ES",
+                "family_id": "family-trend",
+                "regime": "mean_reverting",
+                "best_sharpe": 2.8,
+                "run_count": 4,
+                "diversity_score": 3,
+                "fragility_class": "Regime Robust",
+            },
+        ]
+
+    def test_regime_performance_in_catalog(self) -> None:
+        assert "regime_performance" in PRESET_CATALOG
+
+    def test_requires_graph(self) -> None:
+        assert PRESET_CATALOG["regime_performance"].requires_graph is True
+
+    def test_strategy_id_param_optional(self) -> None:
+        spec = PRESET_CATALOG["regime_performance"]
+        params = {p.name: p for p in spec.params}
+        assert "strategy_id" in params
+        assert params["strategy_id"].required is False
+
+    def test_no_params_returns_all_rows(self) -> None:
+        rows = self._make_rows()
+        svc = FakeRegimePerformanceService(rows)
+        result = run_preset("regime_performance", {}, service=svc)
+        assert len(result) == 4
+        assert svc.calls[0] == ("get_regime_performance_v1", {"strategy_id": None})
+
+    def test_strategy_id_param_filters(self) -> None:
+        rows = self._make_rows()
+        svc = FakeRegimePerformanceService(rows)
+        result = run_preset("regime_performance", {"strategy_id": "es-alpha"}, service=svc)
+        assert all(r["strategy_id"] == "es-alpha" for r in result)
+        assert svc.calls[0] == ("get_regime_performance_v1", {"strategy_id": "es-alpha"})
+
+    def test_diversity_score_1_gives_regime_specialist(self) -> None:
+        """AC#3: score=1 → fragility_class='Regime Specialist'."""
+        rows = self._make_rows()
+        svc = FakeRegimePerformanceService(rows)
+        result = run_preset("regime_performance", {}, service=svc)
+        alpha_rows = [r for r in result if r["strategy_id"] == "es-alpha"]
+        assert len(alpha_rows) == 1
+        assert alpha_rows[0]["diversity_score"] == 1
+        assert alpha_rows[0]["fragility_class"] == "Regime Specialist"
+
+    def test_diversity_score_3_gives_regime_robust(self) -> None:
+        """AC#4: score≥3 → fragility_class='Regime Robust'."""
+        rows = self._make_rows()
+        svc = FakeRegimePerformanceService(rows)
+        result = run_preset("regime_performance", {}, service=svc)
+        beta_rows = [r for r in result if r["strategy_id"] == "es-beta"]
+        assert all(r["diversity_score"] == 3 for r in beta_rows)
+        assert all(r["fragility_class"] == "Regime Robust" for r in beta_rows)
+
+    def test_empty_result_no_error(self) -> None:
+        """AC#6: empty result when no regime-tagged runs exist."""
+        svc = FakeRegimePerformanceService([])
+        result = run_preset("regime_performance", {}, service=svc)
+        assert result == []
+
+    def test_no_service_raises_runtime_error(self) -> None:
+        with pytest.raises(RuntimeError, match="requires a graph connection"):
+            run_preset("regime_performance", {}, service=None)
+
+    def test_output_contains_required_fields(self) -> None:
+        """AC#1: all required output fields present in each row."""
+        rows = self._make_rows()
+        svc = FakeRegimePerformanceService(rows)
+        result = run_preset("regime_performance", {}, service=svc)
+        required = {"strategy_id", "instrument", "family_id", "regime", "best_sharpe", "run_count", "diversity_score", "fragility_class"}
+        for row in result:
+            assert required.issubset(row.keys()), f"Missing fields in {row}"
+
+
 class TestRunsByRegimeRouting:
     def test_routes_to_service_method(self) -> None:
         rows = [

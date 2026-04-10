@@ -575,4 +575,5 @@ class TestPresetCatalogStory4:
             "promotion_candidates",
             "research_targets",
             "runs_by_regime",
+            "regime_performance",
         }

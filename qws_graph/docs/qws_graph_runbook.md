@@ -204,6 +204,20 @@ returns matching runs ordered by Sharpe descending.
 
 **Without `--regime`:** Run.regime is NULL; no Regime node or IN_REGIME edge is created.
 
+**Query regime performance table (portfolio-wide):**
+```zsh
+qw query --name regime_performance
+# Filter to one strategy
+qw query --name regime_performance --param strategy_id=<id>
+```
+
+Output columns: `strategy_id`, `instrument`, `family_id`, `regime`, `best_sharpe`,
+`run_count`, `diversity_score`, `fragility_class`.
+
+**Regime Diversity Score:** count of distinct regimes where the strategy's best Sharpe
+met the 2.0 threshold. Score = 1 → `fragility_class = "Regime Specialist"` (fragility
+flag — strategy only works in one regime). Score ≥ 3 → `fragility_class = "Regime Robust"`.
+
 ### Record OOS validation result
 Record an OOS outcome on a Champion node:
 ```zsh

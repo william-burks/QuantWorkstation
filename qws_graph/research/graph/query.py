@@ -396,6 +396,33 @@ ORDER BY r.sharpe DESC
 """.strip()
 
 
+GET_REGIME_PERFORMANCE_V1_CYPHER = """
+MATCH (s:Strategy)-[:HAS_RUN]->(r:Run)-[:IN_REGIME]->(reg:Regime)
+WHERE coalesce(s.status, '') <> 'ABORTED'
+  AND ($strategy_id IS NULL OR s.strategy_id = $strategy_id)
+WITH s, reg.regime_id AS regime_id, max(r.sharpe) AS best_sharpe, count(r) AS run_count
+WITH s, collect({regime_id: regime_id, sharpe: best_sharpe, runs: run_count}) AS regime_rows
+WITH s, regime_rows,
+     size([row IN regime_rows WHERE row.sharpe >= 2.0]) AS diversity_score
+UNWIND regime_rows AS row
+RETURN {
+  strategy_id: s.strategy_id,
+  instrument: s.instrument,
+  family_id: s.family_id,
+  regime: row.regime_id,
+  best_sharpe: row.sharpe,
+  run_count: row.runs,
+  diversity_score: diversity_score,
+  fragility_class: CASE
+    WHEN diversity_score = 1 THEN 'Regime Specialist'
+    WHEN diversity_score >= 3 THEN 'Regime Robust'
+    ELSE null
+  END
+} AS result
+ORDER BY s.strategy_id, row.sharpe DESC
+""".strip()
+
+
 GET_RUN_STATS_SUMMARY_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary)
 RETURN {
@@ -532,6 +559,10 @@ class GraphQueryService:
     def get_runs_by_regime_v1(self, regime: str) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_runs_by_regime_v1(session, regime=regime)
+
+    def get_regime_performance_v1(self, strategy_id: str | None = None) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_regime_performance_v1(session, strategy_id=strategy_id)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -903,6 +934,25 @@ def get_runs_by_regime_v1(session: QuerySession, regime: str) -> list[dict[str, 
     return _all_results(session, GET_RUNS_BY_REGIME_V1_CYPHER, regime=regime)
 
 
+def get_regime_performance_v1(
+    session: QuerySession,
+    strategy_id: str | None = None,
+) -> list[dict[str, Any]]:
+    """Return regime performance table with Regime Diversity Score per strategy.
+
+    Rows are grouped by (strategy, regime). ``diversity_score`` is the count of
+    distinct regimes where the strategy's best Sharpe met the 2.0 threshold.
+    Score = 1 → "Regime Specialist" (fragility flag). Score ≥ 3 → "Regime Robust".
+
+    Pass ``strategy_id`` to narrow results to a single strategy.
+    """
+    return _all_results(
+        session,
+        GET_REGIME_PERFORMANCE_V1_CYPHER,
+        strategy_id=strategy_id,
+    )
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -922,6 +972,7 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_promotion_candidates_v1": get_promotion_candidates_v1,
     "get_research_targets_v1": get_research_targets_v1,
     "get_runs_by_regime_v1": get_runs_by_regime_v1,
+    "get_regime_performance_v1": get_regime_performance_v1,
 }
 
 
@@ -965,7 +1016,9 @@ __all__ = [
     "get_list_oos_pending_v1",
     "get_portfolio_alpha_v1",
     "get_promotion_candidates_v1",
+    "GET_REGIME_PERFORMANCE_V1_CYPHER",
     "GET_RUNS_BY_REGIME_V1_CYPHER",
+    "get_regime_performance_v1",
     "get_research_targets_v1",
     "get_runs_by_regime_v1",
     "get_staleness_report_v1",
