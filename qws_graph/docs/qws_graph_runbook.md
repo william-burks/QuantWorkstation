@@ -168,6 +168,42 @@ Expected:
 - If analyst endpoint is reachable, selected runs may include `curator_note` values.
 - If analyst endpoint is unavailable, CLI logs warning and falls back to math tier.
 
+### Regime tagging
+
+Tag runs at ingest time with a market regime label. Creates a `Regime` node and an
+`IN_REGIME` edge from each persisted Run to that Regime node. Labels are
+researcher-defined strings — no enum validation.
+
+**Suggested conventions:**
+
+| Label | Description |
+|---|---|
+| `high_vol` | Elevated realized volatility; VIX-like spike or ATR expansion |
+| `low_vol` | Compressed volatility; tight ranges, low ATR |
+| `trend_up` | Sustained uptrend in the underlying instrument |
+| `trend_down` | Sustained downtrend; useful for bear strategies |
+| `mean_reverting` | Sideways, range-bound price action |
+| `crisis` | Systemic stress event (e.g. COVID, GFC); extreme vol + correlation |
+
+**Example — tag a baseline CSV with a regime:**
+```zsh
+qw record \
+  --file results/es_bear_sweep_1h_baseline.csv \
+  --kind baseline_csv \
+  --source-file strategies/legacy/bear_es_sweep_1h_baseline.py \
+  --regime high_vol
+```
+
+**Query runs in a regime:**
+```zsh
+qw query --name runs_by_regime --param regime=high_vol
+```
+
+The query traverses `(Run)-[:IN_REGIME]->(Regime {regime_id: "high_vol"})` and
+returns matching runs ordered by Sharpe descending.
+
+**Without `--regime`:** Run.regime is NULL; no Regime node or IN_REGIME edge is created.
+
 ### Record OOS validation result
 Record an OOS outcome on a Champion node:
 ```zsh

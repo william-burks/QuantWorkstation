@@ -70,6 +70,7 @@ class Run(BaseModel):
     artifact_path: str
     artifact_path_html: str | None = None  # filesystem path to HTML report; set via patch_run_html_path
     curator_note: str | None = None
+    regime: str | None = None  # operator-supplied market regime label (e.g. "high_vol", "trend_up")
     provenance: Provenance
 
     @field_validator("win_rate")

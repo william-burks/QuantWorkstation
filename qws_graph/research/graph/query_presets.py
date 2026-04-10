@@ -27,6 +27,7 @@ from .query import (
     get_recent_champions_v1,
     get_research_targets_v1,
     get_run_history_v1,
+    get_runs_by_regime_v1,
     get_staleness_report_v1,
     get_strategy_lineage_v1,
 )
@@ -207,6 +208,22 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         params=(),
         requires_graph=True,
     ),
+    "runs_by_regime": PresetSpec(
+        name="runs_by_regime",
+        description=(
+            "Return runs tagged with a specific regime label (via IN_REGIME edge). "
+            "Ordered by Sharpe descending. Regime labels are researcher-defined strings "
+            "(e.g. high_vol, trend_up, mean_reverting)."
+        ),
+        params=(
+            PresetParam(
+                "regime",
+                required=True,
+                description="Regime label to filter by (e.g. high_vol, trend_down, mean_reverting)",
+            ),
+        ),
+        requires_graph=True,
+    ),
 }
 
 
@@ -330,6 +347,11 @@ def run_preset(
         assert service is not None
         return service.get_research_targets_v1()
 
+    if name == "runs_by_regime":
+        regime = params["regime"]
+        assert service is not None
+        return service.get_runs_by_regime_v1(regime=regime)
+
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 
 
@@ -388,6 +410,7 @@ _PRESET_VIEW_FUNCTIONS = {
     "list_aborted": get_list_aborted_v1,
     "promotion_candidates": get_promotion_candidates_v1,
     "research_targets": get_research_targets_v1,
+    "runs_by_regime": get_runs_by_regime_v1,
 }
 
 __all__ = [

@@ -381,6 +381,21 @@ RETURN {
 """.strip()
 
 
+GET_RUNS_BY_REGIME_V1_CYPHER = """
+MATCH (s:Strategy)-[:HAS_RUN]->(r:Run)-[:IN_REGIME]->(reg:Regime {regime_id: $regime})
+WHERE coalesce(s.status, '') <> 'ABORTED'
+RETURN {
+  run_id: r.run_id,
+  strategy_id: s.strategy_id,
+  sharpe: r.sharpe,
+  total_trades: r.total_trades,
+  regime: reg.regime_id,
+  ingested_at: toString(r.ingested_at)
+} AS result
+ORDER BY r.sharpe DESC
+""".strip()
+
+
 GET_RUN_STATS_SUMMARY_V1_CYPHER = """
 MATCH (s:Strategy {strategy_id: $strategy_id})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary)
 RETURN {
@@ -513,6 +528,10 @@ class GraphQueryService:
     def get_research_targets_v1(self) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_research_targets_v1(session)
+
+    def get_runs_by_regime_v1(self, regime: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_runs_by_regime_v1(session, regime=regime)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -879,6 +898,11 @@ def get_research_targets_v1(session: QuerySession) -> list[dict[str, Any]]:
     return _all_results(session, GET_RESEARCH_TARGETS_V1_CYPHER)
 
 
+def get_runs_by_regime_v1(session: QuerySession, regime: str) -> list[dict[str, Any]]:
+    """Return all runs tagged with the given regime label via IN_REGIME edge."""
+    return _all_results(session, GET_RUNS_BY_REGIME_V1_CYPHER, regime=regime)
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -897,6 +921,7 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_list_aborted_v1": get_list_aborted_v1,
     "get_promotion_candidates_v1": get_promotion_candidates_v1,
     "get_research_targets_v1": get_research_targets_v1,
+    "get_runs_by_regime_v1": get_runs_by_regime_v1,
 }
 
 
@@ -940,7 +965,9 @@ __all__ = [
     "get_list_oos_pending_v1",
     "get_portfolio_alpha_v1",
     "get_promotion_candidates_v1",
+    "GET_RUNS_BY_REGIME_V1_CYPHER",
     "get_research_targets_v1",
+    "get_runs_by_regime_v1",
     "get_staleness_report_v1",
     "get_query_view",
     "get_recent_champions_v1",

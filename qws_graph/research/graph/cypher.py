@@ -37,6 +37,7 @@ MERGE (r:Run {run_id: row.run.run_id})
      r.last_trade_ts = datetime(row.run.last_trade_ts),
      r.active_window_frequency = row.run.active_window_frequency,
      r.duty_cycle = row.run.duty_cycle,
+     r.regime = row.run.regime,
      r.artifact_hash = row.run.provenance.artifact_hash,
      r.artifact_mtime_iso = row.run.provenance.artifact_mtime_iso,
      r.ingested_at = datetime(row.run.provenance.ingested_at),
@@ -269,6 +270,20 @@ RETURN ch.champion_id AS champion_id
 
 
 # ---------------------------------------------------------------------------
+# Regime node + IN_REGIME edge merge (QWS-0502)
+# ---------------------------------------------------------------------------
+
+REGIME_MERGE_QUERY = """
+UNWIND $regime_rows AS row
+MATCH (r:Run {run_id: row.run_id})
+MERGE (reg:Regime {regime_id: row.regime_id})
+  ON CREATE SET reg.created_at = datetime()
+  SET reg.updated_at = datetime()
+MERGE (r)-[:IN_REGIME]->(reg)
+""".strip()
+
+
+# ---------------------------------------------------------------------------
 # Demo graph seed / teardown (qw seed --demo)
 #
 # Deterministic, idempotent dummy provenance graph. Covers:
@@ -473,6 +488,24 @@ MERGE (ch2:Champion {champion_id: 'demo_champ_002'})
       ch2.is_demo = true
 MERGE (s2)-[:PRODUCED_CHAMPION]->(ch2)
 MERGE (ch2)-[:PIVOTED_FROM]->(r3)
+
+// ── Regime nodes + IN_REGIME edges ──────────────────────────────────────────
+
+MERGE (reg_hv:Regime {regime_id: 'high_vol'})
+  ON CREATE SET reg_hv.created_at = datetime(), reg_hv.is_demo = true
+  SET reg_hv.updated_at = datetime()
+MERGE (r1)-[:IN_REGIME]->(reg_hv)
+MERGE (r3)-[:IN_REGIME]->(reg_hv)
+
+MERGE (reg_td:Regime {regime_id: 'trend_down'})
+  ON CREATE SET reg_td.created_at = datetime(), reg_td.is_demo = true
+  SET reg_td.updated_at = datetime()
+MERGE (r2)-[:IN_REGIME]->(reg_td)
+
+MERGE (reg_mr:Regime {regime_id: 'mean_reverting'})
+  ON CREATE SET reg_mr.created_at = datetime(), reg_mr.is_demo = true
+  SET reg_mr.updated_at = datetime()
+MERGE (r4)-[:IN_REGIME]->(reg_mr)
 """.strip()
 
 

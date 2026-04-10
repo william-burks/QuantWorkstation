@@ -91,7 +91,12 @@ provenance in the graph.
 |---|---|---|
 | `Hypothesis` | QWS-0601 | The Spark: an unproven theory about a market inefficiency |
 | `FormerChampion` | New story needed | Decay watch: alpha slipping but still monitored; sits between Champion and RetiredChampion |
-| `Regime` | QWS-0502 | Market context node: `volatility_state`, `trend_state` (e.g., "Mean Reversion in High Vol") |
+
+### [NEW — QWS-0502] — Regime Context
+
+| Node | Story | Role |
+|---|---|---|
+| `Regime` | QWS-0502 | Market context node keyed on researcher-defined label (e.g. "high_vol", "trend_down"). Connected to Run nodes via IN_REGIME edges. |
 
 ---
 
@@ -108,6 +113,7 @@ provenance in the graph.
 | `PIVOTED_FROM` | Champion | Run | Links a Champion to the specific Run that triggered its promotion |
 | `HAS_RUN_SUMMARY` | Strategy | RunStatsSummary | Links Strategy to rolled-up grid sweep statistics |
 | `HAS_BLOB` | Strategy | BlobArtifact | Attaches raw unstructured artifact to a Strategy |
+| `IN_REGIME` | Run | Regime | Links a Run to its market regime context. Created via `qw record --regime <label>`. |
 
 ### [TARGET] — Not Yet Implemented
 

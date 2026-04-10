@@ -260,6 +260,15 @@ nodes:
         description: >
           Free-text annotation added by the researcher at record time.
           Truncated to 500 characters at ingest.
+      regime:
+        type: str
+        nullable: true
+        description: >
+          Operator-supplied market regime label set at ingest time via `qw record --regime <label>`.
+          Denormalized convenience copy of the linked Regime node's regime_id. Researcher-defined;
+          no enum validation. Suggested conventions: high_vol, low_vol, trend_up, trend_down,
+          mean_reverting, crisis. Absent (NULL) when no regime was tagged.
+        cli_flag: "--regime"
       artifact_hash:
         type: str
         nullable: false
@@ -799,6 +808,32 @@ nodes:
         type: datetime
         nullable: false
 
+  Regime:
+    description: >
+      Market context node keyed on a researcher-defined regime label (e.g. "high_vol",
+      "trend_down"). Created on first use via `qw record --regime <label>`; merged
+      idempotently on subsequent ingests. Connected to Run nodes via IN_REGIME edges.
+      Enables regime-conditional queries and cross-strategy regime performance aggregation.
+    id_key: regime_id
+    id_source: "researcher-supplied label (e.g. high_vol, trend_down, mean_reverting)"
+    labels: ["Regime"]
+    properties:
+      regime_id:
+        type: str
+        nullable: false
+        description: >
+          Researcher-defined regime label. Acts as the node key.
+          Suggested conventions: high_vol, low_vol, trend_up, trend_down,
+          mean_reverting, crisis. No enum — new values created on first use.
+      created_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+      updated_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+
 # ---------------------------------------------------------------------------
 # Relationship types
 # ---------------------------------------------------------------------------
@@ -861,6 +896,15 @@ relationships:
     target: BlobArtifact
     cardinality: one-to-one per artifact_path
     description: Attaches a raw unstructured artifact to a Strategy.
+
+  IN_REGIME:
+    source: Run
+    target: Regime
+    cardinality: many-to-one (one regime per run; multiple runs per regime)
+    description: >
+      Links a Run to its market regime context. Created when `qw record --regime <label>`
+      is supplied. Absent when no regime was tagged. Enables graph traversal from
+      a Strategy through its Runs to the regimes they were tested in.
 
 # ---------------------------------------------------------------------------
 # Tier thresholds

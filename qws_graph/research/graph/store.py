@@ -26,6 +26,7 @@ from .cypher import (
     PATCH_FAMILY_ID_QUERY,
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
+    REGIME_MERGE_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
     UPDATE_CHAMPION_OOS_STATUS_QUERY,
@@ -845,8 +846,16 @@ class GraphStore:
                 }
             )
 
+        regime_rows = [
+            {"run_id": row["run"]["run_id"], "regime_id": row["run"]["regime"]}
+            for row in rows
+            if row["run"].get("regime")
+        ]
+
         def _write(tx) -> None:
             tx.run(CSV_INGEST_QUERY, rows=rows).consume()
+            if regime_rows:
+                tx.run(REGIME_MERGE_QUERY, regime_rows=regime_rows).consume()
             if summary is not None:
                 result = tx.run(
                     "MATCH (:Strategy {strategy_id: $sid})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary) "

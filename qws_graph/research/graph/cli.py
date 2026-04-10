@@ -350,6 +350,13 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
             update={"strategy": artifact.strategy.model_copy(update={"family_id": fid})}
         )
 
+    # Attach regime to all runs when --regime is provided
+    bundle_regime = getattr(args, "regime", None)
+    if bundle_regime is not None:
+        artifact = artifact.model_copy(
+            update={"runs": [r.model_copy(update={"regime": bundle_regime}) for r in artifact.runs]}
+        )
+
     run_ids = [r.run_id for r in artifact.runs]
 
     if dry_run:
@@ -683,6 +690,13 @@ def cmd_record(args: argparse.Namespace) -> int:
         )
         artifact = artifact.model_copy(
             update={"strategy": artifact.strategy.model_copy(update={"family_id": fid})}
+        )
+
+    # Attach regime to all runs when --regime is provided
+    regime = getattr(args, "regime", None)
+    if regime is not None:
+        artifact = artifact.model_copy(
+            update={"runs": [r.model_copy(update={"regime": regime}) for r in artifact.runs]}
         )
 
     # Apply significance gate for grid_csv (unless --all is set)
@@ -1074,6 +1088,16 @@ def main() -> int:
         default=None,
         metavar="PATH",
         help="Strategy Python source file; used to derive family_id (hash of file content)",
+    )
+    record_parser.add_argument(
+        "--regime",
+        default=None,
+        metavar="LABEL",
+        help=(
+            "Market regime label for all Run nodes in this ingest "
+            "(e.g. high_vol, trend_up, mean_reverting). "
+            "Creates a Regime node and IN_REGIME edge per persisted run."
+        ),
     )
     record_parser.add_argument(
         "--all",

@@ -574,4 +574,5 @@ class TestPresetCatalogStory4:
             "list_aborted",
             "promotion_candidates",
             "research_targets",
+            "runs_by_regime",
         }
