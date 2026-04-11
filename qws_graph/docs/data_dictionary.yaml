@@ -629,63 +629,17 @@ nodes:
         nullable: false
         graph_only: true
 
-  FormerChampion:
-    description: >
-      An intermediate lifecycle node between Champion and RetiredChampion.
-      Created by `qw degrade` when a Champion fails OOS or enters decay watch.
-      Holds the cause-of-death (oos_reason) and can be further retired via
-      `qw retire` to produce a RetiredChampion node with RETIRED_TO edge.
-      QWS-0801.
-    id_key: former_champion_id
-    id_source: "hash12(champion_id, degraded_at_iso)"
-    labels: ["FormerChampion"]
-    properties:
-      former_champion_id:
-        type: str
-        nullable: false
-      strategy_id:
-        type: str
-        nullable: false
-      champion_id:
-        type: str
-        nullable: false
-        description: Source Champion node ID.
-      degraded_at:
-        type: datetime
-        nullable: false
-        description: Timestamp of demotion via qw degrade.
-      oos_reason:
-        type: str
-        nullable: false
-        description: >
-          Mandatory cause-of-death string. Must be non-empty — enforced at CLI level.
-          Example: "MaxDD breached -15% in Oct CPI spike; OOS fail".
-      metrics_sharpe_at_degradation:
-        type: float
-        nullable: true
-        description: Sharpe ratio at time of demotion, if available.
-
   RetiredChampion:
     description: >
       A Champion node that has been displaced by a newer promotion. Carries all
       the same properties as Champion. Label is swapped atomically — the node is
       never deleted, only relabeled. Querying :Champion returns only the active
       set; querying :RetiredChampion returns the full lineage chain.
-      Additional properties added by QWS-0801: oos_reason, retirement_note.
     id_key: champion_id
     labels: ["RetiredChampion"]
     note: >
       Do not MERGE on :RetiredChampion — the store layer handles re-labeling.
       Bare MATCH (ch:Champion) will never return RetiredChampion nodes.
-    properties_added_by_qws0801:
-      oos_reason:
-        type: str
-        nullable: true
-        description: Copied from FormerChampion at retirement time via qw retire.
-      retirement_note:
-        type: str
-        nullable: true
-        description: Free-text reason for final retirement, set at qw retire time.
 
   RunStatsSummary:
     description: >
