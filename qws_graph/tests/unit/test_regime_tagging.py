@@ -189,7 +189,7 @@ class TestCliRegimeFlag:
             mock_store_cls.from_env.return_value.__enter__ = lambda s: mock_store
             mock_store_cls.from_env.return_value = mock_store
 
-            args = argparse.Namespace(
+            _args = argparse.Namespace(
                 file="results.csv",
                 kind="baseline_csv",
                 oos=None,
@@ -205,7 +205,7 @@ class TestCliRegimeFlag:
                 analyze=False,
             )
             # model_copy with regime injection called when regime != None
-            call_args = fake_artifact.model_copy.call_args
+            _call_args = fake_artifact.model_copy.call_args
             # The test just verifies model_copy was called with regime update
             # (full integration tested against Neo4j manually)
 

@@ -50,7 +50,7 @@ def _embed_text(text: str) -> list[float]:
 # Promotion alert thresholds — imported read-only from standards.py
 # fmt: off
 try:
-    from research.experiments.standards import (
+    from research.experiments.standards import (  # noqa: I001
         SHARPE as _SHARPE,
         PROFIT_FACTOR as _PROFIT_FACTOR,
         MIN_ACTIVE_WINDOW_FREQUENCY as _MIN_AWF,
@@ -1015,9 +1015,9 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
 
     repo_root = Path(args.repo_root) if hasattr(args, "repo_root") and args.repo_root else Path.cwd()
     output_json = args.json if hasattr(args, "json") else False
-    since = args.since if hasattr(args, "since") else None
+    _since = args.since if hasattr(args, "since") else None  # reserved for future use
 
-    receipts_dir = repo_root / ".qws" / "receipts"
+    _receipts_dir = repo_root / ".qws" / "receipts"  # reserved for full reconcile impl
     pending_dir = repo_root / ".qws" / "pending"
 
     audit = {
