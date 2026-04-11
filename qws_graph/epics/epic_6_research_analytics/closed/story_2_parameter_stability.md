@@ -4,7 +4,7 @@
 QWS-0602
 
 ## Status
-READY
+CLOSED
 
 ## Summary
 A Python analytics tool (`research/experiments/stability.py`) that takes a champion's
@@ -75,15 +75,50 @@ Tunable threshold. Document clearly as a heuristic, not a statistical guarantee.
 - `tests/unit/test_stability.py` — new
 
 ## Acceptance Criteria
-- [ ] Given a mock grid where champion sharpe=2.31, neighbor sharpe μ=1.84, σ=0.43:
+- [x] Given a mock grid where champion sharpe=2.31, neighbor sharpe μ=1.84, σ=0.43:
   stability score is between 0.80 and 0.82, and assessment label is ROBUST.
-- [ ] Given a mock grid where champion sharpe=2.31, neighbor sharpe μ=0.90, σ=1.10:
+- [x] Given a mock grid where champion sharpe=2.31, neighbor sharpe μ=0.90, σ=1.10:
   stability score is below 0.40, and assessment label is BRITTLE.
-- [ ] `--run-id <id>` with no grid sweep neighbors returns a clear "insufficient data" message.
-- [ ] Stability score is documented as a heuristic with explicit assumptions.
-- [ ] `python -m research.experiments.stability --run-id <id>` runs from repo root.
+- [x] `--run-id <id>` with no grid sweep neighbors returns a clear "insufficient data" message.
+- [x] Stability score is documented as a heuristic with explicit assumptions.
+- [x] `python -m research.experiments.stability --run-id <id>` runs from repo root.
+
+## Acceptance Test Plan
+
+### AC1: ROBUST plateau case
+- type: regression
+- cmd: `pytest tests/unit/test_stability.py::TestRobustCase -q`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC2: BRITTLE island case
+- type: regression
+- cmd: `pytest tests/unit/test_stability.py::TestBrittleCase -q`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC3: Insufficient data message
+- type: regression
+- cmd: `pytest tests/unit/test_stability.py::TestInsufficientData -q`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC4: Heuristic documentation
+- type: regression
+- cmd: `pytest tests/unit/test_stability.py::TestHeuristicDocumentation -q`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC5: CLI entry point
+- type: cli
+- cmd: `python -m research.experiments.stability --run-id fake123`
+- expect_contains: "No live graph connection"
+- expect_exit: 1
 
 ## Definition of Done
-- [ ] `stability.py` implemented with unit tests.
-- [ ] Runbook documents usage example.
-- [ ] Story marked CLOSED.
+- [x] `stability.py` implemented with unit tests.
+- [x] Runbook documents usage example.
+  Usage: `python -m research.experiments.stability --run-id <run_id> [--threshold 0.2]`
+  Import: `from research.experiments.stability import compute_stability, RunRecord`
+  Build RunRecord list from qw query output, call compute_stability(champion, all_runs).
+- [x] Story marked CLOSED.
