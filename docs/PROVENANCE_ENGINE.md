@@ -118,7 +118,7 @@ provenance in the graph.
 | `SUGGESTED` | LLM / User | Hypothesis | `source: str` (model name or "user"). QWS-0601. |
 | `TESTED_AS` | Hypothesis | Strategy | — QWS-0601. |
 | `BRANCHED_FROM` | Hypothesis | Any Node | `rationale: str` — WHY this direction was taken. QWS-0601. |
-| `CORRELATED_WITH` | Strategy ↔ Strategy | — | `coefficient: float`, `lookback: str`, `p_value: float`, `regime_specific: bool`. QWS-0603. Symmetric. |
+| `CORRELATED_WITH` | Strategy ↔ Strategy | — | `coefficient: float`, `threshold: float`, `lookback: str`, `pair_key: str`, `computed_at: datetime`. QWS-0603. Symmetric. |
 | `CORRELATED_WITH` | Champion ↔ Champion | — | same properties. QWS-0603. Symmetric. |
 | `SEMANTICALLY_RELATED` | Hypothesis ↔ Hypothesis | — | `similarity: float` (cosine), `pair_key: str`, `computed_at: datetime`. QWS-0604. Symmetric. |
 
