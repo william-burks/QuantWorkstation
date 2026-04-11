@@ -2,9 +2,9 @@
 
 > **LLM INSTRUCTION BLOCK**
 > ```
-> CURRENT schema nodes: Strategy, Run, Config, Champion, RetiredChampion, RunStatsSummary, BlobArtifact.
-> Do NOT use Hypothesis, FormerChampion, Regime, or ResearchTarget nodes in Cypher until their
-> stories are marked COMPLETE in BACKLOG_ALIGNMENT.md.
+> CURRENT schema nodes: Strategy, Run, Config, Champion, RetiredChampion, RunStatsSummary,
+> BlobArtifact, ResearchTarget, Regime, Hypothesis (QWS-0601 CLOSED), HypothesisSource.
+> Do NOT use FormerChampion in Cypher until its story is marked COMPLETE in BACKLOG_ALIGNMENT.md.
 > The interface is qw CLI + MCP tools only. No FastAPI. No REST API.
 > Before proposing schema changes, check this document for the authoritative current state.
 > ```
@@ -128,7 +128,7 @@ provenance in the graph.
 | `BRANCHED_FROM` | Hypothesis | Any Node | `rationale: str` — WHY this direction was taken | QWS-0601 |
 | `CORRELATED_WITH` | Strategy ↔ Strategy | — | `coefficient: float`, `lookback: str`, `p_value: float`, `regime_specific: bool` | QWS-0603 |
 | `CORRELATED_WITH` | Champion ↔ Champion | — | same properties (symmetric) | QWS-0603 |
-| `SEMANTICALLY_RELATED` | Hypothesis ↔ Hypothesis | — | `similarity: float` (cosine) | New story |
+| `SEMANTICALLY_RELATED` | Hypothesis ↔ Hypothesis | — | `similarity: float` (cosine), `pair_key: str`, `computed_at: datetime` | QWS-0604 (**IMPLEMENTED**) |
 
 **Name conflict note:** `PIVOTED_FROM` already exists in the current schema (Champion → Run, meaning "this
 champion was promoted based on this run"). The new target "context bridge" relationship uses a different

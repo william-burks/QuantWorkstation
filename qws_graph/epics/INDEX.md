@@ -153,9 +153,9 @@ Stories:
 - Objective: three-stage champion lifecycle (active → FormerChampion → RetiredChampion), direct replacement link, automated decay detection.
 
 Stories (execution order):
-1. `QWS-0801` [`story_1_former_champion_lifecycle.md`](epic_8_champion_lifecycle/story_1_former_champion_lifecycle.md) — `draft` _(blocked on QWS-0402 CLOSED)_
-2. `QWS-0802` [`story_2_superseded_by_relationship.md`](epic_8_champion_lifecycle/story_2_superseded_by_relationship.md) — `draft` _(independent; no blocking dependencies)_
-3. `QWS-0803` [`story_3_recursive_validation_loop.md`](epic_8_champion_lifecycle/story_3_recursive_validation_loop.md) — `draft` _(blocked on QWS-0801 CLOSED)_
+1. `QWS-0801` [`story_1_former_champion_lifecycle.md`](epic_8_champion_lifecycle/story_1_former_champion_lifecycle.md) — `ready`
+2. `QWS-0802` [`story_2_superseded_by_relationship.md`](epic_8_champion_lifecycle/story_2_superseded_by_relationship.md) — `ready`
+3. `QWS-0803` [`story_3_recursive_validation_loop.md`](epic_8_champion_lifecycle/story_3_recursive_validation_loop.md) — `blocked` _(blocked on QWS-0801 CLOSED)_
 
 ---
 

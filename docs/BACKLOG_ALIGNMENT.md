@@ -91,14 +91,14 @@ the linked story is marked COMPLETE above.
 | `SUPERSEDED_BY` | QWS-0802 |
 | `RETIRED_TO` (FormerChampion→RetiredChampion) | QWS-0801 |
 | `CORRELATED_WITH` | QWS-0603 (**IMPLEMENTED**) |
-| `SEMANTICALLY_RELATED` | QWS-0604 |
+| `SEMANTICALLY_RELATED` | QWS-0604 (**IMPLEMENTED**) |
 
 ### Properties
 | Property | Node | Story |
 |---|---|---|
 | `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
 | `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
-| `embedding` | Hypothesis | QWS-0604 |
+| `embedding` | Hypothesis | QWS-0604 (**IMPLEMENTED**) |
 | `status = ARCHIVED` | Strategy | QWS-0406 amendment (ABORTED exists; ARCHIVED is new) |
 
 ### MCP Tools
@@ -106,7 +106,7 @@ the linked story is marked COMPLETE above.
 |---|---|
 | `former_champions` | QWS-0801 |
 | `monitor_champion` | QWS-0803 |
-| `similar_hypotheses` | QWS-0604 |
+| `similar_hypotheses` | QWS-0604 (**IMPLEMENTED**) |
 
 ---
 
