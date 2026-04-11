@@ -4,7 +4,7 @@
 QWS-0601
 
 ## Status
-READY
+TESTING
 
 ## Summary
 Introduce `:Hypothesis` nodes that link qualitative research hypotheses to strategies,
