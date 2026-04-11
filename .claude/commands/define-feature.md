@@ -1,7 +1,5 @@
 Define a QuantWorkstation feature: $ARGUMENTS
 
-Invoke skill: caveman
-
 Two-agent flow: **qws-architect (Opus)** reasons, **product-owner (Sonnet)** writes candidate entry.
 
 ---

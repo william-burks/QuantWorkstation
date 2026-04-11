@@ -1,3 +1,3 @@
-- [Epic 6 alignment gaps](project_epic6_alignment_gaps.md) — QWS-0601 draft vs BACKLOG mismatch; check_redundancy ownership ambiguous
+- [Epic 6 alignment gaps](project_epic6_alignment_gaps.md) — ALL RESOLVED after 3 rounds; stories implementation-ready
 - [Story quality validation rules](feedback_story_quality_rules.md) — 4 hard-fail checks: schema drift, dead touchpoints, vague AC, manifesto breach
 - [Config.params_json confirmed](project_config_params_json.md) — property exists in data_dictionary.yaml, used by QWS-0602

@@ -1,6 +1,5 @@
 Answer an architectural assumption for QuantWorkstation: $ARGUMENTS
 
-Invoke skill: caveman
 
 Agent: qws-architect (Opus). Read-only. Definitive ruling only.
 

@@ -1,7 +1,5 @@
 Close QuantWorkstation epic: $ARGUMENTS
 
-Invoke skill: caveman
-
 ## Step 1 — Verify all stories CLOSED
 Read `qws_graph/epics/INDEX.md`. Find all stories for epic $ARGUMENTS.
 If ANY story is not `CLOSED` → STOP. Report outstanding stories.

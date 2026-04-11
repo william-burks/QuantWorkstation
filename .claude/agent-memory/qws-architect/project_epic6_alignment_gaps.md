@@ -1,16 +1,19 @@
 ---
-name: Epic 6 alignment gaps (2026-04-10 re-evaluation)
-description: QWS-0601 now aligned with BACKLOG after rewrite; QWS-0604 has status casing issue and orphaned check_redundancy upgrade
+name: Epic 6 alignment gaps — ALL RESOLVED
+description: All 3 hard-fails and 1 medium gap from 2026-04-10 audits confirmed fixed as of third-round patch validation
 type: project
 ---
 
-QWS-0601 alignment gap RESOLVED. Story now delivers SUGGESTED, TESTED_AS, BRANCHED_FROM edges + all 4 MCP tools matching BACKLOG_ALIGNMENT. Previous HAS_EVIDENCE design replaced.
+**All issues resolved as of 2026-04-10 third-round validation:**
+- QWS-0601: FormerChampion forward-dep fixed — check_redundancy defers FormerChampion to QWS-0801.
+- QWS-0603: `qw promote` references removed — replaced with `qw record --bundle` auto-promote path.
+- QWS-0603: "Out of Scope: Graph schema changes" contradiction removed.
+- QWS-0603: IS/OOS drift flag (`is_oos_drift`) added to In Scope (L82), AC (L119), and DoD (L126). Medium gap closed.
 
-**Open issues (QWS-0604):**
-1. Status field says "draft" — must be "DRAFT" per casing rule.
-2. check_redundancy semantic upgrade is orphaned: 0601 ships string-match version, 0604 creates SEMANTICALLY_RELATED edges, but no story owns "check_redundancy reads those edges." Needs to be folded into 0604 or a new QWS-0605.
-3. ResearchTarget conditional coupling (QWS-0408) should be removed — unnecessary complexity.
+**Sprint order recommendation:** 0601 first (core mission), 0602+0603 parallel, 0604 last (blocked on 0601).
 
-**Why:** These must be resolved before 0604 can promote to READY.
+**Doc drift (low, cosmetic):** BACKLOG L24 (Epic 5 "PLANNED") should say COMPLETE.
 
-**How to apply:** When reviewing 0604 next, verify these three items are addressed. Do not approve for implementation until all resolved.
+**Why:** Tracked to prevent implementers building to wrong spec.
+
+**How to apply:** Epic 6 stories are implementation-ready. No architectural blockers remain.

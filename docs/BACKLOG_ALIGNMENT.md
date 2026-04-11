@@ -123,6 +123,7 @@ Identified during vision planning — not yet in the backlog. Will decides prior
 
 | Candidate | What it delivers |
 |---|---|
+| `qw promote` explicit CLI command | Separates the promotion decision from `qw record --bundle`. Allows staged promotion: record many trials, then selectively promote. Re-runnable correlation gate (re-check after portfolio composition changes without re-running a trial). Auditable promotion event in graph. Value only if workflow shifts to deferred/batch promotion. |
 
 ---
 

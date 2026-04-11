@@ -1,6 +1,5 @@
 Audit QuantWorkstation architecture alignment: $ARGUMENTS
 
-Invoke skill: caveman
 
 Agent: qws-architect (Opus). Read-only. Health check — does what's built match what docs promise?
 

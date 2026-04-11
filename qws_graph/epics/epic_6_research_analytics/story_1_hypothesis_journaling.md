@@ -88,12 +88,12 @@ Context bridge for research pivots. Created via
 - `log_hypothesis` — creates a Hypothesis node via MCP (for AI-initiated hypotheses);
   equivalent to CLI create; creates SUGGESTED edge with `source="llm"`.
 - `check_redundancy --param hypothesis_id=<id>` — given a hypothesis_id, checks:
-  active Champions for similar strategy logic (string match on title), FormerChampions
-  for similar cause-of-death, `list_aborted` for aborted strategies. Returns: match
-  found / no match.
+  active Champions for similar strategy logic (string match on title), `list_aborted`
+  for aborted strategies. Returns: match found / no match. (FormerChampion
+  cause-of-death check deferred to QWS-0801.)
 - `hypothesis_audit --param hypothesis_id=<id>` — traces current state back: what
   TESTED_AS strategies exist, what runs and outcomes are downstream, what Champions
-  or FormerChampions exist downstream.
+  exist downstream.
 
 ## In Scope
 - `:Hypothesis` node in `store.py`

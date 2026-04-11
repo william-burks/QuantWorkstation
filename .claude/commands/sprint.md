@@ -1,7 +1,5 @@
 Read `docs/BACKLOG_ALIGNMENT.md` and `qws_graph/epics/INDEX.md`.
 
-Invoke skill: caveman
-
 Report:
 
 **Current Sprint** — active epic, ordered story sequence, blocked/unblocked status

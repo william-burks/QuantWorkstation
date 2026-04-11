@@ -1,7 +1,5 @@
 Beginning a research session for QuantWorkstation.
 
-Invoke skill: caveman
-
 ## Setup
 Read in order:
 1. `docs/MANIFESTO.md` — mission, targets, philosophy

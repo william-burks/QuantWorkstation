@@ -1,6 +1,5 @@
 Strategic review of QuantWorkstation direction and architecture: $ARGUMENTS
 
-Invoke skill: caveman
 
 Agent: qws-architect (Opus). Adversarial mode — argue against current assumptions.
 

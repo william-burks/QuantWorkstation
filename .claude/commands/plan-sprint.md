@@ -1,7 +1,5 @@
 Sprint Planning session for QuantWorkstation.
 
-Invoke skill: caveman
-
 Two-agent flow: **qws-architect (Opus)** evaluates, **product-owner (Sonnet)** writes.
 
 ---

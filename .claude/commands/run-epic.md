@@ -1,7 +1,5 @@
 Run automated lifecycle for all stories in QuantWorkstation epic: $ARGUMENTS
 
-Invoke skill: caveman
-
 This skill runs in the **main session** as orchestrator. Spawn a fresh lead-engineer agent per story.
 
 ## Step 0 — Pre-flight check (product-analyst, Haiku)
@@ -11,7 +9,7 @@ Read qws_graph/epics/INDEX.md and docs/BACKLOG_ALIGNMENT.md.
 For epic $ARGUMENTS check:
 1. Any story not `ready` (draft, TESTING, BLOCKED)?
 2. Any story with unresolved dependencies (blocked-on not CLOSED)?
-3. Neo4j reachable at bolt://127.0.0.1:7687?
+3. Neo4j reachable? Run: make -C qws_graph neo4j-status
 4. Latest release branch name (git branch | grep release/ | sort -V | tail -1)?
 Return: READY_TO_RUN | BLOCKED — one line per issue. Max 10 lines total.
 ```
@@ -44,7 +42,7 @@ If MISALIGNED → ABORT with architect's findings. Do not proceed to implementat
 6. Present plan to user, wait for confirmation before proceeding
 
 ## Step 2 — Pre-flight
-1. Verify Neo4j reachable (`bolt://127.0.0.1:7687`) → ABORT if not
+1. Verify Neo4j reachable: `make -C qws_graph neo4j-status` → ABORT if not
 2. Identify latest release branch: `git branch | grep release/ | sort -V | tail -1`
 3. `git checkout <release branch> && git pull origin <release branch>`
 4. `qw seed --demo`

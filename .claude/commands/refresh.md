@@ -3,5 +3,3 @@ Read these files:
 2. `docs/MANIFESTO.md`
 3. `docs/PROVENANCE_ENGINE.md`
 4. `docs/RESEARCH_WORKFLOW.md`
-
-Invoke skill: caveman

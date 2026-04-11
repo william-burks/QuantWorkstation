@@ -1,7 +1,5 @@
 Refine all draft stories in QuantWorkstation epic: $ARGUMENTS
 
-Invoke skill: caveman
-
 Two-agent flow: **qws-architect (Opus)** evaluates alignment + quality, **product-owner (Sonnet)** fixes and promotes.
 
 ---
@@ -40,6 +38,9 @@ Validation rules (hard fails → NEEDS WORK):
 3. VAGUE AC: any Acceptance Criteria not binary (true/false testable)
 4. MANIFESTO BREACH: allows >4h holding or targets Sharpe < 2.0
 5. SCOPE MISMATCH: story underdelivers what BACKLOG_ALIGNMENT.md promised — list missing deliverables
+6. TARGET REFERENCE: story ACs, Design, or presets reference nodes/edges/properties marked `[TARGET]` in
+   PROVENANCE_ENGINE.md whose implementing story is not CLOSED. Scan ALL text in story file, not just
+   Blocked On field. This includes cross-epic dependencies (e.g. referencing Epic 8 schema from Epic 6).
 
 Strategic checks:
 1. Do these stories collectively advance the research loop?
@@ -89,7 +90,16 @@ For each NEEDS WORK story:
 - Fix the specific gap identified (tighten ACs, correct touchpoints, fix schema refs, add missing deps)
 - SCOPE MISMATCH: expand story to deliver everything BACKLOG_ALIGNMENT.md promised. Add missing
   deliverables to ACs, In Scope, and Repo Touchpoints. Never reduce the backlog promise.
-- Re-validate against the 5 hard-fail rules after fixing
+- TARGET REFERENCE: scope-cut the unbuilt reference. Remove it from ACs/Design/presets, add
+  "(deferred to QWS-XXXX)" annotation where it was referenced. Then add a backlog candidate
+  to BACKLOG_ALIGNMENT.md's Not Yet Implemented section: the cut capability, which story it
+  was cut from, and which upstream story (QWS-XXXX) must close first. This is autonomous —
+  no interview needed for scope cuts.
+- DEAD TOUCHPOINTS (non-existent CLI command or tool): replace with the documented equivalent
+  from PROVENANCE_ENGINE.md or RESEARCH_WORKFLOW.md. If the docs describe how this capability
+  works (e.g. promotion happens inside `qw record --bundle`), use that path. The story does
+  not get to invent commands the docs don't promise. This is autonomous — not a design decision.
+- Re-validate against the 6 hard-fail rules after fixing
 - After fixing: promote to READY. If you expanded scope, the expansion IS the fix — do not leave as draft.
 
 For each BLOCKED story:
@@ -109,13 +119,17 @@ Sequence fixes:
 Report: stories promoted, stories fixed, stories still blocked, remaining gaps.
 ```
 
-## Phase 4 — Interview loop (remaining drafts)
+## Phase 4 — Interview loop (design decisions only)
 
-If any stories are still draft after Phase 3 (PO couldn't resolve without input):
+If any stories are still draft after Phase 3 — meaning the PO hit a genuine design decision
+that cannot be resolved from docs alone (e.g. "new subcommand vs hook existing path",
+"separate node type vs property on existing node"). Scope cuts and TARGET REFERENCE fixes
+are NOT design decisions — those are handled autonomously in Phase 3.
 
 For each remaining draft:
-1. PO presents the specific unresolved question to Will — not "A or B" options, but "I need to know X to finish this story"
-2. Will answers
+1. PO presents the design decision with architect-identified options and tradeoffs —
+   not an open question, but "Option A: <specific>, Option B: <specific>, tradeoff: <what>"
+2. Will picks
 3. PO applies answer, completes the story, promotes to READY
 4. Repeat until no drafts remain
 

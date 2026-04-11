@@ -1,7 +1,5 @@
 Verify test sweep for QuantWorkstation story: $ARGUMENTS
 
-Invoke skill: caveman
-
 ## Step 1 — Locate story
 Find story `$ARGUMENTS` in `qws_graph/epics/`. Read full file.
 Stop if Status ≠ `TESTING`.

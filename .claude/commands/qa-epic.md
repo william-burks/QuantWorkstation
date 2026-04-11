@@ -1,7 +1,5 @@
 Post-epic QA review for QuantWorkstation epic: $ARGUMENTS
 
-Invoke skill: caveman
-
 Run on `release/yy.m.v` branch after all stories merged. Review every CLOSED story for regressions and consistency.
 
 Tmp files used for context efficiency — written as results arrive, read at report time, cleaned up at end.
