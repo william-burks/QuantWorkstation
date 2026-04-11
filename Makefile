@@ -13,7 +13,7 @@ MASTER_BRANCH = master
 # --- QUALITY ---
 
 test:
-	source .venv/bin/activate && pytest tests/unit/ qws_graph/tests/unit/ -v
+	source .venv/bin/activate && pytest qws_graph/tests/unit/ -v
 
 lint:
 	source .venv/bin/activate && ruff check . && mypy --strict .

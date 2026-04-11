@@ -8,7 +8,7 @@ type: project
 
 All commands require venv activation: `source .venv/bin/activate`
 
-- **Unit tests:** `make test` or `source .venv/bin/activate && pytest tests/unit/ qws_graph/tests/unit/ -v`
+- **Unit tests:** `make test` or `source .venv/bin/activate && pytest qws_graph/tests/unit/ -v`
 - **Lint:** `make lint` or `source .venv/bin/activate && ruff check <files> && mypy --strict <files>`
 - **Both:** `make check`
 - **Neo4j status:** `make -C qws_graph neo4j-status`

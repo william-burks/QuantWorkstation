@@ -1,8 +1,21 @@
 Run automated lifecycle for all stories in QuantWorkstation epic: $ARGUMENTS
 
+Format: `/run-epic <epic_number>` or `/run-epic <epic_number> <story_id>` to resume from a specific story.
+
 This skill runs in the **main session** as orchestrator. Spawn a fresh lead-engineer agent per story.
 
-## Step 0 — Pre-flight check (product-analyst, Haiku)
+## Step 0 — Check for resume
+
+If a story ID is provided (e.g. `/run-epic 6 QWS-0602`):
+1. Read `/tmp/run_epic_$EPIC_progress.md` — verify epic matches
+2. Skip Steps 0a, 1, and 2 (pre-flight, architect, execution plan)
+3. Identify release branch from progress file
+4. Jump to Step 3 starting at the specified story ID
+5. Stories before the resume point are treated as already complete (use progress file status)
+
+If no story ID → full run from Step 0a.
+
+## Step 0a — Pre-flight check (product-analyst, Haiku)
 Spawn product-analyst agent:
 ```
 Read qws_graph/epics/INDEX.md and docs/BACKLOG_ALIGNMENT.md.
@@ -33,7 +46,7 @@ Report: ALIGNED | MISALIGNED (with specific findings per story)
 ```
 If MISALIGNED → ABORT with architect's findings. Do not proceed to implementation.
 
-## Step 1 — Build execution plan
+## Step 2 — Build execution plan
 1. Read `qws_graph/epics/INDEX.md` — find all stories for epic $ARGUMENTS
 2. Read `docs/BACKLOG_ALIGNMENT.md` — dependencies, status
 3. **GATE:** Any story `draft` → STOP. Report draft story IDs and wait for user decision.
@@ -41,27 +54,40 @@ If MISALIGNED → ABORT with architect's findings. Do not proceed to implementat
 5. Sort by dependencies (Blocked On column) — topological order
 6. Present plan to user, wait for confirmation before proceeding
 
-## Step 2 — Pre-flight
+## Step 2b — Initialize progress file
+Write `/tmp/run_epic_$EPIC_progress.md`:
+```markdown
+# Epic $EPIC — Run Progress
+release_branch: <release branch>
+started: <timestamp>
+
+| Story | Status | Summary |
+|-------|--------|---------|
+| QWS-XXXX | PENDING | |
+| QWS-YYYY | PENDING | |
+```
+
+## Step 3 — Pre-flight
 1. Verify Neo4j reachable: `make -C qws_graph neo4j-status` → ABORT if not
 2. Identify latest release branch: `git branch | grep release/ | sort -V | tail -1`
 3. `git checkout <release branch> && git pull origin <release branch>`
 4. `qw seed --demo`
-5. `pytest tests/unit/ -v` — confirm clean baseline
+5. `make test` — confirm clean baseline
 
-## Step 3 — Per-story execution
+## Step 4 — Per-story execution
 For each ready story in dependency order:
 
-### 3a — Verify dependencies
+### 4a — Verify dependencies
 All dependencies must be CLOSED. If not → skip story + mark dependents skipped.
 
-### 3b — Branch
+### 4b — Branch
 ```
 git checkout <release branch>
 git pull origin <release branch>
 git checkout -b feature/<ver>/$STORY_ID
 ```
 
-### 3c — Spawn lead-engineer agent
+### 4c — Spawn lead-engineer agent
 Prompt:
 ```
 Execute full story lifecycle for <STORY_ID>:
@@ -72,7 +98,7 @@ Return max 5 lines: CLOSED | BLOCKED | FAILED — one-line summary — any block
 Full detail lives in git commits. Do not return test output or diffs.
 ```
 
-### 3d — Process result
+### 4d — Process result
 - **CLOSED** → `make to-release` (pushes feature, merges to release, pushes release)
 - **BLOCKED | assumption | \<question\>** → check `.claude/agent-memory/lead-engineer/` for an existing ruling on this question first. If found, write to `/tmp/ruling_<STORY_ID>.txt` and re-spawn lead-engineer directly — skip architect entirely.
   If not found → spawn qws-architect (Opus):
@@ -94,10 +120,14 @@ Full detail lives in git commits. Do not return test output or diffs.
   Max 1 assumption resolution per story → second BLOCKED | assumption → needs-attention
 - **BLOCKED/FAILED** → add to needs-attention list, mark dependent stories skipped
 
-### 3e — Progress
-Report: `QWS-XXXX CLOSED. N/M complete. Next: QWS-YYYY`
+### 4e — Update progress file
+After each story completes (any outcome), update `/tmp/run_epic_$EPIC_progress.md`:
+- Set story row to `CLOSED`, `BLOCKED`, `FAILED`, or `SKIPPED` with one-line summary
+- Report to user: `QWS-XXXX CLOSED. N/M complete. Next: QWS-YYYY`
 
-## Step 4 — Post-epic QA
+This file is the resume checkpoint. If the session dies, `/run-epic $EPIC QWS-YYYY` picks up here.
+
+## Step 5 — Post-epic QA
 ```
 git checkout <release branch>
 git pull origin <release branch>
@@ -110,7 +140,7 @@ Return max 5 lines: CLEAN | ISSUES_FIXED | ISSUES_REMAINING — one-line summary
 Full detail lives in git commits and the QA report. Do not return test output or diffs.
 ```
 
-## Step 5 — Final report
+## Step 6 — Final report
 ```
 ## Epic $ARGUMENTS — Automation Report
 
@@ -132,6 +162,8 @@ CLEAN | ISSUES_FIXED | ISSUES_REMAINING
 QA clean → run: /close-epic $ARGUMENTS
 QA issues remaining → review findings above, resolve, then run: /close-epic $ARGUMENTS
 ```
+
+Clean up: `rm /tmp/run_epic_$EPIC_progress.md`
 
 Session ends here. Close-epic is a separate cold-start.
 
