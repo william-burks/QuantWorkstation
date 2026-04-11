@@ -4,7 +4,7 @@
 QWS-0601
 
 ## Status
-TESTING
+CLOSED
 
 ## Summary
 Introduce `:Hypothesis` nodes that link qualitative research hypotheses to strategies,
@@ -191,4 +191,4 @@ Context bridge for research pivots. Created via
 ## Definition of Done
 - [x] Node type, edges, CLI modes, query presets implemented and tested.
 - [x] Docs updated (`data_dictionary.yaml`, `graph_v1_contract.md`).
-- [ ] Story marked CLOSED.
+- [x] Story marked CLOSED.

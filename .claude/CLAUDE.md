@@ -17,7 +17,7 @@ shared brain. Any model with MCP access reads the same research history.
 - Interface is `qw` CLI + MCP only — no FastAPI
 - Before suggesting a strategy: `qw query --name recent_champions` + `qw query --name list_aborted`
 - Do NOT use nodes/tools marked `[TARGET]` in `PROVENANCE_ENGINE.md` until their story is COMPLETE in `BACKLOG_ALIGNMENT.md`
-- **Current sprint:** Epic 5 COMPLETE — next: QWS-0601 (Hypothesis Journaling) or QWS-0802 (SUPERSEDED_BY)
+- **Current sprint:** QWS-0601 CLOSED — next: QWS-0602/0603 (parallel) or QWS-0604 (Semantic Dedup, now unblocked)
 
 ---
 
