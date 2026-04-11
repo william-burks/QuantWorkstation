@@ -37,7 +37,7 @@ def _mock_session(store: GraphStore, write_records: list[Any], read_record: Any 
     session_mock.execute_read.return_value = read_record
     session_mock.__enter__ = lambda s: s
     session_mock.__exit__ = MagicMock(return_value=False)
-    store._driver.session = MagicMock(return_value=session_mock)  # type: ignore[method-assign]
+    store._driver.session = MagicMock(return_value=session_mock)  # type: ignore[assignment]
     return session_mock
 
 
@@ -84,7 +84,7 @@ class TestDegradeChampion:
         session_mock.execute_write.side_effect = Neo4jError("connection refused")
         session_mock.__enter__ = lambda s: s
         session_mock.__exit__ = MagicMock(return_value=False)
-        store._driver.session = MagicMock(return_value=session_mock)  # type: ignore[method-assign]
+        store._driver.session = MagicMock(return_value=session_mock)  # type: ignore[assignment]
 
         with pytest.raises(StoreInfraError):
             store.degrade_champion("demo_champ_001", "valid reason")
@@ -117,7 +117,7 @@ class TestRetireFormerChampion:
         session_mock.execute_write.return_value = write_records
         session_mock.__enter__ = lambda s: s
         session_mock.__exit__ = MagicMock(return_value=False)
-        store._driver.session = MagicMock(return_value=session_mock)  # type: ignore[method-assign]
+        store._driver.session = MagicMock(return_value=session_mock)  # type: ignore[assignment]
         return store
 
     def test_valid_retire_returns_retired_champion_id(self) -> None:
@@ -152,7 +152,7 @@ class TestRetireFormerChampion:
         session_mock.execute_read.side_effect = Neo4jError("timeout")
         session_mock.__enter__ = lambda s: s
         session_mock.__exit__ = MagicMock(return_value=False)
-        store._driver.session = MagicMock(return_value=session_mock)  # type: ignore[method-assign]
+        store._driver.session = MagicMock(return_value=session_mock)  # type: ignore[assignment]
 
         with pytest.raises(StoreInfraError):
             store.retire_former_champion("fc_abc123")
