@@ -1,6 +1,10 @@
 Implement the QuantWorkstation story identified by: $ARGUMENTS
 
 ## Step 0 — Read memory (MANDATORY FIRST)
+```bash
+rm -f /tmp/agent-read-tracker/* 2>/dev/null; mkdir -p /tmp/agent-read-tracker
+rm -f /tmp/agent-discovery-tracker/* 2>/dev/null; mkdir -p /tmp/agent-discovery-tracker
+```
 Read `.claude/agent-memory/lead-engineer/MEMORY.md` and all referenced files BEFORE any tool invocations.
 Use the exact commands documented there for tests, lint, and type checking.
 Do NOT attempt ruff, pytest, or mypy without checking memory for the correct invocation.
@@ -23,10 +27,15 @@ Read docs directly (known locations):
 
 For story's "Repo Touchpoints" source files, use this exact recipe:
 1. `mcp__codebase-memory-mcp__search_code(query="function_or_class_name")` → note the qualified_name from result
-2. `mcp__codebase-memory-mcp__get_code_snippet(qualified_name=...)` → read that section only, done
-**One search_code per concept. Prefix/suffix variants count as the same search (e.g. `ChampionNode` and `class ChampionNode` are the same — do NOT search both).**
-If search_code returns no results (symbol does not exist yet), one targeted Grep on the most relevant file is permitted. Do NOT expand into broad grep patterns.
-After search_code returns results → read the matched files at those locations. Do NOT grep for broader patterns to discover what else exists. MCP results + file reads are sufficient orientation.
+2. `mcp__codebase-memory-mcp__get_code_snippet(qualified_name=...)` → read that section only
+3. Read each matched source file ONCE at the relevant range. Done — move to Step 4.
+
+**Discovery budget: max 2 search_code + 1 Grep per Repo Touchpoint file. After reading matched files, STOP discovery and start editing.**
+
+One search_code per concept. Prefix/suffix variants count as the same search (e.g. `ChampionNode` and `class ChampionNode` are the same — do NOT search both).
+If search_code returns no results (symbol doesn't exist yet), one targeted Grep on the most relevant file. No broad patterns.
+
+**GATE: After all Repo Touchpoint files are read, discovery is OVER. No more Grep/search_code calls until Step 4 edits fail (string mismatch). Any remaining questions → resolve from context or report BLOCKED.**
 
 Special case — `cypher.py` (~700 lines): grep for `DEMO_SEED_CYPHER` to get offset (~line 465), then Read that range only. Do NOT read cypher.py in full at any step.
 
@@ -114,7 +123,7 @@ git add <story> qws_graph/epics/INDEX.md docs/BACKLOG_ALIGNMENT.md
 git commit -m "status($ARGUMENTS): READY → TESTING"
 ```
 
-## Step 9 — Report
+## Step 9 — Report and STOP
 
 ```
 ## $ARGUMENTS — Implemented and Self-Tested
@@ -136,4 +145,11 @@ git commit -m "status($ARGUMENTS): READY → TESTING"
 [new fixtures/scripts]
 ```
 
-Final: **CLOSED-READY** or **BLOCKED** (with details). Do not mark CLOSED.
+Final: **CLOSED-READY** or **BLOCKED** (with details).
+
+**HARD STOP — your work is done. No further tool calls.**
+- Do NOT read `close-story.md` or any command file other than verify-story.md.
+- Do NOT edit `data_dictionary.yaml`, `graph_v1_contract.md`, `PROVENANCE_ENGINE.md`, or epic README files.
+- Do NOT change story status to CLOSED or move story files to `closed/`.
+- Do NOT run any more tool calls after outputting this report.
+- The orchestrator will invoke verify-story next (same session). Close is a separate agent spawn.

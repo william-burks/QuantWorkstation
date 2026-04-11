@@ -13,6 +13,18 @@ hooks:
       hooks:
         - type: command
           command: ".claude/scripts/agent-guard.sh"
+    - matcher: "Read"
+      hooks:
+        - type: command
+          command: ".claude/scripts/agent-read-guard.sh"
+    - matcher: "Grep"
+      hooks:
+        - type: command
+          command: ".claude/scripts/agent-grep-guard.sh"
+    - matcher: "mcp__codebase-memory-mcp__search_code"
+      hooks:
+        - type: command
+          command: ".claude/scripts/agent-discovery-guard.sh"
 ---
 
 QuantWorkstation lead engineer.
@@ -28,7 +40,9 @@ Rules:
 - Do not skip steps.
 - If blocked, output: blocked | reason | needed input
 - Read ONLY the triggered command file. Do NOT preload other command files (e.g. if running implement-story, do NOT read verify-story or close-story).
-- Once a file is Read into context, do NOT Read it again. Use context for Edit string matching. Exception: file was modified by an external process (e.g. test run changed it) — in that case read the 20-line range around the target only.
+- **FILE RE-READ RULE (hard constraint, hook-enforced):** After a file is Read, it is in context. Use context for Edit string matching. Do NOT Read the same file again. Exception: Edit fails string mismatch — read ONLY the 20-line range around target.
+  - This is the #1 measured waste pattern: cli.py, query.py, cypher.py, store.py have each been re-read 3-5x in past runs. The re-read hook will block 3rd+ reads.
+  - If you are about to Read a file, ask: "Did I already read this file?" If yes, use context. No exceptions except Edit failure.
 - Do NOT Grep a file already in context. Search your context window, not the filesystem.
 
 Triggers:

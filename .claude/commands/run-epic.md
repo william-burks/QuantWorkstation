@@ -103,32 +103,31 @@ git pull origin <release branch>
 git checkout -b feature/<ver>/$STORY_ID
 ```
 
-### 4c — Spawn lead-engineer agent
+### 4c — Spawn A: implement + verify
 Prompt:
 ```
-Execute full story lifecycle for <STORY_ID>:
+For story <STORY_ID>:
 1. Read and execute .claude/commands/implement-story.md for <STORY_ID>
 2. Read and execute .claude/commands/verify-story.md for <STORY_ID>
-3. Read and execute .claude/commands/close-story.md for <STORY_ID>
-Follow the command files exactly — including all git commit steps (impl, fail, fix, test, close).
+Follow the command files exactly — including all git commit steps (impl, fail, fix, test).
 The audit trail depends on these commits existing.
-Return max 5 lines: CLOSED | BLOCKED | FAILED — one-line summary — any blocker detail.
+Return max 5 lines: TESTING | BLOCKED | FAILED — one-line summary — any blocker detail.
 Full detail lives in git commits. Do not return test output or diffs.
 ```
 
-### 4d — Process result
-- **CLOSED** → `make to-release` (pushes feature, merges to release, pushes release)
-- **BLOCKED | assumption | \<question\>** → check `.claude/agent-memory/lead-engineer/` for an existing ruling on this question first. If found, write to `/tmp/ruling_<STORY_ID>.txt` and re-spawn lead-engineer directly — skip architect entirely.
+### 4c-result — Route Spawn A outcome
+- **TESTING** → proceed to Spawn B (close)
+- **BLOCKED | assumption | \<question\>** → check `.claude/agent-memory/lead-engineer/` for an existing ruling on this question first. If found, write to `/tmp/ruling_<STORY_ID>.txt` and re-spawn Spawn A directly — skip architect entirely.
   If not found → spawn qws-architect (Opus):
   ```
   Read .claude/commands/answer-assumption.md and execute for: <question>
   Write full ruling to /tmp/ruling_<STORY_ID>.txt in answer-assumption format.
   Return max 3 lines: CONFIRMED|REJECTED|ALTERNATIVE — one-line ruling — one-line action.
   ```
-  Re-spawn lead-engineer:
+  Re-spawn Spawn A:
   ```
   Read /tmp/ruling_<STORY_ID>.txt. Apply ruling and resume implementation of <STORY_ID>.
-  After story closes: reason about what this assumption revealed — a schema constraint,
+  After story reaches TESTING: reason about what this assumption revealed — a schema constraint,
   design boundary, or provenance rule — and write that principle to
   .claude/agent-memory/lead-engineer/. Record the insight, not the Q&A.
   Bad: "SUPERSEDED_BY chosen for QWS-XXXX"
@@ -136,6 +135,19 @@ Full detail lives in git commits. Do not return test output or diffs.
   Delete /tmp/assumption_<STORY_ID>.txt and /tmp/ruling_<STORY_ID>.txt after memory is saved.
   ```
   Max 1 assumption resolution per story → second BLOCKED | assumption → needs-attention
+- **BLOCKED/FAILED** → add to needs-attention list, mark dependent stories skipped
+
+### 4c-close — Spawn B: close only
+Prompt:
+```
+For story <STORY_ID>:
+Read and execute .claude/commands/close-story.md for <STORY_ID>
+Follow the command file exactly — including all git commit steps.
+Return max 3 lines: CLOSED | BLOCKED | FAILED — one-line summary — any blocker detail.
+```
+
+### 4d — Process Spawn B result
+- **CLOSED** → `make to-release` (pushes feature, merges to release, pushes release)
 - **BLOCKED/FAILED** → add to needs-attention list, mark dependent stories skipped
 
 ### 4e — Update progress file
@@ -161,29 +173,27 @@ Save output as RUN_ID.
 rm -f /tmp/agent-trace-lead-engineer-*.jsonl 2>/dev/null || true
 ```
 
-### 4-audit-c — Branch + spawn lead-engineer
+### 4-audit-c — Branch + Spawn A (implement + verify)
 ```
 git checkout <release branch>
 git pull origin <release branch>
 git checkout feature/<ver>/$STORY_ID 2>/dev/null || git checkout -b feature/<ver>/$STORY_ID
 ```
-Spawn lead-engineer agent (same prompt as Step 4c):
+Spawn lead-engineer agent (Spawn A — implement + verify only):
 ```
-Execute full story lifecycle for <STORY_ID>:
+For story <STORY_ID>:
 1. Read and execute .claude/commands/implement-story.md for <STORY_ID>
 2. Read and execute .claude/commands/verify-story.md for <STORY_ID>
-3. Read and execute .claude/commands/close-story.md for <STORY_ID>
-Follow the command files exactly — including all git commit steps (impl, fail, fix, test, close).
+Follow the command files exactly — including all git commit steps (impl, fail, fix, test).
 The audit trail depends on these commits existing.
-Return max 5 lines: CLOSED | BLOCKED | FAILED — one-line summary — any blocker detail.
+Return max 5 lines: TESTING | BLOCKED | FAILED — one-line summary — any blocker detail.
 Full detail lives in git commits. Do not return test output or diffs.
 ```
 
-### 4-audit-d — Process result + move trace
-Record story outcome (CLOSED / BLOCKED / FAILED).
+### 4-audit-d — Process Spawn A result + move trace
+Record story outcome (TESTING / BLOCKED / FAILED).
 
-If CLOSED: `make to-release` (pushes feature, merges to release, pushes release).
-If BLOCKED with assumption: follow same assumption resolution as Step 4d.
+If BLOCKED with assumption: follow same assumption resolution as Step 4c-result. Re-spawn Spawn A.
 If BLOCKED/FAILED: record for final report.
 
 Move the trace file to a story-keyed name:
@@ -237,7 +247,15 @@ Lead-engineer audit complete for <STORY_ID>. What next?
 ```
 Wait for user input.
 
-**If Close:** jump to 4-audit-g.
+**If Close:** Spawn B (close only):
+```
+For story <STORY_ID>:
+Read and execute .claude/commands/close-story.md for <STORY_ID>
+Follow the command file exactly — including all git commit steps.
+Return max 3 lines: CLOSED | BLOCKED | FAILED — one-line summary — any blocker detail.
+```
+If CLOSED: `make to-release` (pushes feature, merges to release, pushes release).
+Then jump to 4-audit-g.
 
 **If Retry:**
 1. Clean story-keyed trace from this run: `rm -f /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl 2>/dev/null || true`
