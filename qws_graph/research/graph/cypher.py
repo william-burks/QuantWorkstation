@@ -400,6 +400,9 @@ MERGE (r)-[:IN_REGIME]->(reg)
 #   run_history                 — multiple runs on alpha (3 runs)
 #   instrument_concentration    — ES champion + CL champion
 #   recent_champions            — two active champions
+#   list_hypotheses             — demo_hyp_001: open; demo_hyp_002: confirmed + TESTED_AS alpha
+#   hypothesis_audit            — demo_hyp_002 → alpha → champion lineage
+#   check_redundancy            — demo_hyp_001 title matches no active champions
 #
 # All nodes carry is_demo=true for clean teardown via DEMO_TEARDOWN_CYPHER.
 # ---------------------------------------------------------------------------
@@ -607,6 +610,29 @@ MERGE (reg_mr:Regime {regime_id: 'mean_reverting'})
   ON CREATE SET reg_mr.created_at = datetime(), reg_mr.is_demo = true
   SET reg_mr.updated_at = datetime()
 MERGE (r4)-[:IN_REGIME]->(reg_mr)
+
+// ── Demo Hypothesis nodes ────────────────────────────────────────────────────
+
+// Demo Hypothesis 001 — open; no TESTED_AS link; for list_hypotheses + check_redundancy
+MERGE (h1:Hypothesis {hypothesis_id: 'demo_hyp_001'})
+  ON CREATE SET h1.created_at = datetime('2026-01-10T09:00:00'), h1.is_demo = true
+  SET h1.title = 'ES bear high_vol regime has elevated win rate in first 30 min',
+      h1.status = 'open',
+      h1.updated_at = datetime()
+MERGE (hsrc1:HypothesisSource {source_key: 'user'})
+  ON CREATE SET hsrc1.created_at = datetime()
+MERGE (hsrc1)-[:SUGGESTED {source: 'user'}]->(h1)
+
+// Demo Hypothesis 002 — confirmed + TESTED_AS demo-strategy-alpha; for hypothesis_audit
+MERGE (h2:Hypothesis {hypothesis_id: 'demo_hyp_002'})
+  ON CREATE SET h2.created_at = datetime('2026-02-01T10:00:00'), h2.is_demo = true
+  SET h2.title = 'Demo alpha bear logic exploits London open liquidity imbalance',
+      h2.status = 'confirmed',
+      h2.updated_at = datetime()
+MERGE (hsrc2:HypothesisSource {source_key: 'llm'})
+  ON CREATE SET hsrc2.created_at = datetime()
+MERGE (hsrc2)-[:SUGGESTED {source: 'llm'}]->(h2)
+MERGE (h2)-[:TESTED_AS]->(s1)
 """.strip()
 
 
