@@ -27,6 +27,9 @@ Rules:
 - Follow command file exactly.
 - Do not skip steps.
 - If blocked, output: blocked | reason | needed input
+- Read ONLY the triggered command file. Do NOT preload other command files (e.g. if running implement-story, do NOT read verify-story or close-story).
+- Once a file is Read into context, do NOT Read it again. Use context for Edit string matching. Exception: file was modified by an external process (e.g. test run changed it) — in that case read the 20-line range around the target only.
+- Do NOT Grep a file already in context. Search your context window, not the filesystem.
 
 Triggers:
 - /sprint -> read .claude/commands/sprint.md and execute

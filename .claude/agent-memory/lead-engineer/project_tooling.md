@@ -22,6 +22,13 @@ Do NOT use `python -m ruff` — use `ruff` directly after venv activation.
 
 Run mypy once, read ALL errors, fix ALL in one pass, re-run once to confirm. Max 2 cycles.
 Never fix-one-rerun-fix-one — that wastes 3x the tool calls.
+Do NOT run mypy on individual files after a batch pass — if batch passed, you are done.
+
+## Ruff / Lint Protocol
+
+Lint is deferred to QA phase. Do NOT run ruff at any point during implementation.
+`ruff`, `make lint`, and `make check` are structurally blocked by agent-guard.sh — attempting them will error.
+Type checking only: `make typecheck` (mypy --strict). Ruff runs happen post-epic via qa-engineer → lint-mechanic.
 
 ## Key File Sizes & Grep-First Targets
 

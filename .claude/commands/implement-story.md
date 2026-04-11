@@ -8,6 +8,7 @@ Do NOT attempt ruff, pytest, or mypy without checking memory for the correct inv
 ## Step 1 — Locate story
 Search `qws_graph/epics/` for story `$ARGUMENTS`. Read full file.
 Stop if Status ≠ `ready`.
+**One glob only — story path = first match. Do NOT glob again to confirm.**
 **Story file is now in context — do NOT re-read it during Steps 4 or 7.**
 
 ## Step 2 — Verify unblocked
@@ -23,11 +24,15 @@ Read docs directly (known locations):
 For story's "Repo Touchpoints" source files, use this exact recipe:
 1. `mcp__codebase-memory-mcp__search_code(query="function_or_class_name")` → note the qualified_name from result
 2. `mcp__codebase-memory-mcp__get_code_snippet(qualified_name=...)` → read that section only, done
-Do NOT grep or Read entire files to orient. Do NOT run multiple search_code calls for the same symbol.
+**One search_code per concept. Prefix/suffix variants count as the same search (e.g. `ChampionNode` and `class ChampionNode` are the same — do NOT search both).**
+If search_code returns no results (symbol does not exist yet), one targeted Grep on the most relevant file is permitted. Do NOT expand into broad grep patterns.
+After search_code returns results → read the matched files at those locations. Do NOT grep for broader patterns to discover what else exists. MCP results + file reads are sufficient orientation.
+
+Special case — `cypher.py` (~700 lines): grep for `DEMO_SEED_CYPHER` to get offset (~line 465), then Read that range only. Do NOT read cypher.py in full at any step.
 
 No [TARGET] nodes/relationships/MCP tools unless this story implements them.
 
-**STOP — do NOT re-read any of these files in later steps: PROVENANCE_ENGINE.md, BACKLOG_ALIGNMENT.md, story file.**
+**STOP — do NOT re-read for reference: PROVENANCE_ENGINE.md, BACKLOG_ALIGNMENT.md, story file. If you need to Edit these files later, use exact strings from context. If Edit fails string match, read ONLY the 20-line range around the target — not the whole file.**
 
 If any schema, design, or scope question cannot be resolved from these docs → do not guess.
 ```
@@ -40,16 +45,19 @@ Report: `BLOCKED | assumption | <exact question>` and stop.
 If `/tmp/ruling_$ARGUMENTS.txt` exists → read it before reporting blocked. Apply ruling and continue.
 
 ## Step 4 — Implement
+**Files read in Step 3 are in context. Do NOT re-read them before editing. Use exact strings from context for Edit `old_string`. If an Edit fails due to string mismatch, read ONLY the 20-line range around the target — not the whole file.**
+
 Work ACs one by one. After each:
 1. `- [ ]` → `- [x]` in story file
 2. `git add` each changed file (never `-A` or `.`)
 3. `make test` after any Python change — fix all failures
-4. Run `mypy --strict` on changed files. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
+4. Run `make typecheck` on the project. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
 
 For large files (>500 lines): grep for the target function/section first, then read only that range.
 Do NOT read whole files in sequential chunks.
 
-Run `ruff check` once → collect ALL errors → fix ALL in one pass → re-run once to confirm. Max 2 cycles. Do NOT fix one error, re-run, fix the next.
+**Lint is handled at QA phase — do NOT run ruff during implementation.**
+`ruff`, `make lint`, and `make check` are structurally blocked by agent-guard.sh. Type check only: `make typecheck`.
 
 **4b — Demo seed.** If this story adds or modifies nodes, edges, or properties:
 update `DEMO_SEED_CYPHER` and `DEMO_TEARDOWN_CYPHER` in `qws_graph/research/graph/cypher.py`.
@@ -80,6 +88,8 @@ git commit -m "impl($ARGUMENTS): <summary>"
 
 ## Step 7 — Execute acceptance tests (fail/fix cycle)
 Run each test step. Compare actual vs expected.
+**One `ls` per directory — if result answers the question, stop. Do NOT drill into subdirectories.**
+**Do NOT re-run the full test suite if no code changed since the last passing run.**
 
 Passing AC → confirm `- [x]`.
 

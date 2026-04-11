@@ -32,4 +32,22 @@ if echo "$COMMAND" | grep -qE 'rm\s+-rf\s+(/|\./?\.?\s)'; then
   exit 2
 fi
 
+# Block all ruff execution paths — lint-mechanic handles ruff fixes
+if echo "$COMMAND" | grep -qiE '(^|\s|&&\s*|;\s*)ruff\s'; then
+  echo "Blocked: lead-engineer cannot run ruff directly — spawn lint-mechanic instead" >&2
+  exit 2
+fi
+
+# Block make lint — runs ruff
+if echo "$COMMAND" | grep -qE 'make\s+lint(\s|$)'; then
+  echo "Blocked: make lint runs ruff — use 'make typecheck' for mypy or 'make test' for pytest" >&2
+  exit 2
+fi
+
+# Block make check — includes ruff via lint
+if echo "$COMMAND" | grep -qE 'make\s+check(\s|$)'; then
+  echo "Blocked: make check includes ruff — use 'make typecheck' and 'make test' separately" >&2
+  exit 2
+fi
+
 exit 0

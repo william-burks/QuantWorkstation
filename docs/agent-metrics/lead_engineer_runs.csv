@@ -1,1 +1,3 @@
 run_id,timestamp,epic,story_id,branch,model,total_calls,necessary,wasted,waste_pct,verdict,acs_passed,assumption_count,top_waste_pattern
+20260411T200900,2026-04-11T20:09:00Z,7,QWS-0801,release/26.4.0,sonnet,144,87,57,40,CLOSED,,,file-reread
+20260411T200900-retry,2026-04-11T21:00:00Z,7,QWS-0801,feature/26.4.0/QWS-0801,sonnet,228,111,117,51,CLOSED,,,lint-loop

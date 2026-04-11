@@ -7,7 +7,7 @@ REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
 
-.PHONY: to-release to-master check-clean done-with-feature test lint check
+.PHONY: to-release to-master check-clean done-with-feature test lint typecheck check
 
 
 # --- QUALITY ---
@@ -16,9 +16,12 @@ test:
 	source .venv/bin/activate && pytest qws_graph/tests/unit/ -v
 
 lint:
-	source .venv/bin/activate && ruff check . && mypy --strict .
+	source .venv/bin/activate && ruff check .
 
-check: lint test
+typecheck:
+	source .venv/bin/activate && mypy --strict .
+
+check: lint typecheck test
 
 # --- GIT WORKFLOW ---
 
