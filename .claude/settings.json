@@ -153,5 +153,36 @@
         "Bash(python -m ruff *)",
         "Bash(python3 -m ruff *)"
       ]
+    },
+    "hooks": {
+      "PreToolUse": [
+        {
+          "matcher": "Read",
+          "hooks": [
+            {
+              "type": "command",
+              "command": ".claude/scripts/agent-read-guard.sh"
+            }
+          ]
+        },
+        {
+          "matcher": "Grep",
+          "hooks": [
+            {
+              "type": "command",
+              "command": ".claude/scripts/agent-grep-guard.sh"
+            }
+          ]
+        },
+        {
+          "matcher": "mcp__codebase-memory-mcp__search_code",
+          "hooks": [
+            {
+              "type": "command",
+              "command": ".claude/scripts/agent-discovery-guard.sh"
+            }
+          ]
+        }
+      ]
     }
   }

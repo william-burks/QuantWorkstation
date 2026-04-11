@@ -3,3 +3,4 @@ run_id,timestamp,epic,story_id,branch,model,total_calls,necessary,wasted,waste_p
 20260411T200900-retry,2026-04-11T21:00:00Z,7,QWS-0801,feature/26.4.0/QWS-0801,sonnet,228,111,117,51,CLOSED,,,lint-loop
 20260411T215414,2026-04-11T00:00:00Z,epic-7,QWS-0801,feature/26.4.0/QWS-0801,sonnet,166,86,80,48,CLOSED-OVERREACH,,,scope-archaeology
 20260411T223754,2026-04-11T00:00:00Z,epic-7,QWS-0801,feature/26.4.0/QWS-0801,sonnet,152,67,85,56,CLOSED,,,doc-overreach
+20260411T231923,2026-04-11T00:00:00Z,epic-8,QWS-0801,feature/26.4.0/QWS-0801,sonnet,148,86,62,42,CLOSED-READY,,,file-reread

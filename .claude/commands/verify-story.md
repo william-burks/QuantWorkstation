@@ -44,10 +44,12 @@ source .venv/bin/activate && ruff check qws_graph/path/to/file.py && mypy --stri
 ```
 Fix all warnings. To verify edits landed, read the file — do not grep a file you just edited.
 
-## Step 7b — Check Acceptance Test Plan
-If story has `## Acceptance Test Plan`: verify all ACs are `- [x]`.
-Any `- [ ]` or `- [FAILED]` → note in "Remaining before CLOSED."
-Do not re-run acceptance tests.
+## Step 7b — Re-run Acceptance Tests
+If story has `## Acceptance Test Plan`:
+1. Execute each test step (same commands as implement-story Step 7)
+2. All pass → confirm all ACs `- [x]`
+3. On failure → diagnose + fix code, `git commit -m "verify-fix($ARGUMENTS): <what fixed>"`, re-run. Max 2 fix cycles.
+Any `- [ ]` or `- [FAILED]` after fix cycles → note in "Remaining before CLOSED."
 
 ## Step 8 — Update DoD checkboxes
 Check off verified items. Leave unchecked only items requiring manual verification.

@@ -37,11 +37,19 @@ If search_code returns no results (symbol doesn't exist yet), one targeted Grep 
 
 **GATE: After all Repo Touchpoint files are read, discovery is OVER. No more Grep/search_code calls until Step 4 edits fail (string mismatch). Any remaining questions → resolve from context or report BLOCKED.**
 
-Special case — `cypher.py` (~700 lines): grep for `DEMO_SEED_CYPHER` to get offset (~line 465), then Read that range only. Do NOT read cypher.py in full at any step.
+**Large file protocol — read targeted ranges only, never full file:**
+| File | Size | How to target |
+|------|------|--------------|
+| `store.py` | ~1400L | Grep method name first → read only that 50-line range |
+| `cli.py` | ~1500L | Grep `@app.command` decorator for subcommand → read only that range |
+| `cypher.py` | ~700L | Grep `DEMO_SEED_CYPHER` → offset ~465, read 200-line range |
+| `query.py` | ~540L | Grep constant name → offset ~500+, read that range |
+
+Never exceed 200 lines in a single Read of these files. Read once, edit from context.
 
 No [TARGET] nodes/relationships/MCP tools unless this story implements them.
 
-**STOP — do NOT re-read for reference: PROVENANCE_ENGINE.md, BACKLOG_ALIGNMENT.md, story file. If you need to Edit these files later, use exact strings from context. If Edit fails string match, read ONLY the 20-line range around the target — not the whole file.**
+**STOP — do NOT re-read for reference: PROVENANCE_ENGINE.md, BACKLOG_ALIGNMENT.md, story file, data_dictionary.yaml, graph_v1_contract.md. If you need to Edit these files later, use exact strings from context. If Edit fails string match, read ONLY the 20-line range around the target — not the whole file.**
 
 If any schema, design, or scope question cannot be resolved from these docs → do not guess.
 ```
@@ -149,7 +157,7 @@ Final: **CLOSED-READY** or **BLOCKED** (with details).
 
 **HARD STOP — your work is done. No further tool calls.**
 - Do NOT read `close-story.md` or any command file other than verify-story.md.
-- Do NOT edit `data_dictionary.yaml`, `graph_v1_contract.md`, `PROVENANCE_ENGINE.md`, or epic README files.
+- Do NOT edit `data_dictionary.yaml`, `graph_v1_contract.md`, `PROVENANCE_ENGINE.md`, or epic README files UNLESS they appear in the story's DoD or Repo Touchpoints. When in scope, edit them during Step 4 — not after the Step 6 commit.
 - Do NOT change story status to CLOSED or move story files to `closed/`.
 - Do NOT run any more tool calls after outputting this report.
 - The orchestrator will invoke verify-story next (same session). Close is a separate agent spawn.

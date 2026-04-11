@@ -12,6 +12,7 @@ type: project
 | 20260411T200900-retry | QWS-0801 | 228 | 111 | 117 | 51% | lint-loop | prose prohibition (FAILED) |
 | 20260411T215414 | QWS-0801 | 166 | 86 | 80 | 48% | scope-archaeology | structural lint fix (lint-loop eliminated) |
 | 20260411T223754 | QWS-0801 | 152 | 67 | 85 | 56% | doc-overreach | read-guard + discovery gate + STOP gate |
+| 20260411T231923 | QWS-0801 | 148 | 86 | 62 | 42% | file-reread | spawn-split + grep/search guards |
 
 ## Confirmed Waste Patterns
 
@@ -36,13 +37,18 @@ CLI function inventories. Should have pivoted to reading + editing after MCP hit
 - `implement-story.md` Step 3: Phase gate + explicit discovery budget (max 2 search_code + 1 Grep per file)
 - `project_tooling.md`: Discovery budget recipe added to agent memory
 
-### 4. file-reread (28 calls in Run 3 — cli.py×5, query.py×5, cypher.py×5, store.py×2)
-Files already in context re-read before editing. Prose failed 3 consecutive runs.
+### 4. file-reread (28 calls in Run 3; 44 in Run 5 — store.py×7, query.py×9, cypher.py×6, cli.py×5, graph_v1_contract.md×7)
+Files already in context re-read before editing. Prose failed every run. Hook not firing (agent frontmatter hooks don't fire for spawned subagents — confirmed by chmod test passing but re-reads still occurring in trace).
 
-**Fix applied (structural):**
-- `agent-read-guard.sh`: re-read counter — blocks 3rd+ read of same source file
-- `lead-engineer.md`: stronger prose callout with specific file names + "hook-enforced" label
-- `implement-story.md` Step 0: tracker dir cleanup (`rm -rf /tmp/agent-read-tracker`)
+**Root cause confirmed (Run 5):** `hooks:` in agent YAML frontmatter applies only to main-session tool calls, not subagent tool calls. All three guard hooks (Read, Grep, search_code) were silently ignored.
+
+**Fix applied (structural — Run 5→6):**
+- Moved Read/Grep/search_code hooks to `.claude/settings.json` (global, fires for all agents)
+- Bash hook stays in lead-engineer.md only (ruff already blocked by deny list)
+- `implement-story.md` Step 3: large file offset hints table (store/cli/cypher/query)
+- `implement-story.md` Step 3 STOP: added graph_v1_contract.md to no-reread list
+- `implement-story.md` Step 9: PROVENANCE_ENGINE prohibition now conditional on story DoD scope
+- `verify-story.md` Step 7b: re-run acceptance tests instead of just checking checkboxes
 
 ## Principle Confirmed
 **Prose prohibition failure rate ~100% when prohibited action is agent's default instinct.**
@@ -66,3 +72,8 @@ Only structural enforcement works: hooks, guards, removing the tool/command.
 | agent-grep-guard.sh (block Grep on Read files) | .claude/scripts/agent-grep-guard.sh | Applied Run 4→5 |
 | Grep + search_code hooks in lead-engineer.md | .claude/agents/lead-engineer.md | Applied Run 4→5 |
 | Discovery tracker reset in Step 0 | .claude/commands/implement-story.md | Applied Run 4→5 |
+| Hooks moved to settings.json (Read/Grep/search_code) | .claude/settings.json | Applied Run 5→6 — fixes frontmatter-hook firing bug |
+| Large file offset hints table in Step 3 | .claude/commands/implement-story.md | Applied Run 5→6 |
+| graph_v1_contract.md added to no-reread STOP list | .claude/commands/implement-story.md | Applied Run 5→6 |
+| PROVENANCE_ENGINE prohibition conditional on DoD scope | .claude/commands/implement-story.md | Applied Run 5→6 |
+| verify-story Step 7b: AT re-run (was no-op checkbox check) | .claude/commands/verify-story.md | Applied Run 5→6 |
