@@ -13,9 +13,6 @@ Operator runbook for Graph V1 as currently implemented in QuantWorkstation.
 - Optional semantic tier (`--analyze`) can annotate selected runs with `curator_note`.
 - Query presets and MCP adapter read only from graph projections (no file fallback).
 - `qw abort` can mark a strategy as ABORTED with an explicit reason.
-- `qw degrade` demotes a Champion to FormerChampion state with a mandatory oos_reason.
-- `qw retire` retires a FormerChampion by creating a RetiredChampion and RETIRED_TO edge.
-- `qw query --name former_champions` returns the cemetery view (all FormerChampions).
 
 Primary references:
 - `qws_graph/docs/graph_v1_contract.md`
@@ -40,8 +37,6 @@ qw record --help
 qw reconcile --help
 qw query --help
 qw abort --help
-qw degrade --help
-qw retire --help
 ```
 
 Expected:
@@ -49,8 +44,6 @@ Expected:
 - `qw reconcile` shows `--since`, `--json`, `--repo-root`.
 - `qw query` lists available presets.
 - `qw abort` shows `--strategy` and `--reason`.
-- `qw degrade` shows `--champion` and `--reason`.
-- `qw retire` shows `--former-champion` and optional `--note`.
 
 ## Day-1 Operations
 
