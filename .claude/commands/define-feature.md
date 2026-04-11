@@ -1,0 +1,68 @@
+Define a QuantWorkstation feature: $ARGUMENTS
+
+Invoke skill: caveman
+
+Two-agent flow: **qws-architect (Opus)** reasons, **product-owner (Sonnet)** writes candidate entry.
+
+---
+
+## Phase 1 — Feature analysis (qws-architect, Opus)
+
+Spawn qws-architect agent:
+```
+Load: docs/MANIFESTO.md, docs/PROVENANCE_ENGINE.md, docs/RESEARCH_WORKFLOW.md,
+      docs/BACKLOG_ALIGNMENT.md, qws_graph/epics/INDEX.md
+
+Analyze feature: $ARGUMENTS
+
+Answer:
+1. Already covered? Check CLOSED stories and current capabilities — if yes, say so and stop.
+2. Which epic absorbs this? Own epic only if operationally distinct.
+3. Advances which research loop step?
+4. Manifesto alignment: alpha, friction reduction, or hard constraint?
+5. Schema impact: new nodes/edges/properties? Conflict with PROVENANCE_ENGINE? Depends on [TARGET]?
+6. How many stories? Could be one or several — size correctly.
+7. Execution order and dependencies — what must be CLOSED first?
+
+Output:
+
+**Fit**
+| Field | Value |
+|---|---|
+| Epic | N — name |
+| Research loop step | |
+| Manifesto alignment | |
+| Blocked on | story IDs or none |
+
+**Schema impact**
+[nodes/edges/properties added, or "none"]
+
+**Story breakdown**
+| # | Summary | Key ACs (3-5 falsifiable) | Repo touchpoints |
+|---|---|---|---|
+
+**Open questions**
+[only if answer materially changes what gets built — prefer decisions]
+
+**Verdict**
+READY TO WRITE | NEEDS DECISION (list questions) | NOT WORTH BUILDING (reason)
+```
+
+If NEEDS DECISION → stop, present to user. Do not proceed to Phase 2.
+If NOT WORTH BUILDING → stop, explain why.
+
+---
+
+## Phase 2 — Add to candidates (product-owner, Sonnet)
+
+Only if architect verdict = READY TO WRITE and user approves.
+
+Spawn product-owner agent with architect's output:
+```
+Add the following candidate(s) to the New Story Candidates table in docs/BACKLOG_ALIGNMENT.md:
+
+| Candidate | What it delivers |
+[one row per story from the architect's breakdown]
+
+Append to the existing table. Do not remove existing rows.
+```

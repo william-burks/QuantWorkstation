@@ -4,6 +4,13 @@ Invoke skill: caveman
 
 Run on `release/yy.m.v` branch after all stories merged. Review every CLOSED story for regressions and consistency.
 
+## Step 0 — Baseline
+```
+qw seed --demo
+pytest tests/unit/ -v 2>&1
+```
+Capture baseline failures. Any failure here is pre-existing — not caused by this epic's stories.
+
 ## Step 1 — Identify stories
 Read `qws_graph/epics/INDEX.md` — find all CLOSED stories in epic $ARGUMENTS.
 List story IDs and paths (in `closed/` subdirectory).
@@ -39,7 +46,7 @@ Run full test suite:
 ```
 pytest tests/unit/ -v 2>&1
 ```
-If any test fails that is NOT related to the current story → cross-story regression. Flag with story that likely caused it.
+Compare against Step 0 baseline. Any new failure not in baseline → cross-story regression. Flag with story that likely caused it.
 
 ## Step 3 — Fix issues
 If issues found: fix code/fixtures/Cypher as needed.
@@ -52,7 +59,12 @@ git push origin <release branch>
 ```
 If no issues → skip commit, report clean.
 
-## Step 5 — Report
+## Step 5 — Teardown demo seed
+```
+qw seed --demo --teardown
+```
+
+## Step 6 — Report
 ```
 ## Epic $ARGUMENTS — QA Report
 

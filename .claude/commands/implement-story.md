@@ -17,6 +17,14 @@ Read before coding:
 
 No [TARGET] nodes/relationships/MCP tools unless this story implements them.
 
+If any schema, design, or scope question cannot be resolved from these docs → do not guess.
+```
+git add <story file>
+git commit -m "blocked($ARGUMENTS): assumption — <exact question>"
+```
+Report: `BLOCKED | assumption | <exact question>` and stop.
+Will will run `/answer-assumption <question>` to get a ruling before resuming.
+
 ## Step 4 — Implement
 Work ACs one by one. After each:
 1. `- [ ]` → `- [x]` in story file
@@ -56,7 +64,12 @@ Passing AC → confirm `- [x]`.
 4. Restore `- [x]`
 5. `git commit -m "fix($ARGUMENTS): AC<N> — <what fixed>"`
 6. Re-run ALL tests from top
-7. Max 3 cycles → BLOCKED if still failing
+7. Max 3 cycles → commit blocked state + stop:
+   ```
+   git add <story file>
+   git commit -m "blocked($ARGUMENTS): AC<N> — max cycles, <reason>"
+   ```
+   Report: `BLOCKED | <reason>` and stop.
 
 ## Step 8 — Update status
 All ACs pass → READY → TESTING in story, INDEX.md, BACKLOG_ALIGNMENT.md.

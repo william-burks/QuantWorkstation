@@ -4,7 +4,21 @@ Invoke skill: caveman
 
 This skill runs in the **main session** as orchestrator. Spawn a fresh lead-engineer agent per story.
 
-## Step 0 — Strategic validation (qws-architect, Opus)
+## Step 0 — Pre-flight check (product-analyst, Haiku)
+Spawn product-analyst agent:
+```
+Read qws_graph/epics/INDEX.md and docs/BACKLOG_ALIGNMENT.md.
+For epic $ARGUMENTS check:
+1. Any story not `ready` (draft, TESTING, BLOCKED)?
+2. Any story with unresolved dependencies (blocked-on not CLOSED)?
+3. Neo4j reachable at bolt://127.0.0.1:7687?
+4. Latest release branch name (git branch | grep release/ | sort -V | tail -1)?
+Return: READY_TO_RUN | BLOCKED — one line per issue. Max 10 lines total.
+```
+If BLOCKED → STOP. Report issues. Do not proceed to architect or implementation.
+
+## Step 1 — Strategic validation (qws-architect, Opus)
+
 Spawn qws-architect agent:
 ```
 Load: docs/MANIFESTO.md, docs/RESEARCH_WORKFLOW.md, docs/PROVENANCE_ENGINE.md, docs/BACKLOG_ALIGNMENT.md
@@ -56,11 +70,25 @@ Execute full story lifecycle for <STORY_ID>:
 1. Read and execute .claude/commands/implement-story.md for <STORY_ID>
 2. Read and execute .claude/commands/verify-story.md for <STORY_ID>
 3. Read and execute .claude/commands/close-story.md for <STORY_ID>
-Report final status: CLOSED | BLOCKED | FAILED with details.
+Return max 5 lines: CLOSED | BLOCKED | FAILED — one-line summary — any blocker detail.
+Full detail lives in git commits. Do not return test output or diffs.
 ```
 
 ### 3d — Process result
 - **CLOSED** → `make to-release` (pushes feature, merges to release, pushes release)
+- **BLOCKED | assumption | \<question\>** → spawn qws-architect (Opus):
+  ```
+  Read .claude/commands/answer-assumption.md and execute for: <question>
+  Return ruling in answer-assumption format. Max 10 lines.
+  ```
+  Re-spawn lead-engineer with original prompt + ruling appended:
+  ```
+  Assumption resolved: <question>
+  Ruling: <CONFIRMED|REJECTED|ALTERNATIVE>
+  Action: <what lead-engineer should do>
+  Resume implementation from where blocked.
+  ```
+  Max 1 assumption resolution per story → second BLOCKED | assumption → needs-attention
 - **BLOCKED/FAILED** → add to needs-attention list, mark dependent stories skipped
 
 ### 3e — Progress
@@ -75,6 +103,7 @@ Spawn qa-executor agent:
 ```
 Execute .claude/commands/qa-epic.md for epic $ARGUMENTS.
 You are on the release branch. Review all CLOSED stories, commit fixes, push.
+Return verdict: CLEAN | ISSUES_FIXED | ISSUES_REMAINING
 ```
 
 ## Step 5 — Final report
@@ -84,17 +113,26 @@ You are on the release branch. Review all CLOSED stories, commit fixes, push.
 ### Completed (CLOSED)
 - QWS-XXXX: <summary>
 
-### Needs Attention
+### Needs Attention (story failures)
 - QWS-ZZZZ: <failure details>
 
-### Skipped (blocked by failures)
+### Skipped (blocked by story failures)
 - QWS-VVVV: blocked on QWS-ZZZZ
 
-### QA Review
+### QA Verdict
+CLEAN | ISSUES_FIXED | ISSUES_REMAINING
+
 [qa-executor findings]
+
+### Next step
+QA clean → run: /close-epic $ARGUMENTS
+QA issues remaining → review findings above, resolve, then run: /close-epic $ARGUMENTS
 ```
+
+Session ends here. Close-epic is a separate cold-start.
 
 ## Failure policy
 - Story A fails, B depends on A → skip B
 - Story A fails, B independent → proceed with B
-- Never retry a failed story automatically — needs-attention list for Will
+- Never retry a failed story — needs-attention list for Will
+- Epic closure always requires human to invoke /close-epic
