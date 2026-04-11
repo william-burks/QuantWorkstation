@@ -94,6 +94,8 @@ Execute full story lifecycle for <STORY_ID>:
 1. Read and execute .claude/commands/implement-story.md for <STORY_ID>
 2. Read and execute .claude/commands/verify-story.md for <STORY_ID>
 3. Read and execute .claude/commands/close-story.md for <STORY_ID>
+Follow the command files exactly — including all git commit steps (impl, fail, fix, test, close).
+The audit trail depends on these commits existing.
 Return max 5 lines: CLOSED | BLOCKED | FAILED — one-line summary — any blocker detail.
 Full detail lives in git commits. Do not return test output or diffs.
 ```

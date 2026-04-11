@@ -1,5 +1,8 @@
 Implement the QuantWorkstation story identified by: $ARGUMENTS
 
+## Step 0 — Read memory
+Read `.claude/agent-memory/lead-engineer/` — apply tooling knowledge, principles from prior stories.
+
 ## Step 1 — Locate story
 Search `qws_graph/epics/` for story `$ARGUMENTS`. Read full file.
 Stop if Status ≠ `ready`.
