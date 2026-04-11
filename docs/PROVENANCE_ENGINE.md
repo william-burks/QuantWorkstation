@@ -60,6 +60,8 @@ Current state maps onto a subset of this chain. Target additions are marked.
 | `RunStatsSummary` | `RunStatsSummary` | Aggregate stats for grid-sweep rows below the significance gate. |
 | `BlobArtifact` | `BlobArtifact` | Raw unstructured artifact (tracker markdown). Preserves provenance without parsing. |
 | `ResearchTarget` | `ResearchTarget` | Singleton config node: promotion thresholds. Seeded via `qw seed --targets`; queried via `research_targets` preset. |
+| `Hypothesis` | `Hypothesis` | The Spark: an unproven theory about a market inefficiency. QWS-0601. |
+| `HypothesisSource` | `HypothesisSource` | Source of a Hypothesis (LLM model name or "user"). QWS-0601. |
 
 **Vocabulary note:** "Trial" is the conceptual term for what the code calls `Run`. The node label in
 Neo4j is `:Run`. When reading code or writing Cypher, use `Run`. When reasoning about the lifecycle,
@@ -89,7 +91,6 @@ provenance in the graph.
 
 | Node | Story | Role |
 |---|---|---|
-| `Hypothesis` | QWS-0601 | The Spark: an unproven theory about a market inefficiency |
 | `FormerChampion` | New story needed | Decay watch: alpha slipping but still monitored; sits between Champion and RetiredChampion |
 
 ### [NEW — QWS-0502] — Regime Context
@@ -114,21 +115,21 @@ provenance in the graph.
 | `HAS_RUN_SUMMARY` | Strategy | RunStatsSummary | Links Strategy to rolled-up grid sweep statistics |
 | `HAS_BLOB` | Strategy | BlobArtifact | Attaches raw unstructured artifact to a Strategy |
 | `IN_REGIME` | Run | Regime | Links a Run to its market regime context. Created via `qw record --regime <label>`. |
+| `SUGGESTED` | LLM / User | Hypothesis | `source: str` (model name or "user"). QWS-0601. |
+| `TESTED_AS` | Hypothesis | Strategy | — QWS-0601. |
+| `BRANCHED_FROM` | Hypothesis | Any Node | `rationale: str` — WHY this direction was taken. QWS-0601. |
+| `CORRELATED_WITH` | Strategy ↔ Strategy | — | `coefficient: float`, `lookback: str`, `p_value: float`, `regime_specific: bool`. QWS-0603. Symmetric. |
+| `CORRELATED_WITH` | Champion ↔ Champion | — | same properties. QWS-0603. Symmetric. |
+| `SEMANTICALLY_RELATED` | Hypothesis ↔ Hypothesis | — | `similarity: float` (cosine), `pair_key: str`, `computed_at: datetime`. QWS-0604. Symmetric. |
 
 ### [TARGET] — Not Yet Implemented
 
 | Relationship | Source | Target | Properties | Story |
 |---|---|---|---|---|
-| `SUGGESTED` | LLM / User | Hypothesis | `source: str` (model name or "user") | QWS-0601 |
-| `TESTED_AS` | Hypothesis | Strategy | — | QWS-0601 |
 | `HAS_TRIAL` | Strategy | Trial | Alias for `HAS_RUN` at the conceptual level | — |
 | `DEGRADED_TO` | Champion | FormerChampion | `detected_at: datetime` | New story |
 | `RETIRED_TO` | FormerChampion | RetiredChampion | Replaces direct Champion→RetiredChampion in target state | New story |
 | `SUPERSEDED_BY` | Champion | Champion | Replaced by better version of same idea | New story |
-| `BRANCHED_FROM` | Hypothesis | Any Node | `rationale: str` — WHY this direction was taken | QWS-0601 |
-| `CORRELATED_WITH` | Strategy ↔ Strategy | — | `coefficient: float`, `lookback: str`, `p_value: float`, `regime_specific: bool` | QWS-0603 |
-| `CORRELATED_WITH` | Champion ↔ Champion | — | same properties (symmetric) | QWS-0603 |
-| `SEMANTICALLY_RELATED` | Hypothesis ↔ Hypothesis | — | `similarity: float` (cosine), `pair_key: str`, `computed_at: datetime` | QWS-0604 (**IMPLEMENTED**) |
 
 **Name conflict note:** `PIVOTED_FROM` already exists in the current schema (Champion → Run, meaning "this
 champion was promoted based on this run"). The new target "context bridge" relationship uses a different
@@ -206,6 +207,17 @@ story is marked COMPLETE in `BACKLOG_ALIGNMENT.md`.
 | `metrics_oos_sharpe` | float \| null | OOS Sharpe from `--sharpe` flag; null until first `qw record --oos --sharpe` call |
 | `auto_promoted` | bool | true = auto-gate; null = manually curated (authoritative) |
 | `fragilities` | list[str] | Known failure modes |
+| `created_at` | datetime | Timestamp of node creation |
+| `updated_at` | datetime | Timestamp of last node update |
+
+### Hypothesis — key properties (QWS-0601 + QWS-0604)
+
+| Property | Type | Description |
+|---|---|---|
+| `hypothesis_id` | str | 12-char deterministic ID |
+| `title` | str | Short description of the market inefficiency theory |
+| `status` | str | `open \| confirmed \| rejected` |
+| `embedding` | list[float] | 384-dim sentence-transformer vector of `title`. Null for pre-QWS-0604 nodes; backfill via `qw backfill --embeddings`. Used to compute cosine similarity for `SEMANTICALLY_RELATED` edges. |
 | `created_at` | datetime | Timestamp of node creation |
 | `updated_at` | datetime | Timestamp of last node update |
 
