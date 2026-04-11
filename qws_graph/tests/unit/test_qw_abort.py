@@ -5,9 +5,6 @@ from __future__ import annotations
 import sys
 from argparse import Namespace
 from pathlib import Path
-from typing import Any
-
-import pytest
 
 QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
 if str(QWS_GRAPH_ROOT) not in sys.path:
@@ -15,7 +12,6 @@ if str(QWS_GRAPH_ROOT) not in sys.path:
 
 from research.graph.cli import cmd_abort
 from research.graph.store import StoreInfraError
-
 
 # ---------------------------------------------------------------------------
 # Fake store
@@ -145,11 +141,12 @@ class TestCmdAbort:
 class TestAbortSubparser:
     def test_abort_subcommand_registered(self) -> None:
         import argparse
+
         import research.graph.cli as cli_module
 
         # Re-parse through the real main parser to confirm `abort` is registered
         parser = argparse.ArgumentParser()
-        subparsers = parser.add_subparsers(dest="command")
+        parser.add_subparsers(dest="command")
         # Import the module's main() to check parser construction indirectly
         # by verifying cmd_abort is importable and callable
         assert callable(cli_module.cmd_abort)
