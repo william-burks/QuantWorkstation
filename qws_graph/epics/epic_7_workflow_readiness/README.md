@@ -14,7 +14,7 @@ gaps remain before end-to-end research sessions are reliable:
 3. Correlation gate has no re-check path when portfolio composition changes
 
 ## Stories (execution order)
-1. `QWS-0801` — FormerChampion Lifecycle (READY)
+1. `QWS-0801` — FormerChampion Lifecycle (TESTING — all ACs pass)
 2. `QWS-0703` — OpenAI Curation Switch (READY — independent of 0801)
 3. `QWS-0804` — Correlation Gate Re-check (BLOCKED on QWS-0801)
 

@@ -85,29 +85,29 @@ the linked story is marked COMPLETE above.
 ### Nodes
 | Node | Story |
 |---|---|
-| `FormerChampion` | QWS-0801 |
+| ~~`FormerChampion`~~ | QWS-0801 (**IMPLEMENTED**) |
 
 ### Relationships
 | Relationship | Story |
 |---|---|
-| `DEGRADED_TO` | QWS-0801 |
+| ~~`DEGRADED_TO`~~ | QWS-0801 (**IMPLEMENTED**) |
 | `SUPERSEDED_BY` | QWS-0802 |
-| `RETIRED_TO` (FormerChampion→RetiredChampion) | QWS-0801 |
+| ~~`RETIRED_TO`~~ (FormerChampion→RetiredChampion) | QWS-0801 (**IMPLEMENTED**) |
 | `CORRELATED_WITH` | QWS-0603 (**IMPLEMENTED**) |
 | `SEMANTICALLY_RELATED` | QWS-0604 (**IMPLEMENTED**) |
 
 ### Properties
 | Property | Node | Story |
 |---|---|---|
-| `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
-| `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
+| ~~`oos_reason`~~ | FormerChampion / RetiredChampion | QWS-0801 (**IMPLEMENTED**) |
+| ~~`retirement_note`~~ | FormerChampion / RetiredChampion | QWS-0801 (**IMPLEMENTED**) |
 | `embedding` | Hypothesis | QWS-0604 (**IMPLEMENTED**) |
 | `status = ARCHIVED` | Strategy | QWS-0406 amendment (ABORTED exists; ARCHIVED is new) |
 
 ### MCP Tools
 | Tool | Story |
 |---|---|
-| `former_champions` | QWS-0801 |
+| ~~`former_champions`~~ | QWS-0801 (**IMPLEMENTED**) |
 | `monitor_champion` | QWS-0803 |
 | `similar_hypotheses` | QWS-0604 (**IMPLEMENTED**) |
 
