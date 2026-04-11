@@ -1,7 +1,9 @@
 Implement the QuantWorkstation story identified by: $ARGUMENTS
 
-## Step 0 — Read memory
-Read `.claude/agent-memory/lead-engineer/` — apply tooling knowledge, principles from prior stories.
+## Step 0 — Read memory (MANDATORY FIRST)
+Read `.claude/agent-memory/lead-engineer/MEMORY.md` and all referenced files BEFORE any tool invocations.
+Use the exact commands documented there for tests, lint, and type checking.
+Do NOT attempt ruff, pytest, or mypy without checking memory for the correct invocation.
 
 ## Step 1 — Locate story
 Search `qws_graph/epics/` for story `$ARGUMENTS`. Read full file.
@@ -33,6 +35,10 @@ Work ACs one by one. After each:
 1. `- [ ]` → `- [x]` in story file
 2. `git add` each changed file (never `-A` or `.`)
 3. `make test` after any Python change — fix all failures
+4. Run `mypy --strict` on changed files. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
+
+For large files (>500 lines): grep for the target function/section first, then read only that range.
+Do NOT read whole files in sequential chunks.
 
 **4b — Demo seed.** If this story adds or modifies nodes, edges, or properties:
 update `DEMO_SEED_CYPHER` and `DEMO_TEARDOWN_CYPHER` in `qws_graph/research/graph/cypher.py`.

@@ -4,7 +4,7 @@
 QWS-0702
 
 ## Status
-draft
+READY
 
 ## Summary
 Automate the `qa_graph_integrity.sh` checks so they run on every push without requiring
@@ -19,59 +19,60 @@ regressions in the ingest/query path before they reach the graph.
 The checks themselves are fast (< 5s). The blocker is Neo4j dependency in CI.
 
 ## Goal
-A CI job that:
-1. Spins up a Neo4j instance (Docker, or uses the existing `make neo4j-up` target).
-2. Seeds it with a minimal fixture dataset (one strategy, a few runs, one champion).
-3. Runs the 5 integrity checks.
-4. Fails the build if any check fails.
+A CI job that runs the 5 integrity checks on every push without requiring a live Neo4j
+instance. Converts the shell checks into Python unit tests using the existing `FakeSession`
+pattern, so CI runs with no Docker dependency.
 
-Alternatively: convert the 5 checks into Python unit tests against a mock session, so
-CI runs without Neo4j at all. Evaluate which approach is simpler given the existing test
-infrastructure (the unit tests already use `FakeSession`).
+## Design
 
-## Design options
+Decision: Option A (FakeSession unit tests). Option B (Docker Neo4j integration gate)
+deferred as follow-on.
 
-### Option A — Python unit tests (no Neo4j in CI)
 Convert each `qa_graph_integrity.sh` check into a unit test in
-`tests/unit/test_graph_integrity.py` using the existing `FakeSession` pattern.
-No Docker required. Runs in < 1s. Cannot catch real query syntax errors.
+`qws_graph/tests/unit/test_graph_integrity.py` using the existing `FakeSession` pattern.
+No Docker required. Runs in < 1s.
 
-### Option B — Docker Neo4j in CI (integration gate)
-Add a GitHub Actions workflow step:
-```yaml
-services:
-  neo4j:
-    image: neo4j:5
-    env:
-      NEO4J_AUTH: neo4j/test_password
-    ports:
-      - 7687:7687
-```
-Seed from `tests/fixtures/`, run `qa_graph_integrity.sh` against it.
-Catches real Cypher errors. Adds ~60s to CI run.
+## Implementation Notes
 
-Recommendation: implement Option A first (fast, no infra), note Option B as follow-on.
+- The 5 shell checks in `qa_graph_integrity.sh` use the `trace_champion` preset, which
+  is deprecated and removed (per QWS-0406). The unit tests must NOT rely on the
+  `trace_champion` preset. Each test should use the documented replacement
+  (`downstream_champions`) or direct Cypher/Python assertions as appropriate.
+- Do NOT update `qa_graph_integrity.sh` itself. The unit tests stand alone.
+- FakeSession tests verify logic structure, not real Cypher syntax. Cypher correctness
+  is not validated by Option A — that is acknowledged and deferred to Option B (follow-on).
+
+## Repo Touchpoints
+
+| File | Status |
+| --- | --- |
+| `research/bin/qa_graph_integrity.sh` | exists — reference only; do not modify |
+| `qws_graph/tests/unit/test_graph_integrity.py` | new |
+| `.github/workflows/test-integrity.yml` | new |
+| `Makefile` | exists — add `test-integrity` target here |
 
 ## In Scope
-- `tests/unit/test_graph_integrity.py` — 5 unit tests mirroring the 5 shell checks
-- CI workflow step (GitHub Actions `.github/workflows/`) that runs these tests
+- `qws_graph/tests/unit/test_graph_integrity.py` — 5 unit tests mirroring the 5 shell checks
+- CI workflow `.github/workflows/test-integrity.yml` that runs these tests
 - `Makefile` target `make test-integrity` for local invocation
-- Document Option B as a follow-on in the story
+- GitHub Actions workflow status badge added to `qws_graph/README.md`
 
 ## Out of Scope
-- Full integration test suite against live Neo4j (that's Option B, a follow-on)
+- Full integration test suite against live Neo4j (Option B — follow-on)
 - Seeding fixtures for all 9 Epic 3 UAT phases
 - Performance benchmarking
+- Modifying `qa_graph_integrity.sh`
 
 ## Acceptance Criteria
 - [ ] `make test-integrity` runs the 5 integrity unit tests and exits 0 on a clean codebase.
 - [ ] Intentionally breaking a champion property (remove `metrics_sharpe`) causes the
   relevant test to fail.
 - [ ] CI runs `make test-integrity` on every push to `feature/*` and `main`.
-- [ ] CI badge or workflow status is visible in the repo.
+- [ ] GitHub Actions workflow status badge is added to `qws_graph/README.md` linking to
+  the `test-integrity` workflow.
 
 ## Definition of Done
-- [ ] Unit tests implemented (5 checks).
+- [ ] Unit tests implemented (5 checks, using `downstream_champions` or direct Cypher — not `trace_champion`).
 - [ ] CI workflow step added.
 - [ ] `Makefile` target documented.
 - [ ] Story marked CLOSED.

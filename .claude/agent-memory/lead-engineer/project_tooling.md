@@ -7,11 +7,33 @@ type: project
 ## Test/Lint Commands
 
 All commands require venv activation: `source .venv/bin/activate`
+ALWAYS run from project root `/Users/will/ClaudeProjects/QuantWorkstation` — NOT from `qws_graph/`.
 
 - **Unit tests:** `make test` or `source .venv/bin/activate && pytest qws_graph/tests/unit/ -v`
-- **Lint:** `make lint` or `source .venv/bin/activate && ruff check <files> && mypy --strict <files>`
+- **Lint:** `source .venv/bin/activate && ruff check qws_graph/path/to/file.py`
+- **Type check:** `source .venv/bin/activate && mypy --strict qws_graph/path/to/file.py`
 - **Both:** `make check`
 - **Neo4j status:** `make -C qws_graph neo4j-status`
+
+Do NOT use `cd qws_graph && ruff check research/...` — breaks import resolution.
+Do NOT use `python -m ruff` — use `ruff` directly after venv activation.
+
+## Mypy Fix Protocol
+
+Run mypy once, read ALL errors, fix ALL in one pass, re-run once to confirm. Max 2 cycles.
+Never fix-one-rerun-fix-one — that wastes 3x the tool calls.
+
+## Key File Sizes & Grep-First Targets
+
+Large files — grep for function/section names first, read only that range. Do NOT read sequentially.
+
+| File | Lines | Key landmarks |
+|------|-------|---------------|
+| `qws_graph/research/graph/store.py` | ~1400 | grep for method names like `record_hypothesis`, `backfill_embeddings` |
+| `qws_graph/research/graph/cli.py` | ~1500 | grep for subcommand decorators like `@app.command` |
+| `qws_graph/research/graph/cypher.py` | ~700 | `DEMO_SEED_CYPHER` starts ~line 465, `DEMO_TEARDOWN_CYPHER` follows |
+| `qws_graph/research/graph/query.py` | ~540 | Cypher constant strings at bottom (~line 500+) |
+| `qws_graph/docs/data_dictionary.yaml` | ~1060 | `Hypothesis:` section starts ~line 840 |
 
 ## Demo Seed
 

@@ -4,7 +4,7 @@
 QWS-0802
 
 ## Status
-draft
+READY
 
 ## Blocked On
 None (independent of QWS-0801)
@@ -39,7 +39,7 @@ to OOS failure), there is currently no way to query "is this strategy a generati
 improvement of an older approach, or a brand new direction?"
 
 ## Goal
-At promotion time, `store.promote_to_champion()` creates a `SUPERSEDED_BY` edge from the
+At promotion time, `_maybe_auto_promote_champion()` creates a `SUPERSEDED_BY` edge from the
 current Champion to the incoming Champion (before the current Champion is relabeled as
 RetiredChampion):
 
@@ -66,23 +66,33 @@ remains traversable as `(RetiredChampion)-[:SUPERSEDED_BY]->(Champion)`.
 ## Design
 
 ### Promotion path modification
-Current flow in `store.promote_to_champion()`:
-1. Create new Champion node
-2. Relabel old Champion → RetiredChampion (MERGE new label, remove old)
-3. Create `WAS_CHAMPION` edge
 
-New flow:
-1. Create new Champion node
-2. **Create `SUPERSEDED_BY` edge from old Champion to new Champion**
-3. Relabel old Champion → RetiredChampion
-4. Create `WAS_CHAMPION` edge
+The promotion logic lives in `_maybe_auto_promote_champion()` in `store.py`. Internally,
+promotion is handled by a single Cypher transaction (`_write` nested function). The
+`SUPERSEDED_BY` edge must be added inside this Cypher block, in the FOREACH clause that
+already handles the `WAS_CHAMPION` edge:
 
-The SUPERSEDED_BY edge is created in the same transaction as the relabeling.
+Current FOREACH (creates WAS_CHAMPION):
+```cypher
+FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
+  CREATE (ch)-[:WAS_CHAMPION]->(prev)
+)
+```
+
+Add SUPERSEDED_BY alongside WAS_CHAMPION in the same FOREACH block:
+```cypher
+FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
+  CREATE (ch)-[:WAS_CHAMPION]->(prev)
+  CREATE (prev)-[:SUPERSEDED_BY]->(ch)
+)
+```
+
+`prev` is the old Champion node (already relabeled to RetiredChampion by the preceding
+FOREACH). The SUPERSEDED_BY edge is created atomically in the same transaction.
 
 ### When SUPERSEDED_BY is NOT created
-- First promotion for a Strategy (no existing Champion to displace) — no edge.
-- `qw degrade` path (Champion → FormerChampion) — no edge; that is the decay path,
-  not the replacement path.
+- First promotion (prev IS NULL) — FOREACH body skipped, no edge created.
+- `qw degrade` path — does not go through `_maybe_auto_promote_champion`; no edge.
 
 ## In Scope
 - `qws_graph/research/graph/store.py` — add SUPERSEDED_BY edge creation inside the

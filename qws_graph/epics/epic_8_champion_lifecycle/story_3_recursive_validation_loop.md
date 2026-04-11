@@ -4,11 +4,10 @@
 QWS-0803
 
 ## Status
-draft
+BLOCKED
 
 ## Blocked On
-QWS-0801 (FormerChampion node and DEGRADED_TO edge must be CLOSED — this story writes
-those schema elements)
+QWS-0801 (FormerChampion node and DEGRADED_TO edge must be CLOSED — monitor writes these schema elements)
 
 ## Summary
 Add a `monitor_champion` scheduled skill that re-runs each active Champion's trial with
@@ -38,6 +37,17 @@ For each active Champion:
 Will's response is manual: either `qw degrade --reason` + new Hypothesis (`BRANCHED_FROM`)
 for a pivot, or `qw retire` to archive.
 
+## Schema Extension
+
+### HAS_BLOB edge — source expansion
+| Edge | Source → Target | Properties | Change |
+|---|---|---|---|
+| `HAS_BLOB` | FormerChampion → BlobArtifact | none | New source type; existing Strategy→BlobArtifact unaffected |
+
+BlobArtifact node properties are unchanged. The notification content stored as BlobArtifact
+should include: `artifact_type = "monitor_notification"`, `content = <notification text>`,
+`created_at = datetime()`.
+
 ## Design
 
 ### Skill interface
@@ -50,8 +60,15 @@ qw monitor
 ```
 
 ### Decay threshold configuration
-`decay_threshold` is read from the `ResearchTarget` node if QWS-0408 is CLOSED;
-otherwise falls back to `0.75` hardcoded in `monitor.py`.
+`decay_threshold` is read from the `ResearchTarget` node property `decay_threshold` (added
+by this story); falls back to `0.75` when ResearchTarget is absent or property is unset.
+
+### Auto-generated oos_reason
+When monitor auto-creates a FormerChampion, it passes the following oos_reason to
+`store.degrade_champion()`:
+```
+"Auto-detected by qw monitor on {date}: Sharpe drifted from {old_sharpe:.2f} to {new_sharpe:.2f} (drift={drift:.2f}, threshold={threshold:.2f})"
+```
 
 ### Trial re-run mechanism
 The monitor reads each Champion's `artifact_path` to identify the trial script, then
@@ -71,8 +88,10 @@ and is queryable.
   the decay detection loop
 - `qws_graph/research/graph/cli.py` — `qw monitor` subcommand; optional `--champion-id`
   to restrict to one Champion; `--dry-run` to report drift without writing edges
-- `qws_graph/docs/data_dictionary.yaml` — document `decay_threshold` and monitor
-  behavior
+- `qws_graph/docs/data_dictionary.yaml` — document `decay_threshold` and monitor behavior;
+  extend `HAS_BLOB` edge to also accept FormerChampion as source (FormerChampion → BlobArtifact);
+  add `decay_threshold` property to ResearchTarget node (float, default 0.75, description:
+  'Sharpe drift threshold for monitor_champion decay detection')
 - Unit tests: drift above threshold triggers degrade; drift below threshold skips;
   dry-run produces no graph writes
 - Integration test: end-to-end with a mock trial script that returns known Sharpe values
@@ -103,7 +122,10 @@ and is queryable.
 - [ ] Notification is stored as a `BlobArtifact` attached to the FormerChampion node.
 - [ ] A Champion with an unresolvable trial script path is skipped with a logged warning;
   other Champions continue to be evaluated.
-- [ ] `decay_threshold` defaults to `0.75` when `ResearchTarget` node is absent.
+- [ ] `decay_threshold` defaults to `0.75` when `ResearchTarget` node is absent or
+  `decay_threshold` property is unset.
+- [ ] FormerChampion created by `qw monitor` has `oos_reason` set to the auto-generated
+  monitor format string (includes old Sharpe, new Sharpe, drift value, threshold).
 - [ ] Unit tests cover: above-threshold, below-threshold, dry-run, single-champion scope,
   missing script path.
 

@@ -4,11 +4,10 @@
 QWS-0801
 
 ## Status
-draft
+READY
 
 ## Blocked On
-QWS-0402 (OOS outcome tracking must be CLOSED — `oos_fail` recording is the primary
-trigger for Champion degradation)
+None (QWS-0402 was the prerequisite — now CLOSED)
 
 ## Summary
 Introduce `FormerChampion` as a first-class node type, sitting between Champion and
@@ -68,6 +67,11 @@ The `former_champions` preset returns: `strategy_id`, `instrument`, `degraded_at
 | Property | Type | Description |
 |---|---|---|
 | `retirement_note` | str | Free-text reason for final retirement (set at `qw retire` time) |
+| `oos_reason` | str | Copied from FormerChampion at retirement time |
+
+**Note:** `oos_reason` is set at degradation time on FormerChampion. At retirement,
+`oos_reason` is copied to the RetiredChampion node alongside `retirement_note`. This
+satisfies the BACKLOG_ALIGNMENT listing of `oos_reason` on both node types.
 
 ### oos_reason enforcement
 `qw degrade` requires `--reason` and rejects empty strings. The LLM instruction in
@@ -107,8 +111,10 @@ PROVENANCE_ENGINE.md is explicit: without cause-of-death, the cemetery view is u
 - [ ] `qw degrade <champion_id>` without `--reason` exits non-zero with a clear error.
 - [ ] `qw degrade <champion_id> --reason ""` (empty string) exits non-zero.
 - [ ] `qw degrade <non_existent_id> --reason "..."` exits non-zero with a clear error.
-- [ ] `qw retire <former_champion_id> --note "..."` creates a `RETIRED_TO` edge to the
-  RetiredChampion and stores `retirement_note` on the RetiredChampion node.
+- [ ] `qw retire <former_champion_id> --note "..."` creates a new RetiredChampion node (if
+  one does not already exist) and creates a `RETIRED_TO` edge from the FormerChampion to it.
+- [ ] `qw retire <former_champion_id> --note "..."` stores `retirement_note` on the
+  RetiredChampion node.
 - [ ] `qw retire <former_champion_id>` without `--note` succeeds (note is optional for retirement).
 - [ ] `qw query --name former_champions` returns one row per FormerChampion with
   `strategy_id`, `instrument`, `degraded_at`, `oos_reason`, `retirement_note` (null if
