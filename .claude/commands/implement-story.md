@@ -29,7 +29,12 @@ If `/tmp/ruling_$ARGUMENTS.txt` exists → read it before reporting blocked. App
 Work ACs one by one. After each:
 1. `- [ ]` → `- [x]` in story file
 2. `git add` each changed file (never `-A` or `.`)
-3. `pytest tests/unit/ -v` after any Python change — fix all failures
+3. `make test` after any Python change — fix all failures
+
+**4b — Demo seed.** If this story adds or modifies nodes, edges, or properties:
+update `DEMO_SEED_CYPHER` and `DEMO_TEARDOWN_CYPHER` in `qws_graph/research/graph/cypher.py`.
+New node types → add MERGE block (`is_demo=true`, deterministic IDs, realistic values).
+Modified properties → update existing SET blocks. This is part of implementation, not verification.
 
 ## Step 5 — Write Acceptance Test Plan
 Add `## Acceptance Test Plan` section to story file after ACs.

@@ -16,12 +16,14 @@ Read `docs/PROVENANCE_ENGINE.md` — note nodes/relationships/fields from this s
 **3a — Update stale:** Compare fixtures in `qws_graph/tests/fixtures/` against schema. Fix stale fields.
 **3b — Create missing:** New node/relationship types need fixtures in appropriate subdir (`baseline/`, `champion/`, `grid/`, `tracker/`). Name: `<symbol>_<direction>_<tf>_<variant>`. Add unit test for new fixtures.
 
-## Step 4 — Sync demo seed
+## Step 4 — Verify demo seed (not create)
 Read `qws_graph/research/graph/cypher.py` DEMO_SEED_CYPHER + DEMO_TEARDOWN_CYPHER.
-- Modified node types → ensure new properties in SET blocks
-- New node types → add MERGE block (`is_demo=true`, deterministic IDs, realistic values)
-- Removed/renamed properties → update all affected MERGE blocks
-- Verify Cypher syntax (brackets, commas, strings)
+Demo seed should already be updated from implement-story Step 4b. Verify consistency:
+- New nodes/edges from this story present in MERGE blocks with `is_demo=true`
+- Modified properties reflected in SET blocks
+- DEMO_TEARDOWN_CYPHER cleans up everything DEMO_SEED_CYPHER creates
+- Cypher syntax correct (brackets, commas, strings)
+If demo seed is missing or inconsistent → fix it, but note this as a gap in implementation.
 
 ## Step 5 — Integration tests
 If tests in `qws_graph/tests/integration/` cover this story's code paths:
@@ -36,7 +38,7 @@ Check `qws_graph/tests/e2e/run_e2e.py` for matching scenarios. List for referenc
 ## Step 7 — Verify DoD
 For each DoD item: automatable → verify now. Requires live env → flag.
 ```
-ruff check <files> && mypy --strict <files> 2>&1
+source .venv/bin/activate && ruff check <files> && mypy --strict <files> 2>&1
 ```
 Fix all warnings.
 

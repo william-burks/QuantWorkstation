@@ -90,11 +90,14 @@ For each NEEDS WORK story:
 - Fix the specific gap identified (tighten ACs, correct touchpoints, fix schema refs, add missing deps)
 - SCOPE MISMATCH: expand story to deliver everything BACKLOG_ALIGNMENT.md promised. Add missing
   deliverables to ACs, In Scope, and Repo Touchpoints. Never reduce the backlog promise.
-- TARGET REFERENCE: scope-cut the unbuilt reference. Remove it from ACs/Design/presets, add
-  "(deferred to QWS-XXXX)" annotation where it was referenced. Then add a backlog candidate
-  to BACKLOG_ALIGNMENT.md's Not Yet Implemented section: the cut capability, which story it
-  was cut from, and which upstream story (QWS-XXXX) must close first. This is autonomous —
-  no interview needed for scope cuts.
+- TARGET REFERENCE: assess complexity of the unbuilt dependency.
+  **Low complexity** (single property, small edge addition, trivial Cypher) → inline the fix
+  into this story's scope. Add to In Scope and Repo Touchpoints. No card needed.
+  **High complexity** (new node type, lifecycle system, multi-story dependency) → scope-cut.
+  Remove from ACs/Design/presets, add "(deferred to QWS-XXXX)" annotation. Add a backlog
+  candidate to BACKLOG_ALIGNMENT.md's Not Yet Implemented section: the cut capability, which
+  story it was cut from, and which upstream story (QWS-XXXX) must close first.
+  Both paths are autonomous — no interview needed.
 - DEAD TOUCHPOINTS (non-existent CLI command or tool): replace with the documented equivalent
   from PROVENANCE_ENGINE.md or RESEARCH_WORKFLOW.md. If the docs describe how this capability
   works (e.g. promotion happens inside `qw record --bundle`), use that path. The story does
