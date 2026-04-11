@@ -1,3 +1,4 @@
+# noqa: I001
 """Unit tests for research/graph_export.py."""
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from research.graph_export import ( # noqa: E402, I001
+from research.graph_export import ( # noqa: E402
     COLUMN_ALIASES,
     REQUIRED_FIELDS,
     write_baseline_csv,
