@@ -4,7 +4,7 @@
 QWS-0801
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 None (QWS-0402 was the prerequisite — now CLOSED)
@@ -185,7 +185,7 @@ PROVENANCE_ENGINE.md is explicit: without cause-of-death, the cemetery view is u
 - [x] `qw degrade` and `qw retire` CLI commands operational.
 - [x] `former_champions` preset returns cemetery view.
 - [x] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
-- [ ] Story marked CLOSED — unblocks QWS-0803.
-- [ ] All affected README files updated to reflect new capabilities.
+- [x] Story marked CLOSED — unblocks QWS-0803.
+- [x] All affected README files updated to reflect new capabilities.
 - [x] PROVENANCE_ENGINE.md updated — FormerChampion, DEGRADED_TO, RETIRED_TO, oos_reason,
   retirement_note moved from `[TARGET]` to `[CURRENT]`; former_champions tool updated.
