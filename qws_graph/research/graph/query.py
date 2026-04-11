@@ -543,14 +543,12 @@ ORDER BY r.similarity DESC
 
 GET_FORMER_CHAMPIONS_V1_CYPHER = """
 MATCH (fc:FormerChampion)
-OPTIONAL MATCH (origin)-[:DEGRADED_TO]->(fc)
-OPTIONAL MATCH (fc:FormerChampion)-[:RETIRED_TO]->(rc:RetiredChampion)
-WITH fc, rc
+OPTIONAL MATCH (fc)-[:RETIRED_TO]->(rc:RetiredChampion)
 OPTIONAL MATCH (s:Strategy {strategy_id: fc.strategy_id})
 RETURN {
   strategy_id: fc.strategy_id,
   instrument: s.instrument,
-  degraded_at: fc.degraded_at,
+  degraded_at: toString(fc.degraded_at),
   oos_reason: fc.oos_reason,
   retirement_note: rc.retirement_note,
   status: CASE WHEN rc IS NOT NULL THEN 'RETIRED' ELSE 'DEGRADED' END
