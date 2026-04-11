@@ -16,14 +16,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from .query import (
-    get_check_redundancy_v1,
     get_cross_artifact_correlation_v1,
     get_downstream_champions_v1,
     get_fragility_report_v1,
-    get_hypothesis_audit_v1,
     get_instrument_concentration_v1,
     get_list_aborted_v1,
-    get_list_hypotheses_v1,
     get_list_oos_pending_v1,
     get_portfolio_alpha_v1,
     get_promotion_candidates_v1,

@@ -26,7 +26,6 @@ if str(QWS_GRAPH_ROOT) not in sys.path:
 
 from research.graph.cli import (  # noqa: E402
     _cmd_hypothesis,
-    _DEFAULT_SIMILARITY_THRESHOLD,
     cmd_backfill,
 )
 from research.graph.query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params  # noqa: E402
@@ -204,7 +203,6 @@ def test_backfill_embeddings_processes_null_embedding_nodes(capsys: pytest.Captu
     store.get_all_hypothesis_embeddings = MagicMock(return_value=all_embs)
 
     # Patch the import check inside cmd_backfill so sentence-transformers need not be installed.
-    import importlib
     fake_st_module = MagicMock()
     fake_st_module.SentenceTransformer = MagicMock()
 
