@@ -835,6 +835,15 @@ nodes:
         description: >
           Current state of the hypothesis. Updated via
           `qw record --hypothesis <id> --status <value>`.
+      embedding:
+        type: list[float]
+        nullable: true
+        graph_only: true
+        description: >
+          384-dimensional embedding vector computed from title using
+          sentence-transformers/all-MiniLM-L6-v2 at creation time.
+          Null for hypotheses created before QWS-0604 (backfill via `qw backfill --embeddings`).
+          Used to compute cosine similarity for SEMANTICALLY_RELATED edge creation.
       created_at:
         type: datetime
         nullable: false
@@ -1039,6 +1048,38 @@ relationships:
       Used by the promotion gate in `qw record --bundle` to warn about
       concentration risk when a newly-promoted Champion already has a high
       correlation with an active Champion in the portfolio.
+
+  SEMANTICALLY_RELATED:
+    source: "Hypothesis ↔ Hypothesis"
+    target: same_type
+    cardinality: symmetric (written in both directions)
+    story: QWS-0604
+    properties:
+      similarity:
+        type: float
+        nullable: false
+        unit: cosine similarity [0.0, 1.0]
+        description: >
+          Cosine similarity between the embedding vectors of the two Hypothesis nodes.
+          Computed using sentence-transformers/all-MiniLM-L6-v2 (384-dim, normalized).
+          Only edges with similarity >= threshold (default 0.85) are stored.
+      pair_key:
+        type: str
+        nullable: false
+        description: >
+          Deterministic deduplication key: sorted(hypothesis_id_a, hypothesis_id_b) joined with pipe.
+          Used as the MERGE key to prevent duplicate edges on re-runs.
+      computed_at:
+        type: datetime
+        nullable: false
+        description: Timestamp when this edge was last written.
+    description: >
+      Connects two Hypothesis nodes when their title embeddings have cosine similarity
+      >= the configured threshold (default 0.85). Written automatically by
+      `qw record --hypothesis "<title>"` at creation time and backfilled via
+      `qw backfill --embeddings`. Symmetric: written in both A→B and B→A directions.
+      Enables pre-query deduplication: `qw query --name similar_hypotheses --param hypothesis_id=<id>`
+      surfaces existing related hypotheses before a new research direction is committed.
 
 # ---------------------------------------------------------------------------
 # Tier thresholds

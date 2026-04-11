@@ -515,13 +515,30 @@ OPTIONAL MATCH (active_s:Strategy)-[:PRODUCED_CHAMPION]->(active_ch:Champion)
 OPTIONAL MATCH (aborted_s:Strategy)
   WHERE aborted_s.status = 'ABORTED'
     AND toLower(aborted_s.strategy_id) CONTAINS toLower(h.title)
+OPTIONAL MATCH (h)-[sem:SEMANTICALLY_RELATED]->(sem_h:Hypothesis)
 RETURN {
   hypothesis_id: h.hypothesis_id,
   title: h.title,
   active_champion_matches: collect(DISTINCT active_ch.champion_id),
-  aborted_strategy_matches: collect(DISTINCT aborted_s.strategy_id)
+  aborted_strategy_matches: collect(DISTINCT aborted_s.strategy_id),
+  semantic_matches: collect(DISTINCT {
+    hypothesis_id: sem_h.hypothesis_id,
+    title: sem_h.title,
+    similarity: sem.similarity
+  })
 } AS result
 LIMIT 1
+""".strip()
+
+GET_SIMILAR_HYPOTHESES_V1_CYPHER = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})-[r:SEMANTICALLY_RELATED]->(other:Hypothesis)
+RETURN {
+  hypothesis_id: other.hypothesis_id,
+  title: other.title,
+  similarity: r.similarity,
+  status: other.status
+} AS result
+ORDER BY r.similarity DESC
 """.strip()
 
 
@@ -664,6 +681,10 @@ class GraphQueryService:
     def get_check_redundancy_v1(self, hypothesis_id: str) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_check_redundancy_v1(session, hypothesis_id=hypothesis_id)
+
+    def get_similar_hypotheses_v1(self, hypothesis_id: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_similar_hypotheses_v1(session, hypothesis_id=hypothesis_id)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -1109,8 +1130,16 @@ def get_check_redundancy_v1(
     session: QuerySession,
     hypothesis_id: str,
 ) -> list[dict[str, Any]]:
-    """Return match results for existing champions and aborted strategies."""
+    """Return match results for existing champions, aborted strategies, and semantic matches."""
     return _all_results(session, GET_CHECK_REDUNDANCY_V1_CYPHER, hypothesis_id=hypothesis_id)
+
+
+def get_similar_hypotheses_v1(
+    session: QuerySession,
+    hypothesis_id: str,
+) -> list[dict[str, Any]]:
+    """Return hypotheses with SEMANTICALLY_RELATED edges, ordered by similarity descending."""
+    return _all_results(session, GET_SIMILAR_HYPOTHESES_V1_CYPHER, hypothesis_id=hypothesis_id)
 
 
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
@@ -1136,6 +1165,7 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_list_hypotheses_v1": get_list_hypotheses_v1,
     "get_hypothesis_audit_v1": get_hypothesis_audit_v1,
     "get_check_redundancy_v1": get_check_redundancy_v1,
+    "get_similar_hypotheses_v1": get_similar_hypotheses_v1,
 }
 
 

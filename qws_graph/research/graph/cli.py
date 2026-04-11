@@ -23,6 +23,30 @@ from .store import RESEARCH_TARGET_ALLOWED_KEYS, GraphStore, StoreError, StoreIn
 
 _VALID_HYPOTHESIS_STATUSES = frozenset({"open", "confirmed", "refuted", "abandoned"})
 
+_DEFAULT_SIMILARITY_THRESHOLD = 0.85
+_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
+
+def _embed_text(text: str) -> list[float]:
+    """Return a float embedding vector for *text* using the local sentence-transformers model.
+
+    The model is loaded lazily and cached within the process.  No external API
+    calls are made — inference runs on CPU.
+
+    Raises ImportError when sentence-transformers is not installed.
+    """
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ImportError as exc:
+        raise ImportError(
+            "sentence-transformers is required for semantic hypothesis deduplication. "
+            "Install with: pip install sentence-transformers"
+        ) from exc
+
+    model = SentenceTransformer(_EMBEDDING_MODEL)
+    vector = model.encode(text, normalize_embeddings=True)
+    return [float(v) for v in vector]
+
 # Promotion alert thresholds — imported read-only from standards.py
 # fmt: off
 try:
@@ -670,6 +694,9 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
     rationale: str | None = getattr(args, "rationale", None)
     status: str | None = getattr(args, "status", None)
     timeout_seconds: int = getattr(args, "timeout_seconds", 3)
+    similarity_threshold: float = float(
+        getattr(args, "similarity_threshold", None) or _DEFAULT_SIMILARITY_THRESHOLD
+    )
 
     connector = NeoConnector(timeout_seconds=timeout_seconds)
     if not connector.is_available():
@@ -692,6 +719,26 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
                 hypothesis_id = _ids.hash12(title, created_at_iso)
                 store.create_hypothesis(hypothesis_id=hypothesis_id, title=title, source="user")
                 print(f"OK: Hypothesis created — id={hypothesis_id}")
+
+                # Semantic deduplication: embed + store + create edges
+                try:
+                    embedding = _embed_text(title)
+                    store.set_hypothesis_embedding(hypothesis_id, embedding)
+                    existing = store.get_all_hypothesis_embeddings()
+                    n_similar = store.create_semantic_edges(
+                        hypothesis_id, embedding, existing, threshold=similarity_threshold
+                    )
+                    if n_similar > 0:
+                        print(
+                            f"{n_similar} similar hypotheses found. "
+                            f"Run: qw query --name similar_hypotheses "
+                            f"--param hypothesis_id={hypothesis_id}"
+                        )
+                except ImportError as exc:
+                    print(f"WARNING: semantic embedding skipped — {exc}", file=sys.stderr)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"WARNING: semantic embedding failed — {exc}", file=sys.stderr)
+
                 return 0
 
             hypothesis_id = hypothesis_arg
@@ -1121,6 +1168,83 @@ def cmd_query(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_backfill(args: argparse.Namespace) -> int:
+    """Execute `qw backfill --embeddings` — embed+store vectors for null-embedding hypothesis nodes.
+
+    For each Hypothesis node with null embedding:
+      1. Compute embedding from title using local sentence-transformers model.
+      2. Store the vector on the node.
+      3. Create SEMANTICALLY_RELATED edges for all pairs exceeding the threshold.
+
+    Exit codes:
+        0: backfill completed (may have processed 0 nodes if all already embedded)
+        1: sentence-transformers not installed or validation error
+        2: Neo4j unavailable
+    """
+    if not getattr(args, "embeddings", False):
+        print("ERROR: --embeddings is required for qw backfill", file=sys.stderr)
+        return 1
+
+    timeout_seconds: int = getattr(args, "timeout_seconds", 3)
+    similarity_threshold: float = float(
+        getattr(args, "similarity_threshold", None) or _DEFAULT_SIMILARITY_THRESHOLD
+    )
+
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)", file=sys.stderr)
+        return 2
+
+    try:
+        from sentence_transformers import SentenceTransformer  # noqa: F401
+    except ImportError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            targets = store.get_hypotheses_without_embeddings()
+            if not targets:
+                print("OK: backfill complete — 0 hypotheses needed embedding")
+                return 0
+
+            print(f"Backfilling embeddings for {len(targets)} hypothesis nodes…")
+            for row in targets:
+                h_id = str(row["hypothesis_id"])
+                title = str(row["title"])
+                try:
+                    embedding = _embed_text(title)
+                    store.set_hypothesis_embedding(h_id, embedding)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"  WARNING: skipped {h_id!r} — {exc}", file=sys.stderr)
+                    continue
+                print(f"  embedded {h_id}")
+
+            # After all embeddings stored, create missing semantic edges across all pairs
+            all_embs = store.get_all_hypothesis_embeddings()
+            total_pairs = 0
+            for row in all_embs:
+                h_id = str(row["hypothesis_id"])
+                embedding = [float(v) for v in row["embedding"]]  # type: ignore[attr-defined]
+                others = [e for e in all_embs if str(e["hypothesis_id"]) != h_id]
+                n = store.create_semantic_edges(
+                    h_id, embedding, others, threshold=similarity_threshold
+                )
+                total_pairs += n
+
+            n_embedded = len(targets)
+            n_pairs = total_pairs // 2
+            print(f"OK: backfill complete — {n_embedded} nodes embedded, {n_pairs} new pairs")
+        finally:
+            store.close()
+    except StoreInfraError as exc:
+        print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
+        return 2
+
+    return 0
+
+
 def main() -> int:
     """Main entry point for `qw` CLI."""
     parser = argparse.ArgumentParser(
@@ -1260,6 +1384,17 @@ def main() -> int:
         "--analyze",
         action="store_true",
         help="Invoke semantic tier analysis (Llama Scout) for grid_csv; uses QW_AI_ANALYST_ENDPOINT env var",
+    )
+    record_parser.add_argument(
+        "--similarity-threshold",
+        type=float,
+        default=None,
+        metavar="FLOAT",
+        dest="similarity_threshold",
+        help=(
+            "Cosine similarity cutoff for SEMANTICALLY_RELATED edges (default 0.85). "
+            "Use with --hypothesis to override the default threshold."
+        ),
     )
     record_parser.set_defaults(func=cmd_record)
 
@@ -1402,6 +1537,38 @@ def main() -> int:
         help="Repository root directory (auto-detected if not provided)",
     )
     query_parser.set_defaults(func=cmd_query)
+
+    # `qw backfill` subcommand
+    backfill_parser = subparsers.add_parser(
+        "backfill",
+        help="Backfill missing graph properties (e.g. hypothesis embeddings)",
+    )
+    backfill_parser.add_argument(
+        "--embeddings",
+        action="store_true",
+        help=(
+            "Compute and store embedding vectors for all Hypothesis nodes with null embedding. "
+            "Also creates any missing SEMANTICALLY_RELATED edges between all hypothesis pairs."
+        ),
+    )
+    backfill_parser.add_argument(
+        "--similarity-threshold",
+        type=float,
+        default=None,
+        metavar="FLOAT",
+        dest="similarity_threshold",
+        help=(
+            f"Cosine similarity cutoff for SEMANTICALLY_RELATED edges "
+            f"(default {_DEFAULT_SIMILARITY_THRESHOLD})"
+        ),
+    )
+    backfill_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    backfill_parser.set_defaults(func=cmd_backfill)
 
     # Parse arguments
     args = parser.parse_args()

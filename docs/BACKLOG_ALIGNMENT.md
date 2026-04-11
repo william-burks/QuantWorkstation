@@ -55,7 +55,7 @@
 | Hypothesis Journaling | QWS-0601 (**CLOSED**) | `Hypothesis` node; `SUGGESTED`, `TESTED_AS`, `BRANCHED_FROM` edges; `log_hypothesis`, `check_redundancy`, `hypothesis_audit` MCP tools; full provenance chain from idea to Champion | — |
 | Parameter Stability | QWS-0602 (**CLOSED**) | Stability analysis across Config parameter variations | — |
 | Portfolio Correlation | QWS-0603 (**CLOSED**) | `CORRELATED_WITH` edges on Champions; `portfolio_alpha` gains MaxDD/Calmar filters + OOS/IS drift flag; correlation gate on promotion path | — |
-| Semantic Hypothesis Deduplication | QWS-0604 | `SEMANTICALLY_RELATED` edges between Hypothesis nodes; `similar_hypotheses` preset; `embedding` property on Hypothesis; `qw backfill --embeddings`; check_redundancy gains semantic upgrade (reads SEMANTICALLY_RELATED edges) | — |
+| Semantic Hypothesis Deduplication | QWS-0604 (**TESTING**) | `SEMANTICALLY_RELATED` edges between Hypothesis nodes; `similar_hypotheses` preset; `embedding` property on Hypothesis; `qw backfill --embeddings`; check_redundancy gains semantic upgrade (reads SEMANTICALLY_RELATED edges) | — |
 
 ### Epic 8 — Champion Lifecycle
 

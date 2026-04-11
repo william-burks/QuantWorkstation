@@ -711,12 +711,43 @@ MCP write tool `log_hypothesis(title)` creates a Hypothesis with `source="llm"` 
 Query presets:
 - `list_hypotheses` — all Hypothesis nodes ordered by `created_at` DESC
 - `hypothesis_audit --param hypothesis_id=<id>` — linked strategies, runs, outcomes, champions
-- `check_redundancy --param hypothesis_id=<id>` — title substring match against active champions and aborted strategies
+- `check_redundancy --param hypothesis_id=<id>` — title substring match against active champions and aborted strategies; also surfaces SEMANTICALLY_RELATED hypotheses when edges exist
+- `similar_hypotheses --param hypothesis_id=<id>` — hypotheses with SEMANTICALLY_RELATED edges, ordered by similarity DESC
 
 Exit codes for `qw record --hypothesis`:
 - `0`: success
 - `1`: validation error or referenced node not found
 - `2`: Neo4j unavailable
+
+### Semantic Hypothesis Deduplication Contract (QWS-0604)
+
+On each `qw record --hypothesis "<title>"` call (create mode):
+1. Hypothesis node is created (as before).
+2. Title is embedded using `sentence-transformers/all-MiniLM-L6-v2` (384-dim, CPU, local).
+3. Embedding vector stored as `Hypothesis.embedding: list[float]`.
+4. All existing Hypothesis nodes with stored embeddings are loaded.
+5. Cosine similarity computed against each existing embedding.
+6. `SEMANTICALLY_RELATED` edges MERGED for pairs with `similarity >= threshold` (default 0.85).
+7. If N similar hypotheses found: CLI prints advisory message with the `qw query --name similar_hypotheses` command.
+
+```
+Hypothesis.embedding = [float, ...]   # 384-dim vector, set at creation
+SEMANTICALLY_RELATED.similarity      = <cosine score>
+SEMANTICALLY_RELATED.pair_key        = sorted(id_a, id_b) joined with "|"
+SEMANTICALLY_RELATED.computed_at     = datetime()
+```
+
+Symmetric: A→B and B→A edges are written with the same `similarity` value.
+
+Override threshold: `qw record --hypothesis "<title>" --similarity-threshold 0.90`
+
+Backfill for pre-existing hypotheses: `qw backfill --embeddings`
+- Computes and stores embedding for every Hypothesis node with null `embedding`.
+- Creates missing `SEMANTICALLY_RELATED` edges across all pairs.
+- Exit code 0 on completion; 1 when sentence-transformers not installed; 2 when Neo4j unavailable.
+
+Embedding failures (ImportError, model load error) are non-fatal for `qw record --hypothesis`:
+the hypothesis node is created successfully and a WARNING is printed to stderr.
 
 ### Abort Strategy Contract
 

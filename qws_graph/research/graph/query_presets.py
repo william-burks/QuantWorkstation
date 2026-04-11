@@ -32,6 +32,7 @@ from .query import (
     get_research_targets_v1,
     get_run_history_v1,
     get_runs_by_regime_v1,
+    get_similar_hypotheses_v1,
     get_staleness_report_v1,
     get_strategy_lineage_v1,
 )
@@ -294,13 +295,30 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         name="check_redundancy",
         description=(
             "Given a hypothesis_id, check for active Champions and aborted strategies "
-            "with similar logic (title substring match). Returns match found / no match."
+            "with similar logic (title substring match). Also surfaces SEMANTICALLY_RELATED "
+            "hypotheses when similarity edges exist. Returns match found / no match."
         ),
         params=(
             PresetParam(
                 "hypothesis_id",
                 required=True,
                 description="12-char hypothesis ID to check redundancy for",
+            ),
+        ),
+        requires_graph=True,
+    ),
+    "similar_hypotheses": PresetSpec(
+        name="similar_hypotheses",
+        description=(
+            "Return hypotheses semantically related to a given hypothesis_id via "
+            "SEMANTICALLY_RELATED edges, ordered by similarity score descending. "
+            "Columns: hypothesis_id, title, similarity, status."
+        ),
+        params=(
+            PresetParam(
+                "hypothesis_id",
+                required=True,
+                description="12-char hypothesis ID to find similar hypotheses for",
             ),
         ),
         requires_graph=True,
@@ -455,6 +473,11 @@ def run_preset(
         assert service is not None
         return service.get_check_redundancy_v1(hypothesis_id=hypothesis_id)
 
+    if name == "similar_hypotheses":
+        hypothesis_id = params["hypothesis_id"]
+        assert service is not None
+        return service.get_similar_hypotheses_v1(hypothesis_id=hypothesis_id)
+
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 
 
@@ -518,6 +541,7 @@ _PRESET_VIEW_FUNCTIONS = {
     "research_targets": get_research_targets_v1,
     "runs_by_regime": get_runs_by_regime_v1,
     "regime_performance": get_regime_performance_v1,
+    "similar_hypotheses": get_similar_hypotheses_v1,
 }
 
 __all__ = [

@@ -24,20 +24,24 @@ from .cypher import (
     DEMO_SEED_CYPHER,
     DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
+    GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
     GET_HYPOTHESIS_BY_ID_QUERY,
+    GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY,
     GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,
     HYPOTHESIS_BRANCHED_FROM_QUERY,
     HYPOTHESIS_CREATE_QUERY,
     HYPOTHESIS_SUGGESTED_EDGE_QUERY,
     HYPOTHESIS_TESTED_AS_QUERY,
     HYPOTHESIS_UPDATE_STATUS_QUERY,
+    HYPOTHESIS_SET_EMBEDDING_QUERY,
     PATCH_FAMILY_ID_QUERY,
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
     REGIME_MERGE_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
+    SEMANTICALLY_RELATED_MERGE_QUERY,
     UPDATE_CHAMPION_OOS_STATUS_QUERY,
 )
 from .models import ResearchArtifact, RunStatsSummary
@@ -1216,5 +1220,143 @@ RETURN {
             ).consume()
 
         session.execute_write(_write)
+
+    # ---------------------------------------------------------------------------
+    # Semantic hypothesis deduplication (QWS-0604)
+    # ---------------------------------------------------------------------------
+
+    def set_hypothesis_embedding(
+        self,
+        hypothesis_id: str,
+        embedding: list[float],
+    ) -> bool:
+        """Store an embedding vector on a Hypothesis node.
+
+        Args:
+            hypothesis_id: Target Hypothesis node ID.
+            embedding: Float vector from the sentence-transformers model.
+
+        Returns True when found and updated, False when hypothesis not found.
+
+        Raises StoreInfraError on Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx) -> list[object]:  # type: ignore[no-untyped-def]
+                    result = tx.run(
+                        HYPOTHESIS_SET_EMBEDDING_QUERY,
+                        hypothesis_id=hypothesis_id,
+                        embedding=embedding,
+                    )
+                    return list(result)
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def get_all_hypothesis_embeddings(self) -> list[dict[str, object]]:
+        """Return all Hypothesis nodes that have a stored embedding vector.
+
+        Returns a list of dicts with keys: hypothesis_id, title, embedding.
+        Used to avoid recomputing all embeddings on every `qw record --hypothesis` call.
+
+        Raises StoreInfraError on Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
+                    return [dict(r) for r in tx.run(GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY)]
+
+                return session.execute_read(_read)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def get_hypotheses_without_embeddings(self) -> list[dict[str, object]]:
+        """Return Hypothesis nodes with null embedding (backfill targets).
+
+        Returns a list of dicts with keys: hypothesis_id, title.
+
+        Raises StoreInfraError on Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
+                    return [dict(r) for r in tx.run(GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY)]
+
+                return session.execute_read(_read)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def create_semantic_edges(
+        self,
+        new_hypothesis_id: str,
+        new_embedding: list[float],
+        existing_embeddings: list[dict[str, object]],
+        threshold: float = 0.85,
+    ) -> int:
+        """Create SEMANTICALLY_RELATED edges for pairs exceeding the cosine similarity threshold.
+
+        The edge is symmetric: A→B and B→A are both created with the same similarity value.
+        pair_key is the sorted concatenation of the two IDs joined by pipe (idempotent MERGE key).
+
+        Args:
+            new_hypothesis_id: The newly-created Hypothesis node.
+            new_embedding: Embedding vector for the new hypothesis.
+            existing_embeddings: Output of get_all_hypothesis_embeddings() — excludes new node.
+            threshold: Cosine similarity cutoff (default 0.85).
+
+        Returns count of new pairs (each pair = 2 directed edges).
+
+        Raises StoreInfraError on Neo4j connectivity or execution failure.
+        """
+        import math
+
+        def _cosine(a: list[float], b: list[float]) -> float:
+            dot = sum(x * y for x, y in zip(a, b))
+            norm_a = math.sqrt(sum(x * x for x in a))
+            norm_b = math.sqrt(sum(x * x for x in b))
+            if norm_a == 0.0 or norm_b == 0.0:
+                return 0.0
+            return dot / (norm_a * norm_b)
+
+        pairs = []
+        for row in existing_embeddings:
+            other_id = str(row["hypothesis_id"])
+            if other_id == new_hypothesis_id:
+                continue
+            raw_emb = row["embedding"]
+            other_emb: list[float] = [float(v) for v in raw_emb]  # type: ignore[attr-defined]
+            sim = _cosine(new_embedding, other_emb)
+            if sim >= threshold:
+                sorted_ids = sorted([new_hypothesis_id, other_id])
+                pairs.append({
+                    "hypothesis_id_a": sorted_ids[0],
+                    "hypothesis_id_b": sorted_ids[1],
+                    "pair_key": f"{sorted_ids[0]}|{sorted_ids[1]}",
+                    "similarity": round(sim, 6),
+                })
+
+        if not pairs:
+            return 0
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx) -> None:  # type: ignore[no-untyped-def]
+                    tx.run(SEMANTICALLY_RELATED_MERGE_QUERY, pairs=pairs).consume()
+
+                session.execute_write(_write)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+        return len(pairs)
 
 

@@ -360,13 +360,64 @@ OPTIONAL MATCH (active_s:Strategy)-[:PRODUCED_CHAMPION]->(active_ch:Champion)
 OPTIONAL MATCH (aborted_s:Strategy)
   WHERE aborted_s.status = 'ABORTED'
     AND toLower(aborted_s.strategy_id) CONTAINS toLower(h.title)
+OPTIONAL MATCH (h)-[sem:SEMANTICALLY_RELATED]->(sem_h:Hypothesis)
 RETURN {
   hypothesis_id: h.hypothesis_id,
   title: h.title,
   active_champion_matches: collect(DISTINCT active_ch.champion_id),
-  aborted_strategy_matches: collect(DISTINCT aborted_s.strategy_id)
+  aborted_strategy_matches: collect(DISTINCT aborted_s.strategy_id),
+  semantic_matches: collect(DISTINCT {
+    hypothesis_id: sem_h.hypothesis_id,
+    title: sem_h.title,
+    similarity: sem.similarity
+  })
 } AS result
 LIMIT 1
+""".strip()
+
+
+# ---------------------------------------------------------------------------
+# Semantic hypothesis deduplication (QWS-0604)
+# ---------------------------------------------------------------------------
+
+HYPOTHESIS_SET_EMBEDDING_QUERY = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+SET h.embedding = $embedding, h.updated_at = datetime()
+RETURN h.hypothesis_id AS hypothesis_id
+""".strip()
+
+GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY = """
+MATCH (h:Hypothesis)
+WHERE h.embedding IS NOT NULL
+RETURN h.hypothesis_id AS hypothesis_id, h.title AS title,
+       h.embedding AS embedding
+""".strip()
+
+GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY = """
+MATCH (h:Hypothesis)
+WHERE h.embedding IS NULL
+RETURN h.hypothesis_id AS hypothesis_id, h.title AS title
+""".strip()
+
+SEMANTICALLY_RELATED_MERGE_QUERY = """
+UNWIND $pairs AS pair
+MATCH (a:Hypothesis {hypothesis_id: pair.hypothesis_id_a})
+MATCH (b:Hypothesis {hypothesis_id: pair.hypothesis_id_b})
+MERGE (a)-[r1:SEMANTICALLY_RELATED {pair_key: pair.pair_key}]->(b)
+  SET r1.similarity = pair.similarity, r1.computed_at = datetime()
+MERGE (b)-[r2:SEMANTICALLY_RELATED {pair_key: pair.pair_key}]->(a)
+  SET r2.similarity = pair.similarity, r2.computed_at = datetime()
+""".strip()
+
+GET_SIMILAR_HYPOTHESES_V1_CYPHER = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})-[r:SEMANTICALLY_RELATED]->(other:Hypothesis)
+RETURN {
+  hypothesis_id: other.hypothesis_id,
+  title: other.title,
+  similarity: r.similarity,
+  status: other.status
+} AS result
+ORDER BY r.similarity DESC
 """.strip()
 
 
@@ -694,6 +745,21 @@ MERGE (hsrc2:HypothesisSource {source_key: 'llm'})
   ON CREATE SET hsrc2.created_at = datetime()
 MERGE (hsrc2)-[:SUGGESTED {source: 'llm'}]->(h2)
 MERGE (h2)-[:TESTED_AS]->(s1)
+
+// ── SEMANTICALLY_RELATED edges — semantic dedup (QWS-0604) ──────────────────
+
+// demo_hyp_001 ↔ demo_hyp_002: high semantic similarity (0.91 > 0.85 threshold)
+// Both discuss ES bear regime/liquidity — same underlying idea in different words.
+MERGE (h1_sem:Hypothesis {hypothesis_id: 'demo_hyp_001'})
+MERGE (h2_sem:Hypothesis {hypothesis_id: 'demo_hyp_002'})
+MERGE (h1_sem)-[sr1:SEMANTICALLY_RELATED {pair_key: 'demo_hyp_001|demo_hyp_002'}]->(h2_sem)
+  SET sr1.similarity = 0.91,
+      sr1.computed_at = datetime('2026-04-11T00:00:00'),
+      sr1.is_demo     = true
+MERGE (h2_sem)-[sr2:SEMANTICALLY_RELATED {pair_key: 'demo_hyp_001|demo_hyp_002'}]->(h1_sem)
+  SET sr2.similarity = 0.91,
+      sr2.computed_at = datetime('2026-04-11T00:00:00'),
+      sr2.is_demo     = true
 
 // ── CORRELATED_WITH edges — portfolio_correlation (QWS-0603) ─────────────────
 

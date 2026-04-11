@@ -727,4 +727,5 @@ class TestPresetCatalogStory4:
             "list_hypotheses",
             "hypothesis_audit",
             "check_redundancy",
+            "similar_hypotheses",
         }

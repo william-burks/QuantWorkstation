@@ -4,7 +4,7 @@
 QWS-0604
 
 ## Status
-BLOCKED
+TESTING
 
 ## Blocked On
 QWS-0601 (Hypothesis journaling must be CLOSED — Hypothesis nodes must exist before
@@ -116,28 +116,84 @@ This property is additive — QWS-0601 nodes created before this story will have
 - `qws_graph/tests/unit/test_qw_hypothesis_similarity.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw record --hypothesis "..."` embeds the title and stores the vector on the
+- [x] `qw record --hypothesis "..."` embeds the title and stores the vector on the
   Hypothesis node at creation time.
-- [ ] After recording, SEMANTICALLY_RELATED edges are created for all existing Hypothesis
+- [x] After recording, SEMANTICALLY_RELATED edges are created for all existing Hypothesis
   nodes with cosine similarity >= threshold (default 0.85).
-- [ ] Edges are symmetric: if A→B exists, B→A also exists with the same `similarity` value.
-- [ ] `qw record --hypothesis "..." --similarity-threshold 0.90` uses 0.90 as the cutoff.
-- [ ] `qw query --name similar_hypotheses --param hypothesis_id=<id>` returns matched
+- [x] Edges are symmetric: if A→B exists, B→A also exists with the same `similarity` value.
+- [x] `qw record --hypothesis "..." --similarity-threshold 0.90` uses 0.90 as the cutoff.
+- [x] `qw query --name similar_hypotheses --param hypothesis_id=<id>` returns matched
   hypotheses ordered by similarity descending, with `title`, `similarity`, `status`.
-- [ ] `qw backfill --embeddings` embeds and stores vectors for all Hypothesis nodes that
+- [x] `qw backfill --embeddings` embeds and stores vectors for all Hypothesis nodes that
   have null `embedding`, and creates any missing SEMANTICALLY_RELATED edges.
-- [ ] A Hypothesis with no similar counterparts produces no edges and no error.
-- [ ] Unit tests cover: above-threshold pair creates edges, below-threshold creates none,
+- [x] A Hypothesis with no similar counterparts produces no edges and no error.
+- [x] Unit tests cover: above-threshold pair creates edges, below-threshold creates none,
   symmetric edge creation, backfill on existing null-embedding nodes.
-- [ ] `qw query --name check_redundancy --param hypothesis_id=<id>` surfaces
+- [x] `qw query --name check_redundancy --param hypothesis_id=<id>` surfaces
   SEMANTICALLY_RELATED hypotheses (similarity >= threshold) alongside string-match results
   when SEMANTICALLY_RELATED edges exist.
 
+## Acceptance Test Plan
+
+### AC1: qw record --hypothesis embeds and stores vector
+- type: cli
+- cmd: `python -m pytest qws_graph/tests/unit/test_qw_hypothesis_similarity.py::test_record_hypothesis_embeds_and_stores_embedding -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC2: SEMANTICALLY_RELATED edges created above threshold
+- type: cli
+- cmd: `python -m pytest qws_graph/tests/unit/test_store_semantic.py::test_create_semantic_edges_above_threshold_creates_pair -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC3: Edges symmetric (A→B and B→A with same similarity)
+- type: cli
+- cmd: `python -m pytest qws_graph/tests/unit/test_store_semantic.py::test_create_semantic_edges_symmetric_pair_key -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC4: --similarity-threshold 0.90 forwarded correctly
+- type: cli
+- cmd: `python -m pytest qws_graph/tests/unit/test_qw_hypothesis_similarity.py::test_record_hypothesis_custom_similarity_threshold -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC5: similar_hypotheses preset returns matches ordered by similarity
+- type: cli
+- cmd: `python -m pytest qws_graph/tests/unit/test_qw_hypothesis_similarity.py::test_similar_hypotheses_preset_delegates_to_service -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC6: qw backfill --embeddings processes null-embedding nodes
+- type: cli
+- cmd: `python -m pytest qws_graph/tests/unit/test_qw_hypothesis_similarity.py::test_backfill_embeddings_processes_null_embedding_nodes -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC7: No similar counterparts → no edges, no error
+- type: cli
+- cmd: `python -m pytest qws_graph/tests/unit/test_store_semantic.py::test_create_semantic_edges_empty_existing_returns_zero qws_graph/tests/unit/test_qw_hypothesis_similarity.py::test_record_hypothesis_no_advisory_when_no_similar -v`
+- expect_contains: "2 passed"
+- expect_exit: 0
+
+### AC8: Unit tests (above/below threshold, symmetric, backfill)
+- type: cli
+- cmd: `python -m pytest qws_graph/tests/unit/test_store_semantic.py qws_graph/tests/unit/test_qw_hypothesis_similarity.py -v`
+- expect_contains: "23 passed"
+- expect_exit: 0
+
+### AC9: check_redundancy includes semantic_matches
+- type: cli
+- cmd: `python -m pytest qws_graph/tests/unit/test_qw_hypothesis_similarity.py::test_check_redundancy_preset_routes_to_service -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
 ## Definition of Done
-- [ ] Embedding computation, edge creation, and `similar_hypotheses` preset implemented
+- [x] Embedding computation, edge creation, and `similar_hypotheses` preset implemented
   and tested.
-- [ ] `qw backfill --embeddings` operational for existing hypothesis nodes.
-- [ ] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
+- [x] `qw backfill --embeddings` operational for existing hypothesis nodes.
+- [x] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
 - [ ] Story marked CLOSED.
 - [ ] All affected README files updated to reflect new capabilities.
 - [ ] PROVENANCE_ENGINE.md updated — SEMANTICALLY_RELATED moved from `[TARGET]` to
