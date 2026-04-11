@@ -21,6 +21,8 @@ from .query import GraphQueryService
 from .query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params
 from .store import RESEARCH_TARGET_ALLOWED_KEYS, GraphStore, StoreError, StoreInfraError
 
+_VALID_HYPOTHESIS_STATUSES = frozenset({"open", "confirmed", "refuted", "abandoned"})
+
 # Promotion alert thresholds — imported read-only from standards.py
 # fmt: off
 try:
@@ -625,6 +627,93 @@ def cmd_seed(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_hypothesis(args: argparse.Namespace) -> int:
+    """Execute `qw record --hypothesis ...` — hypothesis journaling commands.
+
+    Modes:
+      --hypothesis "<title>"                  → create Hypothesis node (source=user)
+      --hypothesis <id> --tested-as <sid>     → create TESTED_AS edge
+      --hypothesis <id> --branched-from <nid> --rationale "<text>"  → BRANCHED_FROM edge
+      --hypothesis <id> --status <s>          → update status
+
+    Exit codes:
+        0: success
+        1: validation error or node not found
+        2: Neo4j unavailable
+    """
+    hypothesis_arg: str = args.hypothesis
+    tested_as: str | None = getattr(args, "tested_as", None)
+    branched_from: str | None = getattr(args, "branched_from", None)
+    rationale: str | None = getattr(args, "rationale", None)
+    status: str | None = getattr(args, "status", None)
+    timeout_seconds: int = getattr(args, "timeout_seconds", 3)
+
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)", file=sys.stderr)
+        return 2
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            # Mode 1: create hypothesis (title is a new quoted string — not a 12-char id)
+            if tested_as is None and branched_from is None and status is None:
+                title = hypothesis_arg
+                if not title:
+                    print("ERROR: --hypothesis requires a non-empty title or ID", file=sys.stderr)
+                    return 1
+                if len(title) > 200:
+                    print("ERROR: hypothesis title must be ≤ 200 characters", file=sys.stderr)
+                    return 1
+                created_at_iso = datetime.now(UTC).isoformat()
+                hypothesis_id = _ids.hash12(title, created_at_iso)
+                store.create_hypothesis(hypothesis_id=hypothesis_id, title=title, source="user")
+                print(f"OK: Hypothesis created — id={hypothesis_id}")
+                return 0
+
+            hypothesis_id = hypothesis_arg
+
+            # Mode 2: update status
+            if status is not None:
+                if status not in _VALID_HYPOTHESIS_STATUSES:
+                    valid = ", ".join(sorted(_VALID_HYPOTHESIS_STATUSES))
+                    print(f"ERROR: invalid status {status!r}; must be one of: {valid}", file=sys.stderr)
+                    return 1
+                found = store.update_hypothesis_status(hypothesis_id, status)
+                if not found:
+                    print(f"ERROR: Hypothesis {hypothesis_id!r} not found in graph", file=sys.stderr)
+                    return 1
+                print(f"OK: Hypothesis {hypothesis_id!r} status={status!r}")
+                return 0
+
+            # Mode 3: TESTED_AS
+            if tested_as is not None:
+                store.link_hypothesis_tested_as(hypothesis_id, tested_as)
+                print(f"OK: TESTED_AS edge created — hypothesis={hypothesis_id} strategy={tested_as}")
+                return 0
+
+            # Mode 4: BRANCHED_FROM
+            if branched_from is not None:
+                if not rationale:
+                    print("ERROR: --rationale is required with --branched-from", file=sys.stderr)
+                    return 1
+                store.link_hypothesis_branched_from(hypothesis_id, branched_from, rationale)
+                print(f"OK: BRANCHED_FROM edge created — hypothesis={hypothesis_id} node={branched_from}")
+                return 0
+
+        finally:
+            store.close()
+
+    except StoreError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    except StoreInfraError as exc:
+        print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
+        return 2
+
+    return 0  # unreachable
+
+
 def cmd_record(args: argparse.Namespace) -> int:
     """Execute `qw record` command.
 
@@ -633,6 +722,10 @@ def cmd_record(args: argparse.Namespace) -> int:
         1: schema validation failure
         2: infrastructure failure (Neo4j unavailable and --offline not provided)
     """
+    # Dispatch to hypothesis handler when --hypothesis is provided
+    if getattr(args, "hypothesis", None) is not None:
+        return _cmd_hypothesis(args)
+
     # Dispatch to bundle handler when --bundle is provided
     if getattr(args, "bundle", None):
         return _cmd_bundle(args)
@@ -1036,6 +1129,41 @@ def main() -> int:
         metavar="STATUS",
         default=None,
         help="OOS validation outcome to record on a Champion node (oos_pass | oos_fail | oos_pending). Requires --champion.",
+    )
+    record_mode.add_argument(
+        "--hypothesis",
+        metavar="TITLE_OR_ID",
+        default=None,
+        help=(
+            "Hypothesis journaling. Pass a quoted title to create a new Hypothesis node. "
+            "Pass an existing hypothesis_id with --tested-as, --branched-from, or --status to modify."
+        ),
+    )
+    record_parser.add_argument(
+        "--tested-as",
+        default=None,
+        metavar="STRATEGY_ID",
+        dest="tested_as",
+        help="Link hypothesis to strategy via TESTED_AS edge (use with --hypothesis <id>)",
+    )
+    record_parser.add_argument(
+        "--branched-from",
+        default=None,
+        metavar="NODE_ID",
+        dest="branched_from",
+        help="Link hypothesis via BRANCHED_FROM edge to any node ID (use with --hypothesis <id> --rationale)",
+    )
+    record_parser.add_argument(
+        "--rationale",
+        default=None,
+        metavar="TEXT",
+        help="Rationale for BRANCHED_FROM edge (required with --branched-from)",
+    )
+    record_parser.add_argument(
+        "--status",
+        default=None,
+        metavar="STATUS",
+        help=f"Update hypothesis status. One of: {', '.join(sorted(_VALID_HYPOTHESIS_STATUSES))}",
     )
     record_parser.add_argument(
         "--champion",

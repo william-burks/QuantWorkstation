@@ -686,6 +686,38 @@ The `standards.py` enforcement logic is **not** updated by this contract — the
 is the read surface only. Changing promotion thresholds still requires a code change to
 `standards.py` in addition to updating the graph node.
 
+### Hypothesis Journaling Contract (QWS-0601)
+
+`qw record --hypothesis "<title>"` creates a Hypothesis node and SUGGESTED edge.
+
+```
+Hypothesis.hypothesis_id = hash12(title, created_at_iso)
+Hypothesis.title         = <title>
+Hypothesis.status        = "open"
+Hypothesis.created_at    = datetime()
+Hypothesis.updated_at    = datetime()
+SUGGESTED.source         = "user"
+```
+
+Additional modes:
+- `qw record --hypothesis <id> --tested-as <strategy_id>` → TESTED_AS edge
+- `qw record --hypothesis <id> --branched-from <node_id> --rationale "<text>"` → BRANCHED_FROM edge
+- `qw record --hypothesis <id> --status confirmed|refuted|abandoned|open` → update status
+
+Valid status values: `open`, `confirmed`, `refuted`, `abandoned`.
+
+MCP write tool `log_hypothesis(title)` creates a Hypothesis with `source="llm"` on the SUGGESTED edge.
+
+Query presets:
+- `list_hypotheses` — all Hypothesis nodes ordered by `created_at` DESC
+- `hypothesis_audit --param hypothesis_id=<id>` — linked strategies, runs, outcomes, champions
+- `check_redundancy --param hypothesis_id=<id>` — title substring match against active champions and aborted strategies
+
+Exit codes for `qw record --hypothesis`:
+- `0`: success
+- `1`: validation error or referenced node not found
+- `2`: Neo4j unavailable
+
 ### Abort Strategy Contract
 
 `qw abort --strategy <strategy_id> --reason "<reason>"` sets three graph-only properties

@@ -116,23 +116,79 @@ Context bridge for research pivots. Created via
 - `qws_graph/tests/unit/test_hypothesis_journaling.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw record --hypothesis "Test title"` creates a Hypothesis node, prints its ID,
+- [x] `qw record --hypothesis "Test title"` creates a Hypothesis node, prints its ID,
   and creates a SUGGESTED edge with `source="user"`.
-- [ ] `qw record --hypothesis <id> --tested-as <strategy_id>` creates a TESTED_AS edge
+- [x] `qw record --hypothesis <id> --tested-as <strategy_id>` creates a TESTED_AS edge
   linking hypothesis to strategy.
-- [ ] `qw record --hypothesis <id> --branched-from <node_id> --rationale "reason"`
+- [x] `qw record --hypothesis <id> --branched-from <node_id> --rationale "reason"`
   creates a BRANCHED_FROM edge with `rationale` property set.
-- [ ] `qw query --name list_hypotheses` returns all hypotheses.
-- [ ] `qw query --name hypothesis_audit --param hypothesis_id=<id>` returns full
+- [x] `qw query --name list_hypotheses` returns all hypotheses.
+- [x] `qw query --name hypothesis_audit --param hypothesis_id=<id>` returns full
   downstream state: linked strategies, runs, outcomes.
-- [ ] `qw query --name check_redundancy --param hypothesis_id=<id>` returns match
+- [x] `qw query --name check_redundancy --param hypothesis_id=<id>` returns match
   results for existing champions and aborted strategies.
-- [ ] `qw record --hypothesis <id> --status confirmed` updates `status` on the node.
-- [ ] Supplying a non-existent `strategy_id` to `--tested-as` returns a clear error.
-- [ ] `log_hypothesis` MCP preset creates a Hypothesis node with `source="llm"` on the
+- [x] `qw record --hypothesis <id> --status confirmed` updates `status` on the node.
+- [x] Supplying a non-existent `strategy_id` to `--tested-as` returns a clear error.
+- [x] `log_hypothesis` MCP preset creates a Hypothesis node with `source="llm"` on the
   SUGGESTED edge.
 
+## Acceptance Test Plan
+
+### AC1: qw record --hypothesis "<title>" creates Hypothesis node
+- type: cli
+- cmd: `python -m research.graph.cli record --hypothesis "Tuesday London Open CL bear liquidity trap"`
+- expect_contains: "OK: Hypothesis created"
+- expect_exit: 0
+
+### AC2: qw record --hypothesis <id> --tested-as <strategy_id>
+- type: regression
+- cmd: `python -m pytest qws_graph/tests/unit/test_hypothesis_journaling.py::TestStoreLinkHypothesisTestedAs -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC3: qw record --hypothesis <id> --branched-from <node_id> --rationale "reason"
+- type: regression
+- cmd: `python -m pytest qws_graph/tests/unit/test_hypothesis_journaling.py::TestStoreLinkHypothesisBranchedFrom -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC4: qw query --name list_hypotheses
+- type: regression
+- cmd: `python -m pytest qws_graph/tests/unit/test_hypothesis_journaling.py::TestHypothesisPresetRouting::test_list_hypotheses_routing -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC5: qw query --name hypothesis_audit --param hypothesis_id=<id>
+- type: regression
+- cmd: `python -m pytest qws_graph/tests/unit/test_hypothesis_journaling.py::TestHypothesisPresetRouting::test_hypothesis_audit_routing -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC6: qw query --name check_redundancy --param hypothesis_id=<id>
+- type: regression
+- cmd: `python -m pytest qws_graph/tests/unit/test_hypothesis_journaling.py::TestHypothesisPresetRouting::test_check_redundancy_routing -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC7: qw record --hypothesis <id> --status confirmed
+- type: regression
+- cmd: `python -m pytest qws_graph/tests/unit/test_hypothesis_journaling.py::TestStoreUpdateHypothesisStatus -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC8: non-existent strategy_id returns clear error
+- type: regression
+- cmd: `python -m pytest qws_graph/tests/unit/test_hypothesis_journaling.py::TestHypothesisCLI::test_tested_as_strategy_not_found -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC9: log_hypothesis MCP creates with source="llm"
+- type: regression
+- cmd: `python -m pytest qws_graph/tests/unit/test_hypothesis_journaling.py::TestMcpLogHypothesis -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
 ## Definition of Done
-- [ ] Node type, edges, CLI modes, query presets implemented and tested.
-- [ ] Docs updated (`data_dictionary.yaml`, `graph_v1_contract.md`).
+- [x] Node type, edges, CLI modes, query presets implemented and tested.
+- [x] Docs updated (`data_dictionary.yaml`, `graph_v1_contract.md`).
 - [ ] Story marked CLOSED.

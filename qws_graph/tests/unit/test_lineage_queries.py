@@ -724,4 +724,7 @@ class TestPresetCatalogStory4:
             "research_targets",
             "runs_by_regime",
             "regime_performance",
+            "list_hypotheses",
+            "hypothesis_audit",
+            "check_redundancy",
         }

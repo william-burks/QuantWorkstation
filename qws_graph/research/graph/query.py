@@ -464,6 +464,52 @@ ORDER BY rss.trial_number ASC
 """.strip()
 
 
+GET_LIST_HYPOTHESES_V1_CYPHER = """
+MATCH (h:Hypothesis)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  status: h.status,
+  created_at: toString(h.created_at)
+} AS result
+ORDER BY h.created_at DESC
+""".strip()
+
+GET_HYPOTHESIS_AUDIT_V1_CYPHER = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+OPTIONAL MATCH (h)-[:TESTED_AS]->(s:Strategy)
+OPTIONAL MATCH (s)-[:PRODUCED_CHAMPION]->(ch:Champion)
+OPTIONAL MATCH (s)-[:HAS_RUN]->(r:Run)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  status: h.status,
+  strategy_id: s.strategy_id,
+  champion_id: ch.champion_id,
+  run_id: r.run_id,
+  run_sharpe: r.sharpe,
+  oos_status: ch.oos_status
+} AS result
+""".strip()
+
+GET_CHECK_REDUNDANCY_V1_CYPHER = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+OPTIONAL MATCH (active_s:Strategy)-[:PRODUCED_CHAMPION]->(active_ch:Champion)
+  WHERE coalesce(active_s.status, '') <> 'ABORTED'
+    AND toLower(active_s.strategy_id) CONTAINS toLower(h.title)
+OPTIONAL MATCH (aborted_s:Strategy)
+  WHERE aborted_s.status = 'ABORTED'
+    AND toLower(aborted_s.strategy_id) CONTAINS toLower(h.title)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  active_champion_matches: collect(DISTINCT active_ch.champion_id),
+  aborted_strategy_matches: collect(DISTINCT aborted_s.strategy_id)
+} AS result
+LIMIT 1
+""".strip()
+
+
 class QuerySession(Protocol):
     """Small protocol for Neo4j read sessions and test doubles."""
 
@@ -591,6 +637,18 @@ class GraphQueryService:
     def get_regime_performance_v1(self, strategy_id: str | None = None) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_regime_performance_v1(session, strategy_id=strategy_id)
+
+    def get_list_hypotheses_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_list_hypotheses_v1(session)
+
+    def get_hypothesis_audit_v1(self, hypothesis_id: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_hypothesis_audit_v1(session, hypothesis_id=hypothesis_id)
+
+    def get_check_redundancy_v1(self, hypothesis_id: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_check_redundancy_v1(session, hypothesis_id=hypothesis_id)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -1019,6 +1077,27 @@ def get_regime_performance_v1(
     )
 
 
+def get_list_hypotheses_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return all Hypothesis nodes ordered by created_at DESC."""
+    return _all_results(session, GET_LIST_HYPOTHESES_V1_CYPHER)
+
+
+def get_hypothesis_audit_v1(
+    session: QuerySession,
+    hypothesis_id: str,
+) -> list[dict[str, Any]]:
+    """Return full downstream state for a hypothesis: strategies, runs, outcomes."""
+    return _all_results(session, GET_HYPOTHESIS_AUDIT_V1_CYPHER, hypothesis_id=hypothesis_id)
+
+
+def get_check_redundancy_v1(
+    session: QuerySession,
+    hypothesis_id: str,
+) -> list[dict[str, Any]]:
+    """Return match results for existing champions and aborted strategies."""
+    return _all_results(session, GET_CHECK_REDUNDANCY_V1_CYPHER, hypothesis_id=hypothesis_id)
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -1039,6 +1118,9 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_research_targets_v1": get_research_targets_v1,
     "get_runs_by_regime_v1": get_runs_by_regime_v1,
     "get_regime_performance_v1": get_regime_performance_v1,
+    "get_list_hypotheses_v1": get_list_hypotheses_v1,
+    "get_hypothesis_audit_v1": get_hypothesis_audit_v1,
+    "get_check_redundancy_v1": get_check_redundancy_v1,
 }
 
 

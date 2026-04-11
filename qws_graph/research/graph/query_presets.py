@@ -16,11 +16,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from .query import (
+    get_check_redundancy_v1,
     get_cross_artifact_correlation_v1,
     get_downstream_champions_v1,
     get_fragility_report_v1,
+    get_hypothesis_audit_v1,
     get_instrument_concentration_v1,
     get_list_aborted_v1,
+    get_list_hypotheses_v1,
     get_list_oos_pending_v1,
     get_portfolio_alpha_v1,
     get_promotion_candidates_v1,
@@ -263,6 +266,45 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         ),
         requires_graph=True,
     ),
+    "list_hypotheses": PresetSpec(
+        name="list_hypotheses",
+        description=(
+            "Return all Hypothesis nodes ordered by created_at DESC. "
+            "Columns: hypothesis_id, title, status, created_at."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
+    "hypothesis_audit": PresetSpec(
+        name="hypothesis_audit",
+        description=(
+            "Trace current state of a hypothesis: linked strategies, runs, outcomes, "
+            "and downstream champions. Requires hypothesis_id param."
+        ),
+        params=(
+            PresetParam(
+                "hypothesis_id",
+                required=True,
+                description="12-char hypothesis ID to audit",
+            ),
+        ),
+        requires_graph=True,
+    ),
+    "check_redundancy": PresetSpec(
+        name="check_redundancy",
+        description=(
+            "Given a hypothesis_id, check for active Champions and aborted strategies "
+            "with similar logic (title substring match). Returns match found / no match."
+        ),
+        params=(
+            PresetParam(
+                "hypothesis_id",
+                required=True,
+                description="12-char hypothesis ID to check redundancy for",
+            ),
+        ),
+        requires_graph=True,
+    ),
 }
 
 
@@ -398,6 +440,20 @@ def run_preset(
         assert service is not None
         regime_strategy_id: str | None = params.get("strategy_id") or None
         return service.get_regime_performance_v1(strategy_id=regime_strategy_id)
+
+    if name == "list_hypotheses":
+        assert service is not None
+        return service.get_list_hypotheses_v1()
+
+    if name == "hypothesis_audit":
+        hypothesis_id = params["hypothesis_id"]
+        assert service is not None
+        return service.get_hypothesis_audit_v1(hypothesis_id=hypothesis_id)
+
+    if name == "check_redundancy":
+        hypothesis_id = params["hypothesis_id"]
+        assert service is not None
+        return service.get_check_redundancy_v1(hypothesis_id=hypothesis_id)
 
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 

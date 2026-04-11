@@ -270,6 +270,107 @@ RETURN ch.champion_id AS champion_id
 
 
 # ---------------------------------------------------------------------------
+# Hypothesis journaling (QWS-0601)
+# ---------------------------------------------------------------------------
+
+HYPOTHESIS_CREATE_QUERY = """
+MERGE (h:Hypothesis {hypothesis_id: $hypothesis_id})
+  ON CREATE SET
+    h.title = $title,
+    h.status = 'open',
+    h.created_at = datetime(),
+    h.updated_at = datetime()
+  ON MATCH SET
+    h.updated_at = datetime()
+RETURN h.hypothesis_id AS hypothesis_id
+""".strip()
+
+HYPOTHESIS_SUGGESTED_EDGE_QUERY = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+MERGE (src:HypothesisSource {source_key: $source})
+  ON CREATE SET src.created_at = datetime()
+MERGE (src)-[:SUGGESTED {source: $source}]->(h)
+RETURN h.hypothesis_id AS hypothesis_id
+""".strip()
+
+HYPOTHESIS_TESTED_AS_QUERY = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+MATCH (s:Strategy {strategy_id: $strategy_id})
+MERGE (h)-[:TESTED_AS]->(s)
+RETURN h.hypothesis_id AS hypothesis_id, s.strategy_id AS strategy_id
+""".strip()
+
+HYPOTHESIS_BRANCHED_FROM_QUERY = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+MATCH (n) WHERE n.hypothesis_id = $node_id
+  OR n.strategy_id = $node_id
+  OR n.run_id = $node_id
+  OR n.champion_id = $node_id
+  OR n.regime_id = $node_id
+WITH h, n LIMIT 1
+MERGE (h)-[:BRANCHED_FROM {rationale: $rationale}]->(n)
+RETURN h.hypothesis_id AS hypothesis_id
+""".strip()
+
+HYPOTHESIS_UPDATE_STATUS_QUERY = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+SET h.status = $status, h.updated_at = datetime()
+RETURN h.hypothesis_id AS hypothesis_id
+""".strip()
+
+GET_HYPOTHESIS_BY_ID_QUERY = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+RETURN h.hypothesis_id AS hypothesis_id, h.title AS title, h.status AS status,
+       toString(h.created_at) AS created_at, toString(h.updated_at) AS updated_at
+""".strip()
+
+GET_LIST_HYPOTHESES_V1_CYPHER = """
+MATCH (h:Hypothesis)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  status: h.status,
+  created_at: toString(h.created_at)
+} AS result
+ORDER BY h.created_at DESC
+""".strip()
+
+GET_HYPOTHESIS_AUDIT_V1_CYPHER = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+OPTIONAL MATCH (h)-[:TESTED_AS]->(s:Strategy)
+OPTIONAL MATCH (s)-[:PRODUCED_CHAMPION]->(ch:Champion)
+OPTIONAL MATCH (s)-[:HAS_RUN]->(r:Run)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  status: h.status,
+  strategy_id: s.strategy_id,
+  champion_id: ch.champion_id,
+  run_id: r.run_id,
+  run_sharpe: r.sharpe,
+  oos_status: ch.oos_status
+} AS result
+""".strip()
+
+GET_CHECK_REDUNDANCY_V1_CYPHER = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+OPTIONAL MATCH (active_s:Strategy)-[:PRODUCED_CHAMPION]->(active_ch:Champion)
+  WHERE coalesce(active_s.status, '') <> 'ABORTED'
+    AND toLower(active_s.strategy_id) CONTAINS toLower(h.title)
+OPTIONAL MATCH (aborted_s:Strategy)
+  WHERE aborted_s.status = 'ABORTED'
+    AND toLower(aborted_s.strategy_id) CONTAINS toLower(h.title)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  active_champion_matches: collect(DISTINCT active_ch.champion_id),
+  aborted_strategy_matches: collect(DISTINCT aborted_s.strategy_id)
+} AS result
+LIMIT 1
+""".strip()
+
+
+# ---------------------------------------------------------------------------
 # Regime node + IN_REGIME edge merge (QWS-0502)
 # ---------------------------------------------------------------------------
 

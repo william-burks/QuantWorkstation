@@ -51,10 +51,14 @@ and ``ok=True, data=[]`` for list lookups. It is not an error.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, Literal
+
+from . import ids as _ids
 
 if TYPE_CHECKING:
     from .query import GraphQueryService
+    from .store import GraphStore
 
 
 # ---------------------------------------------------------------------------
@@ -115,6 +119,10 @@ class McpReadAdapter:
     def from_env(cls, timeout_seconds: int = 3) -> McpReadAdapter:
         from .query import GraphQueryService as _Svc
         return cls(_Svc.from_env(timeout_seconds=timeout_seconds))
+
+    def _get_store(self, timeout_seconds: int = 3) -> GraphStore:
+        from .store import GraphStore as _Store
+        return _Store.from_env(timeout_seconds=timeout_seconds)
 
     def close(self) -> None:
         self._service.close()
@@ -237,6 +245,47 @@ class McpReadAdapter:
                     "runs_capped": runs_capped,
                 },
             )
+        except Exception as exc:
+            return McpResult(
+                ok=False,
+                data=None,
+                error=McpError(code="INFRA_ERROR", message=str(exc)),
+            )
+
+
+    def log_hypothesis(self, title: str) -> McpResult:
+        """Create a Hypothesis node with source='llm' on the SUGGESTED edge.
+
+        Equivalent to ``qw record --hypothesis "<title>"`` but marks source as "llm".
+        Returns hypothesis_id on success.
+        """
+        if not title or not isinstance(title, str):
+            return McpResult(
+                ok=False,
+                data=None,
+                error=McpError(
+                    code="INVALID_PARAMS",
+                    message="title must be a non-empty string",
+                ),
+            )
+        if len(title) > 200:
+            return McpResult(
+                ok=False,
+                data=None,
+                error=McpError(
+                    code="INVALID_PARAMS",
+                    message="title must be ≤ 200 characters",
+                ),
+            )
+        try:
+            created_at_iso = datetime.now(UTC).isoformat()
+            hypothesis_id = _ids.hash12(title, created_at_iso)
+            store = self._get_store()
+            try:
+                store.create_hypothesis(hypothesis_id=hypothesis_id, title=title, source="llm")
+            finally:
+                store.close()
+            return McpResult(ok=True, data={"hypothesis_id": hypothesis_id, "title": title, "source": "llm"})
         except Exception as exc:
             return McpResult(
                 ok=False,

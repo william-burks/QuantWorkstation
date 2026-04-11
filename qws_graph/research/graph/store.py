@@ -23,6 +23,12 @@ from .cypher import (
     DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
+    GET_HYPOTHESIS_BY_ID_QUERY,
+    HYPOTHESIS_BRANCHED_FROM_QUERY,
+    HYPOTHESIS_CREATE_QUERY,
+    HYPOTHESIS_SUGGESTED_EDGE_QUERY,
+    HYPOTHESIS_TESTED_AS_QUERY,
+    HYPOTHESIS_UPDATE_STATUS_QUERY,
     PATCH_FAMILY_ID_QUERY,
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
@@ -468,6 +474,176 @@ class GraphStore:
         try:
             with self._driver.session(database=self._database) as session:
                 session.execute_write(lambda tx: tx.run(DEMO_TEARDOWN_CYPHER).consume())
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    # ---------------------------------------------------------------------------
+    # Hypothesis journaling (QWS-0601)
+    # ---------------------------------------------------------------------------
+
+    def create_hypothesis(self, hypothesis_id: str, title: str, source: str = "user") -> str:
+        """Create a Hypothesis node and SUGGESTED edge.
+
+        Idempotent — MERGE on hypothesis_id.
+
+        Args:
+            hypothesis_id: Deterministic 12-char hex ID.
+            title: Short description (≤ 200 chars).
+            source: "user" for CLI; "llm" for MCP.
+
+        Returns:
+            hypothesis_id on success.
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx) -> str:
+                    tx.run(HYPOTHESIS_CREATE_QUERY, hypothesis_id=hypothesis_id, title=title).consume()
+                    tx.run(HYPOTHESIS_SUGGESTED_EDGE_QUERY, hypothesis_id=hypothesis_id, source=source).consume()
+                    return hypothesis_id
+
+                return session.execute_write(_write)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def link_hypothesis_tested_as(self, hypothesis_id: str, strategy_id: str) -> bool:
+        """Create TESTED_AS edge from Hypothesis to Strategy.
+
+        Returns True when both nodes exist and edge was created/confirmed,
+        False when hypothesis not found, raises StoreError when strategy not found.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _check_strategy(tx) -> bool:
+                    result = tx.run(
+                        "MATCH (s:Strategy {strategy_id: $strategy_id}) RETURN s.strategy_id AS sid",
+                        strategy_id=strategy_id,
+                    ).single()
+                    return result is not None
+
+                def _write(tx):
+                    result = tx.run(
+                        HYPOTHESIS_TESTED_AS_QUERY,
+                        hypothesis_id=hypothesis_id,
+                        strategy_id=strategy_id,
+                    )
+                    return list(result)
+
+                strategy_exists = session.execute_read(_check_strategy)
+                if not strategy_exists:
+                    raise StoreError(f"Strategy {strategy_id!r} not found in graph")
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+
+        except StoreError:
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def link_hypothesis_branched_from(
+        self,
+        hypothesis_id: str,
+        node_id: str,
+        rationale: str,
+    ) -> bool:
+        """Create BRANCHED_FROM edge from Hypothesis to any node.
+
+        Returns True when edge created, False when hypothesis not found.
+        Raises StoreError when target node not found.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _check_node(tx) -> bool:
+                    result = tx.run(
+                        """
+                        MATCH (n)
+                        WHERE n.hypothesis_id = $node_id
+                          OR n.strategy_id = $node_id
+                          OR n.run_id = $node_id
+                          OR n.champion_id = $node_id
+                          OR n.regime_id = $node_id
+                        RETURN count(n) > 0 AS found
+                        LIMIT 1
+                        """,
+                        node_id=node_id,
+                    ).single()
+                    return bool(result["found"]) if result is not None else False
+
+                def _write(tx):
+                    result = tx.run(
+                        HYPOTHESIS_BRANCHED_FROM_QUERY,
+                        hypothesis_id=hypothesis_id,
+                        node_id=node_id,
+                        rationale=rationale,
+                    )
+                    return list(result)
+
+                node_exists = session.execute_read(_check_node)
+                if not node_exists:
+                    raise StoreError(f"Target node {node_id!r} not found in graph")
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+
+        except StoreError:
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def update_hypothesis_status(self, hypothesis_id: str, status: str) -> bool:
+        """Update status on a Hypothesis node.
+
+        Returns True when found and updated, False when not found.
+        Raises ValueError for invalid status values.
+        """
+        _VALID_HYPOTHESIS_STATUSES = frozenset({"open", "confirmed", "refuted", "abandoned"})
+        if status not in _VALID_HYPOTHESIS_STATUSES:
+            raise ValueError(
+                f"invalid hypothesis status {status!r}; must be one of: "
+                f"{sorted(_VALID_HYPOTHESIS_STATUSES)}"
+            )
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx):
+                    result = tx.run(
+                        HYPOTHESIS_UPDATE_STATUS_QUERY,
+                        hypothesis_id=hypothesis_id,
+                        status=status,
+                    )
+                    return list(result)
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def hypothesis_exists(self, hypothesis_id: str) -> bool:
+        """Return True when a Hypothesis node with this ID exists."""
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx) -> bool:
+                    result = tx.run(
+                        GET_HYPOTHESIS_BY_ID_QUERY,
+                        hypothesis_id=hypothesis_id,
+                    ).single()
+                    return result is not None
+
+                return session.execute_read(_read)
+
         except Neo4jError as exc:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001

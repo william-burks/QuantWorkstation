@@ -808,6 +808,59 @@ nodes:
         type: datetime
         nullable: false
 
+  Hypothesis:
+    description: >
+      A research hypothesis linking qualitative motivation to strategies, runs, and other
+      graph nodes. Turns the graph into a research journal — "why I ran this" is permanently
+      connected to "what the results showed." Directly addresses context drift.
+      Created via `qw record --hypothesis "<title>"` (source=user) or via the
+      log_hypothesis MCP tool (source=llm).
+    id_key: hypothesis_id
+    id_source: "hash12(title, created_at_iso)"
+    labels: ["Hypothesis"]
+    properties:
+      hypothesis_id:
+        type: str
+        nullable: false
+        description: Deterministic 12-char hex ID. See id_source.
+      title:
+        type: str
+        nullable: false
+        description: Short description of the hypothesis (≤ 200 chars).
+      status:
+        type: str
+        nullable: false
+        enum: [open, confirmed, refuted, abandoned]
+        default: open
+        description: >
+          Current state of the hypothesis. Updated via
+          `qw record --hypothesis <id> --status <value>`.
+      created_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+      updated_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+
+  HypothesisSource:
+    description: >
+      Internal connector node used to anchor SUGGESTED edges. One node per source
+      key ("user" or "llm"). Not queried directly by users — exists only to support
+      the SUGGESTED relationship pattern.
+    id_key: source_key
+    labels: ["HypothesisSource"]
+    properties:
+      source_key:
+        type: str
+        nullable: false
+        enum: [user, llm]
+      created_at:
+        type: datetime
+        nullable: false
+        graph_only: true
+
   Regime:
     description: >
       Market context node keyed on a researcher-defined regime label (e.g. "high_vol",
@@ -905,6 +958,46 @@ relationships:
       Links a Run to its market regime context. Created when `qw record --regime <label>`
       is supplied. Absent when no regime was tagged. Enables graph traversal from
       a Strategy through its Runs to the regimes they were tested in.
+
+  SUGGESTED:
+    source: HypothesisSource
+    target: Hypothesis
+    cardinality: many-to-one (one SUGGESTED edge per creation event)
+    properties:
+      source:
+        type: str
+        enum: [user, llm]
+        description: >
+          "user" when created via `qw record --hypothesis "<title>"`.
+          "llm" when created via the log_hypothesis MCP tool.
+    description: >
+      Records who/what originated the hypothesis. Created atomically with the
+      Hypothesis node. Enables queries like "show me all AI-suggested hypotheses".
+
+  TESTED_AS:
+    source: Hypothesis
+    target: Strategy
+    cardinality: many-to-many
+    description: >
+      Links a hypothesis to a strategy when a trial is run against it.
+      Created via `qw record --hypothesis <id> --tested-as <strategy_id>`.
+      One hypothesis may be tested via multiple strategies; one strategy
+      may implement multiple hypotheses.
+
+  BRANCHED_FROM:
+    source: Hypothesis
+    target: any_node
+    cardinality: many-to-one per branch event
+    properties:
+      rationale:
+        type: str
+        nullable: false
+        description: Why this hypothesis branched from the source node.
+    description: >
+      Context bridge for research pivots. Created via
+      `qw record --hypothesis <id> --branched-from <node_id> --rationale "<text>"`.
+      Target can be any node identifiable by its primary key
+      (hypothesis_id, strategy_id, run_id, champion_id, or regime_id).
 
 # ---------------------------------------------------------------------------
 # Tier thresholds
