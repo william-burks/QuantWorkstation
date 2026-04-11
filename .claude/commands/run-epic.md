@@ -79,14 +79,18 @@ Full detail lives in git commits. Do not return test output or diffs.
 - **BLOCKED | assumption | \<question\>** → spawn qws-architect (Opus):
   ```
   Read .claude/commands/answer-assumption.md and execute for: <question>
-  Return ruling in answer-assumption format. Max 10 lines.
+  Write full ruling to /tmp/ruling_<STORY_ID>.txt in answer-assumption format.
+  Return max 3 lines: CONFIRMED|REJECTED|ALTERNATIVE — one-line ruling — one-line action.
   ```
-  Re-spawn lead-engineer with original prompt + ruling appended:
+  Re-spawn lead-engineer:
   ```
-  Assumption resolved: <question>
-  Ruling: <CONFIRMED|REJECTED|ALTERNATIVE>
-  Action: <what lead-engineer should do>
-  Resume implementation from where blocked.
+  Read /tmp/ruling_<STORY_ID>.txt. Apply ruling and resume implementation of <STORY_ID>.
+  After story closes: reason about what this assumption revealed — a schema constraint,
+  design boundary, or provenance rule — and write that principle to
+  .claude/agent-memory/lead-engineer/. Record the insight, not the Q&A.
+  Bad: "SUPERSEDED_BY chosen for QWS-XXXX"
+  Good: "Provenance engine separates lineage (SUPERSEDED_BY) from consolidation (MERGED_INTO) — misuse breaks lineage traversal"
+  Delete /tmp/assumption_<STORY_ID>.txt and /tmp/ruling_<STORY_ID>.txt after memory is saved.
   ```
   Max 1 assumption resolution per story → second BLOCKED | assumption → needs-attention
 - **BLOCKED/FAILED** → add to needs-attention list, mark dependent stories skipped
@@ -103,7 +107,8 @@ Spawn qa-executor agent:
 ```
 Execute .claude/commands/qa-epic.md for epic $ARGUMENTS.
 You are on the release branch. Review all CLOSED stories, commit fixes, push.
-Return verdict: CLEAN | ISSUES_FIXED | ISSUES_REMAINING
+Return max 5 lines: CLEAN | ISSUES_FIXED | ISSUES_REMAINING — one-line summary per issue.
+Full detail lives in git commits and the QA report. Do not return test output or diffs.
 ```
 
 ## Step 5 — Final report

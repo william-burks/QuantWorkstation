@@ -45,6 +45,11 @@ Also check:
 - Sprint sequence optimal for capability unlock?
 
 Output: proposal table + verdicts + questions (only if answer materially changes what gets built).
+
+For each candidate you verdict APPROVED (no MISALIGNED flag): write a principle-level memory
+entry to .claude/agent-memory/qws-architect/ capturing what made it a good fit — epic alignment
+rationale, research loop position, schema simplicity or complexity. Record the principle, not
+the story ID. This builds institutional knowledge about what Will values in sprint candidates.
 ```
 
 If architect reports MISALIGNED candidates → flag to user. Do not write stories for flagged candidates without user decision.

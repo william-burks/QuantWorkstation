@@ -46,6 +46,13 @@ Output:
 
 **Verdict**
 READY TO WRITE | NEEDS DECISION (list questions) | NOT WORTH BUILDING (reason)
+
+If verdict = READY TO WRITE: write a principle-level memory entry to
+.claude/agent-memory/qws-architect/ capturing what made this feature a good fit —
+which manifesto pillar it advances, why it belongs in this epic, what schema decisions
+were made and why. Record the principle, not the feature name.
+If verdict = NOT WORTH BUILDING: write a memory entry capturing why — what constraint
+it violated or what capability it duplicated. Prevents similar proposals surfacing again.
 ```
 
 If NEEDS DECISION → stop, present to user. Do not proceed to Phase 2.

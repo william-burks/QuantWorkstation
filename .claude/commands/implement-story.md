@@ -19,11 +19,13 @@ No [TARGET] nodes/relationships/MCP tools unless this story implements them.
 
 If any schema, design, or scope question cannot be resolved from these docs → do not guess.
 ```
+echo "<exact question>" > /tmp/assumption_$ARGUMENTS.txt
 git add <story file>
 git commit -m "blocked($ARGUMENTS): assumption — <exact question>"
 ```
 Report: `BLOCKED | assumption | <exact question>` and stop.
-Will will run `/answer-assumption <question>` to get a ruling before resuming.
+
+If `/tmp/ruling_$ARGUMENTS.txt` exists → read it before reporting blocked. Apply ruling and continue.
 
 ## Step 4 — Implement
 Work ACs one by one. After each:
