@@ -4,7 +4,7 @@
 QWS-0604
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 QWS-0601 (Hypothesis journaling must be CLOSED — Hypothesis nodes must exist before
@@ -194,7 +194,7 @@ This property is additive — QWS-0601 nodes created before this story will have
   and tested.
 - [x] `qw backfill --embeddings` operational for existing hypothesis nodes.
 - [x] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
-- [ ] Story marked CLOSED.
+- [x] Story marked CLOSED.
 - [x] All affected README files updated to reflect new capabilities.
 - [x] PROVENANCE_ENGINE.md updated — SEMANTICALLY_RELATED moved from `[TARGET]` to
   `[CURRENT]`; `embedding` property added to Hypothesis node spec.

@@ -132,7 +132,7 @@ Stories (recommended execution order: 0602 ∥ 0603 in parallel → 0601 → 060
 1. `QWS-0602` [`closed/story_2_parameter_stability.md`](epic_6_research_analytics/closed/story_2_parameter_stability.md) — `CLOSED`
 2. `QWS-0603` [`closed/story_3_portfolio_correlation.md`](epic_6_research_analytics/closed/story_3_portfolio_correlation.md) — `CLOSED`
 3. `QWS-0601` [`story_1_hypothesis_journaling.md`](epic_6_research_analytics/closed/story_1_hypothesis_journaling.md) — `CLOSED`
-4. `QWS-0604` [`story_4_semantic_hypothesis_deduplication.md`](epic_6_research_analytics/story_4_semantic_hypothesis_deduplication.md) — `TESTING`
+4. `QWS-0604` [`closed/story_4_semantic_hypothesis_deduplication.md`](epic_6_research_analytics/closed/story_4_semantic_hypothesis_deduplication.md) — `CLOSED`
 
 Dependency notes: QWS-0602 and QWS-0603 are independent — start parallel. QWS-0604 blocked on QWS-0601.
 
