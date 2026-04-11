@@ -20,14 +20,11 @@ from .cypher import (
     CORRELATED_WITH_CHAMPION_QUERY,
     CORRELATED_WITH_STRATEGY_QUERY,
     CSV_INGEST_QUERY,
-    DEGRADE_CHAMPION_QUERY,
     DEMO_SEED_CYPHER,
     DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY,
-    GET_CHAMPION_BY_ID_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
-    GET_FORMER_CHAMPION_BY_ID_QUERY,
     GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY,
     GET_HYPOTHESIS_BY_ID_QUERY,
     GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,
@@ -41,7 +38,6 @@ from .cypher import (
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
     REGIME_MERGE_QUERY,
-    RETIRE_FORMER_CHAMPION_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
     SEMANTICALLY_RELATED_MERGE_QUERY,
@@ -284,95 +280,6 @@ class GraphStore:
             with self._driver.session(database=self._database) as session:
                 def _write(tx):
                     result = tx.run(ABORT_STRATEGY_QUERY, strategy_id=strategy_id, reason=reason)
-                    return list(result)
-
-                records = session.execute_write(_write)
-                return len(records) > 0
-        except Neo4jError as exc:
-            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
-        except Exception as exc:  # noqa: BLE001
-            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
-
-    def degrade_champion(
-        self,
-        champion_id: str,
-        oos_reason: str,
-        former_champion_id: str,
-        strategy_id: str,
-        degraded_at: str,
-        metrics_sharpe_at_degradation: float | None = None,
-    ) -> bool:
-        """Create a FormerChampion node and DEGRADED_TO edge from Champion.
-
-        Returns ``True`` when the Champion was found and the FormerChampion
-        created, ``False`` when no Champion node with that ``champion_id``
-        exists.  Raises ``StoreInfraError`` on Neo4j failure.
-        """
-        try:
-            with self._driver.session(database=self._database) as session:
-                # Verify champion exists first
-                def _check(tx):
-                    result = tx.run(GET_CHAMPION_BY_ID_QUERY, champion_id=champion_id)
-                    return list(result)
-
-                rows = session.execute_read(_check)
-                if not rows:
-                    return False
-
-                def _write(tx):
-                    result = tx.run(
-                        DEGRADE_CHAMPION_QUERY,
-                        champion_id=champion_id,
-                        former_champion_id=former_champion_id,
-                        strategy_id=strategy_id,
-                        degraded_at=degraded_at,
-                        oos_reason=oos_reason,
-                        metrics_sharpe_at_degradation=metrics_sharpe_at_degradation,
-                    )
-                    return list(result)
-
-                records = session.execute_write(_write)
-                return len(records) > 0
-        except Neo4jError as exc:
-            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
-        except Exception as exc:  # noqa: BLE001
-            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
-
-    def retire_former_champion(
-        self,
-        former_champion_id: str,
-        retired_champion_id: str,
-        retired_at: str,
-        retirement_note: str | None = None,
-    ) -> bool:
-        """Create a RetiredChampion node and RETIRED_TO edge from FormerChampion.
-
-        Returns ``True`` when the FormerChampion was found and the
-        RetiredChampion created, ``False`` when no FormerChampion node with
-        that ``former_champion_id`` exists.  Raises ``StoreInfraError`` on
-        Neo4j failure.
-        """
-        try:
-            with self._driver.session(database=self._database) as session:
-                def _check(tx):
-                    result = tx.run(
-                        GET_FORMER_CHAMPION_BY_ID_QUERY,
-                        former_champion_id=former_champion_id,
-                    )
-                    return list(result)
-
-                rows = session.execute_read(_check)
-                if not rows:
-                    return False
-
-                def _write(tx):
-                    result = tx.run(
-                        RETIRE_FORMER_CHAMPION_QUERY,
-                        former_champion_id=former_champion_id,
-                        retired_champion_id=retired_champion_id,
-                        retired_at=retired_at,
-                        retirement_note=retirement_note or "",
-                    )
                     return list(result)
 
                 records = session.execute_write(_write)
