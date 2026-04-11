@@ -4,12 +4,13 @@
 QWS-0601
 
 ## Status
-draft
+READY
 
 ## Summary
-Introduce `:Hypothesis` nodes that link qualitative research hypotheses to one or more
-`:Run` nodes. Turns the graph into a research journal where "why I ran this" is
-permanently connected to "what the results showed." Directly addresses context drift.
+Introduce `:Hypothesis` nodes that link qualitative research hypotheses to strategies,
+runs, and other graph nodes. Turns the graph into a research journal where "why I ran
+this" is permanently connected to "what the results showed." Directly addresses context
+drift.
 
 ## Problem
 Research context lives in the researcher's head, in Slack messages, or in scattered
@@ -23,17 +24,24 @@ hypothesis to multiple runs or track whether the hypothesis was confirmed.
 
 ## Goal
 ```zsh
-# Record a new hypothesis
+# Record a new hypothesis (user-initiated)
 qw record --hypothesis "Tuesday London Open has a specific liquidity trap in CL bear"
+# → creates Hypothesis node, prints hypothesis_id
+# → creates SUGGESTED edge with source="user"
 
-# Link runs to it (by run_id)
-qw record --hypothesis <hypothesis_id> --link-run <run_id>
-qw record --hypothesis <hypothesis_id> --link-run <run_id> --evidence supports
-qw record --hypothesis <hypothesis_id> --link-run <run_id> --evidence refutes
+# Link hypothesis to a strategy when a trial is run
+qw record --hypothesis <hypothesis_id> --tested-as <strategy_id>
+
+# Link hypothesis to a prior node when pivoting (context bridge)
+qw record --hypothesis <hypothesis_id> --branched-from <node_id> --rationale "<text>"
+
+# Update status
+qw record --hypothesis <id> --status confirmed|refuted|abandoned|open
 
 # Query
 qw query --name list_hypotheses
-qw query --name hypothesis_evidence --param hypothesis_id=<id>
+qw query --name hypothesis_audit --param hypothesis_id=<id>
+qw query --name check_redundancy --param hypothesis_id=<id>
 ```
 
 ## Schema
@@ -47,49 +55,84 @@ created_at: datetime
 updated_at: datetime
 ```
 
-### `HAS_EVIDENCE` edge: `(Hypothesis)-[:HAS_EVIDENCE]->(Run)`
+### `SUGGESTED` edge: `(LLM/User)-[:SUGGESTED {source: str}]->(Hypothesis)`
 ```
-evidence_type: str          # supports | refutes | inconclusive (default: inconclusive)
-note: str | null            # optional free-text annotation on this specific link
-linked_at: datetime
+source: str                 # "user" for CLI-created; "llm" for AI-initiated
 ```
+Created at hypothesis creation time. For `qw record --hypothesis "<title>"`, source is "user".
+
+### `TESTED_AS` edge: `(Hypothesis)-[:TESTED_AS]->(Strategy)`
+Links a hypothesis to a strategy when a trial is run. Created via
+`qw record --hypothesis <id> --tested-as <strategy_id>`.
+
+### `BRANCHED_FROM` edge: `(Hypothesis)-[:BRANCHED_FROM {rationale: str}]->(any_node)`
+```
+rationale: str              # why this hypothesis branched from the source node
+```
+Context bridge for research pivots. Created via
+`qw record --hypothesis <id> --branched-from <node_id> --rationale "<text>"`.
 
 ## CLI surface
-- `qw record --hypothesis "<title>"` — creates a new Hypothesis node, prints
-  `hypothesis_id`.
-- `qw record --hypothesis <id> --link-run <run_id>` — adds a `HAS_EVIDENCE` edge.
-  `--evidence supports|refutes|inconclusive` (default: `inconclusive`).
-  `--note "<text>"` optional annotation on the edge.
-- `qw record --hypothesis <id> --status confirmed` — updates `status` on the node.
+- `qw record --hypothesis "<title>"` — creates Hypothesis node, prints `hypothesis_id`,
+  creates SUGGESTED edge with `source="user"`.
+- `qw record --hypothesis <id> --tested-as <strategy_id>` — creates TESTED_AS edge
+  linking hypothesis to strategy.
+- `qw record --hypothesis <id> --branched-from <node_id> --rationale "<text>"` — creates
+  BRANCHED_FROM edge with rationale property.
+- `qw record --hypothesis <id> --status confirmed|refuted|abandoned|open` — updates
+  `status` on the node.
 
-## Query presets
-- `list_hypotheses` — all Hypothesis nodes, ordered by `created_at` DESC. Columns:
-  `hypothesis_id`, `title`, `status`, `evidence_count`, `created_at`.
-- `hypothesis_evidence --param hypothesis_id=<id>` — all Run nodes linked to a
-  hypothesis with their `evidence_type`, `sharpe`, `total_trades`, `regime` (if set).
+## MCP tools / Query presets
+- `list_hypotheses` — all Hypothesis nodes ordered by `created_at` DESC. Columns:
+  `hypothesis_id`, `title`, `status`, `created_at`.
+- `log_hypothesis` — creates a Hypothesis node via MCP (for AI-initiated hypotheses);
+  equivalent to CLI create; creates SUGGESTED edge with `source="llm"`.
+- `check_redundancy --param hypothesis_id=<id>` — given a hypothesis_id, checks:
+  active Champions for similar strategy logic (string match on title), FormerChampions
+  for similar cause-of-death, `list_aborted` for aborted strategies. Returns: match
+  found / no match.
+- `hypothesis_audit --param hypothesis_id=<id>` — traces current state back: what
+  TESTED_AS strategies exist, what runs and outcomes are downstream, what Champions
+  or FormerChampions exist downstream.
 
 ## In Scope
-- `:Hypothesis` node and `HAS_EVIDENCE` edge in `store.py`
-- Three new CLI modes on `qw record`
-- Two new query presets
-- `data_dictionary.yaml` and `graph_v1_contract.md` updated
+- `:Hypothesis` node in `store.py`
+- `SUGGESTED`, `TESTED_AS`, `BRANCHED_FROM` edges in `store.py`
+- Four CLI modes on `qw record`: `--hypothesis "<title>"`, `--tested-as`, `--branched-from`, `--status`
+- `list_hypotheses`, `log_hypothesis`, `check_redundancy`, `hypothesis_audit` query presets
+- `data_dictionary.yaml` and `graph_v1_contract.md` updated for node and all new edges
 - Unit tests for store methods and CLI parsing
 
 ## Out of Scope
-- AI-generated hypotheses
-- Hypothesis versioning or branching
-- Linking hypotheses to Champion or Config nodes (Run-only in V1)
+- AI-generated hypothesis title suggestions (LLM surface only — journaling is manual)
+- Linking hypotheses to Run nodes directly (use Strategy via TESTED_AS instead)
+
+## Repo Touchpoints
+- `qws_graph/research/graph/store.py`
+- `qws_graph/research/graph/cli.py`
+- `qws_graph/research/graph/query_presets.py`
+- `qws_graph/docs/data_dictionary.yaml`
+- `qws_graph/docs/graph_v1_contract.md`
+- `qws_graph/tests/unit/test_hypothesis_journaling.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw record --hypothesis "Test title"` creates a Hypothesis node and prints its ID.
-- [ ] `qw record --hypothesis <id> --link-run <run_id> --evidence supports` creates
-  a `HAS_EVIDENCE` edge with `evidence_type = "supports"`.
-- [ ] `qw query --name list_hypotheses` returns all hypotheses with evidence counts.
-- [ ] `qw query --name hypothesis_evidence --param hypothesis_id=<id>` returns linked runs.
+- [ ] `qw record --hypothesis "Test title"` creates a Hypothesis node, prints its ID,
+  and creates a SUGGESTED edge with `source="user"`.
+- [ ] `qw record --hypothesis <id> --tested-as <strategy_id>` creates a TESTED_AS edge
+  linking hypothesis to strategy.
+- [ ] `qw record --hypothesis <id> --branched-from <node_id> --rationale "reason"`
+  creates a BRANCHED_FROM edge with `rationale` property set.
+- [ ] `qw query --name list_hypotheses` returns all hypotheses.
+- [ ] `qw query --name hypothesis_audit --param hypothesis_id=<id>` returns full
+  downstream state: linked strategies, runs, outcomes.
+- [ ] `qw query --name check_redundancy --param hypothesis_id=<id>` returns match
+  results for existing champions and aborted strategies.
 - [ ] `qw record --hypothesis <id> --status confirmed` updates `status` on the node.
-- [ ] Linking a non-existent `run_id` returns a clear error.
+- [ ] Supplying a non-existent `strategy_id` to `--tested-as` returns a clear error.
+- [ ] `log_hypothesis` MCP preset creates a Hypothesis node with `source="llm"` on the
+  SUGGESTED edge.
 
 ## Definition of Done
 - [ ] Node type, edges, CLI modes, query presets implemented and tested.
-- [ ] Docs updated.
+- [ ] Docs updated (`data_dictionary.yaml`, `graph_v1_contract.md`).
 - [ ] Story marked CLOSED.

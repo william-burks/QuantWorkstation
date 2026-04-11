@@ -21,9 +21,9 @@ Navigation and execution index for `qws_graph/epics`.
 - Epic 4 unblocked now — no prerequisites beyond Epic 3 completion.
 - Epic 5 QWS-0503 (cross-instrument aggregator) requires Epic 4 QWS-0402 (OOS metrics)
   and Epic 5 QWS-0501 (family_id population) to produce meaningful results.
-- Epic 6 QWS-0601 (hypothesis journaling) has no dependencies.
-- Epic 6 QWS-0602/0603 (analytics scripts) have no graph schema dependencies — can start
-  any time the research data is sufficient.
+- Epic 6 QWS-0602/0603 (analytics scripts) have no graph schema dependencies — start parallel.
+- Epic 6 QWS-0601 (hypothesis journaling) has no dependencies — start after 0602/0603 or in parallel.
+- Epic 6 QWS-0604 (semantic deduplication) blocked on QWS-0601 CLOSED.
 - Epic 7 is fully independent and can be worked alongside any other epic.
 
 ---
@@ -112,15 +112,15 @@ Cancelled (preserved in `cancelled_stories/`):
 ---
 
 ## Epic 5 — Context Enrichment [PLANNED]
-- Epic README: [`epic_5_context_enrichment/README.md`](epic_5_context_enrichment/README.md)
+- Epic README: [`epic_5_context_enrichment/README.md`](epic_5_context_enrichment%5BCOMPLETE%5D/README.md)
 - Objective: add family identity and regime context to unlock comparative queries.
 
 Stories (execution order):
-0. `QWS-0402C` [`story_0_oos_sharpe_amendment.md`](epic_5_context_enrichment/closed/story_0_oos_sharpe_amendment.md) — `CLOSED` _(patch: amends QWS-0402; prerequisite for QWS-0503 oos_sharpe column)_
-1. `QWS-0501` [`story_1_family_id_population.md`](epic_5_context_enrichment/closed/story_1_family_id_population.md) — `CLOSED`
-2. `QWS-0502` [`story_2_regime_tagging.md`](epic_5_context_enrichment/closed/story_2_regime_tagging.md) — `CLOSED`
-3. `QWS-0503` [`story_3_cross_instrument_aggregator.md`](epic_5_context_enrichment/closed/story_3_cross_instrument_aggregator.md) — `CLOSED`
-4. `QWS-0504` [`story_4_recursive_lineage_traversal.md`](epic_5_context_enrichment/closed/story_4_recursive_lineage_traversal.md) — `CLOSED`
+0. `QWS-0402C` [`story_0_oos_sharpe_amendment.md`](epic_5_context_enrichment%5BCOMPLETE%5D/closed/story_0_oos_sharpe_amendment.md) — `CLOSED` _(patch: amends QWS-0402; prerequisite for QWS-0503 oos_sharpe column)_
+1. `QWS-0501` [`story_1_family_id_population.md`](epic_5_context_enrichment%5BCOMPLETE%5D/closed/story_1_family_id_population.md) — `CLOSED`
+2. `QWS-0502` [`story_2_regime_tagging.md`](epic_5_context_enrichment%5BCOMPLETE%5D/closed/story_2_regime_tagging.md) — `CLOSED`
+3. `QWS-0503` [`story_3_cross_instrument_aggregator.md`](epic_5_context_enrichment%5BCOMPLETE%5D/closed/story_3_cross_instrument_aggregator.md) — `CLOSED`
+4. `QWS-0504` [`story_4_recursive_lineage_traversal.md`](epic_5_context_enrichment%5BCOMPLETE%5D/closed/story_4_recursive_lineage_traversal.md) — `CLOSED`
 
 ---
 
@@ -128,11 +128,13 @@ Stories (execution order):
 - Epic README: [`epic_6_research_analytics/README.md`](epic_6_research_analytics/README.md)
 - Objective: compute research insights from graph data; Python does the math, graph provides the index.
 
-Stories:
-1. `QWS-0601` [`story_1_hypothesis_journaling.md`](epic_6_research_analytics/story_1_hypothesis_journaling.md) — `draft`
-2. `QWS-0602` [`story_2_parameter_stability.md`](epic_6_research_analytics/story_2_parameter_stability.md) — `draft`
-3. `QWS-0603` [`story_3_portfolio_correlation.md`](epic_6_research_analytics/story_3_portfolio_correlation.md) — `draft`
-4. `QWS-0604` [`story_4_semantic_hypothesis_deduplication.md`](epic_6_research_analytics/story_4_semantic_hypothesis_deduplication.md) — `draft` _(blocked on QWS-0601 CLOSED)_
+Stories (recommended execution order: 0602 ∥ 0603 in parallel → 0601 → 0604):
+1. `QWS-0602` [`story_2_parameter_stability.md`](epic_6_research_analytics/story_2_parameter_stability.md) — `ready`
+2. `QWS-0603` [`story_3_portfolio_correlation.md`](epic_6_research_analytics/story_3_portfolio_correlation.md) — `ready`
+3. `QWS-0601` [`story_1_hypothesis_journaling.md`](epic_6_research_analytics/story_1_hypothesis_journaling.md) — `ready`
+4. `QWS-0604` [`story_4_semantic_hypothesis_deduplication.md`](epic_6_research_analytics/story_4_semantic_hypothesis_deduplication.md) — `blocked` _(blocked on QWS-0601 CLOSED)_
+
+Dependency notes: QWS-0602 and QWS-0603 are independent — start parallel. QWS-0604 blocked on QWS-0601.
 
 ---
 

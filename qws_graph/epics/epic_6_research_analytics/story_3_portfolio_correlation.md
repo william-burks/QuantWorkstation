@@ -4,7 +4,7 @@
 QWS-0603
 
 ## Status
-draft
+READY
 
 ## Summary
 A Python analytics script (`research/analytics/portfolio_correlation.py`) that reads
@@ -38,13 +38,12 @@ flag pairs with |correlation| > threshold
 
 ### Input
 All Champions where `oos_status = oos_pass`. Retrieved via the existing `portfolio_alpha`
-preset extended with `artifact_path` in the return columns, or via a new
-`champion_artifacts` preset (minimal Cypher addition).
+preset extended with `artifact_path` in the return columns.
 
 ### CSV requirement
 Each result CSV must have a `date` column and a `daily_pnl` or `equity` column.
 If neither is present, the champion is skipped with a warning. This is a current CSV
-format question — verify against actual output before implementing.
+format question — see Pre-condition below.
 
 ### Output
 ```
@@ -71,7 +70,7 @@ Default `|correlation| > 0.60` flagged as high. Configurable via `--threshold`.
 
 ## In Scope
 - `research/analytics/portfolio_correlation.py`
-- Minimal graph query to retrieve OOS-pass champion `artifact_path` values
+- `portfolio_alpha` preset extended with `artifact_path` in return columns
 - Unit tests with synthetic time series
 - Runbook entry
 
@@ -81,6 +80,17 @@ Default `|correlation| > 0.60` flagged as high. Configurable via `--threshold`.
 - Optimization of portfolio weights
 - Champions without `oos_status = oos_pass` (excluded by default; configurable)
 
+## Repo Touchpoints
+- `research/analytics/portfolio_correlation.py` — new (directory also new)
+- `tests/unit/test_portfolio_correlation.py` — new
+
+## Pre-condition
+Before implementing: audit the CSV column name for daily P&L by running:
+`head -1 research/results/futures/*/runs/*/output.csv` (or equivalent for actual artifact
+paths). If `daily_pnl` exists — implement with that name. If not, compute from trade-level
+data or extend the golden run output to emit it. Document the finding in this story's
+Definition of Done. This is an implementation-time discovery step, not a design blocker.
+
 ## Acceptance Criteria
 - [ ] Script runs from repo root with `python -m research.analytics.portfolio_correlation`.
 - [ ] Correctly computes pairwise Pearson correlation from mock daily P&L series.
@@ -89,13 +99,7 @@ Default `|correlation| > 0.60` flagged as high. Configurable via `--threshold`.
 - [ ] Pairs with `|r| > threshold` are flagged in output.
 - [ ] Empty champion set (no OOS-pass champions) exits gracefully with a message.
 
-## Open Question
-What column name does the result CSV use for daily P&L? Audit existing CSV output from
-`run_liquidity_sweep_golden.sh` before implementing. If daily P&L isn't in the CSV,
-the story needs a pre-condition: extend golden run output to include it, or compute from
-trade-level data.
-
 ## Definition of Done
 - [ ] Script implemented with unit tests.
-- [ ] Open question on CSV column format resolved and documented.
+- [ ] Pre-condition CSV column discovery documented here before implementation begins.
 - [ ] Story marked CLOSED.

@@ -4,7 +4,7 @@
 QWS-0602
 
 ## Status
-draft
+READY
 
 ## Summary
 A Python analytics tool (`research/experiments/stability.py`) that takes a champion's
@@ -70,9 +70,15 @@ Tunable threshold. Document clearly as a heuristic, not a statistical guarantee.
 - Multi-dimensional parameter topology visualization
 - Automated re-promotion based on stability score
 
+## Repo Touchpoints
+- `research/experiments/stability.py` — new
+- `tests/unit/test_stability.py` — new
+
 ## Acceptance Criteria
-- [ ] Given a mock grid of 20 runs with known parameter values, the tool correctly
-  identifies the champion as robust (plateau) or brittle (island).
+- [ ] Given a mock grid where champion sharpe=2.31, neighbor sharpe μ=1.84, σ=0.43:
+  stability score is between 0.80 and 0.82, and assessment label is ROBUST.
+- [ ] Given a mock grid where champion sharpe=2.31, neighbor sharpe μ=0.90, σ=1.10:
+  stability score is below 0.40, and assessment label is BRITTLE.
 - [ ] `--run-id <id>` with no grid sweep neighbors returns a clear "insufficient data" message.
 - [ ] Stability score is documented as a heuristic with explicit assumptions.
 - [ ] `python -m research.experiments.stability --run-id <id>` runs from repo root.

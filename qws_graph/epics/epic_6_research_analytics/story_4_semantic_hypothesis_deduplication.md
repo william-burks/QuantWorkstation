@@ -4,7 +4,7 @@
 QWS-0604
 
 ## Status
-draft
+BLOCKED
 
 ## Blocked On
 QWS-0601 (Hypothesis journaling must be CLOSED — Hypothesis nodes must exist before
@@ -58,9 +58,6 @@ Implemented as two directed edges (A→B and B→A) for Cypher traversal simplic
 Default: `0.85` cosine similarity. Configurable via `--similarity-threshold` flag on
 `qw record --hypothesis`.
 
-If `ResearchTarget` node exists (QWS-0408), `similarity_threshold` may be added as a
-property there. If absent, fall back to `0.85`.
-
 ## Design
 
 ### Embedding model
@@ -95,6 +92,8 @@ This property is additive — QWS-0601 nodes created before this story will have
   edge creation; add `qw backfill --embeddings` for existing hypotheses
 - `qws_graph/research/graph/query_presets.py` — `similar_hypotheses` preset filtered by
   `hypothesis_id`, returning title, similarity score, status of matched hypotheses
+- `qws_graph/research/graph/query_presets.py` — extend `check_redundancy` to read
+  `SEMANTICALLY_RELATED` edges in addition to string-match when edges exist
 - `qws_graph/docs/data_dictionary.yaml` — SEMANTICALLY_RELATED edge, `embedding` property
   on Hypothesis
 - `qws_graph/docs/graph_v1_contract.md` — add edge and property to schema section
@@ -102,8 +101,6 @@ This property is additive — QWS-0601 nodes created before this story will have
   backfill command, null-safe handling for pre-existing hypotheses without embeddings
 
 ## Out of Scope
-- Real-time similarity checking during `check_redundancy` (that preset uses the
-  SEMANTICALLY_RELATED edges as a read — the edges must already exist)
 - Storing raw embedding vectors in a vector database (Neo4j property storage is sufficient
   at this scale)
 - Cross-node type similarity (e.g., Hypothesis ↔ Strategy matching)
@@ -132,6 +129,9 @@ This property is additive — QWS-0601 nodes created before this story will have
 - [ ] A Hypothesis with no similar counterparts produces no edges and no error.
 - [ ] Unit tests cover: above-threshold pair creates edges, below-threshold creates none,
   symmetric edge creation, backfill on existing null-embedding nodes.
+- [ ] `qw query --name check_redundancy --param hypothesis_id=<id>` surfaces
+  SEMANTICALLY_RELATED hypotheses (similarity >= threshold) alongside string-match results
+  when SEMANTICALLY_RELATED edges exist.
 
 ## Definition of Done
 - [ ] Embedding computation, edge creation, and `similar_hypotheses` preset implemented

@@ -22,11 +22,12 @@ modules. The graph provides file paths and metadata; pandas/numpy does the compu
 This is intentional — the graph is the index, not the compute engine.
 
 ## Stories
-1. `QWS-0601` `story_1_hypothesis_journaling.md` — `:Hypothesis` nodes linked to runs
+1. `QWS-0601` `story_1_hypothesis_journaling.md` — `:Hypothesis` nodes, SUGGESTED/TESTED_AS/BRANCHED_FROM edges, MCP tools
 2. `QWS-0602` `story_2_parameter_stability.md` — Python stability analysis tool
 3. `QWS-0603` `story_3_portfolio_correlation.md` — Python portfolio correlation tool
+4. `QWS-0604` `story_4_semantic_hypothesis_deduplication.md` — Semantic deduplication via embeddings
 
-Stories 2 and 3 are independent of Story 1 and of each other.
+Stories 2 and 3 are independent of Story 1 and of each other. Story 4 blocked on Story 1.
 
 ## Dependencies
 - Epic 4 complete (OOS outcomes recorded, champions have `oos_status`).
