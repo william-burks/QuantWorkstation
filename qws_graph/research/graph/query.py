@@ -278,16 +278,31 @@ GET_PORTFOLIO_ALPHA_V1_CYPHER = """
 MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
 WHERE ch.tier IN ['professional', 'institutional']
   AND s.status <> 'ABORTED'
-WITH count(ch) AS champion_count,
-     sum(ch.metrics_return) AS total_return,
-     avg(ch.metrics_sharpe) AS avg_sharpe,
-     collect(ch.strategy_id) AS strategies
+WITH ch,
+     CASE
+       WHEN ch.metrics_oos_sharpe IS NOT NULL AND ch.metrics_sharpe <> 0
+         AND abs(ch.metrics_oos_sharpe - ch.metrics_sharpe) / abs(ch.metrics_sharpe) > 0.20
+       THEN true
+       ELSE false
+     END AS is_oos_drift
 RETURN {
-  champion_count: champion_count,
-  total_return: total_return,
-  avg_sharpe: avg_sharpe,
-  strategies: strategies
+  champion_id:            ch.champion_id,
+  strategy_id:            ch.strategy_id,
+  artifact_path:          ch.artifact_path,
+  tier:                   ch.tier,
+  oos_status:             ch.oos_status,
+  metrics_sharpe:         ch.metrics_sharpe,
+  metrics_oos_sharpe:     ch.metrics_oos_sharpe,
+  metrics_return:         ch.metrics_return,
+  metrics_max_drawdown_r: ch.metrics_max_drawdown_r,
+  calmar: CASE
+    WHEN ch.metrics_max_drawdown_r IS NOT NULL AND ch.metrics_max_drawdown_r <> 0
+    THEN ch.metrics_return / abs(ch.metrics_max_drawdown_r)
+    ELSE null
+  END,
+  is_oos_drift:           is_oos_drift
 } AS result
+ORDER BY ch.best_evidence_score DESC
 """.strip()
 
 GET_FRAGILITY_REPORT_V1_CYPHER = """

@@ -401,6 +401,25 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
                         f"but file not found in {bundle_dir}",
                         file=sys.stderr,
                     )
+            # Correlation gate: warn when a newly-promoted Champion already has
+            # CORRELATED_WITH edges to other active Champions (non-blocking).
+            corr_warnings: list[str] = []
+            for outcome in result.evolution:
+                if outcome.status == "promoted" and outcome.champion_id:
+                    try:
+                        overlap = store.check_correlated_with_active_champions(
+                            outcome.champion_id,
+                            threshold=_CORRELATION_GATE_THRESHOLD,
+                        )
+                        for match in overlap:
+                            corr_warnings.append(
+                                f"CORRELATION WARNING: new Champion {outcome.champion_id} "
+                                f"correlated with {match.get('champion_id')} "
+                                f"(r={match.get('coefficient', '?'):.2f}, "
+                                f"strategy={match.get('strategy_id')})"
+                            )
+                    except Exception:  # noqa: BLE001
+                        pass  # correlation check is advisory; never block ingest
         finally:
             store.close()
     except StoreInfraError as exc:
@@ -429,10 +448,14 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
     else:
         print("  html: (none in manifest)")
 
+    for warn in corr_warnings:
+        print(f"  {warn}", file=sys.stderr)
+
     return 0
 
 
 _VALID_OOS_STATUSES = frozenset({"oos_pending", "oos_pass", "oos_fail"})
+_CORRELATION_GATE_THRESHOLD = 0.60
 
 _TARGET_INT_KEYS = frozenset({"max_holding_hours", "min_trades"})
 

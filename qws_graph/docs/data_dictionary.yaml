@@ -999,6 +999,47 @@ relationships:
       Target can be any node identifiable by its primary key
       (hypothesis_id, strategy_id, run_id, champion_id, or regime_id).
 
+  CORRELATED_WITH:
+    source: "Champion ↔ Champion OR Strategy ↔ Strategy"
+    target: same_type
+    cardinality: symmetric (written in both directions)
+    story: QWS-0603
+    properties:
+      coefficient:
+        type: float
+        nullable: false
+        unit: Pearson r [-1.0, 1.0]
+        description: Pairwise Pearson correlation of daily P&L series.
+      threshold:
+        type: float
+        nullable: false
+        description: Threshold value used during the computation run that flagged this pair.
+      lookback:
+        type: str
+        nullable: false
+        description: >
+          Descriptive label for the data window used (e.g. "full", "1y", "6m").
+          "full" means all available daily P&L data aligned across the pair.
+      pair_key:
+        type: str
+        nullable: false
+        description: >
+          Deterministic deduplication key: sorted(id_a, id_b) joined with pipe.
+          Used as the MERGE key to prevent duplicate edges on re-runs.
+      computed_at:
+        type: datetime
+        nullable: false
+        description: Timestamp when this edge was last written.
+    description: >
+      Connects two Champions (or two Strategies) when their daily P&L series
+      have a Pearson correlation coefficient exceeding the threshold.
+      Written by `research/analytics/portfolio_correlation.py` after running
+      the pairwise correlation matrix. Symmetric: written in both A→B and B→A
+      directions so queries can match from either endpoint.
+      Used by the promotion gate in `qw record --bundle` to warn about
+      concentration risk when a newly-promoted Champion already has a high
+      correlation with an active Champion in the portfolio.
+
 # ---------------------------------------------------------------------------
 # Tier thresholds
 # ---------------------------------------------------------------------------

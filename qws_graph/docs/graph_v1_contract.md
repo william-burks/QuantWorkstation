@@ -787,6 +787,42 @@ Response shape:
 When the strategy has more runs than `max_runs`, `runs_capped` is `true`.
 `get_run_history_v1` must be registered in `QUERY_VIEW_REGISTRY` before this contract can be satisfied end-to-end.
 
+### Portfolio Correlation Contract (QWS-0603)
+
+`python -m research.analytics.portfolio_correlation [--threshold 0.6]` computes pairwise
+Pearson correlation across OOS-pass Champions and writes `CORRELATED_WITH` edges to the graph.
+
+```
+CORRELATED_WITH (Champion)-[CORRELATED_WITH]->(Champion)
+CORRELATED_WITH (Strategy)-[CORRELATED_WITH]->(Strategy)
+```
+
+Properties written:
+```
+coefficient:  float   — Pearson r
+threshold:    float   — threshold used during computation
+lookback:     str     — "full" or descriptive window label
+pair_key:     str     — sorted(id_a, id_b) joined with pipe (dedup key)
+computed_at:  datetime
+```
+
+Symmetric: each pair written in both A→B and B→A directions.
+Idempotent: `MERGE ... {pair_key: ...}` prevents duplicates.
+
+Correlation gate in `qw record --bundle`:
+After an auto-promote event, `check_correlated_with_active_champions()` queries for
+existing `CORRELATED_WITH` edges on the new Champion. If any exist above threshold (0.60
+default), a non-blocking `CORRELATION WARNING` is printed to stderr.
+
+`portfolio_alpha` preset extended columns (QWS-0603):
+- `metrics_max_drawdown_r` — max drawdown from champion metrics
+- `calmar` — computed as `metrics_return / abs(metrics_max_drawdown_r)` in Cypher
+- `is_oos_drift` — `true` when `abs(metrics_oos_sharpe - metrics_sharpe) / abs(metrics_sharpe) > 0.20`
+
+CSV pre-condition (discovered at implementation time):
+Current artifact CSVs are parameter-sweep results. They do NOT contain `daily_pnl` or
+`equity` columns. Champions backed by such CSVs are skipped with a warning per AC3.
+
 ---
 
 ## Shell Hook Integration Contract

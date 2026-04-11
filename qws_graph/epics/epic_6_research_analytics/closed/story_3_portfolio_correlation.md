@@ -4,7 +4,7 @@
 QWS-0603
 
 ## Status
-READY
+CLOSED
 
 ## Summary
 Introduces `CORRELATED_WITH` edges between Strategy/Champion nodes, extends the
@@ -108,23 +108,86 @@ data or extend the golden run output to emit it. Document the finding in this st
 Definition of Done. This is an implementation-time discovery step, not a design blocker.
 
 ## Acceptance Criteria
-- [ ] Script runs from repo root with `python -m research.analytics.portfolio_correlation`.
-- [ ] Correctly computes pairwise Pearson correlation from mock daily P&L series.
-- [ ] Champions whose CSVs lack a `daily_pnl`/`equity` column are skipped with a warning,
+- [x] Script runs from repo root with `python -m research.analytics.portfolio_correlation`.
+- [x] Correctly computes pairwise Pearson correlation from mock daily P&L series.
+- [x] Champions whose CSVs lack a `daily_pnl`/`equity` column are skipped with a warning,
   not a crash.
-- [ ] Pairs with `|r| > threshold` are flagged in output.
-- [ ] Empty champion set (no OOS-pass champions) exits gracefully with a message.
-- [ ] Script writes `CORRELATED_WITH` edges to graph for each flagged pair after computation.
-- [ ] `qw query --name portfolio_alpha` returns MaxDD and Calmar ratio columns alongside existing metrics.
-- [ ] `portfolio_alpha` flags Champions where `oos_sharpe` deviates from IS Sharpe by more than 20% with `is_oos_drift=True` in the result row.
-- [ ] `qw record --bundle` auto-promote path emits a correlation warning when candidate Champion has `CORRELATED_WITH` edge to an active Champion above threshold.
-- [ ] `data_dictionary.yaml` and `graph_v1_contract.md` include `CORRELATED_WITH` edge definition.
+- [x] Pairs with `|r| > threshold` are flagged in output.
+- [x] Empty champion set (no OOS-pass champions) exits gracefully with a message.
+- [x] Script writes `CORRELATED_WITH` edges to graph for each flagged pair after computation.
+- [x] `qw query --name portfolio_alpha` returns MaxDD and Calmar ratio columns alongside existing metrics.
+- [x] `portfolio_alpha` flags Champions where `oos_sharpe` deviates from IS Sharpe by more than 20% with `is_oos_drift=True` in the result row.
+- [x] `qw record --bundle` auto-promote path emits a correlation warning when candidate Champion has `CORRELATED_WITH` edge to an active Champion above threshold.
+- [x] `data_dictionary.yaml` and `graph_v1_contract.md` include `CORRELATED_WITH` edge definition.
 
 ## Definition of Done
-- [ ] Script implemented with unit tests.
-- [ ] `CORRELATED_WITH` edge write method implemented and tested.
-- [ ] `portfolio_alpha` preset updated with MaxDD, Calmar, and `is_oos_drift` columns.
-- [ ] Correlation gate check implemented in `qw record --bundle` auto-promote path.
-- [ ] Schema docs updated (`data_dictionary.yaml`, `graph_v1_contract.md`).
-- [ ] Pre-condition CSV column discovery documented here before implementation begins.
-- [ ] Story marked CLOSED.
+- [x] Script implemented with unit tests.
+- [x] `CORRELATED_WITH` edge write method implemented and tested.
+- [x] `portfolio_alpha` preset updated with MaxDD, Calmar, and `is_oos_drift` columns.
+- [x] Correlation gate check implemented in `qw record --bundle` auto-promote path.
+- [x] Schema docs updated (`data_dictionary.yaml`, `graph_v1_contract.md`).
+- [x] Pre-condition CSV column discovery documented here before implementation begins.
+- [x] Story marked CLOSED.
+
+## Pre-condition CSV Discovery (implementation-time finding)
+Current artifact CSVs (`research/results/*/runs/*/output.csv`) are parameter-sweep results
+(one row per param combo). Columns: `instrument,timeframe,direction,logic_type,<params>,sharpe,
+profit_factor,win_rate,max_drawdown,total_trades,return,calmar`. No `daily_pnl` or `equity`
+column exists. Per AC3, champions backed by such CSVs are skipped with a warning. The script
+gracefully degrades to zero-correlation output when no usable P&L series are available.
+
+## Acceptance Test Plan
+
+### AC1: Script entry point
+- type: cli
+- cmd: `python -m research.analytics.portfolio_correlation --no-write`
+- expect_contains: "No OOS-pass champions"
+- expect_exit: 0
+
+### AC2: Pearson correlation computation
+- type: regression
+- cmd: `pytest tests/unit/test_portfolio_correlation.py::TestComputeCorrelationMatrix -v`
+- expect_contains: "5 passed"
+- expect_exit: 0
+
+### AC3: Skip missing columns with warning
+- type: regression
+- cmd: `pytest tests/unit/test_portfolio_correlation.py::TestLoadPnlSeries -v`
+- expect_contains: "5 passed"
+- expect_exit: 0
+
+### AC4: Flag high-correlation pairs
+- type: regression
+- cmd: `pytest tests/unit/test_portfolio_correlation.py::TestFlagHighPairs -v`
+- expect_contains: "5 passed"
+- expect_exit: 0
+
+### AC5: Empty champion set exits gracefully
+- type: regression
+- cmd: `pytest tests/unit/test_portfolio_correlation.py::TestRunEmptyChampions -v`
+- expect_contains: "2 passed"
+- expect_exit: 0
+
+### AC6: CORRELATED_WITH edges written
+- type: regression
+- cmd: `pytest tests/unit/test_portfolio_correlation.py::TestWriteEdges -v`
+- expect_contains: "2 passed"
+- expect_exit: 0
+
+### AC7/AC8: portfolio_alpha Cypher extended
+- type: regression
+- cmd: `pytest tests/unit/test_portfolio_correlation.py::TestPortfolioAlphaCypher -v`
+- expect_contains: "4 passed"
+- expect_exit: 0
+
+### AC9: Correlation gate in cli
+- type: regression
+- cmd: `pytest tests/unit/test_portfolio_correlation.py::TestCorrelationGateCli -v`
+- expect_contains: "3 passed"
+- expect_exit: 0
+
+### AC10: Schema docs
+- type: regression
+- cmd: `pytest tests/unit/test_portfolio_correlation.py::TestSchemaDocs -v`
+- expect_contains: "2 passed"
+- expect_exit: 0

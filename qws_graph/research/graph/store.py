@@ -18,12 +18,15 @@ from .cypher import (
     AUDIT_NULL_FAMILY_ID_QUERY,
     BLOB_INGEST_QUERY,
     CHAMPION_INGEST_QUERY,
+    CORRELATED_WITH_CHAMPION_QUERY,
+    CORRELATED_WITH_STRATEGY_QUERY,
     CSV_INGEST_QUERY,
     DEMO_SEED_CYPHER,
     DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
     GET_HYPOTHESIS_BY_ID_QUERY,
+    GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,
     HYPOTHESIS_BRANCHED_FROM_QUERY,
     HYPOTHESIS_CREATE_QUERY,
     HYPOTHESIS_SUGGESTED_EDGE_QUERY,
@@ -644,6 +647,133 @@ class GraphStore:
 
                 return session.execute_read(_read)
 
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    # ---------------------------------------------------------------------------
+    # Portfolio correlation (QWS-0603)
+    # ---------------------------------------------------------------------------
+
+    def write_correlated_with(
+        self,
+        champion_id_a: str,
+        strategy_id_a: str,
+        champion_id_b: str,
+        strategy_id_b: str,
+        coefficient: float,
+        threshold: float,
+        lookback: str = "full",
+    ) -> None:
+        """Write symmetric CORRELATED_WITH edges for a Champion pair and their parent Strategies.
+
+        Idempotent — uses MERGE with pair_key so re-running the script produces no duplicates.
+        pair_key is the sorted concatenation of the two IDs joined by pipe.
+
+        Args:
+            champion_id_a: First Champion node ID.
+            strategy_id_a: Parent Strategy ID of champion_id_a.
+            champion_id_b: Second Champion node ID.
+            strategy_id_b: Parent Strategy ID of champion_id_b.
+            coefficient:   Pearson correlation coefficient.
+            threshold:     Threshold used during computation.
+            lookback:      Descriptive lookback label (e.g. "full", "1y").
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        ids = sorted([champion_id_a, champion_id_b])
+        pair_key_champ = f"{ids[0]}|{ids[1]}"
+        sids = sorted([strategy_id_a, strategy_id_b])
+        pair_key_strat = f"{sids[0]}|{sids[1]}"
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx) -> None:  # type: ignore[no-untyped-def]
+                    tx.run(
+                        CORRELATED_WITH_CHAMPION_QUERY,
+                        champion_id_a=champion_id_a,
+                        champion_id_b=champion_id_b,
+                        pair_key=pair_key_champ,
+                        coefficient=coefficient,
+                        threshold=threshold,
+                        lookback=lookback,
+                    ).consume()
+                    tx.run(
+                        CORRELATED_WITH_STRATEGY_QUERY,
+                        strategy_id_a=strategy_id_a,
+                        strategy_id_b=strategy_id_b,
+                        pair_key=pair_key_strat,
+                        coefficient=coefficient,
+                        threshold=threshold,
+                        lookback=lookback,
+                    ).consume()
+
+                session.execute_write(_write)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def get_portfolio_alpha_champions(self) -> list[dict[str, object]]:
+        """Return OOS-pass Champions with artifact_path for correlation computation.
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
+                    return [dict(r["result"]) for r in tx.run(GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY)]
+
+                return session.execute_read(_read)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def check_correlated_with_active_champions(
+        self,
+        candidate_champion_id: str,
+        threshold: float = 0.60,
+    ) -> list[dict[str, object]]:
+        """Return active Champions that have a CORRELATED_WITH edge to *candidate_champion_id*.
+
+        Used by the correlation gate in `qw record --bundle` auto-promote path.
+
+        Returns a list of dicts with keys: champion_id, strategy_id, coefficient.
+        Empty list means no high-correlation overlap.
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        _CORR_GATE_CYPHER = """
+MATCH (cand:Champion {champion_id: $candidate_id})
+MATCH (cand)-[e:CORRELATED_WITH]->(other:Champion)
+WHERE e.coefficient >= $threshold
+  AND other.champion_id <> $candidate_id
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(other)
+WHERE s.status <> 'ABORTED'
+RETURN {
+  champion_id: other.champion_id,
+  strategy_id: other.strategy_id,
+  coefficient: e.coefficient
+} AS result
+"""
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
+                    return [
+                        dict(r["result"])
+                        for r in tx.run(
+                            _CORR_GATE_CYPHER,
+                            candidate_id=candidate_champion_id,
+                            threshold=threshold,
+                        )
+                    ]
+
+                return session.execute_read(_read)
         except Neo4jError as exc:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001

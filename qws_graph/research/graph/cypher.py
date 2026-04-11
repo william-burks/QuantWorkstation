@@ -385,6 +385,62 @@ MERGE (r)-[:IN_REGIME]->(reg)
 
 
 # ---------------------------------------------------------------------------
+# CORRELATED_WITH edge write (QWS-0603)
+# Symmetric: written in both directions so queries can match either endpoint.
+# ---------------------------------------------------------------------------
+
+CORRELATED_WITH_CHAMPION_QUERY = """
+MATCH (ca:Champion {champion_id: $champion_id_a})
+MATCH (cb:Champion {champion_id: $champion_id_b})
+MERGE (ca)-[e1:CORRELATED_WITH {pair_key: $pair_key}]->(cb)
+  SET e1.coefficient  = $coefficient,
+      e1.threshold    = $threshold,
+      e1.lookback     = $lookback,
+      e1.computed_at  = datetime()
+MERGE (cb)-[e2:CORRELATED_WITH {pair_key: $pair_key}]->(ca)
+  SET e2.coefficient  = $coefficient,
+      e2.threshold    = $threshold,
+      e2.lookback     = $lookback,
+      e2.computed_at  = datetime()
+""".strip()
+
+CORRELATED_WITH_STRATEGY_QUERY = """
+MATCH (sa:Strategy {strategy_id: $strategy_id_a})
+MATCH (sb:Strategy {strategy_id: $strategy_id_b})
+MERGE (sa)-[e1:CORRELATED_WITH {pair_key: $pair_key}]->(sb)
+  SET e1.coefficient  = $coefficient,
+      e1.threshold    = $threshold,
+      e1.lookback     = $lookback,
+      e1.computed_at  = datetime()
+MERGE (sb)-[e2:CORRELATED_WITH {pair_key: $pair_key}]->(sa)
+  SET e2.coefficient  = $coefficient,
+      e2.threshold    = $threshold,
+      e2.lookback     = $lookback,
+      e2.computed_at  = datetime()
+""".strip()
+
+GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY = """
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
+WHERE ch.oos_status = 'oos_pass'
+  AND ch.tier IN ['professional', 'institutional']
+  AND s.status <> 'ABORTED'
+RETURN {
+  champion_id:       ch.champion_id,
+  strategy_id:       ch.strategy_id,
+  artifact_path:     ch.artifact_path,
+  metrics_sharpe:    ch.metrics_sharpe,
+  metrics_oos_sharpe: ch.metrics_oos_sharpe,
+  metrics_max_drawdown_r: ch.metrics_max_drawdown_r,
+  metrics_return:    ch.metrics_return,
+  metrics_total_trades: ch.metrics_total_trades,
+  tier:              ch.tier,
+  oos_status:        ch.oos_status
+} AS result
+ORDER BY ch.best_evidence_score DESC
+""".strip()
+
+
+# ---------------------------------------------------------------------------
 # Demo graph seed / teardown (qw seed --demo)
 #
 # Deterministic, idempotent dummy provenance graph. Covers:
@@ -393,7 +449,7 @@ MERGE (r)-[:IN_REGIME]->(reg)
 #   regime_performance          — multiple regimes across two strategies
 #   compare_strategy_performance — champions on ES and CL
 #   downstream_champions        — PIVOTED_FROM edges on all champions
-#   portfolio_alpha             — demo_champ_002 has oos_pass
+#   portfolio_alpha             — demo_champ_002 has oos_pass; MaxDD/Calmar/is_oos_drift columns
 #   list_oos_pending            — demo_champ_001 has oos_pending
 #   promotion_candidates        — demo_run_004: dual-hurdle pass, not yet promoted
 #   list_aborted                — demo-strategy-gamma: ABORTED with abort_reason
@@ -403,6 +459,7 @@ MERGE (r)-[:IN_REGIME]->(reg)
 #   list_hypotheses             — demo_hyp_001: open; demo_hyp_002: confirmed + TESTED_AS alpha
 #   hypothesis_audit            — demo_hyp_002 → alpha → champion lineage
 #   check_redundancy            — demo_hyp_001 title matches no active champions
+#   portfolio_correlation       — CORRELATED_WITH demo_champ_001 ↔ demo_champ_002 (r=0.72)
 #
 # All nodes carry is_demo=true for clean teardown via DEMO_TEARDOWN_CYPHER.
 # ---------------------------------------------------------------------------
@@ -556,10 +613,12 @@ MERGE (ch1:Champion {champion_id: 'demo_champ_001'})
   ON CREATE SET ch1.created_at = datetime()
   SET ch1.strategy_id = 'demo-strategy-alpha',
       ch1.metrics_sharpe = 3.1,
+      ch1.metrics_oos_sharpe = null,
       ch1.metrics_return = 0.087,
       ch1.metrics_total_trades = 55,
       ch1.metrics_win_rate = 0.62,
       ch1.metrics_profit_factor = 1.92,
+      ch1.metrics_max_drawdown_r = -2.1,
       ch1.best_evidence_score = 23.0,
       ch1.tier = 'institutional',
       ch1.oos_status = 'oos_pending',
@@ -578,10 +637,12 @@ MERGE (ch2:Champion {champion_id: 'demo_champ_002'})
   ON CREATE SET ch2.created_at = datetime()
   SET ch2.strategy_id = 'demo-strategy-beta',
       ch2.metrics_sharpe = 4.6,
+      ch2.metrics_oos_sharpe = 3.8,
       ch2.metrics_return = 0.099,
       ch2.metrics_total_trades = 32,
       ch2.metrics_win_rate = 0.66,
       ch2.metrics_profit_factor = 2.14,
+      ch2.metrics_max_drawdown_r = -1.4,
       ch2.best_evidence_score = 26.03,
       ch2.tier = 'institutional',
       ch2.oos_status = 'oos_pass',
@@ -633,6 +694,40 @@ MERGE (hsrc2:HypothesisSource {source_key: 'llm'})
   ON CREATE SET hsrc2.created_at = datetime()
 MERGE (hsrc2)-[:SUGGESTED {source: 'llm'}]->(h2)
 MERGE (h2)-[:TESTED_AS]->(s1)
+
+// ── CORRELATED_WITH edges — portfolio_correlation (QWS-0603) ─────────────────
+
+// demo_champ_001 ↔ demo_champ_002: high correlation (|r|=0.72 > 0.60 threshold)
+MERGE (ch1_corr:Champion {champion_id: 'demo_champ_001'})
+MERGE (ch2_corr:Champion {champion_id: 'demo_champ_002'})
+MERGE (ch1_corr)-[ec1:CORRELATED_WITH {pair_key: 'demo_champ_001|demo_champ_002'}]->(ch2_corr)
+  SET ec1.coefficient = 0.72,
+      ec1.threshold   = 0.60,
+      ec1.lookback    = 'full',
+      ec1.computed_at = datetime('2026-04-11T00:00:00'),
+      ec1.is_demo     = true
+MERGE (ch2_corr)-[ec2:CORRELATED_WITH {pair_key: 'demo_champ_001|demo_champ_002'}]->(ch1_corr)
+  SET ec2.coefficient = 0.72,
+      ec2.threshold   = 0.60,
+      ec2.lookback    = 'full',
+      ec2.computed_at = datetime('2026-04-11T00:00:00'),
+      ec2.is_demo     = true
+
+// Strategy-level CORRELATED_WITH mirrors champion-level
+MERGE (sa_corr:Strategy {strategy_id: 'demo-strategy-alpha'})
+MERGE (sb_corr:Strategy {strategy_id: 'demo-strategy-beta'})
+MERGE (sa_corr)-[es1:CORRELATED_WITH {pair_key: 'demo-strategy-alpha|demo-strategy-beta'}]->(sb_corr)
+  SET es1.coefficient = 0.72,
+      es1.threshold   = 0.60,
+      es1.lookback    = 'full',
+      es1.computed_at = datetime('2026-04-11T00:00:00'),
+      es1.is_demo     = true
+MERGE (sb_corr)-[es2:CORRELATED_WITH {pair_key: 'demo-strategy-alpha|demo-strategy-beta'}]->(sa_corr)
+  SET es2.coefficient = 0.72,
+      es2.threshold   = 0.60,
+      es2.lookback    = 'full',
+      es2.computed_at = datetime('2026-04-11T00:00:00'),
+      es2.is_demo     = true
 """.strip()
 
 
