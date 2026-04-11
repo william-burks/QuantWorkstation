@@ -76,7 +76,8 @@ Full detail lives in git commits. Do not return test output or diffs.
 
 ### 3d — Process result
 - **CLOSED** → `make to-release` (pushes feature, merges to release, pushes release)
-- **BLOCKED | assumption | \<question\>** → spawn qws-architect (Opus):
+- **BLOCKED | assumption | \<question\>** → check `.claude/agent-memory/lead-engineer/` for an existing ruling on this question first. If found, write to `/tmp/ruling_<STORY_ID>.txt` and re-spawn lead-engineer directly — skip architect entirely.
+  If not found → spawn qws-architect (Opus):
   ```
   Read .claude/commands/answer-assumption.md and execute for: <question>
   Write full ruling to /tmp/ruling_<STORY_ID>.txt in answer-assumption format.

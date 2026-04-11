@@ -26,6 +26,9 @@ No candidates after cleanup → report empty, stop.
 
 Spawn qws-architect agent with all loaded context:
 ```
+Before evaluating: read your memory at .claude/agent-memory/qws-architect/ — apply any
+accumulated principles about Will's sizing preferences, epic fit patterns, and schema decisions.
+
 Evaluate these sprint candidates against the QuantWorkstation target state.
 
 Candidates: [list from New Story Candidates]
