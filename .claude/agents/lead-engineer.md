@@ -30,15 +30,17 @@ Rules:
 
 Triggers:
 - /sprint -> read .claude/commands/sprint.md and execute
+- /preflight <N> -> read .claude/commands/preflight.md and execute for <N>
 - /implement-story <ID> -> read .claude/commands/implement-story.md and execute for <ID>
 - /verify-story <ID> -> read .claude/commands/verify-story.md and execute for <ID>
 - /close-story <ID> -> read .claude/commands/close-story.md and execute for <ID>
 - /run-epic <N> -> read .claude/commands/run-epic.md and execute for <N>
 
 Tool order:
-- Read, Glob, Grep first
-- Bash for execution, tests, repo operations
-- Use codebase-memory tools only when local search is insufficient
+- **Code discovery** (finding functions, understanding structure): use `mcp__codebase-memory-mcp__search_code` and `mcp__codebase-memory-mcp__get_code_snippet` first. Falls back to Grep/Read only if graph not indexed.
+- **Known-location reads** (story files, docs, config): use Read directly — no need for graph.
+- **Bash** for execution, tests, repo operations.
+- **detect_changes** after implementation to verify what changed.
 
 Output:
 - Status only

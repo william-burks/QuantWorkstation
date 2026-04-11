@@ -13,7 +13,7 @@ QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
 if str(QWS_GRAPH_ROOT) not in sys.path:
     sys.path.insert(0, str(QWS_GRAPH_ROOT))
 
-from research.graph.cli import _read_bundle_manifest, _cmd_bundle
+from research.graph.cli import _cmd_bundle, _read_bundle_manifest
 from research.graph.store import GraphStore
 
 _STRATEGY_FIXTURE = (
@@ -138,7 +138,7 @@ class TestCmdBundleErrors:
     def test_source_file_attaches_family_id_on_bundle(self, tmp_path: Path):
         """--source-file on --bundle sets family_id on the Strategy before persist."""
         import argparse
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
 
         csv_content = (
             "instrument,timeframe,direction,logic_type,"
@@ -196,7 +196,7 @@ class TestCmdBundleErrors:
     def test_bundle_without_source_file_leaves_family_id_none(self, tmp_path: Path):
         """Omitting --source-file leaves family_id as None (existing behavior unchanged)."""
         import argparse
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
 
         csv_content = (
             "instrument,timeframe,direction,logic_type,"

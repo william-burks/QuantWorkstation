@@ -13,7 +13,6 @@ if str(QWS_GRAPH_ROOT) not in sys.path:
 from research.graph.cli import _evaluate_promotion_candidates
 from research.graph.models import Provenance, Run
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

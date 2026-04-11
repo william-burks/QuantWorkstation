@@ -43,6 +43,17 @@ When adding new nodes/edges/properties, update BOTH:
 
 Do this during implementation (implement-story Step 4b), not verification.
 
+## Codebase Discovery (codebase-memory-mcp)
+
+For finding functions, classes, or understanding file structure — use MCP tools FIRST:
+- `search_code(query="record_hypothesis")` → finds function location without reading whole file
+- `get_code_snippet(qualified_name="GraphStore.record_hypothesis")` → reads just that function
+- `trace_call_path(source="backfill_embeddings")` → shows what calls what
+
+Only fall back to Grep/Read when:
+- Graph is not indexed (run `index_repository` first)
+- You need to read a config/doc file at a known path (just use Read directly)
+
 ## Integration Tests
 
 Pre-existing failures may exist in `qws_graph/tests/integration/`. Do not git stash to check baseline —

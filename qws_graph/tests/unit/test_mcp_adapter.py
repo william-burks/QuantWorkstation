@@ -6,8 +6,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import pytest
-
 QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
 if str(QWS_GRAPH_ROOT) not in sys.path:
     sys.path.insert(0, str(QWS_GRAPH_ROOT))
@@ -18,7 +16,6 @@ from research.graph.mcp_adapter import (
     McpReadAdapter,
     McpResult,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fake service

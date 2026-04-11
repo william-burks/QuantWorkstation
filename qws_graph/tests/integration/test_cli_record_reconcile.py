@@ -8,8 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-
-from research.graph.cli import cmd_record, cmd_reconcile
+from research.graph.cli import cmd_reconcile, cmd_record
 from research.graph.store import StoreResult
 
 

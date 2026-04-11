@@ -37,10 +37,12 @@ Check `qws_graph/tests/e2e/run_e2e.py` for matching scenarios. List for referenc
 
 ## Step 7 — Verify DoD
 For each DoD item: automatable → verify now. Requires live env → flag.
+
+Run lint/type-check from **project root** (not `qws_graph/`):
 ```
-source .venv/bin/activate && ruff check <files> && mypy --strict <files> 2>&1
+source .venv/bin/activate && ruff check qws_graph/path/to/file.py && mypy --strict qws_graph/path/to/file.py
 ```
-Fix all warnings.
+Fix all warnings. To verify edits landed, read the file — do not grep a file you just edited.
 
 ## Step 7b — Check Acceptance Test Plan
 If story has `## Acceptance Test Plan`: verify all ACs are `- [x]`.

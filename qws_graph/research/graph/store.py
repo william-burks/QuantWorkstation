@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-import os
+import datetime
 import json
+import os
 from dataclasses import dataclass, field
 
 from neo4j import GraphDatabase
 from neo4j.exceptions import Neo4jError
 
-import datetime
-
-from .analyst import truncate_curator_note
 from . import ids as _ids
+from .analyst import truncate_curator_note
 from .cypher import (
     ABORT_STRATEGY_QUERY,
     AUDIT_NULL_FAMILY_ID_QUERY,
@@ -26,15 +25,15 @@ from .cypher import (
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
-    GET_HYPOTHESIS_BY_ID_QUERY,
     GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY,
+    GET_HYPOTHESIS_BY_ID_QUERY,
     GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,
     HYPOTHESIS_BRANCHED_FROM_QUERY,
     HYPOTHESIS_CREATE_QUERY,
+    HYPOTHESIS_SET_EMBEDDING_QUERY,
     HYPOTHESIS_SUGGESTED_EDGE_QUERY,
     HYPOTHESIS_TESTED_AS_QUERY,
     HYPOTHESIS_UPDATE_STATUS_QUERY,
-    HYPOTHESIS_SET_EMBEDDING_QUERY,
     PATCH_FAMILY_ID_QUERY,
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
@@ -45,7 +44,6 @@ from .cypher import (
     UPDATE_CHAMPION_OOS_STATUS_QUERY,
 )
 from .models import ResearchArtifact, RunStatsSummary
-
 
 _PROFESSIONAL_SHARPE_THRESHOLD = 2.0
 _INSTITUTIONAL_SHARPE_THRESHOLD = 3.5

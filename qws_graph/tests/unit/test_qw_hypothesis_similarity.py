@@ -28,8 +28,12 @@ from research.graph.cli import (  # noqa: E402
     _cmd_hypothesis,
     cmd_backfill,
 )
-from research.graph.query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params  # noqa: E402
-
+from research.graph.query_presets import (  # noqa: E402
+    PRESET_CATALOG,
+    resolve_preset,
+    run_preset,
+    validate_params,
+)
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 

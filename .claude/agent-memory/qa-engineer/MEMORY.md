@@ -1,0 +1,3 @@
+- [qa-epic commit rule](feedback_commit_rule.md) — "commit fixes, push" in task prompt = explicit permission, proceed
+- [pre-existing test failures](project_preexisting_failures.md) — 9 ibkr_futures_collector failures pre-exist; not qws_graph scope
+- [tooling commands](project_tooling.md) — exact lint/test/seed commands; use `make lint`, not raw ruff/mypy

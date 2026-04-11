@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 import sys
-from importlib import import_module
 from datetime import UTC, date, datetime
+from importlib import import_module
 from pathlib import Path
 
 import pytest

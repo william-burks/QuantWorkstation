@@ -16,7 +16,7 @@ from typing import Any, Literal
 from . import ids as _ids
 from .curator import apply_significance_gate
 from .models import ResearchArtifact, Run
-from .parsers import CSVParser, ChampionMarkdownParser, research_artifact_payload_hash
+from .parsers import ChampionMarkdownParser, CSVParser, research_artifact_payload_hash
 from .query import GraphQueryService
 from .query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params
 from .store import RESEARCH_TARGET_ALLOWED_KEYS, GraphStore, StoreError, StoreInfraError

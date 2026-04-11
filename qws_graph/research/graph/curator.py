@@ -30,11 +30,11 @@ if TYPE_CHECKING:
 
 
 def apply_significance_gate(
-    artifact: "ResearchArtifact",
+    artifact: ResearchArtifact,
     top_n_sharpe: int = 5,
     bottom_n_drawdown: int = 2,
     pinned_run_ids: set[str] | None = None,
-) -> "tuple[ResearchArtifact, RunStatsSummary]":
+) -> tuple[ResearchArtifact, RunStatsSummary]:
     """Apply the significance gate to a ``grid_csv`` artifact.
 
     Args:

@@ -14,15 +14,12 @@ import sys
 from argparse import Namespace
 from pathlib import Path
 
-import pytest
-
 QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
 if str(QWS_GRAPH_ROOT) not in sys.path:
     sys.path.insert(0, str(QWS_GRAPH_ROOT))
 
-from research.graph.cli import cmd_record, _VALID_OOS_STATUSES
+from research.graph.cli import _VALID_OOS_STATUSES, cmd_record
 from research.graph.store import StoreError, StoreInfraError
-
 
 # ---------------------------------------------------------------------------
 # Fake store

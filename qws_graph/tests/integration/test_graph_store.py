@@ -6,10 +6,8 @@ from pathlib import Path
 
 import pytest
 from neo4j import GraphDatabase
-
-from research.graph.parsers import CSVParser, ChampionMarkdownParser
+from research.graph.parsers import ChampionMarkdownParser, CSVParser
 from research.graph.store import GraphStore, StoreInfraError
-
 
 REPO_ROOT = Path("/Users/will/ClaudeProjects/QuantWorkstation/qws_graph")
 BASELINE_FIXTURE = REPO_ROOT / "tests" / "fixtures" / "artifacts" / "baseline" / "es_bear_baseline_fixture.txt"

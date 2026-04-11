@@ -21,7 +21,6 @@ from research.graph.query_presets import (
     validate_params,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -100,8 +99,6 @@ class TestRunModelRegimeField:
 
 def _parse_qw_args(argv: list[str]) -> argparse.Namespace:
     """Parse qw CLI args by invoking main's parser setup via sys.argv substitution."""
-    import research.graph.cli as cli_mod
-    import unittest.mock as um
     # Build the parser by calling main but capturing the parse result
     parser = argparse.ArgumentParser(prog="qw")
     subparsers = parser.add_subparsers(dest="command")
@@ -142,8 +139,6 @@ class TestCliRegimeFlag:
 
     def test_regime_injected_into_runs(self) -> None:
         """When --regime provided, all runs in artifact get regime set."""
-        from research.graph.cli import cmd_record
-        import datetime
 
         run1 = _make_run(run_id="run001aaaaaa", regime=None)
         run2 = _make_run(run_id="run002aaaaaa", regime=None)

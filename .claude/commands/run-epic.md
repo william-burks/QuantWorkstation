@@ -1,10 +1,26 @@
 Run automated lifecycle for all stories in QuantWorkstation epic: $ARGUMENTS
 
 Format: `/run-epic <epic_number>` or `/run-epic <epic_number> <story_id>` to resume from a specific story.
+Format: `/run-epic <epic_number> qa` to skip to Step 5 (post-epic QA only).
+Format: `/run-epic <epic_number> qa audit` to run QA with full audit report (verbose categorization).
+Format: `/run-epic <story_id> audit` to run single story + verbose lead-engineer audit (e.g. `/run-epic QWS-0801 audit`).
 
 This skill runs in the **main session** as orchestrator. Spawn a fresh lead-engineer agent per story.
 
 ## Step 0 — Check for resume
+
+**If first argument matches `QWS-\d+` and second argument is `audit`** (e.g. `/run-epic QWS-0801 audit`):
+1. Set STORY_ID = first argument, AUDIT_MODE_LE = verbose
+2. Identify release branch: `git branch | grep release/ | sort -V | tail -1`
+3. Extract epic number from story ID (e.g. QWS-0801 → epic 8)
+4. Skip Steps 0a, 1, 2, 3, 4, 5 entirely
+5. Jump directly to **Step 4-audit**
+
+If second argument is `qa` (e.g. `/run-epic 6 qa`):
+1. Skip Steps 0a through 4 entirely
+2. Identify release branch: `git branch | grep release/ | sort -V | tail -1`
+3. Check if third argument is `audit` — if yes, set AUDIT_MODE=verbose; otherwise AUDIT_MODE=quiet
+4. Jump directly to Step 5 (post-epic QA)
 
 If a story ID is provided (e.g. `/run-epic 6 QWS-0602`):
 1. Read `/tmp/run_epic_$EPIC_progress.md` — verify epic matches
@@ -129,18 +145,357 @@ After each story completes (any outcome), update `/tmp/run_epic_$EPIC_progress.m
 
 This file is the resume checkpoint. If the session dies, `/run-epic $EPIC QWS-YYYY` picks up here.
 
+## Step 4-audit — Single-story lead-engineer audit (only when AUDIT_MODE_LE=verbose)
+
+This entire section runs ONLY when dispatched from Step 0 via `/run-epic QWS-XXXX audit`.
+It implements: run one story, audit the lead-engineer trace, offer investigate loop.
+
+### 4-audit-a — Generate run_id
+```
+date -u +%Y%m%dT%H%M%S
+```
+Save output as RUN_ID.
+
+### 4-audit-b — Clean stale traces
+```
+rm -f /tmp/agent-trace-lead-engineer-*.jsonl 2>/dev/null || true
+```
+
+### 4-audit-c — Branch + spawn lead-engineer
+```
+git checkout <release branch>
+git pull origin <release branch>
+git checkout feature/<ver>/$STORY_ID 2>/dev/null || git checkout -b feature/<ver>/$STORY_ID
+```
+Spawn lead-engineer agent (same prompt as Step 4c):
+```
+Execute full story lifecycle for <STORY_ID>:
+1. Read and execute .claude/commands/implement-story.md for <STORY_ID>
+2. Read and execute .claude/commands/verify-story.md for <STORY_ID>
+3. Read and execute .claude/commands/close-story.md for <STORY_ID>
+Follow the command files exactly — including all git commit steps (impl, fail, fix, test, close).
+The audit trail depends on these commits existing.
+Return max 5 lines: CLOSED | BLOCKED | FAILED — one-line summary — any blocker detail.
+Full detail lives in git commits. Do not return test output or diffs.
+```
+
+### 4-audit-d — Process result + move trace
+Record story outcome (CLOSED / BLOCKED / FAILED).
+
+If CLOSED: `make to-release` (pushes feature, merges to release, pushes release).
+If BLOCKED with assumption: follow same assumption resolution as Step 4d.
+If BLOCKED/FAILED: record for final report.
+
+Move the trace file to a story-keyed name:
+```
+mv /tmp/agent-trace-lead-engineer-*.jsonl /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl
+```
+
+### 4-audit-e — Spawn qa-auditor (verbose)
+1. Find trace:
+```
+ls /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl
+```
+2. Ensure CSV exists:
+```
+mkdir -p docs/agent-metrics
+```
+If `docs/agent-metrics/lead_engineer_runs.csv` does not exist, write the header:
+```
+echo "run_id,timestamp,epic,story_id,branch,model,total_calls,necessary,wasted,waste_pct,verdict,acs_passed,assumption_count,top_waste_pattern" > docs/agent-metrics/lead_engineer_runs.csv
+```
+If `ls` fails (file not found) → **WARN: no trace file for $STORY_ID — audit skipped.** Jump to 4-audit-g.
+
+3. Spawn qa-auditor agent (verbose):
+```
+Audit the agent trace at /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl
+(use the actual filename found above).
+Expected steps are in .claude/commands/implement-story.md.
+Story: <STORY_ID>. Agent: lead-engineer. Model: sonnet. Run ID: <RUN_ID>.
+Mode: verbose — full audit report.
+Return:
+1. A markdown table categorizing every tool call:
+   | # | Tool | Target | Category | Note |
+   Categories: NECESSARY, REDUNDANT, FLAILING, CONTRADICTED
+2. Summary: AUDIT: <total> calls, <necessary> necessary, <wasted> wasted, <waste_pct>% waste | top: <pattern>
+3. CSV row: CSV: <run_id>,<timestamp>,<epic>,<story_id>,<branch>,sonnet,<total>,<necessary>,<wasted>,<waste_pct>,<verdict>,<acs_passed>,<assumption_count>,<top_pattern>
+```
+4. Extract the CSV line (line starting with `CSV:`). Append to CSV:
+```
+echo "<CSV line without the CSV: prefix>" >> docs/agent-metrics/lead_engineer_runs.csv
+```
+
+### 4-audit-f — Present results + offer loop
+Present the full categorization table and waste summary to the user.
+
+Prompt:
+```
+Lead-engineer audit complete for <STORY_ID>. What next?
+1. Close — accept results, proceed to final report
+2. Investigate — analyze waste patterns, propose agent fixes
+3. Retry — revert commits, re-run implement-story from clean state
+```
+Wait for user input.
+
+**If Close:** jump to 4-audit-g.
+
+**If Retry:**
+1. Clean story-keyed trace from this run: `rm -f /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl 2>/dev/null || true`
+2. Find commits lead-engineer made this run: `git log --oneline -10`
+3. Revert each agent commit: `git revert <commit> --no-edit`
+4. Push reverts: `git push origin <release branch>`
+5. Jump back to 4-audit-b (clean traces, re-spawn lead-engineer, re-audit)
+
+**If Investigate:**
+Spawn agent-builder agent:
+```
+Audit and fix agent waste. Context:
+
+Agent: lead-engineer (definition: .claude/agents/lead-engineer.md)
+Command file: .claude/commands/implement-story.md
+Trace: /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl
+Audit memory: ~/.claude/agent-memory/agent-builder/agent_lead-engineer.md
+Categorization table from qa-auditor:
+<paste the full categorization table here>
+
+For each waste cluster (REDUNDANT/FLAILING/CONTRADICTED calls):
+1. Diagnose root cause across 5 layers: spawn prompt, command file, agent memory, agent definition, hooks
+2. Propose a specific fix (exact file path, exact change)
+3. Present as numbered list
+
+Also cross-check against generic patterns in ~/.claude/agent-memory/agent-builder/pattern_*.md.
+If a pattern applies to this agent but isn't addressed by the audit fixes, add it to the proposal list.
+
+Return:
+- Numbered fix proposals with file paths and exact changes
+- Updated efficiency table row for agent-builder audit memory
+Do NOT apply fixes — return proposals only.
+```
+
+Present agent-builder's proposals:
+```
+Proposed fixes:
+1. [file] — [change description]
+2. [file] — [change description]
+...
+Apply all / Apply specific (e.g. 1,3) / Skip
+```
+- Apply selected fixes (orchestrator makes edits based on proposals)
+- Update `~/.claude/agent-memory/agent-builder/agent_lead-engineer.md` with new run data
+- After fixes applied, re-prompt with same 3 options (Close / Investigate / Retry)
+
+### 4-audit-g — Cleanup + final report
+```
+rm -f /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl 2>/dev/null || true
+```
+
+Report:
+```
+## <STORY_ID> — Single-Story Audit Report
+
+### Story outcome
+<CLOSED | BLOCKED | FAILED> — <summary>
+
+### Agent Metrics (run_id: <RUN_ID>)
+<full categorization table from qa-auditor>
+<waste summary line>
+Metrics appended to docs/agent-metrics/lead_engineer_runs.csv
+
+### Next step
+Story CLOSED → run: /close-epic <epic>
+Story BLOCKED/FAILED → review findings above
+```
+
+Session ends here.
+
 ## Step 5 — Post-epic QA
+
+### Lock gate (prevents parallel QA runs)
+Each step below is ONE Bash call. Do NOT combine them.
+
+**Step 1 — check lock:**
+```
+cat /tmp/qa_run.lock
+```
+If file exists (cat succeeds) → **STOP. ABORT.** Report the lock contents. Do NOT proceed.
+If cat fails (file not found) → no lock, continue.
+
+**Step 2 — generate run_id:**
+```
+date -u +%Y%m%dT%H%M%S
+```
+Save the output as RUN_ID. Use it for all CSV rows in this run.
+
+**Step 3 — create lock (substitute RUN_ID and epic from above):**
+```
+echo "run_id=20260411T143022 epic=6 started=2026-04-11T14:30:22Z" > /tmp/qa_run.lock
+```
+Use the ACTUAL values — do not use shell variables or `$(...)` expansion.
+
+**Step 4 — clean stale traces (two separate calls):**
+```
+rm -f /tmp/agent-trace-qa-engineer-*.jsonl 2>/dev/null || true
+```
+```
+rm -f /tmp/agent-trace-lint-mechanic-*.jsonl 2>/dev/null || true
+```
+
+### Step 5a — QA review
 ```
 git checkout <release branch>
 git pull origin <release branch>
 ```
-Spawn qa-executor agent:
+Spawn qa-engineer agent:
 ```
 Execute .claude/commands/qa-epic.md for epic $ARGUMENTS.
-You are on the release branch. Review all CLOSED stories, commit fixes, push.
-Return max 5 lines: CLEAN | ISSUES_FIXED | ISSUES_REMAINING — one-line summary per issue.
+You are on the release branch release/26.4.0. Review all CLOSED stories.
+If lint errors found in-scope, write fixlist to /tmp/qa_epic_$ARGUMENTS_fixlist.txt. Do NOT fix lint.
+Commit only fixture/seed fixes. Push if committed.
+Return max 5 lines: CLEAN | LINT_FIXLIST_WRITTEN | ISSUES_REMAINING — one-line summary per issue.
 Full detail lives in git commits and the QA report. Do not return test output or diffs.
 ```
+
+### Step 5b — Lint fixes (only if fixlist exists)
+Check if `/tmp/qa_epic_$ARGUMENTS_fixlist.txt` exists:
+```
+ls /tmp/qa_epic_$ARGUMENTS_fixlist.txt 2>/dev/null
+```
+If it exists, spawn lint-mechanic agent:
+```
+Read /tmp/qa_epic_$ARGUMENTS_fixlist.txt and fix every error listed.
+The fixlist contains file:line:col, error code, and description for every error — it is your complete diagnosis. Do NOT run make lint before fixing. Phase A (read fixlist, read files, edit) requires zero lint runs.
+You are in /Users/will/ClaudeProjects/QuantWorkstation on branch release/26.4.0.
+After all fixes verified clean, run:
+  git add <fixed files>
+  git commit -m "qa(epic-$ARGUMENTS): post-epic QA — lint fixes"
+  git push origin release/26.4.0
+Return: FIXED | N files, M errors | clean: yes/no
+```
+If fixlist does not exist, skip to Step 5c.
+
+### Step 5c — Automated audit + metrics
+1. Find trace files for this session:
+```
+ls /tmp/agent-trace-qa-engineer-*.jsonl 2>/dev/null
+ls /tmp/agent-trace-lint-mechanic-*.jsonl 2>/dev/null
+```
+2. Create metrics directory if needed:
+```
+mkdir -p docs/agent-metrics
+```
+3. If `docs/agent-metrics/qa_runs.csv` does not exist, write the header:
+```
+echo "run_id,timestamp,epic,branch,agent,model,total_calls,necessary,wasted,waste_pct,verdict,lint_errors_found,lint_errors_fixed,top_waste_pattern" > docs/agent-metrics/qa_runs.csv
+```
+4. Spawn qa-auditor agent for the qa-engineer trace. The prompt varies by AUDIT_MODE:
+
+**If AUDIT_MODE=quiet (default):**
+```
+Audit the agent trace at /tmp/agent-trace-qa-engineer-<PID>.jsonl
+(use the actual PID filename found in step 1).
+Expected steps are in .claude/commands/qa-epic.md.
+Epic: <N>. Agent: qa-engineer. Model: sonnet. Run ID: <RUN_ID>.
+Mode: quiet — categorize each call, return summary only.
+Return exactly two lines:
+  AUDIT: <total> calls, <necessary> necessary, <wasted> wasted, <waste_pct>% waste | top: <pattern>
+  CSV: <run_id>,<timestamp>,<epic>,<branch>,qa-engineer,sonnet,<total>,<necessary>,<wasted>,<waste_pct>,<verdict>,<lint_errors>,<lint_fixed>,<top_pattern>
+```
+
+**If AUDIT_MODE=verbose:**
+```
+Audit the agent trace at /tmp/agent-trace-qa-engineer-<PID>.jsonl
+(use the actual PID filename found in step 1).
+Expected steps are in .claude/commands/qa-epic.md.
+Epic: <N>. Agent: qa-engineer. Model: sonnet. Run ID: <RUN_ID>.
+Mode: verbose — full audit report.
+Return:
+1. A markdown table categorizing every tool call:
+   | # | Tool | Target | Category | Note |
+   Categories: NECESSARY, REDUNDANT, FLAILING, CONTRADICTED
+2. Summary: AUDIT: <total> calls, <necessary> necessary, <wasted> wasted, <waste_pct>% waste | top: <pattern>
+3. CSV row: CSV: <run_id>,<timestamp>,<epic>,<branch>,qa-engineer,sonnet,<total>,<necessary>,<wasted>,<waste_pct>,<verdict>,<lint_errors>,<lint_fixed>,<top_pattern>
+```
+
+5. Extract the CSV line from the auditor response (the line starting with `CSV:`). Append it to the CSV file:
+```
+echo "<CSV line without the CSV: prefix>" >> docs/agent-metrics/qa_runs.csv
+```
+6. If a lint-mechanic trace file exists, spawn qa-auditor for it too with the same run_id and AUDIT_MODE. Append its CSV row.
+7. If AUDIT_MODE=quiet, include only the one-line AUDIT summary. Skip to Step 5d.
+
+8. If AUDIT_MODE=verbose:
+   - Present the full categorization table to the user
+   - Show the waste summary (total, wasted, waste%, top pattern)
+   - Prompt the user:
+   ```
+   Audit complete. What next?
+   1. Close — accept results, proceed to final report
+   2. Investigate — analyze waste patterns, propose fixes
+   3. Retry — revert agent commits, re-run QA from clean state
+   ```
+   Wait for user input.
+
+   **If Close:** proceed to Step 5d.
+
+   **If Retry:**
+   1. Find commits the agent made this run: `git log --oneline -5`
+   2. Revert each agent commit: `git revert <commit> --no-edit`
+   3. Push reverts: `git push origin <release branch>`
+   4. Release lock: `rm -f /tmp/qa_run.lock`
+   5. Jump back to Step 5 lock gate (re-acquire lock, re-spawn qa-engineer)
+   After the re-run completes, return to Step 5c audit. The user can retry as many times as needed.
+
+   **If Investigate:**
+   Spawn agent-builder agent:
+   ```
+   Audit and fix agent waste. Context:
+
+   Agent: <agent name> (definition: .claude/agents/<agent>.md)
+   Command file: .claude/commands/qa-epic.md
+   Trace: /tmp/agent-trace-<agent>-<PID>.jsonl
+   Audit memory: ~/.claude/agent-memory/agent-builder/agent_qa-engineer.md
+   Categorization table from qa-auditor:
+   <paste the full categorization table here>
+
+   For each waste cluster (REDUNDANT/FLAILING/CONTRADICTED calls):
+   1. Diagnose root cause across 5 layers: spawn prompt, command file, agent memory, agent definition, hooks
+   2. Propose a specific fix (exact file path, exact change)
+   3. Present as numbered list
+
+   Also cross-check against generic patterns in ~/.claude/agent-memory/agent-builder/pattern_*.md.
+   If a pattern applies to this agent but isn't addressed by the audit fixes, add it to the proposal list.
+
+   Return:
+   - Numbered fix proposals with file paths and exact changes
+   - Updated efficiency table row for agent-builder audit memory
+   Do NOT apply fixes — return proposals only.
+   ```
+
+   Present agent-builder's proposals to the user:
+   ```
+   Proposed fixes:
+   1. [file] — [change description]
+   2. [file] — [change description]
+   ...
+   Apply all / Apply specific (e.g. 1,3) / Skip
+   ```
+   - Apply selected fixes (orchestrator makes the edits based on agent-builder's proposals)
+   - Update agent-builder audit memory with the new run data
+   - After fixes applied, re-prompt with the same 3 options (Close / Investigate / Retry)
+   - User can iterate: investigate → apply fixes → retry → audit → investigate again
+
+### Step 5d — Release lock + cleanup
+Each rm is ONE Bash call. Do NOT combine them.
+```
+rm -f /tmp/qa_run.lock
+```
+```
+rm -f /tmp/agent-trace-qa-engineer-*.jsonl 2>/dev/null || true
+```
+```
+rm -f /tmp/agent-trace-lint-mechanic-*.jsonl 2>/dev/null || true
+```
+Always release the lock, even if earlier steps failed or errored.
 
 ## Step 6 — Final report
 ```
@@ -158,7 +513,11 @@ Full detail lives in git commits and the QA report. Do not return test output or
 ### QA Verdict
 CLEAN | ISSUES_FIXED | ISSUES_REMAINING
 
-[qa-executor findings]
+[qa-engineer findings]
+
+### Agent Metrics (run_id: <RUN_ID>)
+[AUDIT summary lines from Step 5c]
+Metrics appended to docs/agent-metrics/qa_runs.csv
 
 ### Next step
 QA clean → run: /close-epic $ARGUMENTS

@@ -21,7 +21,6 @@ from research.graph.query_presets import (
 )
 from research.graph.store import StoreError
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

@@ -20,11 +20,10 @@ if str(QWS_GRAPH_ROOT) not in sys.path:
 
 from research.graph.cli import cmd_seed
 from research.graph.store import (
+    _RESEARCH_TARGET_DEFAULTS,
     RESEARCH_TARGET_ALLOWED_KEYS,
     StoreInfraError,
-    _RESEARCH_TARGET_DEFAULTS,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fake store
@@ -240,7 +239,7 @@ class TestSeedInfra:
 
 class TestEnsureResearchTargetStore:
     def test_unknown_key_raises_value_error(self) -> None:
-        from research.graph.store import GraphStore, RESEARCH_TARGET_ALLOWED_KEYS
+        from research.graph.store import GraphStore
 
         # We can't call the real method without Neo4j, but we can test the
         # validation branch via a thin wrapper.
@@ -248,7 +247,6 @@ class TestEnsureResearchTargetStore:
             def session(self, **_kw):
                 raise AssertionError("should not reach Neo4j for validation errors")
 
-        import research.graph.store as store_module
         store = GraphStore.__new__(GraphStore)
         store._database = "neo4j"
         store._driver = _FakeDriver()

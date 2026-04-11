@@ -15,7 +15,6 @@ if str(QWS_GRAPH_ROOT) not in sys.path:
 from research.graph.curator import apply_significance_gate
 from research.graph.models import Config, Provenance, ResearchArtifact, Run, Strategy
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

@@ -7,41 +7,148 @@ Tmp files used for context efficiency — written as results arrive, read at rep
 - Per story: `/tmp/qa_epic_$ARGUMENTS_<STORY_ID>.txt`
 - Regression snapshot: `/tmp/qa_epic_$ARGUMENTS_current.txt`
 
+## Step -1 — Read memory (MANDATORY FIRST ACTION)
+Read your agent memory at `.claude/agent-memory/qa-engineer/MEMORY.md` NOW.
+Do this BEFORE any shell command, seed, or test. Do not skip this step.
+If the Read is blocked by a hook, use `cat .claude/agent-memory/qa-engineer/MEMORY.md` instead.
+
+### Critical rules (duplicated from memory — because memory reads get skipped)
+- Lint: `make lint` only. Do NOT run `ruff check` or `python -m ruff` directly.
+- Tests: `pytest tests/unit/ -v` and `pytest qws_graph/tests/unit/ -v`
+- Seed: `qw seed --demo` and `qw seed --demo --teardown`
+- Never retry the same command more than once.
+- Never debug environment failures (pandas import, Neo4j connection). Record and move on.
+- Never `ls` for test files. Use the story test table in Step 2b.
+- Never combine multiple commands in one Bash call with newlines. Use separate Bash calls.
+- Never use `python3 -c` for inline scripts. Read the tmp file directly instead.
+- Extract what you need on first read of a file. Do not re-read the same file within a run.
+- After the Phase 2 STOP gate: do not read, grep, or reference ANY `/tmp/qa_epic_*` file, `cypher.py`, or `PROVENANCE_ENGINE.md`.
+- Never run `git stash list`, `git stash show`, or investigate stash state.
+- Run `git log` and `git diff --name-only` once each in Phase 2. Do not re-run them.
+- Never run research scripts (`python -m research.*`, `python -m analytics.*`). QA checks tests and lint only.
+- Never batch `rm` calls in parallel. Run each `rm` in its own sequential Bash call.
+
 ## Step 0 — Baseline
 ```
 qw seed --demo
 pytest tests/unit/ -v 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_baseline.txt
 ```
 Any failure here is pre-existing — not caused by this epic's stories.
+If tests fail: record the failures and continue. Do NOT debug import errors or environment issues.
+Only investigate failures that appear NEW in the regression diff (Step 2f).
+Never retry the same command more than once.
 
 ## Step 1 — Identify stories
 Read `qws_graph/epics/INDEX.md` — find all CLOSED stories in epic $ARGUMENTS.
 List story IDs and paths (in `closed/` subdirectory).
+Do not `ls` the epics directory — INDEX.md is the source of truth for story paths.
 
 ## Step 2 — Per-story review
 For each CLOSED story, write all results to `/tmp/qa_epic_$ARGUMENTS_<STORY_ID>.txt` as they complete.
 
 ### 2a — Re-run Acceptance Test Plan
 Execute every test step in `## Acceptance Test Plan`. Append results to story tmp file.
+**Skip any test step that runs research scripts (`python -m research.*`, `python -m analytics.*`) or requires a live Neo4j query** — these are validated by unit tests in Step 2b.
 
 ### 2b — Unit tests
+Use these exact paths per story. Do NOT `ls` or guess paths.
+
+| Story | Test file |
+|-------|-----------|
+| QWS-0601 | qws_graph/tests/unit/test_hypothesis_journaling.py |
+| QWS-0602 | tests/unit/test_stability.py |
+| QWS-0603 | tests/unit/test_portfolio_correlation.py |
+| QWS-0604 | qws_graph/tests/unit/test_store_semantic.py |
+
+Run each story's test file once. Do not re-run passing tests.
+If you discover additional test files during the run, do NOT run them. ONLY the files in this table. No exceptions.
 ```
-pytest tests/unit/ -v -k "<story-related tests>" 2>&1 >> /tmp/qa_epic_$ARGUMENTS_<STORY_ID>.txt
+pytest <test_file> -v 2>&1 >> /tmp/qa_epic_$ARGUMENTS_<STORY_ID>.txt
 ```
 
 ### 2c — Static analysis
-```
-ruff check <story-touched files> && mypy --strict <story-touched files> 2>&1 >> /tmp/qa_epic_$ARGUMENTS_<STORY_ID>.txt
-```
-Fix any warnings found.
 
-### 2d — Fixture consistency
-Compare fixtures in `qws_graph/tests/fixtures/` against `docs/PROVENANCE_ENGINE.md`.
-Append findings to story tmp file.
+#### Phase 1: Capture lint output
+```
+make lint 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_lint.txt
+```
+This is your ONLY `make lint` run. You do NOT fix lint errors — you write a fixlist.
+
+#### Phase 2: Identify in-scope errors
+Three steps. Each produces a file. Read files — do not re-grep.
+
+**Step A — save changed files:**
+```
+git diff feature/26.4.0/QWS-0301..HEAD --name-only > /tmp/qa_epic_$ARGUMENTS_changed.txt
+```
+
+**Step B — save error code + file path pairs:**
+Ruff format: error line, then `  --> file:line:col` below it. This captures BOTH lines together:
+```
+grep -B1 -E "^\s*-->" /tmp/qa_epic_$ARGUMENTS_lint.txt > /tmp/qa_epic_$ARGUMENTS_arrows.txt
+```
+WARNING: The `-B1` flag is mandatory. It captures the error code line printed ABOVE each `-->` line. Without `-B1`, arrows.txt has only file paths and Step C cannot identify fixable codes.
+Each pair in arrows.txt: error code line on top, `-->` file path line below. You have everything you need.
+
+**Step C — cross-reference (TWO Reads, then done — never touch lint.txt again):**
+Use the Read tool (not Bash grep) for both files:
+```
+Read /tmp/qa_epic_$ARGUMENTS_changed.txt
+Read /tmp/qa_epic_$ARGUMENTS_arrows.txt
+```
+Both files are now in context. Make ONE pass through arrows.txt from top to bottom:
+- Each pair: error code line on top, `  --> file:line:col` below.
+- For each pair: extract file path from `-->` line. Check if that path appears in changed.txt.
+  - If file NOT in changed.txt → skip, move to next pair.
+  - If file IS in changed.txt AND code is F401/F841/I001 → add to your scratch list.
+  - If file IS in changed.txt but code is anything else (E402, E501, any E-prefix) → skip.
+- When you reach the end of arrows.txt, you are DONE. Do NOT re-read arrows.txt. Do NOT re-read changed.txt. Do NOT grep either file. Do NOT go back to lint.txt.
+One pass. No re-reads.
+
+**STOP. Lint analysis complete.**
+You have your complete fix list. From this point forward:
+- Do NOT read, grep, or reference ANY `/tmp/qa_epic_*` file (lint, arrows, changed, fixlist — all off-limits).
+- Do NOT run `make lint`, `ruff`, or any lint-related command.
+- Do NOT search for lint-related patterns in any file.
+- Do NOT re-read `qws_graph/research/graph/cypher.py` or `docs/PROVENANCE_ENGINE.md` after their designated steps (2d/2e).
+
+Next action:
+- Fix list empty → skip Phase 3, proceed to Step 2d.
+- Fix list has items → proceed to Phase 3.
+
+#### Phase 3: Write fixlist (ONLY if errors found in-scope)
+If Phase 2 found fixable errors in changed files:
+1. Write them to `/tmp/qa_epic_$ARGUMENTS_fixlist.txt` in this exact format:
+```
+# Epic $ARGUMENTS — Lint Fix List
+# Format: file:line:col | code | description
+path/to/file.py:6:1 | F401 | `typing.Any` imported but unused
+```
+2. **STOP. Do NOT fix any lint errors.** The orchestrator will spawn lint-mechanic to handle fixes.
+3. Proceed to Step 2d.
+
+If Phase 2 found zero in-scope errors, skip Phase 3 entirely. Do NOT write an empty fixlist.
+
+### 2d — Schema context + Fixture consistency
+Recipe — three tool calls max:
+1. Read `docs/PROVENANCE_ENGINE.md` (full file). This is your ONLY read of this file for the entire run.
+2. Use `Glob("qws_graph/tests/fixtures/artifacts/**/*")` to discover fixture files. ONE Glob call — no `ls`, no `grep -rl`, no Bash ls.
+3. Read only fixture files that could contain graph node/relationship data (skip `.csv` grid/baseline files — those are strategy artifacts, not graph schema). If no fixtures contain graph data, note "no graph fixtures" and move on.
+4. Compare any graph-relevant fixture node labels, properties, and relationship types against PROVENANCE_ENGINE schema from step 1.
+5. Append findings to story tmp file.
+
+**Do NOT grep PROVENANCE_ENGINE.md. Do NOT `ls` the directory. Do NOT read more than 3 fixture files.**
+**Do NOT grep or read test files (tests/unit/, qws_graph/tests/unit/) in this step — test coverage was verified in Step 2b.**
 
 ### 2e — Demo seed consistency
-Read `qws_graph/research/graph/cypher.py`. Verify MERGE blocks match current schema.
-Append findings to story tmp file.
+Recipe — one Read, no grep:
+1. Read `qws_graph/research/graph/cypher.py` (full file — do NOT use limit parameter). This is your ONLY read of this file.
+2. Scan MERGE blocks in what you just read: node labels, property names, relationship types.
+3. Compare against PROVENANCE_ENGINE schema (already in context from Step 2d).
+4. Report mismatches. Append findings to story tmp file.
+
+**Do NOT grep cypher.py. Do NOT re-read it. Do NOT re-read PROVENANCE_ENGINE.md — it is in context from Step 2d.**
+**STOP. Schema comparison complete.** cypher.py and PROVENANCE_ENGINE.md are done. Do not touch either file again for the rest of the run.
 
 ### 2f — Cross-story regressions
 ```
@@ -50,22 +157,40 @@ diff /tmp/qa_epic_$ARGUMENTS_baseline.txt /tmp/qa_epic_$ARGUMENTS_current.txt
 ```
 Any `FAILED` line in current not present in baseline → cross-story regression. Flag with story that likely caused it.
 
-## Step 3 — Fix issues
-If issues found: fix code/fixtures/Cypher as needed.
+## Step 3 — Fix non-lint issues
+If fixture or demo seed issues found: fix those directly (these are schema consistency, not lint).
+Lint errors are handled by lint-mechanic — do NOT fix them here.
 
 ## Step 4 — Commit and push
+If fixture/seed fixes were made:
 ```
 git add <fixed files>
-git commit -m "qa(epic-$ARGUMENTS): post-epic QA fixes"
+git commit -m "qa(epic-$ARGUMENTS): post-epic QA fixes — fixtures/seed"
 git push origin <release branch>
 ```
-If no issues → skip commit, report clean.
+If no fixture/seed issues and no lint fixlist → skip commit, report clean.
+If only lint fixlist exists → skip commit (lint-mechanic will commit after fixing).
 
 ## Step 5 — Teardown and cleanup
 ```
 qw seed --demo --teardown
-rm /tmp/qa_epic_$ARGUMENTS_*.txt
 ```
+Remove each `/tmp/qa_epic_$ARGUMENTS_<name>.txt` file in separate Bash calls:
+```
+rm /tmp/qa_epic_$ARGUMENTS_baseline.txt
+rm /tmp/qa_epic_$ARGUMENTS_current.txt
+rm /tmp/qa_epic_$ARGUMENTS_lint.txt
+rm /tmp/qa_epic_$ARGUMENTS_fixlist.txt
+rm /tmp/qa_epic_$ARGUMENTS_arrows.txt
+rm /tmp/qa_epic_$ARGUMENTS_changed.txt
+rm /tmp/qa_epic_$ARGUMENTS_QWS-0601.txt
+rm /tmp/qa_epic_$ARGUMENTS_QWS-0602.txt
+rm /tmp/qa_epic_$ARGUMENTS_QWS-0603.txt
+rm /tmp/qa_epic_$ARGUMENTS_QWS-0604.txt
+```
+Do NOT use glob patterns or `&&` chains — use separate Bash calls for each rm.
+
+Update agent memory if needed. READ the memory file BEFORE writing to it (Write tool requires prior Read).
 
 ## Step 6 — Report
 ```
@@ -75,12 +200,15 @@ rm /tmp/qa_epic_$ARGUMENTS_*.txt
 | Story | ACs | Unit | Ruff/mypy | Fixtures | Demo seed | Regressions |
 |-------|-----|------|-----------|----------|-----------|-------------|
 
-### Issues found and fixed
-[list with commit ref]
+### Lint fixlist
+NONE | Written to /tmp/qa_epic_$ARGUMENTS_fixlist.txt (N errors in M files)
+
+### Fixture/seed fixes applied
+[list with commit ref, or NONE]
 
 ### Outstanding issues
-[any unfixed items]
+[any unfixed items beyond lint]
 
 ### Verdict
-CLEAN | ISSUES FIXED | ISSUES REMAINING
+CLEAN | LINT_FIXLIST_WRITTEN | ISSUES_REMAINING
 ```

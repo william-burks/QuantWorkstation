@@ -8,17 +8,26 @@ Do NOT attempt ruff, pytest, or mypy without checking memory for the correct inv
 ## Step 1 — Locate story
 Search `qws_graph/epics/` for story `$ARGUMENTS`. Read full file.
 Stop if Status ≠ `ready`.
+**Story file is now in context — do NOT re-read it during Steps 4 or 7.**
 
 ## Step 2 — Verify unblocked
 Read `docs/BACKLOG_ALIGNMENT.md` "Blocked On" column. If blocked → stop, report blocker.
 
 ## Step 3 — Read context
-Read before coding:
-- Story's "Repo Touchpoints" files
+Read docs directly (known locations):
 - `docs/PROVENANCE_ENGINE.md`
 - `docs/BACKLOG_ALIGNMENT.md`
 
+**PROVENANCE_ENGINE.md and BACKLOG_ALIGNMENT.md are now in context — do NOT re-read them in any later step.**
+
+For story's "Repo Touchpoints" source files, use this exact recipe:
+1. `mcp__codebase-memory-mcp__search_code(query="function_or_class_name")` → note the qualified_name from result
+2. `mcp__codebase-memory-mcp__get_code_snippet(qualified_name=...)` → read that section only, done
+Do NOT grep or Read entire files to orient. Do NOT run multiple search_code calls for the same symbol.
+
 No [TARGET] nodes/relationships/MCP tools unless this story implements them.
+
+**STOP — do NOT re-read any of these files in later steps: PROVENANCE_ENGINE.md, BACKLOG_ALIGNMENT.md, story file.**
 
 If any schema, design, or scope question cannot be resolved from these docs → do not guess.
 ```
@@ -40,8 +49,11 @@ Work ACs one by one. After each:
 For large files (>500 lines): grep for the target function/section first, then read only that range.
 Do NOT read whole files in sequential chunks.
 
+Run `ruff check` once → collect ALL errors → fix ALL in one pass → re-run once to confirm. Max 2 cycles. Do NOT fix one error, re-run, fix the next.
+
 **4b — Demo seed.** If this story adds or modifies nodes, edges, or properties:
 update `DEMO_SEED_CYPHER` and `DEMO_TEARDOWN_CYPHER` in `qws_graph/research/graph/cypher.py`.
+`cypher.py` is ~700 lines — grep for `DEMO_SEED_CYPHER` first (~line 465), then Read that offset range only. Do NOT read the whole file. Do NOT re-read cypher.py after this step.
 New node types → add MERGE block (`is_demo=true`, deterministic IDs, realistic values).
 Modified properties → update existing SET blocks. This is part of implementation, not verification.
 

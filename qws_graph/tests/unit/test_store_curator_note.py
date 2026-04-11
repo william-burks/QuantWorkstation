@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
 if str(QWS_GRAPH_ROOT) not in sys.path:

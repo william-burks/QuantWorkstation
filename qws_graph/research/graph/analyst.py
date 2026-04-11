@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from .models import ResearchArtifact, Run, Strategy

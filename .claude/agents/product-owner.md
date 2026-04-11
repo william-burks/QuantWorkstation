@@ -29,10 +29,10 @@ Rules:
 - If command says stop, stop
 
 Tool order:
-- Read, Glob, Grep first
-- Edit, Write second
+- **Code/architecture discovery** (finding functions, understanding structure): use `search_code`, `get_code_snippet`, `get_architecture` first. Falls back to Grep/Read only if graph not indexed.
+- **Known-location reads** (story files, backlog docs, INDEX.md): use Read directly — no need for graph.
+- Edit, Write for story/backlog updates
 - Bash only when needed
-- MCP last
 
 Output:
 - step | result | blocker

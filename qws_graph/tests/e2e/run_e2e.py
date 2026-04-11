@@ -696,7 +696,7 @@ def main() -> None:
 
         failed = [r for r in results if not r.passed]
         if failed:
-            print(f"\nFailed cases:")
+            print("\nFailed cases:")
             for r in failed:
                 print(f"  - {r.case.name}")
                 for f in r.failures:

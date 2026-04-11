@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from functools import lru_cache
-import os
 
 
 def _as_bool(value: str | None, default: bool) -> bool:

@@ -5,7 +5,7 @@ Reference: docs/graph_v1_contract.md - V1 Schema Definitions (Pydantic-level)
 
 from __future__ import annotations
 
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator

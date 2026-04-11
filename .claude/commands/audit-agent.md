@@ -95,7 +95,8 @@ Each recommendation specifies:
 After user reviews the report:
 1. User approves specific recommendations (by number)
 2. Apply edits directly — agent defs, command files, memory seeds
-3. For complex agent redesigns, spawn agent-builder instead
+3. Cross-check against generic patterns in `~/.claude/agent-memory/agent-builder/pattern_*.md` — if a pattern applies but isn't covered by audit fixes, add it to recommendations
+4. For complex agent redesigns, spawn agent-builder instead
 
 ## Step 5 — Record patterns
 
@@ -103,6 +104,27 @@ After every audit, write what you learned to agent-builder memory at `~/.claude/
 Record **patterns**, not instances:
 - Good: "Agents that touch PROVENANCE_ENGINE.md (800+ lines) waste 5-8 calls chunking it — add grep hints to command files"
 - Bad: "lead-engineer chunked PROVENANCE_ENGINE.md 6 times during QWS-0604"
+
+## Step 6 — Retry or close
+
+After fixes are applied, ask:
+
+```
+Fixes applied. Next:
+1. **Retry** — re-run the agent to verify improvements
+2. **Close** — waste is acceptable, move on
+
+Pick 1 or 2.
+```
+
+If user picks 1 — rollback then retry:
+1. Find the agent's last commit(s) from this run: `git log --oneline -5`
+2. Roll back any commits the agent made: `git revert <commit> --no-edit` for each
+3. Push the reverts: `git push origin <branch>`
+4. Re-spawn the same agent with the same arguments (e.g. `/qa-epic 6`)
+5. After it completes, user invokes `/audit-agent` again to compare
+
+If user picks 2: done.
 
 ## Model allocation
 

@@ -6,20 +6,17 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
 if str(QWS_GRAPH_ROOT) not in sys.path:
     sys.path.insert(0, str(QWS_GRAPH_ROOT))
 
 from research.graph.store import (
+    _INSTITUTIONAL_SHARPE_THRESHOLD,
+    _PROFESSIONAL_SHARPE_THRESHOLD,
     EvolutionOutcome,
     GraphStore,
     StoreResult,
-    _INSTITUTIONAL_SHARPE_THRESHOLD,
-    _PROFESSIONAL_SHARPE_THRESHOLD,
 )
-
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -39,6 +36,7 @@ def _make_tx_with_single(record: dict | None) -> MagicMock:
 
 def _make_artifact(sharpe: float = 1.5, total_trades: int = 30):
     from datetime import UTC, datetime
+
     from research.graph.models import Config, Provenance, ResearchArtifact, Run, Strategy
 
     prov = Provenance(
@@ -456,7 +454,8 @@ class TestPersistArtifactDedup:
 
 class TestChampionMdQualityGate:
     def _make_champion_artifact(self, tier: str = "professional"):
-        from datetime import UTC, datetime, date
+        from datetime import UTC, date, datetime
+
         from research.graph.models import Champion, Provenance, ResearchArtifact, Strategy
 
         prov = Provenance(
