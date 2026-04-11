@@ -62,16 +62,16 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| FormerChampion Lifecycle | QWS-0801 (**TESTING**) | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
+| FormerChampion Lifecycle | QWS-0801 (**CLOSED**) | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
 | OpenAI Curation Switch | QWS-0703 | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
-| Correlation Gate Re-check | QWS-0804 | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
+| Correlation Gate Re-check | QWS-0804 | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | ~~QWS-0801~~ CLOSED → **READY** |
 
 ### Backlog
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | SUPERSEDED_BY Relationship | QWS-0802 | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
-| Recursive Validation Loop | QWS-0803 | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | QWS-0801 CLOSED |
+| Recursive Validation Loop | QWS-0803 | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | ~~QWS-0801~~ CLOSED → **READY** |
 | PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse | — |
 | CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push | — |
 
