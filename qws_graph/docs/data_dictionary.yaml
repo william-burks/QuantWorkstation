@@ -640,51 +640,6 @@ nodes:
     note: >
       Do not MERGE on :RetiredChampion — the store layer handles re-labeling.
       Bare MATCH (ch:Champion) will never return RetiredChampion nodes.
-    properties_added_qws_0801:
-      oos_reason:
-        type: str
-        nullable: true
-        description: >
-          Copied from FormerChampion at retirement time. Cause-of-death explanation.
-          Null for RetiredChampion nodes that were retired before QWS-0801.
-      retirement_note:
-        type: str
-        nullable: true
-        description: >
-          Optional free-text final retirement reason set at qw retire time.
-
-  FormerChampion:
-    story: QWS-0801
-    description: >
-      Decay-watch state for a Champion whose performance is degrading. Sits between
-      Champion and RetiredChampion in the lifecycle. Created by qw degrade; retired
-      by qw retire. The Champion node is NOT deleted on demotion.
-    id_key: former_champion_id
-    id_source: "hash12(champion_id + degraded_at_iso)"
-    labels: ["FormerChampion"]
-    properties:
-      former_champion_id:
-        type: str
-        nullable: false
-      strategy_id:
-        type: str
-        nullable: false
-      champion_id:
-        type: str
-        nullable: false
-        description: Source Champion node ID.
-      degraded_at:
-        type: datetime
-        nullable: false
-        description: Timestamp of demotion via qw degrade.
-      oos_reason:
-        type: str
-        nullable: false
-        description: Mandatory cause-of-death — cannot be empty. Set at qw degrade time.
-      metrics_sharpe_at_degradation:
-        type: float
-        nullable: true
-        description: Sharpe at time of demotion, if provided.
 
   RunStatsSummary:
     description: >
