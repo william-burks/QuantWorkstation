@@ -20,11 +20,13 @@ from .cypher import (
     CORRELATED_WITH_CHAMPION_QUERY,
     CORRELATED_WITH_STRATEGY_QUERY,
     CSV_INGEST_QUERY,
+    DEGRADE_CHAMPION_QUERY,
     DEMO_SEED_CYPHER,
     DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
+    GET_FORMER_CHAMPION_QUERY,
     GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY,
     GET_HYPOTHESIS_BY_ID_QUERY,
     GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,
@@ -38,6 +40,7 @@ from .cypher import (
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
     REGIME_MERGE_QUERY,
+    RETIRE_FORMER_CHAMPION_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
     SEMANTICALLY_RELATED_MERGE_QUERY,
@@ -284,6 +287,114 @@ class GraphStore:
 
                 records = session.execute_write(_write)
                 return len(records) > 0
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def degrade_champion(
+        self,
+        champion_id: str,
+        oos_reason: str,
+        metrics_sharpe: float | None = None,
+    ) -> str:
+        """Demote a Champion to FormerChampion state with a mandatory cause-of-death.
+
+        Creates a FormerChampion node and a DEGRADED_TO edge from the Champion.
+        The Champion node is NOT deleted — it remains readable in the graph.
+
+        Args:
+            champion_id: ID of the Champion to demote.
+            oos_reason: Mandatory non-empty reason string (cause-of-death).
+            metrics_sharpe: Optional Sharpe at demotion time.
+
+        Returns:
+            The new former_champion_id.
+
+        Raises:
+            StoreError: Champion not found, or oos_reason is empty.
+            StoreInfraError: Neo4j connectivity or execution failure.
+        """
+        oos_reason = oos_reason.strip()
+        if not oos_reason:
+            raise StoreError("oos_reason must not be empty")
+
+        now = datetime.datetime.now(datetime.UTC).isoformat()
+        former_champion_id = _ids.hash12(champion_id, now)
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx: object) -> list[object]:
+                    result = tx.run(  # type: ignore[union-attr]
+                        DEGRADE_CHAMPION_QUERY,
+                        champion_id=champion_id,
+                        former_champion_id=former_champion_id,
+                        degraded_at=now,
+                        oos_reason=oos_reason,
+                        metrics_sharpe=metrics_sharpe,
+                    )
+                    return list(result)
+
+                records = session.execute_write(_write)
+                if not records:
+                    raise StoreError(f"Champion {champion_id!r} not found in graph")
+                return former_champion_id
+
+        except StoreError:
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def retire_former_champion(
+        self,
+        former_champion_id: str,
+        retirement_note: str | None = None,
+    ) -> str:
+        """Retire a FormerChampion by creating a RetiredChampion and RETIRED_TO edge.
+
+        Args:
+            former_champion_id: ID of the FormerChampion to retire.
+            retirement_note: Optional free-text reason for final retirement.
+
+        Returns:
+            The new retired_champion_id.
+
+        Raises:
+            StoreError: FormerChampion not found.
+            StoreInfraError: Neo4j connectivity or execution failure.
+        """
+        now = datetime.datetime.now(datetime.UTC).isoformat()
+        retired_champion_id = _ids.hash12(former_champion_id, now)
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _check(tx: object) -> object:
+                    return tx.run(  # type: ignore[union-attr]
+                        GET_FORMER_CHAMPION_QUERY,
+                        former_champion_id=former_champion_id,
+                    ).single()
+
+                row = session.execute_read(_check)
+                if row is None:
+                    raise StoreError(f"FormerChampion {former_champion_id!r} not found in graph")
+
+                def _write(tx: object) -> list[object]:
+                    result = tx.run(  # type: ignore[union-attr]
+                        RETIRE_FORMER_CHAMPION_QUERY,
+                        former_champion_id=former_champion_id,
+                        retired_champion_id=retired_champion_id,
+                        retirement_note=retirement_note,
+                        retired_at=now,
+                    )
+                    return list(result)
+
+                session.execute_write(_write)
+                return retired_champion_id
+
+        except StoreError:
+            raise
         except Neo4jError as exc:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001

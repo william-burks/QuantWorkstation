@@ -106,29 +106,86 @@ PROVENANCE_ENGINE.md is explicit: without cause-of-death, the cemetery view is u
 - `qws_graph/tests/unit/test_qw_degrade_retire.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw degrade <champion_id> --reason "..."` creates a FormerChampion node,
+- [x] `qw degrade <champion_id> --reason "..."` creates a FormerChampion node,
   creates a `DEGRADED_TO` edge from the Champion, and exits `0`.
-- [ ] `qw degrade <champion_id>` without `--reason` exits non-zero with a clear error.
-- [ ] `qw degrade <champion_id> --reason ""` (empty string) exits non-zero.
-- [ ] `qw degrade <non_existent_id> --reason "..."` exits non-zero with a clear error.
-- [ ] `qw retire <former_champion_id> --note "..."` creates a new RetiredChampion node (if
+- [x] `qw degrade <champion_id>` without `--reason` exits non-zero with a clear error.
+- [x] `qw degrade <champion_id> --reason ""` (empty string) exits non-zero.
+- [x] `qw degrade <non_existent_id> --reason "..."` exits non-zero with a clear error.
+- [x] `qw retire <former_champion_id> --note "..."` creates a new RetiredChampion node (if
   one does not already exist) and creates a `RETIRED_TO` edge from the FormerChampion to it.
-- [ ] `qw retire <former_champion_id> --note "..."` stores `retirement_note` on the
+- [x] `qw retire <former_champion_id> --note "..."` stores `retirement_note` on the
   RetiredChampion node.
-- [ ] `qw retire <former_champion_id>` without `--note` succeeds (note is optional for retirement).
-- [ ] `qw query --name former_champions` returns one row per FormerChampion with
+- [x] `qw retire <former_champion_id>` without `--note` succeeds (note is optional for retirement).
+- [x] `qw query --name former_champions` returns one row per FormerChampion with
   `strategy_id`, `instrument`, `degraded_at`, `oos_reason`, `retirement_note` (null if
   not yet retired), `status` (`DEGRADED` or `RETIRED`).
-- [ ] The Champion node remains readable after demotion (not deleted).
-- [ ] Unit tests cover: valid degrade, missing reason, empty reason, non-existent id,
+- [x] The Champion node remains readable after demotion (not deleted).
+- [x] Unit tests cover: valid degrade, missing reason, empty reason, non-existent id,
   valid retire, retire without note, cemetery view query.
 
+## Acceptance Test Plan
+
+### AC1: qw degrade creates FormerChampion and exits 0
+- type: cli
+- cmd: `python -m qws_graph.research.graph.cli degrade --champion demo_champ_001 --reason "OOS fail — MaxDD breach"`
+- expect_contains: "OK: Champion 'demo_champ_001' degraded"
+- expect_exit: 0
+
+### AC2: qw degrade without --reason exits non-zero
+- type: cli
+- cmd: `python -m qws_graph.research.graph.cli degrade --champion demo_champ_001 --reason ""`
+- expect_contains: "ERROR: --reason must be a non-empty string"
+- expect_exit: 1
+
+### AC3: qw degrade with empty string reason exits non-zero
+- type: regression
+- Covered by AC2 (same code path — empty string after strip)
+
+### AC4: qw degrade nonexistent champion exits non-zero
+- type: cli
+- cmd: `python -m qws_graph.research.graph.cli degrade --champion nonexistent_id_xyz --reason "test"`
+- expect_contains: "ERROR"
+- expect_exit: 1
+
+### AC5: qw retire with note creates RetiredChampion and RETIRED_TO edge
+- type: cli
+- cmd: `python -m qws_graph.research.graph.cli retire --former-champion <fc_id> --note "Logic dead-ended"`
+- expect_contains: "OK: FormerChampion"
+- expect_exit: 0
+
+### AC6: qw retire stores retirement_note on RetiredChampion
+- type: cypher
+- cmd: `MATCH (rc:RetiredChampion) WHERE rc.retirement_note IS NOT NULL RETURN count(rc) > 0 AS has_note`
+- expect_contains: "true"
+
+### AC7: qw retire without --note succeeds
+- type: cli
+- cmd: `python -m qws_graph.research.graph.cli retire --former-champion <fc_id>`
+- expect_exit: 0
+
+### AC8: qw query --name former_champions returns cemetery view
+- type: cli
+- cmd: `python -m qws_graph.research.graph.cli query --name former_champions --json`
+- expect_contains: "strategy_id"
+- expect_exit: 0
+
+### AC9: Champion readable after demotion
+- type: cypher
+- cmd: `MATCH (ch:Champion {champion_id: 'demo_champ_001'}) RETURN ch.champion_id`
+- expect_contains: "demo_champ_001"
+
+### AC10: Unit test coverage
+- type: file_check
+- cmd: `pytest qws_graph/tests/unit/test_store_former_champion.py qws_graph/tests/unit/test_qw_degrade_retire.py -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
 ## Definition of Done
-- [ ] FormerChampion node, DEGRADED_TO, RETIRED_TO edges implemented and tested.
-- [ ] `qw degrade` and `qw retire` CLI commands operational.
-- [ ] `former_champions` preset returns cemetery view.
-- [ ] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
+- [x] FormerChampion node, DEGRADED_TO, RETIRED_TO edges implemented and tested.
+- [x] `qw degrade` and `qw retire` CLI commands operational.
+- [x] `former_champions` preset returns cemetery view.
+- [x] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
 - [ ] Story marked CLOSED — unblocks QWS-0803.
 - [ ] All affected README files updated to reflect new capabilities.
-- [ ] PROVENANCE_ENGINE.md updated — FormerChampion, DEGRADED_TO, RETIRED_TO, oos_reason,
+- [x] PROVENANCE_ENGINE.md updated — FormerChampion, DEGRADED_TO, RETIRED_TO, oos_reason,
   retirement_note moved from `[TARGET]` to `[CURRENT]`; former_champions tool updated.

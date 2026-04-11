@@ -386,6 +386,29 @@ class ResearchArtifact(BaseModel):
 }
 ```
 
+#### FormerChampion (QWS-0801)
+
+Decay-watch state: a demoted Champion awaiting pivot or retirement.
+
+```json
+{
+  "former_champion_id": "abc123def456",
+  "strategy_id": "es-1h-bear-bear-baseline",
+  "champion_id": "0ab1cd2ef345",
+  "degraded_at": "2026-04-11T12:00:00Z",
+  "oos_reason": "MaxDD breached -15% in Oct CPI spike; OOS fail confirmed",
+  "metrics_sharpe_at_degradation": 1.8
+}
+```
+
+**Edges:**
+- `(Champion)-[:DEGRADED_TO {detected_at: datetime}]->(FormerChampion)` — created by `qw degrade`
+- `(FormerChampion)-[:RETIRED_TO {retired_at: datetime}]->(RetiredChampion)` — created by `qw retire`
+
+**New properties on RetiredChampion (set at `qw retire` time):**
+- `oos_reason: str` — copied from FormerChampion
+- `retirement_note: str | null` — optional free-text final retirement reason
+
 ---
 
 ## Graph Write Semantics for `qw record`
