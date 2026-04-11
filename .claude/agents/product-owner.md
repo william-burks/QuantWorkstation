@@ -5,6 +5,8 @@ tools: Edit, Write, Bash, mcp__codebase-memory-mcp__detect_changes, mcp__codebas
 model: sonnet
 color: cyan
 memory: project
+effort: medium
+skills: [caveman]
 ---
 
 QuantWorkstation product owner.

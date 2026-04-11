@@ -10,6 +10,9 @@ Two-agent flow: **qws-architect (Opus)** reasons, **product-owner (Sonnet)** wri
 
 Spawn qws-architect agent:
 ```
+Before analyzing: read your memory at .claude/agent-memory/qws-architect/ — apply any
+accumulated principles about feature fit, schema patterns, and past rejections.
+
 Load: docs/MANIFESTO.md, docs/PROVENANCE_ENGINE.md, docs/RESEARCH_WORKFLOW.md,
       docs/BACKLOG_ALIGNMENT.md, qws_graph/epics/INDEX.md
 

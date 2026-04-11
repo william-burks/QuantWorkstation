@@ -5,6 +5,8 @@ tools: Bash, mcp__codebase-memory-mcp__detect_changes, mcp__codebase-memory-mcp_
 model: sonnet
 color: red
 memory: project
+effort: medium
+skills: [caveman]
 ---
 
 QuantWorkstation QA Executor.

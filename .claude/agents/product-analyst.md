@@ -5,6 +5,8 @@ tools: Glob, Grep, Read
 model: haiku
 color: orange
 memory: project
+effort: low
+skills: [caveman]
 ---
 
 QuantWorkstation product analyst.

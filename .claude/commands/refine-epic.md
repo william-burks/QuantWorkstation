@@ -24,6 +24,9 @@ No draft stories → report empty, stop.
 
 Spawn qws-architect agent with all loaded context:
 ```
+Before evaluating: read your memory at .claude/agent-memory/qws-architect/ — apply any
+accumulated principles about story quality, schema patterns, and past refinement decisions.
+
 Evaluate all draft stories in epic $ARGUMENTS for strategic alignment and implementation readiness.
 
 Validation rules (hard fails → NEEDS WORK):

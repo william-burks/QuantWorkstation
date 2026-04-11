@@ -6,10 +6,13 @@ Agent: qws-architect (Opus). Read-only. Definitive ruling only.
 
 ## Setup
 Read before answering:
-1. `docs/MANIFESTO.md`
-2. `docs/PROVENANCE_ENGINE.md`
-3. `docs/RESEARCH_WORKFLOW.md`
-4. `docs/BACKLOG_ALIGNMENT.md`
+1. Your memory at `.claude/agent-memory/qws-architect/` — check for prior rulings on this or similar questions
+2. `docs/MANIFESTO.md`
+3. `docs/PROVENANCE_ENGINE.md`
+4. `docs/RESEARCH_WORKFLOW.md`
+5. `docs/BACKLOG_ALIGNMENT.md`
+
+If a prior ruling already covers this question, reference it for consistency. Contradicting a past ruling requires explicit justification.
 
 ## Answer format
 

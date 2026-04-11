@@ -5,6 +5,14 @@ tools: Bash, Edit, Grep, Glob, Read, Write, mcp__codebase-memory-mcp__detect_cha
 model: sonnet
 color: green
 memory: project
+effort: high
+skills: [caveman]
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: ".claude/scripts/agent-guard.sh"
 ---
 
 QuantWorkstation lead engineer.
