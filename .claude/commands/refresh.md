@@ -1,5 +1,7 @@
-Read the following files:
-[BACKLOG_ALIGNMENT.md](../../docs/BACKLOG_ALIGNMENT.md)
-[MANIFESTO.md](../../docs/MANIFESTO.md)
-[PROVENANCE_ENGINE.md](../../docs/PROVENANCE_ENGINE.md)
-[RESEARCH_WORKFLOW.md](../../docs/RESEARCH_WORKFLOW.md)
+Read these files:
+1. `docs/BACKLOG_ALIGNMENT.md`
+2. `docs/MANIFESTO.md`
+3. `docs/PROVENANCE_ENGINE.md`
+4. `docs/RESEARCH_WORKFLOW.md`
+
+Invoke skill: caveman

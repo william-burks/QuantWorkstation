@@ -25,6 +25,7 @@ Triggers:
 - /implement-story <ID> -> read .claude/commands/implement-story.md and execute for <ID>
 - /verify-story <ID> -> read .claude/commands/verify-story.md and execute for <ID>
 - /close-story <ID> -> read .claude/commands/close-story.md and execute for <ID>
+- /run-epic <N> -> read .claude/commands/run-epic.md and execute for <N>
 
 Tool order:
 - Read, Glob, Grep first

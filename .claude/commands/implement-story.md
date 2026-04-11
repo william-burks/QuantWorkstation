@@ -2,58 +2,89 @@ Implement the QuantWorkstation story identified by: $ARGUMENTS
 
 Invoke skill: caveman
 
-## Step 1 — Locate and read the story
-Search `qws_graph/epics/` for a story file containing the ID `$ARGUMENTS`.
-Read the full story file. If Status is not `draft` or `ready`, stop and report why.
+## Step 1 — Locate story
+Search `qws_graph/epics/` for story `$ARGUMENTS`. Read full file.
+Stop if Status ≠ `ready`.
 
 ## Step 2 — Verify unblocked
-Read `docs/BACKLOG_ALIGNMENT.md`. Check the "Blocked On" column for this story.
-If blocked, stop and report exactly what must be completed first.
+Read `docs/BACKLOG_ALIGNMENT.md` "Blocked On" column. If blocked → stop, report blocker.
 
 ## Step 3 — Read context
-Read these files before writing any code:
-- The story's "Repo Touchpoints" section — read every file listed
-- `docs/PROVENANCE_ENGINE.md` — schema and MCP tool reference
-- `docs/BACKLOG_ALIGNMENT.md` — confirm this story's capabilities are not marked [TARGET] elsewhere
+Read before coding:
+- Story's "Repo Touchpoints" files
+- `docs/PROVENANCE_ENGINE.md`
+- `docs/BACKLOG_ALIGNMENT.md`
 
-Do NOT use any node types, relationships, or MCP tools marked [TARGET] in PROVENANCE_ENGINE.md
-unless this story is explicitly the one implementing them.
+No [TARGET] nodes/relationships/MCP tools unless this story implements them.
 
 ## Step 4 — Implement
-Work through the Acceptance Criteria one by one, in order.
+Work ACs one by one. After each:
+1. `- [ ]` → `- [x]` in story file
+2. `git add` each changed file (never `-A` or `.`)
+3. `pytest tests/unit/ -v` after any Python change — fix all failures
 
-After each criterion is satisfied:
-1. Edit the story file: change `- [ ]` to `- [x]` for that criterion
-2. Run `git add` on every file you edited or created (never use `git add -A` or `git add .`)
-3. Confirm the criterion is met before moving to the next
+## Step 5 — Write Acceptance Test Plan
+Add `## Acceptance Test Plan` section to story file after ACs.
 
-Follow the existing code patterns in the repo. Run `pytest tests/unit/ -v` after touching
-any Python file. Fix all failures before continuing to the next criterion.
-
-## Step 5 — Update story status
-Once all Acceptance Criteria are checked:
-1. Change the story's `## Status` field from `READY` to `TESTING`
-2. Change the story's `Status` from `READY` to `TESTING` in the epic README and docs/BACKLOG_ALIGNMENT.md
-2. Run `git add` on the story file
-
-## Step 6 — Report
-Produce a structured testing report for Will:
-
-```
-## $ARGUMENTS — Ready for Testing
-
-### What was implemented
-[bullet list of changes, file by file]
-
-### How to test (manual steps required from Will)
-[numbered list of exact commands or actions Will needs to run]
-[include expected output for each step]
-
-### Automated tests
-[confirm: pytest tests/unit/ -v passes — show result]
-
-### Definition of Done remaining
-[any DoD items that require Will's environment, live Neo4j, or manual verification]
+```markdown
+### AC1: <description>
+- type: cli | cypher | file_check | regression
+- cmd: <exact command>
+- expect_contains: "<substring>"
+- expect_exit: 0
 ```
 
-Do not mark the story CLOSED. That is Will's decision after testing passes.
+Types: `cli` (qw command + exit/output), `cypher` (Neo4j query + result), `file_check` (path exists/content), `regression` (two commands match).
+
+Rules: demo seed IDs only. Never real data. Generate fixtures/scripts as needed. Every AC ≥ 1 test step.
+
+## Step 6 — Commit implementation
+```
+git add <files by name>
+git commit -m "impl($ARGUMENTS): <summary>"
+```
+
+## Step 7 — Execute acceptance tests (fail/fix cycle)
+Run each test step. Compare actual vs expected.
+
+Passing AC → confirm `- [x]`.
+
+**On failure:**
+1. Mark AC: `- [FAILED] AC<N> — <actual vs expected>`
+2. `git commit -m "fail($ARGUMENTS): AC<N> — <failure>"`
+3. Diagnose + fix code
+4. Restore `- [x]`
+5. `git commit -m "fix($ARGUMENTS): AC<N> — <what fixed>"`
+6. Re-run ALL tests from top
+7. Max 3 cycles → BLOCKED if still failing
+
+## Step 8 — Update status
+All ACs pass → READY → TESTING in story, INDEX.md, BACKLOG_ALIGNMENT.md.
+```
+git add <story> qws_graph/epics/INDEX.md docs/BACKLOG_ALIGNMENT.md
+git commit -m "status($ARGUMENTS): READY → TESTING"
+```
+
+## Step 9 — Report
+
+```
+## $ARGUMENTS — Implemented and Self-Tested
+
+### Changes
+[file-by-file bullets]
+
+### Acceptance Tests
+| AC | Status | Notes |
+|----|--------|-------|
+
+### Fix cycles
+[fail/fix commits if any]
+
+### Quality
+[pytest result]
+
+### Generated test data
+[new fixtures/scripts]
+```
+
+Final: **CLOSED-READY** or **BLOCKED** (with details). Do not mark CLOSED.

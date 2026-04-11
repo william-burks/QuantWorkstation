@@ -123,7 +123,6 @@ Identified during vision planning — not yet in the backlog. Will decides prior
 
 | Candidate | What it delivers |
 |---|---|
-| *(shipped inline)* `qw seed --demo` | Deterministic demo provenance graph covering all Epic 5 query preset scenarios. Implemented in `cypher.py`, `store.py`, `cli.py`. Documented in runbook. |
 
 ---
 
