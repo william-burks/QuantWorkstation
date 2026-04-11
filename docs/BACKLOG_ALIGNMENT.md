@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 5 COMPLETE — next: QWS-0601 (Hypothesis Journaling) or QWS-0802 (SUPERSEDED_BY)
+> Current sprint: Epic 7 Workflow Readiness — QWS-0801 (FormerChampion) and QWS-0703 (OpenAI Curation) are READY to implement in parallel
 > ```
 
 ---
@@ -20,9 +20,10 @@
 | Epic 2 — MCP Read Integration | **COMPLETE** | Query presets, MCP tools, semantic gate |
 | Epic 3 — Research Pipeline Integrity | **COMPLETE** | Schema consistency, Trial bundle, UAT runbook |
 | Epic 4 — Workflow Utility | **COMPLETE** | OOS tracking, promotion alerts, query interface |
-| Epic 5 — Context Enrichment | **PLANNED ← current** | family_id, Regime tagging, cross-instrument aggregation |
-| Epic 6 — Research Analytics | **PLANNED** | Hypothesis journaling, parameter stability, portfolio correlation |
-| Epic 7 — Developer Experience | **PLANNED** | PyPI packaging, CI integrity gate |
+| Epic 5 — Context Enrichment | **COMPLETE** | family_id, Regime tagging, cross-instrument aggregation |
+| Epic 6 — Research Analytics | **COMPLETE** | Hypothesis journaling, parameter stability, portfolio correlation, semantic dedup |
+| Epic 7 — Workflow Readiness | **PLANNED ← current** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
+| Backlog | **UNSCHEDULED** | QWS-0701, 0702, 0802, 0803 — deferred until post-Epic 7 research sessions |
 
 ---
 
@@ -57,20 +58,22 @@
 | Portfolio Correlation | QWS-0603 (**CLOSED**) | `CORRELATED_WITH` edges on Champions; `portfolio_alpha` gains MaxDD/Calmar filters + OOS/IS drift flag; correlation gate on promotion path | — |
 | Semantic Hypothesis Deduplication | QWS-0604 (**CLOSED**) | `SEMANTICALLY_RELATED` edges between Hypothesis nodes; `similar_hypotheses` preset; `embedding` property on Hypothesis; `qw backfill --embeddings`; check_redundancy gains semantic upgrade (reads SEMANTICALLY_RELATED edges) | — |
 
-### Epic 8 — Champion Lifecycle
+### Epic 7 — Workflow Readiness
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | FormerChampion Lifecycle | QWS-0801 | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
+| OpenAI Curation Switch | QWS-0703 | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
+| Correlation Gate Re-check | QWS-0804 | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
+
+### Backlog
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
 | SUPERSEDED_BY Relationship | QWS-0802 | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
 | Recursive Validation Loop | QWS-0803 | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | QWS-0801 CLOSED |
-
-### Epic 7 — Developer Experience
-
-| Story | ID | Capabilities Unlocked |
-|---|---|---|
-| PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse |
-| CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push |
+| PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse | — |
+| CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push | — |
 
 ---
 
@@ -116,7 +119,7 @@ Identified during vision planning — not yet in the backlog. Will decides prior
 
 | Candidate | What it delivers |
 |---|---|
-| `qw promote` explicit CLI command | Separates the promotion decision from `qw record --bundle`. Allows staged promotion: record many trials, then selectively promote. Re-runnable correlation gate (re-check after portfolio composition changes without re-running a trial). Auditable promotion event in graph. Value only if workflow shifts to deferred/batch promotion. |
+| _(no open candidates)_ | — |
 
 ---
 

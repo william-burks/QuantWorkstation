@@ -12,19 +12,16 @@ Navigation and execution index for `qws_graph/epics`.
 1. **Epic 1 — Ingestion and Index** — `COMPLETE`
 2. **Epic 2 — MCP Read Integration** — `COMPLETE`
 3. **Epic 3 — Research Pipeline Integrity** — `COMPLETE`
-4. **Epic 4 — Workflow Utility** — `PLANNED` ← current
-5. **Epic 5 — Context Enrichment** — `PLANNED`
-6. **Epic 6 — Research Analytics** — `PLANNED`
-7. **Epic 7 — Developer Experience** — `PLANNED` (independent; can run alongside any epic)
+4. **Epic 4 — Workflow Utility** — `COMPLETE`
+5. **Epic 5 — Context Enrichment** — `COMPLETE`
+6. **Epic 6 — Research Analytics** — `COMPLETE`
+7. **Epic 7 — Workflow Readiness** — `PLANNED` ← current sprint
 
 ## Dependency Notes
-- Epic 4 unblocked now — no prerequisites beyond Epic 3 completion.
-- Epic 5 QWS-0503 (cross-instrument aggregator) requires Epic 4 QWS-0402 (OOS metrics)
-  and Epic 5 QWS-0501 (family_id population) to produce meaningful results.
-- Epic 6 QWS-0602/0603 (analytics scripts) have no graph schema dependencies — start parallel.
-- Epic 6 QWS-0601 (hypothesis journaling) has no dependencies — start after 0602/0603 or in parallel.
-- Epic 6 QWS-0604 (semantic deduplication) blocked on QWS-0601 CLOSED.
-- Epic 7 is fully independent and can be worked alongside any other epic.
+- Epics 1–6 COMPLETE.
+- Epic 7 QWS-0801 and QWS-0703 are independent — implement in parallel.
+- Epic 7 QWS-0804 blocked on QWS-0801 CLOSED (FormerChampion node required).
+- Backlog QWS-0803 blocked on QWS-0801 CLOSED (writes DEGRADED_TO edge).
 
 ---
 
@@ -124,46 +121,47 @@ Stories (execution order):
 
 ---
 
-## Epic 6 — Research Analytics [PLANNED]
-- Epic README: [`epic_6_research_analytics/README.md`](epic_6_research_analytics/README.md)
+## Epic 6 — Research Analytics [COMPLETE]
+- Epic README: [`epic_6_research_analytics[COMPLETE]/README.md`](epic_6_research_analytics%5BCOMPLETE%5D/README.md)
 - Objective: compute research insights from graph data; Python does the math, graph provides the index.
 
 Stories (recommended execution order: 0602 ∥ 0603 in parallel → 0601 → 0604):
-1. `QWS-0602` [`closed/story_2_parameter_stability.md`](epic_6_research_analytics/closed/story_2_parameter_stability.md) — `CLOSED`
-2. `QWS-0603` [`closed/story_3_portfolio_correlation.md`](epic_6_research_analytics/closed/story_3_portfolio_correlation.md) — `CLOSED`
-3. `QWS-0601` [`story_1_hypothesis_journaling.md`](epic_6_research_analytics/closed/story_1_hypothesis_journaling.md) — `CLOSED`
-4. `QWS-0604` [`closed/story_4_semantic_hypothesis_deduplication.md`](epic_6_research_analytics/closed/story_4_semantic_hypothesis_deduplication.md) — `CLOSED`
+1. `QWS-0602` [`closed/story_2_parameter_stability.md`](epic_6_research_analytics%5BCOMPLETE%5D/closed/story_2_parameter_stability.md) — `CLOSED`
+2. `QWS-0603` [`closed/story_3_portfolio_correlation.md`](epic_6_research_analytics%5BCOMPLETE%5D/closed/story_3_portfolio_correlation.md) — `CLOSED`
+3. `QWS-0601` [`story_1_hypothesis_journaling.md`](epic_6_research_analytics%5BCOMPLETE%5D/closed/story_1_hypothesis_journaling.md) — `CLOSED`
+4. `QWS-0604` [`closed/story_4_semantic_hypothesis_deduplication.md`](epic_6_research_analytics%5BCOMPLETE%5D/closed/story_4_semantic_hypothesis_deduplication.md) — `CLOSED`
 
 Dependency notes: QWS-0602 and QWS-0603 are independent — start parallel. QWS-0604 blocked on QWS-0601.
 
 ---
 
-## Epic 7 — Developer Experience [PLANNED]
-- Epic README: [`epic_7_developer_experience/README.md`](epic_7_developer_experience/README.md)
-- Objective: packaging and automation hygiene; independent of research epics.
+## Epic 7 — Workflow Readiness [PLANNED] ← current sprint
+- Epic README: `epic_7_workflow_readiness/README.md`
+- Objective: close gaps blocking real end-to-end research sessions
 
-Stories:
-1. `QWS-0701` [`story_1_pypi_packaging.md`](epic_7_developer_experience/story_1_pypi_packaging.md) — `ready`
-2. `QWS-0702` [`story_2_ci_graph_integrity.md`](epic_7_developer_experience/story_2_ci_graph_integrity.md) — `ready`
+Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
+1. `QWS-0801` `story_1_former_champion_lifecycle.md` — `READY`
+2. `QWS-0703` `story_2_openai_curation.md` — `READY`
+3. `QWS-0804` `story_3_correlation_gate_recheck.md` — `BLOCKED` _(blocked on QWS-0801 CLOSED)_
 
 ---
 
-## Epic 8 — Champion Lifecycle [PLANNED]
-- Epic README: [`epic_8_champion_lifecycle/README.md`](epic_8_champion_lifecycle/README.md)
-- Objective: three-stage champion lifecycle (active → FormerChampion → RetiredChampion), direct replacement link, automated decay detection.
+## Backlog [UNSCHEDULED]
+- Backlog README: `backlog/README.md`
+- Stories not yet assigned to a sprint epic. Revisit after Epic 7 complete.
 
-Stories (execution order):
-1. `QWS-0801` [`story_1_former_champion_lifecycle.md`](epic_8_champion_lifecycle/story_1_former_champion_lifecycle.md) — `ready`
-2. `QWS-0802` [`story_2_superseded_by_relationship.md`](epic_8_champion_lifecycle/story_2_superseded_by_relationship.md) — `ready`
-3. `QWS-0803` [`story_3_recursive_validation_loop.md`](epic_8_champion_lifecycle/story_3_recursive_validation_loop.md) — `blocked` _(blocked on QWS-0801 CLOSED)_
+Stories (no order):
+- `QWS-0701` `story_pypi_packaging.md` — `READY`
+- `QWS-0702` `story_ci_graph_integrity.md` — `READY`
+- `QWS-0802` `story_superseded_by_relationship.md` — `READY`
+- `QWS-0803` `story_recursive_validation_loop.md` — `BLOCKED` _(blocked on QWS-0801 CLOSED)_
 
 ---
 
 ## Current Focus
-- **Epic 5 COMPLETE** — all 5 stories CLOSED.
-- **Next options (all unblocked):**
-  - QWS-0601 (Hypothesis Journaling) — starts Epic 6; unlocks QWS-0604
-  - QWS-0802 (SUPERSEDED_BY) — lightest lift; no dependencies
-  - QWS-0801 (FormerChampion Lifecycle) — starts Epic 8
-  - QWS-0701 (PyPI Packaging) — independent; can run alongside any epic
+- **Epic 6 COMPLETE** — all 4 stories CLOSED.
+- **Current sprint: Epic 7 Workflow Readiness**
+  - QWS-0801 (FormerChampion Lifecycle) — READY, start now
+  - QWS-0703 (OpenAI Curation Switch) — READY, parallel with QWS-0801
+  - QWS-0804 (Correlation Gate Re-check) — BLOCKED on QWS-0801
 
