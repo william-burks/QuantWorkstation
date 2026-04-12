@@ -20,11 +20,14 @@ from .cypher import (
     CORRELATED_WITH_CHAMPION_QUERY,
     CORRELATED_WITH_STRATEGY_QUERY,
     CSV_INGEST_QUERY,
+    DEGRADE_CHAMPION_QUERY,
     DEMO_SEED_CYPHER,
     DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY,
+    GET_CHAMPION_BY_ID_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
+    GET_FORMER_CHAMPION_BY_ID_QUERY,
     GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY,
     GET_HYPOTHESIS_BY_ID_QUERY,
     GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,
@@ -36,12 +39,9 @@ from .cypher import (
     HYPOTHESIS_UPDATE_STATUS_QUERY,
     PATCH_FAMILY_ID_QUERY,
     PATCH_RESEARCH_TARGET_QUERY,
-    GET_CHAMPION_BY_ID_QUERY,
-    DEGRADE_CHAMPION_QUERY,
-    GET_FORMER_CHAMPION_BY_ID_QUERY,
-    RETIRE_FORMER_CHAMPION_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
     REGIME_MERGE_QUERY,
+    RETIRE_FORMER_CHAMPION_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
     SEMANTICALLY_RELATED_MERGE_QUERY,
@@ -689,7 +689,7 @@ class GraphStore:
             ValueError: When champion_id not found or oos_reason is empty.
             StoreInfraError: On Neo4j connectivity or execution failure.
         """
-        from datetime import UTC, datetime as _dt
+        from datetime import UTC, datetime as _dt  # noqa: I001
 
         if not oos_reason or not oos_reason.strip():
             raise ValueError("oos_reason must be non-empty")
@@ -759,7 +759,7 @@ class GraphStore:
             ValueError: When former_champion_id not found.
             StoreInfraError: On Neo4j connectivity or execution failure.
         """
-        from datetime import UTC, datetime as _dt
+        from datetime import UTC, datetime as _dt  # noqa: I001
 
         try:
             with self._driver.session(database=self._database) as session:
