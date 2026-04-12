@@ -28,6 +28,7 @@ Navigation and execution index for `qws_graph/epics`.
 - Epic 8 QWS-0803 blocker (QWS-0801 CLOSED) now satisfied.
 - Epic 12 entry blocked on QWS-0803 CLOSED.
 - Epic 10 (Macro Data) is independent of Epic 8.
+- Hotfix stories live in `qws_graph/epics/hotfix_stories/` — implement independently of epic sequencing via run-epic or lead-engineer.
 
 ---
 
@@ -207,6 +208,16 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 Stories (QWS-1101 first, QWS-1102 after):
 - `QWS-1101` `epic_11_production_tracking/story_1_mlflow_champion_registration.md` — `READY`
 - `QWS-1102` `epic_11_production_tracking/story_2_mlflow_oos_sync.md` — `READY`
+
+---
+
+---
+
+## Hotfix Stories
+
+Small, targeted fixes discovered during research sessions or UAT. Not part of any epic sprint. Implement immediately via run-epic or lead-engineer.
+
+- `QWS-HF-001` `hotfix_stories/QWS-HF-001_bundle_hypothesis_autolink.md` — `READY`
 
 ---
 

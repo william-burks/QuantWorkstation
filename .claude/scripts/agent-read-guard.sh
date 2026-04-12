@@ -74,6 +74,9 @@ if echo "$BASENAME" | grep -qE '\.md$'; then
   # Always track story_*.md (mid-run re-reads)
   if echo "$BASENAME" | grep -qE '^story_'; then
     : # fall through to tracking
+  # INDEX.md is a registry file legitimately read many times during refine-epic/close-epic — never cap it.
+  elif echo "$BASENAME" | grep -qE '^INDEX\.md$'; then
+    exit 0
   # Track qws_graph/ .md files (e.g. graph_v1_contract.md, data_dictionary content)
   elif echo "$FILE" | grep -qE 'qws_graph/'; then
     : # fall through to tracking
