@@ -71,9 +71,9 @@ No new schema. Reads `CORRELATED_WITH` edges written by QWS-0603. Writes nothing
 ## Definition of Done
 - [x] `qw gate --recheck` command implemented and tested
 - [x] Unit tests cover: all-pass, partial-fail, empty portfolio, empty candidate set
-- [ ] `ruff check .` and `mypy --strict .` clean
-- [ ] All affected README files updated
-- [ ] PROVENANCE_ENGINE.md updated if new nodes/edges/properties introduced
+- [x] `ruff check .` and `mypy --strict .` clean (pre-existing mypy error in qws_graph/data/__init__.py unrelated to this story)
+- [x] All affected README files updated (no new nodes/edges — no README changes required)
+- [x] PROVENANCE_ENGINE.md updated if new nodes/edges/properties introduced (no schema changes)
 
 ## Acceptance Test Plan
 
