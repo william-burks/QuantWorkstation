@@ -511,7 +511,6 @@ ORDER BY ch.best_evidence_score DESC
 #   hypothesis_audit            — demo_hyp_002 → alpha → champion lineage
 #   check_redundancy            — demo_hyp_001 title matches no active champions
 #   portfolio_correlation       — CORRELATED_WITH demo_champ_001 ↔ demo_champ_002 (r=0.72)
-#   former_champions            — demo_former_champ_001: demo_champ_001 degraded (DEGRADED status)
 #
 # All nodes carry is_demo=true for clean teardown via DEMO_TEARDOWN_CYPHER.
 # ---------------------------------------------------------------------------
@@ -705,19 +704,6 @@ MERGE (ch2:Champion {champion_id: 'demo_champ_002'})
       ch2.is_demo = true
 MERGE (s2)-[:PRODUCED_CHAMPION]->(ch2)
 MERGE (ch2)-[:PIVOTED_FROM]->(r3)
-
-// ── FormerChampion — demo_champ_001 degraded ────────────────────────────────
-
-// Demo FormerChampion 001 — alpha champion demoted after OOS failure
-MERGE (fc1:FormerChampion {former_champion_id: 'demo_former_champ_001'})
-  ON CREATE SET fc1.created_at = datetime()
-  SET fc1.strategy_id = 'demo-strategy-alpha',
-      fc1.champion_id = 'demo_champ_001',
-      fc1.degraded_at = datetime('2026-04-08T10:00:00'),
-      fc1.oos_reason = 'MaxDD breached -15% during CPI spike; OOS Sharpe dropped to 0.8',
-      fc1.metrics_sharpe_at_degradation = 1.2,
-      fc1.is_demo = true
-MERGE (ch1)-[:DEGRADED_TO {detected_at: datetime('2026-04-08T10:00:00')}]->(fc1)
 
 // ── Regime nodes + IN_REGIME edges ──────────────────────────────────────────
 

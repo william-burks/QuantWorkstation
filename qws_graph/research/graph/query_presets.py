@@ -29,7 +29,6 @@ from .query import (
     get_research_targets_v1,
     get_run_history_v1,
     get_runs_by_regime_v1,
-    get_former_champions_v1,
     get_similar_hypotheses_v1,
     get_staleness_report_v1,
     get_strategy_lineage_v1,
@@ -176,17 +175,6 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         description=(
             "Return all Strategies with status = ABORTED, including abort_reason. "
             "Ordered by aborted_at DESC. Used before suggesting new strategies."
-        ),
-        params=(),
-        requires_graph=True,
-    ),
-    "former_champions": PresetSpec(
-        name="former_champions",
-        description=(
-            "Return all FormerChampion nodes — the cemetery view. "
-            "Shows strategy_id, degraded_at, oos_reason, retirement_note (null if still in FormerChampion state), "
-            "and status (DEGRADED | RETIRED). "
-            "Use before proposing new strategies to check for dead-edge reskins."
         ),
         params=(),
         requires_graph=True,
@@ -424,10 +412,6 @@ def run_preset(
         assert service is not None
         return service.get_list_aborted_v1()
 
-    if name == "former_champions":
-        assert service is not None
-        return service.get_former_champions_v1()
-
     if name == "promotion_candidates":
         min_sharpe = float(params.get("min_sharpe", "2.0"))
         min_profit_factor = float(params.get("min_profit_factor", "1.3"))
@@ -555,7 +539,6 @@ _PRESET_VIEW_FUNCTIONS = {
     "runs_by_regime": get_runs_by_regime_v1,
     "regime_performance": get_regime_performance_v1,
     "similar_hypotheses": get_similar_hypotheses_v1,
-    "former_champions": get_former_champions_v1,
 }
 
 __all__ = [

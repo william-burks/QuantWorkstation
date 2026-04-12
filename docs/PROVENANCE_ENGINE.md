@@ -4,7 +4,8 @@
 > ```
 > CURRENT schema nodes: Strategy, Run, Config, Champion, RetiredChampion, RunStatsSummary,
 > BlobArtifact, ResearchTarget, Regime, Hypothesis (QWS-0601 CLOSED), HypothesisSource.
-> > The interface is qw CLI + MCP tools only. No FastAPI. No REST API.
+> Do NOT use FormerChampion in Cypher until its story is marked COMPLETE in BACKLOG_ALIGNMENT.md.
+> The interface is qw CLI + MCP tools only. No FastAPI. No REST API.
 > Before proposing schema changes, check this document for the authoritative current state.
 > ```
 
@@ -61,7 +62,6 @@ Current state maps onto a subset of this chain. Target additions are marked.
 | `ResearchTarget` | `ResearchTarget` | Singleton config node: promotion thresholds. Seeded via `qw seed --targets`; queried via `research_targets` preset. |
 | `Hypothesis` | `Hypothesis` | The Spark: an unproven theory about a market inefficiency. QWS-0601. |
 | `HypothesisSource` | `HypothesisSource` | Source of a Hypothesis (LLM model name or "user"). QWS-0601. |
-| `FormerChampion` | `FormerChampion` | Decay-watch state between Champion and RetiredChampion. Created by `qw degrade`. QWS-0801. |
 
 **Vocabulary note:** "Trial" is the conceptual term for what the code calls `Run`. The node label in
 Neo4j is `:Run`. When reading code or writing Cypher, use `Run`. When reasoning about the lifecycle,
@@ -91,6 +91,7 @@ provenance in the graph.
 
 | Node | Story | Role |
 |---|---|---|
+| `FormerChampion` | New story needed | Decay watch: alpha slipping but still monitored; sits between Champion and RetiredChampion |
 
 ### [NEW — QWS-0502] — Regime Context
 
@@ -120,14 +121,14 @@ provenance in the graph.
 | `CORRELATED_WITH` | Strategy ↔ Strategy | — | `coefficient: float`, `threshold: float`, `lookback: str`, `pair_key: str`, `computed_at: datetime`. QWS-0603. Symmetric. |
 | `CORRELATED_WITH` | Champion ↔ Champion | — | same properties. QWS-0603. Symmetric. |
 | `SEMANTICALLY_RELATED` | Hypothesis ↔ Hypothesis | — | `similarity: float` (cosine), `pair_key: str`, `computed_at: datetime`. QWS-0604. Symmetric. |
-| `DEGRADED_TO` | Champion | FormerChampion | `detected_at: datetime`. Created by `qw degrade`. QWS-0801. |
-| `RETIRED_TO` | FormerChampion | RetiredChampion | `retired_at: datetime`. Created by `qw retire`. QWS-0801. |
 
 ### [TARGET] — Not Yet Implemented
 
 | Relationship | Source | Target | Properties | Story |
 |---|---|---|---|---|
 | `HAS_TRIAL` | Strategy | Trial | Alias for `HAS_RUN` at the conceptual level | — |
+| `DEGRADED_TO` | Champion | FormerChampion | `detected_at: datetime` | New story |
+| `RETIRED_TO` | FormerChampion | RetiredChampion | Replaces direct Champion→RetiredChampion in target state | New story |
 | `SUPERSEDED_BY` | Champion | Champion | Replaced by better version of same idea | New story |
 
 **Name conflict note:** `PIVOTED_FROM` already exists in the current schema (Champion → Run, meaning "this
@@ -257,7 +258,7 @@ JSON output: append `--json` to any preset. Pipe to `jq` for filtering.
 | `list_aborted` | QWS-0406 | All Strategies where `status = ABORTED`, with `abort_reason` and `aborted_at`. LLM checks this before suggesting any new strategy. |
 | `promotion_candidates` | QWS-0406 | Runs meeting `standards.py` tier thresholds not yet promoted. Dual-hurdle gate: `total_trades >= 30` AND `active_window_frequency >= 0.06 trades/day`. Output includes **Tier** (Professional / Institutional), **Active-Window Frequency**, and **Regime Diversity Score** — so the LLM can distinguish "Regime Specialist" from "Robust Performer" before recommending promotion. |
 | `regime_performance` | QWS-0503 | Performance table grouped by `--regime` property. Includes **Regime Diversity Score** (count of distinct regimes meeting Sharpe threshold). Score = 1 → "Regime Specialist" (fragility flag). |
-| `former_champions` | QWS-0801 | The "Cemetery" view: FormerChampion nodes — strategy_id, degraded_at, oos_reason, retirement_note, status (DEGRADED \| RETIRED) |
+| `former_champions` | Epic 4/5 | The "Cemetery" view: strategies that failed OOS or were retired |
 | `hypothesis_audit` | QWS-0601 | Traces current state back to the original `curator_note` intent |
 
 ### [TARGET] Fragility Signal Distribution
