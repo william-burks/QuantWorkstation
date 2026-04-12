@@ -168,10 +168,23 @@ date -u +%Y%m%dT%H%M%S
 ```
 Save output as RUN_ID.
 
-### 4-audit-b — Clean stale traces
+### 4-audit-b — Clean stale traces + hook smoke test
 ```
 rm -f /tmp/agent-trace-lead-engineer-*.jsonl 2>/dev/null || true
 ```
+
+**Hook smoke test — verify guards fire for subagents before burning a full run:**
+1. Reset read tracker: `rm -f /tmp/agent-read-tracker/store.py 2>/dev/null || true`
+2. Spawn minimal lead-engineer agent:
+   ```
+   You must use the Read tool for each step. Do not use memory or prior knowledge.
+   Step 1: Read qws_graph/research/graph/store.py lines 1-5. Report the exact first line of the docstring.
+   Step 2: Read qws_graph/research/graph/store.py lines 1-5 again. Report the exact first line.
+   Step 3: Read qws_graph/research/graph/store.py lines 1-5 a third time. Report ALLOWED (got content) or BLOCKED (got error).
+   Return exactly 3 lines.
+   ```
+3. If Step 3 = **BLOCKED**: hooks working — proceed to 4-audit-c.
+4. If Step 3 = **ALLOWED**: hooks not firing for subagents. **STOP.** Check `.claude/settings.json` PreToolUse hooks section and verify scripts are executable: `ls -la .claude/scripts/agent-*.sh`. Fix before retrying.
 
 ### 4-audit-c — Branch + Spawn A (implement + verify)
 ```
@@ -190,7 +203,7 @@ Return max 5 lines: TESTING | BLOCKED | FAILED — one-line summary — any bloc
 Full detail lives in git commits. Do not return test output or diffs.
 ```
 
-### 4-audit-d — Process Spawn A result + move trace
+### 4-audit-d — Process Spawn A result + move trace + replay
 Record story outcome (TESTING / BLOCKED / FAILED).
 
 If BLOCKED with assumption: follow same assumption resolution as Step 4c-result. Re-spawn Spawn A.
@@ -200,6 +213,14 @@ Move the trace file to a story-keyed name:
 ```
 mv /tmp/agent-trace-lead-engineer-*.jsonl /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl
 ```
+
+**Trace replay — project guard impact before full qa-auditor run:**
+```
+source .venv/bin/activate && python .claude/scripts/trace-replay.py /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl --verbose
+```
+Report the summary line to user: `Replay: N read blocks, M bash-grep blocks, P search blocks = T total projected savings`
+This shows what guards would eliminate in the NEXT run without spawning another agent.
+If total projected savings = 0 and waste was high → guards still not firing; re-run smoke test before retrying.
 
 ### 4-audit-e — Spawn qa-auditor (verbose)
 1. Find trace:
