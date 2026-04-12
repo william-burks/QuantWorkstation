@@ -140,9 +140,36 @@ Dependency notes: QWS-0602 and QWS-0603 are independent — start parallel. QWS-
 - Objective: close gaps blocking real end-to-end research sessions
 
 Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
-1. `QWS-0801` `story_1_former_champion_lifecycle.md` — `READY`
+1. `QWS-0801` `story_1_former_champion_lifecycle.md` — `TESTING`
 2. `QWS-0703` `story_2_openai_curation.md` — `READY`
 3. `QWS-0804` `story_3_correlation_gate_recheck.md` — `BLOCKED` _(blocked on QWS-0801 CLOSED)_
+4. `QWS-0704` `story_4_pre_graph_ideation_layer.md` — `DRAFT`
+
+---
+
+## Epic 8 — Champion Lifecycle [PLANNED]
+- Epic README: `epic_8_champion_lifecycle/README.md`
+- Objective: extend Champion lifecycle to three-stage decay path; add direct supersession link; automate decay detection
+
+Stories (execution order — 0801 and 0802 parallel, 0803 after 0801):
+1. `QWS-0801` `story_1_former_champion_lifecycle.md` — `TESTING` _(also listed in Epic 7)_
+2. `QWS-0802` `story_2_superseded_by_relationship.md` — `READY`
+3. `QWS-0803` `story_3_recursive_validation_loop.md` — `BLOCKED` _(blocked on QWS-0801 CLOSED)_
+4. `QWS-0805` `story_4_champion_promotion_rationale.md` — `DRAFT`
+
+---
+
+## Epic 9 — Research Agent Loop [PLANNED]
+- Epic README: `epic_9_research_agent_loop/README.md`
+- Objective: close split-brain gap — unified research session with navigator + trial-engineer agents
+
+Entry criteria: Epic 7 COMPLETE (QWS-0801, QWS-0703, QWS-0704 all CLOSED on main)
+
+Stories (execution order — QWS-0901 independent; QWS-0902 → 0903 → 0904 serial):
+1. `QWS-0901` `story_1_research_ideas_layer.md` — `DRAFT`
+2. `QWS-0902` `story_2_research_navigator_agent.md` — `DRAFT` _(blocked on Epic 7 COMPLETE)_
+3. `QWS-0903` `story_3_trial_engineer_agent.md` — `DRAFT` _(blocked on QWS-0902 CLOSED)_
+4. `QWS-0904` `story_4_research_session_command_rewrite.md` — `DRAFT` _(blocked on QWS-0902 + QWS-0903 CLOSED)_
 
 ---
 
@@ -155,6 +182,8 @@ Stories (no order):
 - `QWS-0702` `story_ci_graph_integrity.md` — `READY`
 - `QWS-0802` `story_superseded_by_relationship.md` — `READY`
 - `QWS-0803` `story_recursive_validation_loop.md` — `BLOCKED` _(blocked on QWS-0801 CLOSED)_
+- `QWS-1001` `story_cot_collector.md` — `READY`
+- `QWS-1002` `story_fred_macro_collector.md` — `READY`
 
 ---
 

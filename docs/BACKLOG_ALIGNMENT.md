@@ -23,6 +23,7 @@
 | Epic 5 — Context Enrichment | **COMPLETE** | family_id, Regime tagging, cross-instrument aggregation |
 | Epic 6 — Research Analytics | **COMPLETE** | Hypothesis journaling, parameter stability, portfolio correlation, semantic dedup |
 | Epic 7 — Workflow Readiness | **PLANNED ← current** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
+| Epic 9 — Research Agent Loop | **PLANNED** | Navigator + trial-engineer agents; unified research session protocol |
 | Backlog | **UNSCHEDULED** | QWS-0701, 0702, 0802, 0803 — deferred until post-Epic 7 research sessions |
 
 ---
@@ -65,15 +66,36 @@
 | FormerChampion Lifecycle | QWS-0801 | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
 | OpenAI Curation Switch | QWS-0703 | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
 | Correlation Gate Re-check | QWS-0804 | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
+| Pre-Graph Ideation Layer | QWS-0704 | `research/ideas/` directory + file convention; Pre-Graph Ideation section in RESEARCH_WORKFLOW.md; no CLI or graph changes | — |
+
+### Epic 8 — Champion Lifecycle
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| FormerChampion Lifecycle | QWS-0801 | (same as Epic 7 above — listed in both epics) | QWS-0402 CLOSED |
+| SUPERSEDED_BY Relationship | QWS-0802 | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
+| Recursive Validation Loop | QWS-0803 | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | QWS-0801 CLOSED |
+| Champion Promotion Rationale | QWS-0805 | `promotion_rationale` property on Champion node; `--rationale` flag on `qw champion`; rationale in `recent_champions` output; demo seed updated | — |
+
+### Epic 9 — Research Agent Loop
+
+Entry criteria: Epic 7 COMPLETE (QWS-0801 FormerChampion, QWS-0703 OpenAI curation, QWS-0704 Ideation Layer all on main)
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| Research Ideas Layer | QWS-0901 (**DRAFT**) | `research/ideas/` directory + file convention; Pre-Graph Ideation section in RESEARCH_WORKFLOW.md; no CLI or graph changes | — |
+| Research Navigator Agent | QWS-0902 (**DRAFT**) | `research-navigator` agent; `agent-research-guard.sh`; mandatory graph queries before suggestion; BRANCHED_FROM non-optional on pivots | Epic 7 COMPLETE |
+| Trial Engineer Agent | QWS-0903 (**DRAFT**) | `trial-engineer` agent; `agent-trial-guard.sh`; reads base.py + standards.py before writing; `qw record --bundle` after every run; raw metrics only | QWS-0902 CLOSED |
+| Research Session Command Rewrite | QWS-0904 (**DRAFT**) | 6-phase `/research-session`: context load → graph state → ideas scan → session brief → direction + spawn → post-session report | QWS-0902 + QWS-0903 CLOSED |
 
 ### Backlog
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| SUPERSEDED_BY Relationship | QWS-0802 | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
-| Recursive Validation Loop | QWS-0803 | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | QWS-0801 CLOSED |
 | PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse | — |
 | CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push | — |
+| COT Collector | QWS-1001 | `cot` ArcticDB library; weekly CFTC positioning series per symbol; feeds Regime tagging | — |
+| FRED Macro Collector | QWS-1002 | `macro` ArcticDB library; daily yield curve, VIX, HY spread series; feeds macro regime context | — |
 
 ---
 
@@ -101,6 +123,7 @@ the linked story is marked COMPLETE above.
 |---|---|---|
 | `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
 | `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
+| `promotion_rationale` | Champion | QWS-0805 |
 | `embedding` | Hypothesis | QWS-0604 (**IMPLEMENTED**) |
 | `status = ARCHIVED` | Strategy | QWS-0406 amendment (ABORTED exists; ARCHIVED is new) |
 
