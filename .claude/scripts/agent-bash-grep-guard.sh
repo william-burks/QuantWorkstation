@@ -8,10 +8,19 @@
 # Does NOT block: ruff, git push, or lead-engineer-specific rules (those are in agent-guard.sh).
 # Exit 0 = allow, Exit 2 = block.
 
+# Only enforce inside a lead-engineer run.
+# Exception: mypy block applies globally (always catches misuse regardless of context).
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
 [ -z "$COMMAND" ] && exit 0
+
+# mypy guard is unconditional — applies in main session too.
+# All other guards (sed/awk, cp bypass, cat-n, grep/head/tail) are lead-engineer-only.
+_MYPY_ONLY=false
+if [ ! -f "/tmp/agent-current-command.txt" ]; then
+  _MYPY_ONLY=true
+fi
 
 TRACK_DIR="/tmp/agent-read-tracker"
 
@@ -22,6 +31,9 @@ if echo "$COMMAND" | grep -qE '(^|\s|&&\s*|;\s*)mypy\s'; then
   echo "Blocked: bare mypy — use 'make typecheck' for type checking (max 2 cycles)" >&2
   exit 2
 fi
+
+# Remaining checks only apply inside a lead-engineer run.
+[ "$_MYPY_ONLY" = true ] && exit 0
 
 # Fix 2: Block sed/awk/nl on .py files — unconditional (no tracker required).
 # Per pipe segment to avoid false positives from pipelines.
@@ -38,6 +50,14 @@ if echo "$COMMAND" | grep -qE '(^|\|)[^|]*(sed|awk|nl)\s'; then
       done
     fi
   done
+fi
+
+# Fix 9: Block python3/python inline script execution — prevents script-based file read bypass.
+# Blocks ALL inline forms: python3 -c "...", python3 - << 'PYEOF', python3 /tmp/script.py
+# Agent uses heredoc stdin (python3 - << 'PYEOF') to bypass python3 -c deny list.
+if echo "$COMMAND" | grep -qE '(^|\s|&&\s*|;\s*)python3?\s+(-[^a-zA-Z0-9_]|/tmp/\S+\.py)'; then
+  echo "Blocked: python3 inline script — use Read tool with offset+limit for targeted reads (all python3 script bypass forms blocked)" >&2
+  exit 2
 fi
 
 # Fix 8: Block cp of source files to /tmp/ — prevents read-guard bypass via snapshot renaming.

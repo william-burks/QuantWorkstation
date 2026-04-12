@@ -20,9 +20,11 @@ Do NOT use `python -m ruff` — use `ruff` directly after venv activation.
 
 ## Mypy Fix Protocol
 
-Run mypy once, read ALL errors, fix ALL in one pass, re-run once to confirm. Max 2 cycles.
-Never fix-one-rerun-fix-one — that wastes 3x the tool calls.
-Do NOT run mypy on individual files after a batch pass — if batch passed, you are done.
+Use `make typecheck` ONLY. Bare `mypy` is structurally blocked by agent-bash-grep-guard.sh —
+ALL bare mypy invocations (file, directory, or piped) are rejected. `mypy file.py`,
+`mypy --strict qws_graph/` and `mypy --strict dir/ | awk` will all be blocked.
+Run `make typecheck` once, read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
+Never fix-one-rerun-fix-one.
 
 ## Ruff / Lint Protocol
 
@@ -37,7 +39,7 @@ Large files — grep for function/section names first, read only that range. Do 
 | File | Lines | Key landmarks |
 |------|-------|---------------|
 | `qws_graph/research/graph/store.py` | ~1400 | grep for method names like `record_hypothesis`, `backfill_embeddings` |
-| `qws_graph/research/graph/cli.py` | ~1500 | grep for subcommand decorators like `@app.command` |
+| `qws_graph/research/graph/cli.py` | ~1550 | `argparse` CLI — NOT click/typer. `def cmd_*` handlers start ~L312. Parser registration via `subparsers.add_parser()` starts ~L1346. To add a new subcommand: grep `add_parser` for registration section, read L1340-L1400 range. |
 | `qws_graph/research/graph/cypher.py` | ~700 | `DEMO_SEED_CYPHER` starts ~line 465, `DEMO_TEARDOWN_CYPHER` follows |
 | `qws_graph/research/graph/query.py` | ~540 | Cypher constant strings at bottom (~line 500+) |
 | `qws_graph/docs/data_dictionary.yaml` | ~1060 | `Hypothesis:` section starts ~line 840 |
@@ -49,6 +51,14 @@ When adding new nodes/edges/properties, update BOTH:
 - `DEMO_TEARDOWN_CYPHER` — matching cleanup
 
 Do this during implementation (implement-story Step 4b), not verification.
+
+## Story File Location
+
+Story filenames do NOT contain the QWS-NNNN ID. Always use content search:
+```bash
+grep -rl 'QWS-0801' qws_graph/epics/
+```
+Do NOT glob for the ID — it won't match filenames. Do NOT use Glob `**/*0801*`.
 
 ## Codebase Discovery (codebase-memory-mcp)
 

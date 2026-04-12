@@ -52,7 +52,7 @@ If search_code returns no results (symbol doesn't exist yet), one targeted Grep 
 | File | Size | How to target |
 |------|------|--------------|
 | `store.py` | ~1400L | Grep method name first → read only that 50-line range |
-| `cli.py` | ~1500L | Grep `@app.command` decorator for subcommand → read only that range |
+| `cli.py` | ~1550L | `argparse` CLI — NOT click/typer. Grep `add_parser` for subcommand registration (~L1346+). Grep `def cmd_` for handler functions (~L312+). |
 | `cypher.py` | ~700L | Grep `DEMO_SEED_CYPHER` → offset ~465, read 200-line range |
 | `query.py` | ~540L | Grep constant name → offset ~500+, read that range |
 

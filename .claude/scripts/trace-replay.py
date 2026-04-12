@@ -76,6 +76,11 @@ def sim_bash(command: str) -> tuple[bool, str]:
                         name = os.path.basename(token)
                         return True, f"sed/awk/nl on {name} (unconditional — use Read+offset)"
 
+    # 2a. python3/python inline script — heredoc stdin or /tmp script bypass
+    # Catches: python3 - << 'PYEOF', python3 /tmp/script.py, python -
+    if re.search(r'python3?\s+(-[^a-zA-Z0-9_]|/tmp/\S+\.py)', command):
+        return True, "python3 inline script bypass (use Read/Edit tools directly)"
+
     # 2b. cp of source files to /tmp/ — unconditional block (snapshot bypass)
     if re.search(r'(^|\s|&&\s*|;\s*)cp\s', command):
         if re.search(r'\.(py|yaml|yml|md)\s.*/tmp/', command):
@@ -167,10 +172,11 @@ for i, (tool, target) in enumerate(calls, 1):
 
 # --- Breakdown by sub-category ---
 bash_grep   = [(i, t, r) for i, t, r in blocked_bash if "grep" in r or "head/tail" in r]
-bash_sed    = [(i, t, r) for i, t, r in blocked_bash if any(x in r for x in ("sed", "awk", "nl"))]
+bash_sed    = [(i, t, r) for i, t, r in blocked_bash if any(x in r for x in ("sed/awk", "awk", " nl "))]
 bash_catn   = [(i, t, r) for i, t, r in blocked_bash if "cat -n" in r]
 bash_mypy   = [(i, t, r) for i, t, r in blocked_bash if "mypy" in r]
 bash_cp     = [(i, t, r) for i, t, r in blocked_bash if "cp source" in r or "snapshot bypass" in r]
+bash_py3tmp = [(i, t, r) for i, t, r in blocked_bash if "python3 /tmp" in r or "script bypass" in r]
 
 # --- Summary ---
 total = len(calls)
@@ -187,7 +193,8 @@ print(f"  Bash grep on Read files:  {len(bash_grep):3d}  [agent-bash-grep-guard 
 print(f"  Bash sed/awk/nl (any):    {len(bash_sed):3d}  [agent-bash-grep-guard — unconditional]")
 print(f"  Bash cat -n (3rd+):       {len(bash_catn):3d}  [agent-bash-grep-guard — cat-n cap]")
 print(f"  Bash bare mypy (any):     {len(bash_mypy):3d}  [agent-bash-grep-guard — mypy block]")
-print(f"  Bash cp to /tmp/ (any):   {len(bash_cp):3d}  [agent-bash-grep-guard — snapshot bypass] (NEW)")
+print(f"  Bash cp to /tmp/ (any):   {len(bash_cp):3d}  [agent-bash-grep-guard — snapshot bypass]")
+print(f"  Bash python3 /tmp (any):  {len(bash_py3tmp):3d}  [agent-bash-grep-guard — script bypass] (NEW)")
 print(f"  search_code over-cap:     {len(blocked_searches):3d}  [agent-discovery-guard]")
 print(f"  Total would-be blocked:   {total_blocked:3d}")
 print()
