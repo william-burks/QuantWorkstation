@@ -4,13 +4,13 @@
 QWS-0902
 
 ## Status
-READY
+CLOSED
 
 ## Type
 research
 
 ## Blocked On
-QWS-0901
+~~QWS-0901~~
 
 ## Summary
 Before each new strategy idea, use `qw query --name recent_champions` and
@@ -43,13 +43,13 @@ redundancy tools surfaced useful context or were ignored.
 - Fixing redundancy tool gaps found — log them
 
 ## Acceptance Criteria
-- [ ] `recent_champions` and `list_aborted` queries run before each new idea
-- [ ] One parameter sweep completed and ingested via `qw record --bundle`
-- [ ] `docs/research_sessions/session_0902.md` written with observation log
-- [ ] Log documents whether redundancy check was useful, neutral, or missed something
+- [x] `recent_champions` and `list_aborted` queries run before each new idea
+- [x] One parameter sweep completed and ingested via `qw record --bundle`
+- [x] `docs/research_sessions/session_0902.md` written with observation log
+- [x] Log documents whether redundancy check was useful, neutral, or missed something
 
 ## Definition of Done
-- [ ] Sweep results in graph (visible via `qw query --name recent_champions` or `promotion_candidates`)
-- [ ] session_0902.md committed to repo
-- [ ] Redundancy check quality assessed and documented
-- [ ] Story marked CLOSED
+- [x] Sweep results in graph (visible via `qw query --name recent_champions` or `promotion_candidates`)
+- [x] session_0902.md committed to repo
+- [x] Redundancy check quality assessed and documented
+- [x] Story marked CLOSED

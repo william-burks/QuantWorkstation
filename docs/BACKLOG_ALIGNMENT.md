@@ -84,8 +84,8 @@
 | Story | ID | Deliverable | Blocked On |
 |---|---|---|---|
 | First Research Session | QWS-0901 (**CLOSED**) | `docs/research_sessions/session_0901.md` — observation log from 3 full-stack trials | — |
-| Strategy Screening Pass | QWS-0902 (**READY**) | `docs/research_sessions/session_0902.md` — sweep results, redundancy check assessment | ~~QWS-0901~~ |
-| System Gap Audit | QWS-0903 (**BLOCKED**) | `docs/epic_9_gap_audit.md` — tooling gaps, missing data, workflow friction, AI failures, backlog candidates | QWS-0901, QWS-0902 |
+| Strategy Screening Pass | QWS-0902 (**CLOSED**) | `docs/research_sessions/session_0902.md` — sweep results, redundancy check assessment | ~~QWS-0901~~ |
+| System Gap Audit | QWS-0903 (**READY**) | `docs/epic_9_gap_audit.md` — tooling gaps, missing data, workflow friction, AI failures, backlog candidates | ~~QWS-0901~~, ~~QWS-0902~~ |
 
 ### Epic 12 — ML Research Layer
 
