@@ -4,14 +4,14 @@
 QWS-0805
 
 ## Status
-DRAFT
+READY
 
 ## Blocked On
 None
 
 ## Summary
 Add a `promotion_rationale` property to the Champion node to capture why a strategy was
-promoted. Expose it via `--rationale` flag on `qw champion`, include it in the
+promoted. Expose it via `--rationale` flag on `qw record`, include it in the
 `recent_champions` query preset output, and seed realistic values in the demo seed.
 
 ## Problem
@@ -25,10 +25,10 @@ rationale, the promotion history is metrics-only — no decision context survive
 
 ```zsh
 # Manual promotion with rationale
-qw champion --strategy btc-1h-trend-v3 --rationale "Only strategy to pass corr gate against CL; Sharpe 3.1 in high-vol regime"
+qw record --bundle results.csv --rationale "Only strategy to pass corr gate against CL; Sharpe 3.1 in high-vol regime"
 
 # Auto-promotion gate (rationale optional — defaults to empty string)
-qw champion --strategy es-1h-mean-rev --auto
+qw record --bundle results.csv  # auto-promotes when evidence_score > current_champion.evidence_score
 
 # Query output now includes rationale
 qw query --name recent_champions
@@ -48,14 +48,14 @@ No new nodes, edges, or relationships.
 ## In Scope
 - `docs/PROVENANCE_ENGINE.md` — add `promotion_rationale` to Champion node property table
 - `qws_graph/docs/data_dictionary.yaml` — add `promotion_rationale` field to Champion
-- `research/graph/cli.py` — add `--rationale` flag to `qw champion` command; required for
-  manual promotion paths, optional (defaults to `""`) for auto-gate path
-- `research/graph/store.py` (or equivalent champion write path) — persist `promotion_rationale`
+- `research/graph/cli.py` — add `--rationale` flag to `qw record` command; passed through
+  to champion MERGE on both auto and manual promotion paths; defaults to `""` when omitted
+- `research/graph/store.py` (champion write path) — persist `promotion_rationale`
   on Champion MERGE block
-- `qws_graph/cypher/presets/recent_champions.cypher` — include `c.promotion_rationale` in
-  RETURN clause
-- `qws_graph/seed/demo_seed.cypher` — add realistic `promotion_rationale` strings to all
-  Champion MERGE blocks
+- `research/graph/query.py` — add `promotion_rationale` field to `ChampionDetailsV1` pydantic
+  model; add `c.promotion_rationale` to `GET_RECENT_CHAMPIONS_V1_CYPHER` RETURN clause
+- `research/graph/cypher.py` — add realistic `promotion_rationale` strings to all Champion
+  MERGE blocks in demo seed (invoked via `store.seed_demo_graph()`)
 - `docs/BACKLOG_ALIGNMENT.md` — add `promotion_rationale` to Champion row in Not Yet
   Implemented Properties table until this story is CLOSED
 
@@ -70,27 +70,31 @@ No new nodes, edges, or relationships.
 - `qws_graph/docs/data_dictionary.yaml`
 - `research/graph/cli.py`
 - `research/graph/store.py` (champion write path)
-- `qws_graph/cypher/presets/recent_champions.cypher`
-- `qws_graph/seed/demo_seed.cypher`
+- `research/graph/query.py` — new; `ChampionDetailsV1` + `GET_RECENT_CHAMPIONS_V1_CYPHER`
+- `research/graph/cypher.py` — demo seed Cypher; invoked via `store.seed_demo_graph()`
 - `docs/BACKLOG_ALIGNMENT.md`
 
 ## Acceptance Criteria
 - [ ] `promotion_rationale` documented in `docs/PROVENANCE_ENGINE.md` Champion node property
   table, marked nullable
-- [ ] `qw champion --strategy <id> --rationale "<text>"` stores rationale on the Champion node
-- [ ] `qw champion` without `--rationale` on a manual promotion path raises a validation error
-  prompting for rationale; auto-gate path accepts empty string silently
+- [ ] `qw record --bundle results.csv --rationale "<text>"` stores rationale on the Champion node
+- [ ] When `--rationale` is omitted on any `qw record` call that triggers champion promotion,
+  the champion is created with `promotion_rationale = ""` (not an error — nullable)
 - [ ] `qw query --name recent_champions` output includes `promotion_rationale` field
-- [ ] Demo seed Cypher includes realistic `promotion_rationale` strings on all Champion MERGE
-  blocks
+- [ ] Demo seed Cypher (in `research/graph/cypher.py`) includes realistic `promotion_rationale`
+  strings on all Champion MERGE blocks
 - [ ] Existing Champion nodes without `promotion_rationale` are unaffected (field nullable;
   no migration required)
 
 ## Definition of Done
 - [ ] `promotion_rationale` added to PROVENANCE_ENGINE.md Champion properties table
 - [ ] `data_dictionary.yaml` updated
-- [ ] `--rationale` flag implemented on `qw champion`; required for manual, optional for auto
-- [ ] `recent_champions` preset returns `promotion_rationale` in output
+- [ ] `--rationale` flag implemented on `qw record`; passed through on both auto and manual
+  promotion paths; defaults to `""` when omitted
+- [ ] `ChampionDetailsV1` pydantic model gains `promotion_rationale` field
+- [ ] `GET_RECENT_CHAMPIONS_V1_CYPHER` returns `c.promotion_rationale`
 - [ ] Demo seed has realistic rationale strings on all Champion nodes
 - [ ] All tests pass (`ruff check .` and `mypy --strict .` clean)
+- [ ] All affected README files updated
+- [ ] PROVENANCE_ENGINE.md updated with `promotion_rationale` property on Champion node
 - [ ] Story marked CLOSED

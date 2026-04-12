@@ -17,6 +17,10 @@ Navigation and execution index for `qws_graph/epics`.
 6. **Epic 6 — Research Analytics** — `COMPLETE`
 7. **Epic 7 — Workflow Readiness** — `COMPLETE`
 8. **Epic 8 — Champion Lifecycle Hardening** — `PLANNED`
+9. **Epic 9 — Strategy Development** — `PLANNED`
+10. **Epic 10 — Macro Data** — `PLANNED`
+11. **Epic 11 — Production Tracking** — `PLANNED`
+12. **Epic 12 — ML Research Layer** — `PLANNED`
 
 ## Dependency Notes
 - Epics 1–7 COMPLETE.
@@ -153,8 +157,9 @@ Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
 - Objective: SUPERSEDED_BY direct lineage edge at promotion time; automated decay detection via scheduled validation loop
 
 Stories (QWS-0802 and QWS-0803 independent — implement in parallel):
-1. `QWS-0802` `backlog/story_superseded_by_relationship.md` — `READY`
-2. `QWS-0803` `backlog/story_recursive_validation_loop.md` — `READY`
+1. `QWS-0802` `epic_8_champion_lifecycle_hardening/story_2_superseded_by_relationship.md` — `READY`
+2. `QWS-0803` `epic_8_champion_lifecycle_hardening/story_1_recursive_validation_loop.md` — `READY`
+3. `QWS-0805` `epic_8_champion_lifecycle_hardening/story_3_champion_promotion_rationale.md` — `READY`
 
 ---
 
@@ -171,14 +176,49 @@ Note: this epic has no code deliverables. Done criteria = gap audit written, bac
 
 ---
 
+---
+
+## Epic 10 — Macro Data [PLANNED]
+- Epic README: `epic_10_macro_data/README.md`
+- Objective: wire macro and alternative data sources as inputs for regime signal generation
+
+Stories (QWS-1100 first; QWS-1001–1009 parallel; QWS-1011 after QWS-1001):
+- `QWS-1001` `epic_10_macro_data/story_cot_collector.md` — `READY`
+- `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `READY`
+- `QWS-1003` `epic_10_macro_data/story_eia_crude_collector.md` — `READY`
+- `QWS-1004` `epic_10_macro_data/story_baker_hughes_rig_count.md` — `READY`
+- `QWS-1005` `epic_10_macro_data/story_noaa_degree_days.md` — `READY`
+- `QWS-1006` `epic_10_macro_data/story_usda_crop_progress.md` — `READY`
+- `QWS-1007` `epic_10_macro_data/story_google_trends.md` — `READY`
+- `QWS-1008` `epic_10_macro_data/story_bdti_tanker_index.md` — `READY`
+- `QWS-1009` `epic_10_macro_data/story_economic_calendar_collector.md` — `READY`
+- `QWS-1010` `epic_10_macro_data/story_data_quality_validation.md` — `READY`
+- `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `READY` _(blocked on QWS-1001)_
+- `QWS-1100` `epic_10_macro_data/story_prefect_data_collection_infra.md` — `READY`
+
+---
+
+## Epic 11 — Production Tracking [PLANNED]
+- Epic README: `epic_11_production_tracking/README.md`
+- Objective: track Champion performance in production via MLflow; split production results from research results
+
+Stories (QWS-1101 first, QWS-1102 after):
+- `QWS-1101` `epic_11_production_tracking/story_1_mlflow_champion_registration.md` — `READY`
+- `QWS-1102` `epic_11_production_tracking/story_2_mlflow_oos_sync.md` — `READY`
+
+---
+
 ## Backlog [UNSCHEDULED]
 - Backlog README: `backlog/README.md`
 - Stories not yet assigned to a sprint epic. Revisit after Epic 7 complete.
 
 Stories (no order):
-- `QWS-0701` `story_pypi_packaging.md` — `READY`
-- `QWS-0702` `story_ci_graph_integrity.md` — `READY`
-- `QWS-1011` `backlog/story_ndvi_crop_health_collector.md` — `READY` _(blocked on QWS-1001)_
+- `QWS-0701` `backlog/story_pypi_packaging.md` — `READY`
+- `QWS-0702` `backlog/story_ci_graph_integrity.md` — `READY`
+- `QWS-1301` `backlog/story_research_ideas_layer.md` — `DRAFT`
+- `QWS-1302` `backlog/story_research_navigator_agent.md` — `DRAFT`
+- `QWS-1303` `backlog/story_trial_engineer_agent.md` — `DRAFT`
+- `QWS-1304` `backlog/story_research_session_command_rewrite.md` — `DRAFT`
 
 ---
 
@@ -209,5 +249,5 @@ promotion).
 
 ## Current Focus
 - **Epic 7 COMPLETE** — all 3 stories CLOSED.
-- **Next:** Epic 8 (QWS-0802 SUPERSEDED_BY, QWS-0803 Recursive Validation Loop) → Epic 9 (Strategy Development — usage + gap audit) → Epic 10 (Macro Data) → Epic 12.
+- **Next:** Epic 8 (QWS-0802 SUPERSEDED_BY, QWS-0803 Recursive Validation Loop) → Epic 9 (Strategy Development — usage + gap audit) → Epic 10 (Macro Data) → Epic 11 (Production Tracking) → Epic 12.
 

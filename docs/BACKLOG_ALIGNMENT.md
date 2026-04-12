@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 8 Champion Lifecycle Hardening — Epic 7 COMPLETE. Next: QWS-0802 (SUPERSEDED_BY, READY) and QWS-0803 (Recursive Validation Loop, READY) → Epic 9 (Strategy Development, usage + gap audit) → Epic 10 → Epic 12 entry.
+> Current sprint: Epic 8 Champion Lifecycle Hardening — Epic 7 COMPLETE. Next: QWS-0802 (SUPERSEDED_BY, READY) and QWS-0803 (Recursive Validation Loop, READY) → Epic 9 (Strategy Development, usage + gap audit) → Epic 10 (Macro Data) → Epic 11 (Production Tracking) → Epic 12 entry.
 > ```
 
 ---
@@ -25,6 +25,8 @@
 | Epic 7 — Workflow Readiness | **COMPLETE** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
 | Epic 8 — Champion Lifecycle Hardening | **PLANNED** | SUPERSEDED_BY direct lineage edge, recursive decay detection (monitor_champion) |
 | Epic 9 — Strategy Development | **PLANNED** | Research sessions, workflow observation, system gap audit — no code deliverables |
+| Epic 10 — Macro Data | **PLANNED** | Macro + alternative data ingestion to ArcticDB (COT, FRED, EIA, Baker Hughes, NOAA, USDA, Google Trends, BDTI, economic calendar, NDVI, Prefect infra) |
+| Epic 11 — Production Tracking | **PLANNED** | MLflow Champion registration + OOS sync; split production results from research results |
 | Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
 | Backlog | **UNSCHEDULED** | QWS-0701, 0702 — deferred until post-Epic 8 research sessions |
 
@@ -75,6 +77,7 @@
 |---|---|---|---|
 | SUPERSEDED_BY Relationship | QWS-0802 (**READY**) | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
 | Recursive Validation Loop | QWS-0803 (**READY**) | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | ~~QWS-0801 CLOSED~~ (satisfied) |
+| Champion Promotion Rationale | QWS-0805 (**READY**) | `promotion_rationale` property on Champion node; `--rationale` flag on `qw record`; included in `recent_champions` preset output | — |
 
 ### Epic 9 — Strategy Development
 
@@ -96,12 +99,40 @@
 | Results Interpreter Agent | QWS-1206 (**PLANNED**) | `/interpret-ml-results` skill; `verdict.md` per experiment; PROMOTION_CANDIDATE / OVERFIT / FAIL verdicts | QWS-1204 |
 | Hypothesis Miner Agent | QWS-1207 (**PLANNED**) | `/mine-ml-hypotheses` skill; proposal files in `research/ideas/` with graph-node citations | QWS-1206 |
 
+### Epic 10 — Macro Data
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| COT Collector | QWS-1001 (**READY**) | CFTC COT positioning data in ArcticDB | — |
+| FRED Macro Collector | QWS-1002 (**READY**) | FRED macro indicators in ArcticDB | — |
+| EIA Crude Collector | QWS-1003 (**READY**) | EIA crude inventory + production data in ArcticDB | — |
+| Baker Hughes Rig Count | QWS-1004 (**READY**) | Weekly rig count data in ArcticDB | — |
+| NOAA Degree Days | QWS-1005 (**READY**) | Heating/cooling degree days in ArcticDB | — |
+| USDA Crop Progress | QWS-1006 (**READY**) | USDA weekly crop progress data in ArcticDB | — |
+| Google Trends | QWS-1007 (**READY**) | Google Trends signals in ArcticDB | — |
+| BDTI Tanker Index | QWS-1008 (**READY**) | Baltic Dirty Tanker Index data in ArcticDB | — |
+| Economic Calendar Collector | QWS-1009 (**READY**) | Economic event calendar data in ArcticDB | — |
+| Data Quality Validation | QWS-1010 (**READY**) | Validation gate — alerts on missing bars, stale feeds, schema drift | — |
+| NDVI Crop Health Collector | QWS-1011 (**READY**) | NDVI crop health index in ArcticDB | QWS-1001 |
+| Prefect Data Collection Infra | QWS-1100 (**READY**) | Scheduled collection via Prefect; infrastructure prerequisite for all collectors | — |
+
+### Epic 11 — Production Tracking
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| MLflow Champion Registration | QWS-1101 (**READY**) | `qw mlflow register`; IS params/metrics/artifacts logged to local MLflow at promotion time; `mlflow_run_id` written to Champion node | ~~QWS-0801 CLOSED~~ |
+| MLflow OOS Sync | QWS-1102 (**READY**) | `qw mlflow sync-oos`; live OOS metrics synced back to existing MLflow run | QWS-1101 |
+
 ### Backlog
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse | — |
 | CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push | — |
+| Research Ideas Layer | QWS-1301 (**DRAFT**) | Structured idea intake layer for research session seeding | DRAFT, deferred until Epic 9 gap audit |
+| Research Navigator Agent | QWS-1302 (**DRAFT**) | Agent-guided research session navigation | DRAFT, deferred until Epic 9 gap audit |
+| Trial Engineer Agent | QWS-1303 (**DRAFT**) | Agent that drafts and runs trial scripts | DRAFT, deferred until Epic 9 gap audit |
+| Research Session Command Rewrite | QWS-1304 (**DRAFT**) | Rewrite `/research-session` command based on observed friction | DRAFT, deferred until Epic 9 gap audit |
 
 ---
 
@@ -124,6 +155,7 @@ _(None pending — FormerChampion implemented in QWS-0801)_
 | Property | Node | Story |
 |---|---|---|
 | `embedding` | Hypothesis | QWS-0604 (**IMPLEMENTED**) |
+| `promotion_rationale` | Champion | QWS-0805 |
 | `status = ARCHIVED` | Strategy | QWS-0406 amendment (ABORTED exists; ARCHIVED is new) |
 | `logic_type = "ml_model"` or `"ml_regime"` | Strategy | QWS-1202 |
 | `model_class` | Strategy | QWS-1202 |

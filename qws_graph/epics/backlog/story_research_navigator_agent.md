@@ -1,7 +1,7 @@
 # Story 2 — Research Navigator Agent
 
 ## ID
-QWS-0902
+QWS-1302
 
 ## Status
 DRAFT

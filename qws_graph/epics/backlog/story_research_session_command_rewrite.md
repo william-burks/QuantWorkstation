@@ -1,7 +1,7 @@
 # Story 4 — Research Session Command Rewrite
 
 ## ID
-QWS-0904
+QWS-1304
 
 ## Status
 DRAFT

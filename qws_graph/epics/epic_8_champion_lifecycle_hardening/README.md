@@ -24,10 +24,12 @@ QWS-0803 must CLOSE before any ML Champion can be promoted.
 |---|---|---|---|
 | QWS-0802 | SUPERSEDED_BY Relationship | READY | — |
 | QWS-0803 | Recursive Validation Loop | READY | ~~QWS-0801 CLOSED~~ (satisfied) |
+| QWS-0805 | Champion Promotion Rationale | READY | — |
 
 Story files:
-- `backlog/story_superseded_by_relationship.md`
-- `backlog/story_recursive_validation_loop.md`
+- `story_2_superseded_by_relationship.md`
+- `story_1_recursive_validation_loop.md`
+- `story_3_champion_promotion_rationale.md`
 
 ## Dependency Notes
 - QWS-0802 is independent — implement first or in parallel with QWS-0803.

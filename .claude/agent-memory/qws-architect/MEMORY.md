@@ -4,3 +4,4 @@
 - [Research agent architecture](project_research_agent_design.md) — Two-agent split: navigator (opus) + trial-engineer (sonnet), Epic 8
 - [MLflow integration architecture](project_mlflow_integration.md) — Epic 10; post-promotion only; explicit register command; filesystem mode
 - [Prefect scheduling architecture](project_prefect_architecture.md) — Data collection only; APScheduler kept for risk; data/flows/ dir; QWS-1100
+- [Signal lag vs holding mismatch](feedback_signal_lag_holding_mismatch.md) — Regime signals with lag >> hold need cheaper-signal-insufficient evidence first

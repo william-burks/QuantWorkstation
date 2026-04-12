@@ -1,7 +1,7 @@
 # Story 1 — Research Ideas Layer
 
 ## ID
-QWS-0901
+QWS-1301
 
 ## Status
 DRAFT

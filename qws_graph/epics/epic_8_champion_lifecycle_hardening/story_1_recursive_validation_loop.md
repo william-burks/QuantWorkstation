@@ -4,10 +4,10 @@
 QWS-0803
 
 ## Status
-BLOCKED
+READY
 
 ## Blocked On
-QWS-0801 (FormerChampion node and DEGRADED_TO edge must be CLOSED — monitor writes these schema elements)
+~~QWS-0801 CLOSED~~ (satisfied)
 
 ## Summary
 Add a `monitor_champion` scheduled skill that re-runs each active Champion's trial with
