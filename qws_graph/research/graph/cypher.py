@@ -867,9 +867,9 @@ MERGE (fc1:FormerChampion {former_champion_id: 'demo_former_champ_001'})
       fc1.metrics_sharpe_at_degradation = 1.4,
       fc1.updated_at      = datetime()
 
-// DEGRADED_TO edge from RetiredChampion → FormerChampion
-MERGE (rc_demo:RetiredChampion {champion_id: 'demo_retired_champ_001'})
-MERGE (rc_demo)-[dg1:DEGRADED_TO]->(fc1)
+// DEGRADED_TO edge from Champion → FormerChampion
+MERGE (ch_demo:Champion {champion_id: 'demo_champ_001'})
+MERGE (ch_demo)-[dg1:DEGRADED_TO]->(fc1)
   SET dg1.detected_at = datetime('2026-03-25T10:00:00'),
       dg1.is_demo     = true
 
