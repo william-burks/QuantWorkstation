@@ -4,7 +4,7 @@
 QWS-0805
 
 ## Status
-READY
+TESTING
 
 ## Blocked On
 None
