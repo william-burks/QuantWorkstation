@@ -1149,7 +1149,14 @@ def get_similar_hypotheses_v1(
 
 def get_former_champions_v1(session: QuerySession) -> list[dict[str, Any]]:
     """Return all FormerChampion nodes with cemetery view fields."""
-    return _all_results(session, GET_FORMER_CHAMPIONS_V1_CYPHER)
+    rows = _all_results(session, GET_FORMER_CHAMPIONS_V1_CYPHER)
+    return [
+        {
+            k: _normalize_temporal(v) if k == "degraded_at" else v
+            for k, v in row.items()
+        }
+        for row in rows
+    ]
 
 
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
