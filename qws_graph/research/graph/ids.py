@@ -115,6 +115,14 @@ def family_id(logic_type: str, direction: str, src_hash: str) -> str:
     return hash12(normalize_text(logic_type), normalize_text(direction), src_hash)
 
 
+def former_champion_id(champion_id_value: str, degraded_at_iso: str) -> str:
+    """Generate deterministic former_champion_id from champion and degradation timestamp.
+
+    Pattern: hash12(champion_id, degraded_at_iso)
+    """
+    return hash12(champion_id_value, degraded_at_iso)
+
+
 def run_stats_summary_id(strategy_id_value: str, artifact_path: str, artifact_mtime_iso: str) -> str:
     """Deterministic summary_id for a RunStatsSummary node.
 

@@ -749,6 +749,46 @@ Backfill for pre-existing hypotheses: `qw backfill --embeddings`
 Embedding failures (ImportError, model load error) are non-fatal for `qw record --hypothesis`:
 the hypothesis node is created successfully and a WARNING is printed to stderr.
 
+### FormerChampion Lifecycle Contract (QWS-0801)
+
+`qw degrade --champion <champion_id> --reason "<reason>" [--sharpe <float>]` creates a
+`FormerChampion` node and a `DEGRADED_TO` edge from the Champion. The Champion node is
+NOT deleted. `--reason` is mandatory and must be non-empty.
+
+Node properties written:
+```
+FormerChampion.former_champion_id = hash12(champion_id, degraded_at_iso)
+FormerChampion.strategy_id        = Champion.strategy_id
+FormerChampion.champion_id        = <champion_id>
+FormerChampion.degraded_at        = datetime()
+FormerChampion.oos_reason         = <reason>
+FormerChampion.metrics_sharpe_at_degradation = <sharpe> (null if omitted)
+```
+
+Edge written:
+```
+(Champion)-[:DEGRADED_TO {detected_at: datetime()}]->(FormerChampion)
+```
+
+`qw retire --former-champion <former_champion_id> [--note "<note>"]` creates a
+`RetiredChampion` node and a `RETIRED_TO` edge. Copies `oos_reason` from FormerChampion
+to RetiredChampion. `--note` is optional.
+
+```
+RetiredChampion.champion_id     = hash12(former_champion_id, retired_at_iso)
+RetiredChampion.strategy_id     = FormerChampion.strategy_id
+RetiredChampion.oos_reason      = FormerChampion.oos_reason
+RetiredChampion.retirement_note = <note> (null if omitted)
+```
+
+```
+(FormerChampion)-[:RETIRED_TO {retired_at: datetime()}]->(RetiredChampion)
+```
+
+`qw query --name former_champions` returns the cemetery view: all FormerChampion nodes
+with `strategy_id`, `instrument`, `degraded_at`, `oos_reason`, `retirement_note` (null
+if still DEGRADED), and `status` (`DEGRADED` | `RETIRED`).
+
 ### Abort Strategy Contract
 
 `qw abort --strategy <strategy_id> --reason "<reason>"` sets three graph-only properties

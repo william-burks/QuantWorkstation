@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 from .query import (
     get_cross_artifact_correlation_v1,
     get_downstream_champions_v1,
+    get_former_champions_v1,
     get_fragility_report_v1,
     get_instrument_concentration_v1,
     get_list_aborted_v1,
@@ -264,6 +265,17 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         ),
         requires_graph=True,
     ),
+    "former_champions": PresetSpec(
+        name="former_champions",
+        description=(
+            "Cemetery view: all FormerChampion nodes with cause-of-death details. "
+            "Columns: former_champion_id, strategy_id, instrument, degraded_at, "
+            "oos_reason, retirement_note (null if still DEGRADED), status (DEGRADED | RETIRED). "
+            "Use before proposing a strategy to check for dead-edge reskins."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
     "list_hypotheses": PresetSpec(
         name="list_hypotheses",
         description=(
@@ -456,6 +468,10 @@ def run_preset(
         regime_strategy_id: str | None = params.get("strategy_id") or None
         return service.get_regime_performance_v1(strategy_id=regime_strategy_id)
 
+    if name == "former_champions":
+        assert service is not None
+        return service.get_former_champions_v1()
+
     if name == "list_hypotheses":
         assert service is not None
         return service.get_list_hypotheses_v1()
@@ -539,6 +555,7 @@ _PRESET_VIEW_FUNCTIONS = {
     "runs_by_regime": get_runs_by_regime_v1,
     "regime_performance": get_regime_performance_v1,
     "similar_hypotheses": get_similar_hypotheses_v1,
+    "former_champions": get_former_champions_v1,
 }
 
 __all__ = [
