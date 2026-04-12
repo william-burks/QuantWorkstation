@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from unittest.mock import MagicMock, patch
 
-from qws_graph.research.graph.cli import cmd_degrade, cmd_retire
+from research.graph.cli import cmd_degrade, cmd_retire
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -61,8 +61,8 @@ class TestCmdDegrade:
     def test_valid_degrade_exits_zero(self) -> None:
         args = _degrade_args()
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_connector_cls,
-            patch("qws_graph.research.graph.store.GraphStore.from_env") as mock_from_env,
+            patch("research.graph.cli.NeoConnector") as mock_connector_cls,
+            patch("research.graph.store.GraphStore.from_env") as mock_from_env,
         ):
             mock_connector = MagicMock()
             mock_connector.is_available.return_value = True
@@ -81,7 +81,7 @@ class TestCmdDegrade:
 
     def test_neo4j_unavailable_exits_nonzero(self) -> None:
         args = _degrade_args()
-        with patch("qws_graph.research.graph.cli.NeoConnector") as mock_connector_cls:
+        with patch("research.graph.cli.NeoConnector") as mock_connector_cls:
             mock_connector = MagicMock()
             mock_connector.is_available.return_value = False
             mock_connector_cls.return_value = mock_connector
@@ -91,8 +91,8 @@ class TestCmdDegrade:
     def test_non_existent_champion_exits_nonzero(self) -> None:
         args = _degrade_args(champion_id="ghost_id")
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_connector_cls,
-            patch("qws_graph.research.graph.store.GraphStore.from_env") as mock_from_env,
+            patch("research.graph.cli.NeoConnector") as mock_connector_cls,
+            patch("research.graph.store.GraphStore.from_env") as mock_from_env,
         ):
             mock_connector = MagicMock()
             mock_connector.is_available.return_value = True
@@ -115,8 +115,8 @@ class TestCmdRetire:
     def test_valid_retire_with_note_exits_zero(self) -> None:
         args = _retire_args()
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_connector_cls,
-            patch("qws_graph.research.graph.store.GraphStore.from_env") as mock_from_env,
+            patch("research.graph.cli.NeoConnector") as mock_connector_cls,
+            patch("research.graph.store.GraphStore.from_env") as mock_from_env,
         ):
             mock_connector = MagicMock()
             mock_connector.is_available.return_value = True
@@ -136,8 +136,8 @@ class TestCmdRetire:
     def test_retire_without_note_exits_zero(self) -> None:
         args = _retire_args(note=None)
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_connector_cls,
-            patch("qws_graph.research.graph.store.GraphStore.from_env") as mock_from_env,
+            patch("research.graph.cli.NeoConnector") as mock_connector_cls,
+            patch("research.graph.store.GraphStore.from_env") as mock_from_env,
         ):
             mock_connector = MagicMock()
             mock_connector.is_available.return_value = True
@@ -156,7 +156,7 @@ class TestCmdRetire:
 
     def test_neo4j_unavailable_exits_nonzero(self) -> None:
         args = _retire_args()
-        with patch("qws_graph.research.graph.cli.NeoConnector") as mock_connector_cls:
+        with patch("research.graph.cli.NeoConnector") as mock_connector_cls:
             mock_connector = MagicMock()
             mock_connector.is_available.return_value = False
             mock_connector_cls.return_value = mock_connector
@@ -166,8 +166,8 @@ class TestCmdRetire:
     def test_non_existent_former_champion_exits_nonzero(self) -> None:
         args = _retire_args(former_champion_id="ghost_fc")
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_connector_cls,
-            patch("qws_graph.research.graph.store.GraphStore.from_env") as mock_from_env,
+            patch("research.graph.cli.NeoConnector") as mock_connector_cls,
+            patch("research.graph.store.GraphStore.from_env") as mock_from_env,
         ):
             mock_connector = MagicMock()
             mock_connector.is_available.return_value = True

@@ -1,10 +1,12 @@
+RETIRED — split into QWS-1100a and QWS-1100b.
+
 # Story — Prefect Data Collection Infrastructure
 
 ## ID
 QWS-1100
 
 ## Status
-READY
+DRAFT
 
 ## Date
 2026-04-12

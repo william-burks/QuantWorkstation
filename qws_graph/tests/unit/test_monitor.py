@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from qws_graph.research.graph.monitor import MonitorResult, MonitorRunner
+from research.graph.monitor import MonitorResult, MonitorRunner
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -282,7 +282,7 @@ class TestMissingScript:
         store.get_research_targets.return_value = []
         runner = MonitorRunner(repo_root=tmp_path)
 
-        with patch("qws_graph.research.graph.monitor.GraphStore") as MockStore:
+        with patch("research.graph.monitor.GraphStore") as MockStore:
             MockStore.from_env.return_value = store
             results = runner.run()
 
@@ -308,7 +308,7 @@ class TestSingleChampionScope:
         store.get_research_targets.return_value = []
         runner = MonitorRunner(repo_root=tmp_path)
 
-        with patch("qws_graph.research.graph.monitor.GraphStore") as MockStore:
+        with patch("research.graph.monitor.GraphStore") as MockStore:
             MockStore.from_env.return_value = store
             with patch.object(runner, "_evaluate_champion") as mock_eval:
                 mock_eval.return_value = MonitorResult(
@@ -333,7 +333,7 @@ class TestSingleChampionScope:
         store.get_research_targets.return_value = []
         runner = MonitorRunner(repo_root=tmp_path)
 
-        with patch("qws_graph.research.graph.monitor.GraphStore") as MockStore:
+        with patch("research.graph.monitor.GraphStore") as MockStore:
             MockStore.from_env.return_value = store
             results = runner.run(champion_id="nonexistent")
 
@@ -360,37 +360,37 @@ class TestCmdMonitor:
         )
 
     def test_returns_zero_when_no_champions(self) -> None:
-        from qws_graph.research.graph.cli import cmd_monitor  # noqa: PLC0415
+        from research.graph.cli import cmd_monitor  # noqa: PLC0415
 
         args = self._make_args()
 
-        with patch("qws_graph.research.graph.cli.NeoConnector") as MockConn:
+        with patch("research.graph.cli.NeoConnector") as MockConn:
             MockConn.return_value.is_available.return_value = True
-            with patch("qws_graph.research.graph.cli.MonitorRunner") as MockRunner:
+            with patch("research.graph.cli.MonitorRunner") as MockRunner:
                 MockRunner.return_value.run.return_value = []
                 result = cmd_monitor(args)
 
         assert result == 0
 
     def test_returns_one_when_neo4j_unavailable(self) -> None:
-        from qws_graph.research.graph.cli import cmd_monitor  # noqa: PLC0415
+        from research.graph.cli import cmd_monitor  # noqa: PLC0415
 
         args = self._make_args()
 
-        with patch("qws_graph.research.graph.cli.NeoConnector") as MockConn:
+        with patch("research.graph.cli.NeoConnector") as MockConn:
             MockConn.return_value.is_available.return_value = False
             result = cmd_monitor(args)
 
         assert result == 1
 
     def test_dry_run_flag_passed_to_runner(self) -> None:
-        from qws_graph.research.graph.cli import cmd_monitor  # noqa: PLC0415
+        from research.graph.cli import cmd_monitor  # noqa: PLC0415
 
         args = self._make_args(dry_run=True)
 
-        with patch("qws_graph.research.graph.cli.NeoConnector") as MockConn:
+        with patch("research.graph.cli.NeoConnector") as MockConn:
             MockConn.return_value.is_available.return_value = True
-            with patch("qws_graph.research.graph.cli.MonitorRunner") as MockRunner:
+            with patch("research.graph.cli.MonitorRunner") as MockRunner:
                 MockRunner.return_value.run.return_value = []
                 cmd_monitor(args)
                 _, kwargs = MockRunner.call_args
@@ -403,7 +403,7 @@ class TestCmdMonitor:
         import subprocess  # noqa: PLC0415
         import sys
         result = subprocess.run(
-            [sys.executable, "-m", "qws_graph.research.graph.cli", "monitor", "--help"],
+            [sys.executable, "-m", "research.graph.cli", "monitor", "--help"],
             capture_output=True,
             text=True,
         )

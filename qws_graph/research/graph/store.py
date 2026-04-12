@@ -711,7 +711,7 @@ class GraphStore:
 
                 strategy_id = row["strategy_id"]
                 degraded_at = _dt.now(UTC).isoformat()
-                from qws_graph.research.graph.ids import hash12 as _hash12
+                from .ids import hash12 as _hash12
                 former_champion_id = _hash12(champion_id, degraded_at)
 
                 def _write(tx):
@@ -779,7 +779,7 @@ class GraphStore:
                     )
 
                 retired_at = _dt.now(UTC).isoformat()
-                from qws_graph.research.graph.ids import hash12 as _hash12
+                from .ids import hash12 as _hash12
                 retired_champion_id = _hash12(former_champion_id, retired_at)
 
                 def _write(tx):
@@ -822,7 +822,7 @@ class GraphStore:
         Raises:
             StoreInfraError: On Neo4j connectivity or execution failure.
         """
-        from qws_graph.research.graph.cypher import GET_ALL_ACTIVE_CHAMPIONS_QUERY  # noqa: PLC0415
+        from .cypher import GET_ALL_ACTIVE_CHAMPIONS_QUERY  # noqa: PLC0415
 
         try:
             with self._driver.session(database=self._database) as session:
@@ -875,8 +875,8 @@ class GraphStore:
         from datetime import UTC  # noqa: PLC0415
         from datetime import datetime as _dt
 
-        from qws_graph.research.graph.cypher import FORMER_CHAMPION_BLOB_QUERY  # noqa: PLC0415
-        from qws_graph.research.graph.ids import hash12 as _hash12  # noqa: PLC0415
+        from .cypher import FORMER_CHAMPION_BLOB_QUERY  # noqa: PLC0415
+        from .ids import hash12 as _hash12  # noqa: PLC0415
 
         created_at = _dt.now(UTC).isoformat()
         artifact_path = f"monitor:{former_champion_id}:{artifact_type}:{_hash12(former_champion_id, artifact_type, created_at)}"

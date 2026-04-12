@@ -6,6 +6,9 @@ QWS-0902
 ## Status
 READY
 
+## Type
+research
+
 ## Blocked On
 QWS-0901
 

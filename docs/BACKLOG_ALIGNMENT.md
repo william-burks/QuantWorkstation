@@ -103,18 +103,20 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| COT Collector | QWS-1001 (**READY**) | CFTC COT positioning data in ArcticDB | — |
-| FRED Macro Collector | QWS-1002 (**READY**) | FRED macro indicators in ArcticDB | — |
-| EIA Crude Collector | QWS-1003 (**READY**) | EIA crude inventory + production data in ArcticDB | — |
-| Baker Hughes Rig Count | QWS-1004 (**READY**) | Weekly rig count data in ArcticDB | — |
-| NOAA Degree Days | QWS-1005 (**READY**) | Heating/cooling degree days in ArcticDB | — |
-| USDA Crop Progress | QWS-1006 (**READY**) | USDA weekly crop progress data in ArcticDB | — |
-| Google Trends | QWS-1007 (**READY**) | Google Trends signals in ArcticDB | — |
-| BDTI Tanker Index | QWS-1008 (**READY**) | Baltic Dirty Tanker Index data in ArcticDB | — |
-| Economic Calendar Collector | QWS-1009 (**READY**) | Economic event calendar data in ArcticDB | — |
+| Store Series Methods | QWS-1000 (**READY**) | `write_series`/`read_series` for non-OHLCV data in ArcticDB | — |
+| COT Collector | QWS-1001 (**BLOCKED**) | CFTC COT positioning data in ArcticDB | QWS-1000 |
+| FRED Macro Collector | QWS-1002 (**BLOCKED**) | FRED macro indicators in ArcticDB | QWS-1000 |
+| EIA Crude Collector | QWS-1003 (**BLOCKED**) | EIA crude inventory + production data in ArcticDB | QWS-1000 |
+| Baker Hughes Rig Count | QWS-1004 (**BLOCKED**) | Weekly rig count data in ArcticDB | QWS-1000 |
+| NOAA Degree Days | QWS-1005 (**BLOCKED**) | Heating/cooling degree days in ArcticDB | QWS-1000 |
+| USDA Crop Progress | QWS-1006 (**BLOCKED**) | USDA weekly crop progress data in ArcticDB | QWS-1000 |
+| Google Trends | QWS-1007 (**BLOCKED**) | Google Trends signals in ArcticDB | QWS-1000 |
+| BDTI Tanker Index | QWS-1008 (**BLOCKED**) | Baltic Dirty Tanker Index data in ArcticDB | QWS-1000 |
+| Economic Calendar Collector | QWS-1009 (**BLOCKED**) | Economic event calendar data in ArcticDB | QWS-1000 |
 | Data Quality Validation | QWS-1010 (**READY**) | Validation gate — alerts on missing bars, stale feeds, schema drift | — |
-| NDVI Crop Health Collector | QWS-1011 (**READY**) | NDVI crop health index in ArcticDB | QWS-1001 |
-| Prefect Data Collection Infra | QWS-1100 (**READY**) | Scheduled collection via Prefect; infrastructure prerequisite for all collectors | — |
+| NDVI Crop Health Collector | QWS-1011 (**BLOCKED**) | NDVI crop health index in ArcticDB | QWS-1000 |
+| Scheduler Isolation | QWS-1100a (**READY**) | `execution/risk_scheduler.py` with risk jobs only; `prefect` in pyproject.toml | — |
+| Prefect Flows | QWS-1100b (**BLOCKED**) | Scheduled collection via Prefect flows; launchd daemon | QWS-1100a |
 
 ### Epic 11 — Production Tracking
 

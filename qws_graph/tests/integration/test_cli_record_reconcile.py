@@ -26,8 +26,8 @@ def csv_baseline(temp_repo_root: Path) -> Path:
     results_dir.mkdir(parents=True)
     csv_file = results_dir / "test_baseline.csv"
     csv_file.write_text(
-        "instrument,timeframe,direction,logic_type,timestamp,sharpe,profit_factor,win_rate,max_drawdown,total_trades,total_r\n"
-        "ES,1H,bear,baseline,2026-04-02T12:30:00Z,1.3749,1.1562,0.3737,-8.686,99,10.1601\n"
+        "instrument,timeframe,direction,logic_type,timestamp,sharpe,profit_factor,win_rate,max_drawdown,total_trades,total_r,first_trade_ts,last_trade_ts\n"
+        "ES,1H,bear,baseline,2026-04-02T12:30:00Z,1.3749,1.1562,0.3737,-8.686,99,10.1601,2024-01-01T00:00:00Z,2026-04-01T00:00:00Z\n"
     )
     return csv_file
 
@@ -40,6 +40,9 @@ class TestRecordCommand:
         args = mock.MagicMock()
         args.file = str(csv_baseline)
         args.bundle = None
+        args.hypothesis = None
+        args.oos = None
+        args.regime = None
         args.kind = "baseline_csv"
         args.pivot_from = None
         args.offline = False
@@ -55,6 +58,9 @@ class TestRecordCommand:
         args = mock.MagicMock()
         args.file = str(csv_baseline)
         args.bundle = None
+        args.hypothesis = None
+        args.oos = None
+        args.regime = None
         args.kind = "baseline_csv"
         args.pivot_from = None
         args.offline = True
@@ -86,6 +92,10 @@ class TestRecordCommand:
         """Test record with missing file returns exit code 1."""
         args = mock.MagicMock()
         args.file = str(temp_repo_root / "missing.csv")
+        args.bundle = None
+        args.hypothesis = None
+        args.oos = None
+        args.regime = None
         args.kind = "baseline_csv"
         args.pivot_from = None
         args.offline = True
@@ -100,6 +110,9 @@ class TestRecordCommand:
         """Test record with invalid artifact kind returns exit code 1."""
         args = mock.MagicMock()
         args.file = str(csv_baseline)
+        args.bundle = None
+        args.hypothesis = None
+        args.oos = None
         args.kind = "invalid_kind"
         args.pivot_from = None
         args.offline = True
@@ -120,6 +133,9 @@ class TestRecordCommand:
         args = mock.MagicMock()
         args.file = str(csv_baseline)
         args.bundle = None
+        args.hypothesis = None
+        args.oos = None
+        args.regime = None
         args.kind = "baseline_csv"
         args.pivot_from = None
         args.offline = False
@@ -154,6 +170,9 @@ class TestRecordCommand:
         args = mock.MagicMock()
         args.file = str(csv_baseline)
         args.bundle = None
+        args.hypothesis = None
+        args.oos = None
+        args.regime = None
         args.kind = "baseline_csv"
         args.pivot_from = None
         args.offline = False
@@ -182,6 +201,9 @@ class TestRecordCommand:
         args = mock.MagicMock()
         args.file = str(champion)
         args.bundle = None
+        args.hypothesis = None
+        args.oos = None
+        args.regime = None
         args.kind = "champion_md"
         args.pivot_from = None
         args.offline = False

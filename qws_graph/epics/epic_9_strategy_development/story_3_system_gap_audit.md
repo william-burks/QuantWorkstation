@@ -6,6 +6,9 @@ QWS-0903
 ## Status
 BLOCKED
 
+## Type
+docs
+
 ## Blocked On
 QWS-0901, QWS-0902
 

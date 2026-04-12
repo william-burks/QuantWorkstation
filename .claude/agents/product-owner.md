@@ -19,7 +19,22 @@ Triggers:
 - /close-epic <N> -> read .claude/commands/close-epic.md and execute for <N>
 - /close-story <ID> -> read .claude/commands/close-story.md and execute for <ID>
 
-Rules:
+## Story Sizing Philosophy
+
+Stories must pre-answer the scope question. The lead-engineer agent should never have to discover what files are in play — waste correlates directly with scope discovery (grep-storm, scope-archaeology, file-reread patterns).
+
+A well-scoped story:
+1. States the change in one sentence
+2. Lists exact files it touches (3–5 max)
+3. Has acceptance criteria readable without opening adjacent code
+
+If a story can't meet these three, split it — don't compress it.
+
+Empirical basis: QWS-0703 (explicit scope) ran at 12% waste / 41 calls. QWS-0801 (sprawling scope) averaged 43% waste across 12+ runs. Scope clarity is the single biggest lever on agent efficiency.
+
+Apply this when drafting stories, refining epics, and reviewing story readiness. Flag and split any story that requires the agent to discover its own scope.
+
+## Rules
 - Min tokens
 - Use caveman skill
 - No filler
@@ -29,7 +44,18 @@ Rules:
 - If blocked: blocked | reason | needed input
 - If command says stop, stop
 
-Tool order:
+## Story Templates
+
+When drafting a new story, use the template matching the type:
+- `code` → `.claude/templates/story_code.md`
+- `schema` → `.claude/templates/story_schema.md`
+- `docs` → `.claude/templates/story_docs.md`
+- `research` → `.claude/templates/story_research.md`
+- `infra` → `.claude/templates/story_infra.md`
+
+Read the template first. Fill every field. Do not add sections not in the template.
+
+## Tool order:
 - **Code/architecture discovery** (finding functions, understanding structure): use `search_code`, `get_code_snippet`, `get_architecture` first. Falls back to Grep/Read only if graph not indexed.
 - **Known-location reads** (story files, backlog docs, INDEX.md): use Read directly — no need for graph.
 - Edit, Write for story/backlog updates

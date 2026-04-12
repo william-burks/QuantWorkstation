@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from qws_graph.research.graph.monitor import MonitorRunner
+from research.graph.monitor import MonitorRunner
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -81,7 +81,7 @@ class TestMonitorEndToEnd:
 
         runner = MonitorRunner(repo_root=repo_root)
 
-        with patch("qws_graph.research.graph.monitor.GraphStore") as MockStore:
+        with patch("research.graph.monitor.GraphStore") as MockStore:
             MockStore.from_env.return_value = store
             results = runner.run()
 
@@ -109,7 +109,7 @@ class TestMonitorEndToEnd:
 
         runner = MonitorRunner(repo_root=repo_root)
 
-        with patch("qws_graph.research.graph.monitor.GraphStore") as MockStore:
+        with patch("research.graph.monitor.GraphStore") as MockStore:
             MockStore.from_env.return_value = store
             results = runner.run()
 
@@ -152,7 +152,7 @@ class TestMonitorEndToEnd:
 
         runner = MonitorRunner(repo_root=repo_root, dry_run=True)
 
-        with patch("qws_graph.research.graph.monitor.GraphStore") as MockStore:
+        with patch("research.graph.monitor.GraphStore") as MockStore:
             MockStore.from_env.return_value = store
             results = runner.run()
 
@@ -187,7 +187,7 @@ class TestMonitorEndToEnd:
 
         runner = MonitorRunner(repo_root=repo_root)
 
-        with patch("qws_graph.research.graph.monitor.GraphStore") as MockStore:
+        with patch("research.graph.monitor.GraphStore") as MockStore:
             MockStore.from_env.return_value = store
             results = runner.run(champion_id="c_a")
 

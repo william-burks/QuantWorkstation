@@ -93,10 +93,15 @@ started: <timestamp>
 ## Step 4 — Per-story execution
 For each ready story in dependency order:
 
-### 4a — Verify dependencies
+### 4a — Verify story type
+Read the story file. Check the `## Type` field.
+- `research` or `docs` → **ABORT this story.** Print: `QWS-XXXX skipped — type=<type> not implemented in run-epic. Proceed manually.` Mark as SKIPPED in progress file. Do NOT branch or spawn any agent. Continue to next story.
+- `code`, `schema`, `infra`, or missing → proceed to 4b.
+
+### 4b — Verify dependencies
 All dependencies must be CLOSED. If not → skip story + mark dependents skipped.
 
-### 4b — Branch
+### 4c-branch — Branch
 ```
 make feature-branch STORY=$STORY_ID
 ```

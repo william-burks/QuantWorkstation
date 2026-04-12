@@ -16,7 +16,7 @@ Navigation and execution index for `qws_graph/epics`.
 5. **Epic 5 — Context Enrichment** — `COMPLETE`
 6. **Epic 6 — Research Analytics** — `COMPLETE`
 7. **Epic 7 — Workflow Readiness** — `COMPLETE`
-8. **Epic 8 — Champion Lifecycle Hardening** — `PLANNED`
+8. **Epic 8 — Champion Lifecycle Hardening** — `COMPLETE`
 9. **Epic 9 — Strategy Development** — `PLANNED`
 10. **Epic 10 — Macro Data** — `PLANNED`
 11. **Epic 11 — Production Tracking** — `PLANNED`
@@ -152,14 +152,14 @@ Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
 
 ---
 
-## Epic 8 — Champion Lifecycle Hardening [PLANNED]
-- Epic README: `epic_8_champion_lifecycle_hardening/README.md`
+## Epic 8 — Champion Lifecycle Hardening [COMPLETE]
+- Epic README: `epic_8_champion_lifecycle_hardening[COMPLETE]/README.md`
 - Objective: SUPERSEDED_BY direct lineage edge at promotion time; automated decay detection via scheduled validation loop
 
 Stories (QWS-0802 and QWS-0803 independent — implement in parallel):
-1. `QWS-0802` `epic_8_champion_lifecycle_hardening/closed/story_2_superseded_by_relationship.md` — `CLOSED`
-2. `QWS-0803` `epic_8_champion_lifecycle_hardening/closed/story_1_recursive_validation_loop.md` — `CLOSED`
-3. `QWS-0805` `epic_8_champion_lifecycle_hardening/closed/story_3_champion_promotion_rationale.md` — `CLOSED`
+1. `QWS-0802` `epic_8_champion_lifecycle_hardening[COMPLETE]/closed/story_2_superseded_by_relationship.md` — `CLOSED`
+2. `QWS-0803` `epic_8_champion_lifecycle_hardening[COMPLETE]/closed/story_1_recursive_validation_loop.md` — `CLOSED`
+3. `QWS-0805` `epic_8_champion_lifecycle_hardening[COMPLETE]/closed/story_3_champion_promotion_rationale.md` — `CLOSED`
 
 ---
 
@@ -182,19 +182,21 @@ Note: this epic has no code deliverables. Done criteria = gap audit written, bac
 - Epic README: `epic_10_macro_data/README.md`
 - Objective: wire macro and alternative data sources as inputs for regime signal generation
 
-Stories (QWS-1100 first; QWS-1001–1009 parallel; QWS-1011 after QWS-1001):
-- `QWS-1001` `epic_10_macro_data/story_cot_collector.md` — `READY`
-- `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `READY`
-- `QWS-1003` `epic_10_macro_data/story_eia_crude_collector.md` — `READY`
-- `QWS-1004` `epic_10_macro_data/story_baker_hughes_rig_count.md` — `READY`
-- `QWS-1005` `epic_10_macro_data/story_noaa_degree_days.md` — `READY`
-- `QWS-1006` `epic_10_macro_data/story_usda_crop_progress.md` — `READY`
-- `QWS-1007` `epic_10_macro_data/story_google_trends.md` — `READY`
-- `QWS-1008` `epic_10_macro_data/story_bdti_tanker_index.md` — `READY`
-- `QWS-1009` `epic_10_macro_data/story_economic_calendar_collector.md` — `READY`
-- `QWS-1010` `epic_10_macro_data/story_data_quality_validation.md` — `READY`
-- `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `READY` _(blocked on QWS-1001)_
-- `QWS-1100` `epic_10_macro_data/story_prefect_data_collection_infra.md` — `READY`
+Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-1010 parallel from start) → QWS-1100b after QWS-1100a
+- `QWS-1000` `epic_10_macro_data/story_0_store_series_methods.md` — `ready`
+- `QWS-1001` `epic_10_macro_data/story_cot_collector.md` — `blocked` (QWS-1000)
+- `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `blocked` (QWS-1000)
+- `QWS-1003` `epic_10_macro_data/story_eia_crude_collector.md` — `blocked` (QWS-1000)
+- `QWS-1004` `epic_10_macro_data/story_baker_hughes_rig_count.md` — `blocked` (QWS-1000)
+- `QWS-1005` `epic_10_macro_data/story_noaa_degree_days.md` — `blocked` (QWS-1000)
+- `QWS-1006` `epic_10_macro_data/story_usda_crop_progress.md` — `blocked` (QWS-1000)
+- `QWS-1007` `epic_10_macro_data/story_google_trends.md` — `blocked` (QWS-1000)
+- `QWS-1008` `epic_10_macro_data/story_bdti_tanker_index.md` — `blocked` (QWS-1000)
+- `QWS-1009` `epic_10_macro_data/story_economic_calendar_collector.md` — `blocked` (QWS-1000)
+- `QWS-1010` `epic_10_macro_data/story_data_quality_validation.md` — `ready`
+- `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `blocked` (QWS-1000)
+- `QWS-1100a` `epic_10_macro_data/story_prefect_1100a_scheduler_isolation.md` — `ready`
+- `QWS-1100b` `epic_10_macro_data/story_prefect_1100b_flows.md` — `blocked` (QWS-1100a)
 
 ---
 
@@ -249,5 +251,5 @@ promotion).
 
 ## Current Focus
 - **Epic 7 COMPLETE** — all 3 stories CLOSED.
-- **Next:** Epic 8 (QWS-0802 SUPERSEDED_BY, QWS-0803 Recursive Validation Loop) → Epic 9 (Strategy Development — usage + gap audit) → Epic 10 (Macro Data) → Epic 11 (Production Tracking) → Epic 12.
+- **Next:** Epic 9 (Strategy Development — QWS-0901 First Research Session, READY) → Epic 10 (Macro Data) → Epic 11 (Production Tracking) → Epic 12.
 

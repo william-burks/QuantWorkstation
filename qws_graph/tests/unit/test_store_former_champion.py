@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from qws_graph.research.graph.store import GraphStore
+from research.graph.store import GraphStore
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -16,7 +16,7 @@ from qws_graph.research.graph.store import GraphStore
 
 def _make_store() -> GraphStore:
     """Return a GraphStore with a mocked Neo4j driver."""
-    with patch("qws_graph.research.graph.store.GraphDatabase") as mock_gdb:
+    with patch("research.graph.store.GraphDatabase") as mock_gdb:
         mock_driver = MagicMock()
         mock_gdb.driver.return_value = mock_driver
         store = GraphStore("bolt://localhost:7687", "neo4j", "test")
@@ -158,9 +158,9 @@ class TestRetireFormerChampion:
 class TestGetFormerChampionsV1:
     def test_returns_rows_from_session(self) -> None:
         """Verifies GraphQueryService.get_former_champions_v1 passes through rows."""
-        from qws_graph.research.graph.query import GraphQueryService
+        from research.graph.query import GraphQueryService
 
-        with patch("qws_graph.research.graph.query.GraphDatabase") as mock_gdb:
+        with patch("research.graph.query.GraphDatabase") as mock_gdb:
             mock_driver = MagicMock()
             mock_gdb.driver.return_value = mock_driver
 

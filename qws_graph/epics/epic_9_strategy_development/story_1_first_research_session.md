@@ -6,6 +6,9 @@ QWS-0901
 ## Status
 READY
 
+## Type
+research
+
 ## Blocked On
 None
 

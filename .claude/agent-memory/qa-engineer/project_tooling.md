@@ -81,6 +81,11 @@ Use this to identify which lint errors are in-scope vs pre-existing. Do NOT use 
 | QWS-0703 | qws_graph/tests/unit/test_analyst.py |
 | QWS-0804 | qws_graph/tests/unit/test_gate_recheck.py |
 
+## Epic 8 story test map (add to table above)
+| QWS-0802 | qws_graph/tests/unit/test_store_dedup.py |
+| QWS-0803 | qws_graph/tests/unit/test_monitor.py |
+| QWS-0805 | qws_graph/tests/unit/test_graph_query_models.py |
+
 ## qws_graph tests require venv
 qws_graph tests MUST run via venv: `source .venv/bin/activate && pytest qws_graph/tests/unit/<file> -v`
 Without venv, `import qws_graph` fails with ModuleNotFoundError.

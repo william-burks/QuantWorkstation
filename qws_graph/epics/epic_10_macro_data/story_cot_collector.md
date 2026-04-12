@@ -4,44 +4,36 @@
 QWS-1001
 
 ## Status
-READY
+BLOCKED
+
+## Type
+code
+
+## Blocked On
+QWS-1000
 
 ## Summary
-Add a CFTC Disaggregated COT collector that downloads weekly positioning data and writes
-per-symbol net position series into a new `cot` ArcticDB library. Feeds the Regime node
-with real positioning context.
+Add a CFTC Disaggregated COT collector that downloads weekly positioning data and writes per-symbol net position series into a new `cot` ArcticDB library via `write_series()`. Feeds the Regime node with real positioning context.
 
 ## Problem
-Strategy regime tagging (QWS-0502) is currently driven by price-derived indicators only.
-CFTC Commitments of Traders data provides direct insight into commercial vs. non-commercial
-positioning — a canonical input for positioning regime signals. Without a collector, this
-data stays off the research pipeline entirely.
+Strategy regime tagging (QWS-0502) is currently driven by price-derived indicators only. CFTC Commitments of Traders data provides direct insight into commercial vs. non-commercial positioning — a canonical input for positioning regime signals. Without a collector, this data stays off the research pipeline entirely.
 
 ## Goal
-Download CFTC Disaggregated COT reports weekly, map CFTC market codes to our symbol
-conventions, and store commercial net, non-commercial net, and open interest as weekly
-time series in ArcticDB.
-
-## Deliverable
-- `data/collectors/cot.py` — COT collector module
-- `cot` ArcticDB library; keys `{ROOT}_cot` (e.g. `ES_cot`, `CL_cot`)
-- `cot_symbols: list[str]` config field in `data/config.py`
-- Weekly collection job registered in `execution/scheduler.py`
-- Unit tests in `tests/unit/test_cot_collector.py`
+Download CFTC Disaggregated COT reports weekly, map CFTC market codes to our symbol conventions, and store commercial net, non-commercial net, and open interest as weekly time series in ArcticDB via `write_series()`.
 
 ## In Scope
 - Download CFTC Disaggregated COT bulk CSV (no API key required; public URL)
 - Parse columns: commercial net, non-commercial net, open interest
 - CFTC market code → symbol mapping for: ES/MES, NQ/MNQ, GC/MGC, CL, ZN, ZB, 6E
-- Write weekly series via `store.write_bars()` into `cot` library
+- Write weekly series via `store.write_series()` into `cot` library (not `write_bars()` — COT data is multi-column non-OHLCV)
 - Idempotent write (re-download overwrites; no duplicate rows)
-- Scheduler: weekly job (Friday after 15:30 ET when CFTC releases)
 
 ## Out of Scope
 - Legacy COT (non-disaggregated) report parsing
 - Intraweek interpolation of COT data
-- Graph ingestion / Regime node updates (separate story if needed)
+- Graph ingestion / Regime node updates (separate story)
 - Backfill beyond what CFTC bulk download provides (~3 years)
+- Scheduler job registration (handled by QWS-1100b)
 
 ## Implementation Notes
 - CFTC bulk download URL: `https://www.cftc.gov/files/dea/history/fut_disagg_txt_hist_2006_2016.zip`
@@ -53,24 +45,26 @@ time series in ArcticDB.
 - Symbol map lives in `cot.py` as a module-level dict `CFTC_SYMBOL_MAP`
 - Follow same collector pattern as `ibkr_futures.py` — module-level `_CONTRACT_SPECS` analog
 
+## Repo Touchpoints
+- `data/collectors/cot.py` — new
+- `data/config.py` — add `cot_symbols`
+- `tests/unit/test_cot_collector.py` — new
+
 ## Acceptance Criteria
 - [ ] `data/collectors/cot.py` exists and is importable
 - [ ] `cot` ArcticDB library is created on first run
-- [ ] `ES_cot`, `CL_cot`, and at least 4 other symbols write successfully with correct columns
+- [ ] `ES_cot`, `CL_cot`, and at least 4 other symbols write successfully with correct columns (`comm_net`, `noncomm_net`, `open_interest`)
+- [ ] `write_series()` used for COT data (not `write_bars()`)
 - [ ] Re-running collector is idempotent (no duplicate rows, no crash)
 - [ ] `cot_symbols` present in `data/config.py` with sensible default list
-- [ ] Weekly scheduler job registered and callable without error
 - [ ] `tests/unit/test_cot_collector.py` passes with mocked HTTP responses (no live download in tests)
 - [ ] `ruff check` and `mypy --strict` clean
 
 ## Definition of Done
-- [ ] Collector merged to main
-- [ ] ArcticDB `cot` library seeded with at least 52 weeks of data for all configured symbols
-- [ ] Scheduler job confirmed callable
-- [ ] Unit tests green
+- [ ] All ACs passing
+- [ ] Tests green
 - [ ] Story marked CLOSED
 
 ## Dependencies
-- No blockers
 - Enables: COT positioning as input to Regime tagging (future story)
 - Enables: commercial/non-commercial divergence as strategy signal input

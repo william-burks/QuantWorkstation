@@ -1270,7 +1270,7 @@ def cmd_degrade(args: argparse.Namespace) -> int:
         print("error: Neo4j is unavailable", file=sys.stderr)
         return 1
 
-    from qws_graph.research.graph.store import GraphStore, StoreError, StoreInfraError
+    from .store import GraphStore, StoreError, StoreInfraError
 
     try:
         store = GraphStore.from_env(timeout_seconds=args.timeout_seconds)
@@ -1298,7 +1298,7 @@ def cmd_retire(args: argparse.Namespace) -> int:
         print("error: Neo4j is unavailable", file=sys.stderr)
         return 1
 
-    from qws_graph.research.graph.store import GraphStore, StoreError, StoreInfraError
+    from .store import GraphStore, StoreError, StoreInfraError
 
     try:
         store = GraphStore.from_env(timeout_seconds=args.timeout_seconds)
@@ -1323,7 +1323,7 @@ def cmd_gate(args: argparse.Namespace) -> int:
         print("error: Neo4j is unavailable", file=sys.stderr)
         return 1
 
-    from qws_graph.research.graph.store import GraphStore, StoreInfraError
+    from .store import GraphStore, StoreInfraError
 
     try:
         store = GraphStore.from_env(timeout_seconds=args.timeout_seconds)

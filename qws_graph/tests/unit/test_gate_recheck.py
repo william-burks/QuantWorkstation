@@ -14,9 +14,9 @@ import pytest
 
 def _make_store() -> Any:
     """Return a GraphStore with a mocked Neo4j driver."""
-    from qws_graph.research.graph.store import GraphStore
+    from research.graph.store import GraphStore
 
-    with patch("qws_graph.research.graph.store.GraphDatabase") as mock_gdb:
+    with patch("research.graph.store.GraphDatabase") as mock_gdb:
         mock_driver = MagicMock()
         mock_gdb.driver.return_value = mock_driver
         store = GraphStore("bolt://localhost:7687", "neo4j", "test")
@@ -123,7 +123,7 @@ class TestCmdGate:
         import io
         import sys
 
-        from qws_graph.research.graph.cli import cmd_gate
+        from research.graph.cli import cmd_gate
 
         args = argparse.Namespace(timeout_seconds=3)
 
@@ -131,8 +131,8 @@ class TestCmdGate:
         mock_store.get_correlation_gate_recheck_v1.return_value = rows
 
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_conn,
-            patch("qws_graph.research.graph.store.GraphStore") as mock_gs_cls,
+            patch("research.graph.cli.NeoConnector") as mock_conn,
+            patch("research.graph.store.GraphStore") as mock_gs_cls,
         ):
             mock_conn.return_value.is_available.return_value = available
             mock_gs_cls.from_env.return_value = mock_store

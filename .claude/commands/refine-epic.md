@@ -14,7 +14,27 @@ Read before analysis:
 5. `qws_graph/epics/INDEX.md` — story list, dependencies
 6. All story files in epic $ARGUMENTS folder (focus on `draft` status)
 
-No draft stories → report empty, stop.
+## Phase 1b — Template compliance gate
+
+Before evaluating drafts, scan ALL story files in epic $ARGUMENTS regardless of status.
+
+Required fields for every story:
+- `## Type` — valid values: `code`, `schema`, `docs`, `research`, `infra`
+- `## Acceptance Criteria`
+- `## Definition of Done`
+
+Additional required for `code`, `schema`, `infra` type stories:
+- `## Repo Touchpoints`
+
+For each story missing any required field:
+1. Demote status to `draft` in the story file
+2. Update status to `draft` in `INDEX.md`
+3. Update status to `DRAFT` in `BACKLOG_ALIGNMENT.md`
+4. Log: `QWS-XXXX demoted to DRAFT — missing: <field list>`
+
+After demotion, continue to Phase 2 with the updated draft list.
+
+No draft stories (including newly demoted) → report empty, stop.
 
 ---
 
@@ -41,6 +61,8 @@ Validation rules (hard fails → NEEDS WORK):
 6. TARGET REFERENCE: story ACs, Design, or presets reference nodes/edges/properties marked `[TARGET]` in
    PROVENANCE_ENGINE.md whose implementing story is not CLOSED. Scan ALL text in story file, not just
    Blocked On field. This includes cross-epic dependencies (e.g. referencing Epic 8 schema from Epic 6).
+7. MISSING TYPE: no `## Type` field in story file → NEEDS WORK. Valid values: `code`, `schema`, `docs`, `research`, `infra`.
+8. SCOPE TOO BROAD (code/schema stories only): Repo Touchpoints > 5 files → NEEDS WORK. Recommend specific split: which files belong in story A vs story B. Docs/research/infra stories are exempt from this rule.
 
 Strategic checks:
 1. Do these stories collectively advance the research loop?
@@ -88,6 +110,8 @@ Apply the architect's findings to epic $ARGUMENTS draft stories.
 
 For each NEEDS WORK story:
 - Fix the specific gap identified (tighten ACs, correct touchpoints, fix schema refs, add missing deps)
+- MISSING TYPE: add `## Type` field with the correct value (`code`, `schema`, `docs`, `research`, `infra`). Infer from story content — code changes → `code`, graph schema changes only → `schema`, written docs only → `docs`, research sessions → `research`, tooling/infra → `infra`. If ambiguous, use the primary deliverable.
+- SCOPE TOO BROAD: split the story. Write two replacement story files with distinct IDs, each with ≤5 touchpoints. Update INDEX.md and BACKLOG_ALIGNMENT.md with the split. The original story ID is retired.
 - SCOPE MISMATCH: expand story to deliver everything BACKLOG_ALIGNMENT.md promised. Add missing
   deliverables to ACs, In Scope, and Repo Touchpoints. Never reduce the backlog promise.
 - TARGET REFERENCE: assess complexity of the unbuilt dependency.
