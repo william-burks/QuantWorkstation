@@ -20,11 +20,14 @@ from .cypher import (
     CORRELATED_WITH_CHAMPION_QUERY,
     CORRELATED_WITH_STRATEGY_QUERY,
     CSV_INGEST_QUERY,
+    DEGRADE_CHAMPION_QUERY,
     DEMO_SEED_CYPHER,
     DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY,
+    GET_CHAMPION_BY_ID_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
+    GET_FORMER_CHAMPION_BY_ID_QUERY,
     GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY,
     GET_HYPOTHESIS_BY_ID_QUERY,
     GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,
@@ -38,6 +41,7 @@ from .cypher import (
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
     REGIME_MERGE_QUERY,
+    RETIRE_FORMER_CHAMPION_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
     SEMANTICALLY_RELATED_MERGE_QUERY,
@@ -410,6 +414,130 @@ class GraphStore:
 
                 records = session.execute_write(_write)
                 return len(records) > 0
+
+        except StoreError:
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def degrade_champion(
+        self,
+        champion_id: str,
+        oos_reason: str,
+        sharpe_at_degradation: float | None = None,
+    ) -> str:
+        """Demote a Champion to FormerChampion state.
+
+        Creates a FormerChampion node and a DEGRADED_TO edge from the Champion.
+        The Champion node is NOT deleted — it remains readable.
+
+        Args:
+            champion_id: Source Champion node ID.
+            oos_reason: Mandatory cause-of-death explanation (must be non-empty).
+            sharpe_at_degradation: Sharpe ratio at time of demotion, if available.
+
+        Returns:
+            ``former_champion_id`` of the created node.
+
+        Raises:
+            StoreError: Champion not found, or oos_reason is empty.
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        if not oos_reason.strip():
+            raise StoreError("oos_reason must be non-empty")
+
+        degraded_at = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+        former_champion_id = _ids.hash12(champion_id, degraded_at)
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read_champion(tx) -> str | None:  # type: ignore[no-untyped-def]
+                    result = tx.run(GET_CHAMPION_BY_ID_QUERY, champion_id=champion_id).single()
+                    if result is None:
+                        return None
+                    return str(result["strategy_id"])
+
+                strategy_id = session.execute_read(_read_champion)
+                if strategy_id is None:
+                    raise StoreError(f"Champion {champion_id!r} not found")
+
+                def _write(tx) -> str:  # type: ignore[no-untyped-def]
+                    result = tx.run(
+                        DEGRADE_CHAMPION_QUERY,
+                        champion_id=champion_id,
+                        former_champion_id=former_champion_id,
+                        strategy_id=strategy_id,
+                        degraded_at=degraded_at,
+                        oos_reason=oos_reason.strip(),
+                        sharpe_at_degradation=sharpe_at_degradation,
+                    ).single()
+                    if result is None:
+                        raise StoreError(f"Failed to create FormerChampion for {champion_id!r}")
+                    return str(result["former_champion_id"])
+
+                return session.execute_write(_write)
+
+        except StoreError:
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def retire_former_champion(
+        self,
+        former_champion_id: str,
+        retirement_note: str | None = None,
+    ) -> str:
+        """Retire a FormerChampion to a new RetiredChampion node.
+
+        Creates a RetiredChampion node (if not already present) and a RETIRED_TO edge.
+        Copies ``oos_reason`` from the FormerChampion to the RetiredChampion.
+
+        Args:
+            former_champion_id: Source FormerChampion node ID.
+            retirement_note: Optional free-text reason for final retirement.
+
+        Returns:
+            ``retired_champion_id`` of the created/merged RetiredChampion node.
+
+        Raises:
+            StoreError: FormerChampion not found.
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        retired_at = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+        retired_champion_id = _ids.hash12(former_champion_id, retired_at)
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _check(tx) -> bool:  # type: ignore[no-untyped-def]
+                    result = tx.run(
+                        GET_FORMER_CHAMPION_BY_ID_QUERY,
+                        former_champion_id=former_champion_id,
+                    ).single()
+                    return result is not None
+
+                found = session.execute_read(_check)
+                if not found:
+                    raise StoreError(f"FormerChampion {former_champion_id!r} not found")
+
+                def _write(tx) -> str:  # type: ignore[no-untyped-def]
+                    result = tx.run(
+                        RETIRE_FORMER_CHAMPION_QUERY,
+                        former_champion_id=former_champion_id,
+                        retired_champion_id=retired_champion_id,
+                        retirement_note=retirement_note,
+                        retired_at=retired_at,
+                    ).single()
+                    if result is None:
+                        raise StoreError(
+                            f"Failed to create RetiredChampion for {former_champion_id!r}"
+                        )
+                    return str(result["retired_champion_id"])
+
+                return session.execute_write(_write)
 
         except StoreError:
             raise

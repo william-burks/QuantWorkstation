@@ -140,6 +140,23 @@ class BlobArtifact(BaseModel):
     provenance: Provenance
 
 
+class FormerChampionNode(BaseModel):
+    """FormerChampion node: a Champion demoted to decay-watch state.
+
+    Sits between Champion and RetiredChampion in the lifecycle.
+    Created by ``qw degrade``; archived by ``qw retire``.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    former_champion_id: str
+    strategy_id: str
+    champion_id: str
+    degraded_at: datetime
+    oos_reason: str
+    metrics_sharpe_at_degradation: float | None = None
+
+
 class ResearchArtifact(BaseModel):
     """Root artifact payload: union of CSV and Markdown ingests."""
 

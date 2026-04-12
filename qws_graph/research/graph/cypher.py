@@ -512,6 +512,68 @@ ORDER BY ch.best_evidence_score DESC
 #   check_redundancy            — demo_hyp_001 title matches no active champions
 #   portfolio_correlation       — CORRELATED_WITH demo_champ_001 ↔ demo_champ_002 (r=0.72)
 #
+# ---------------------------------------------------------------------------
+# FormerChampion lifecycle queries (QWS-0801)
+# ---------------------------------------------------------------------------
+
+GET_CHAMPION_BY_ID_QUERY = """
+MATCH (ch:Champion {champion_id: $champion_id})
+RETURN ch.champion_id AS champion_id, ch.strategy_id AS strategy_id
+"""
+
+DEGRADE_CHAMPION_QUERY = """
+MATCH (ch:Champion {champion_id: $champion_id})
+MERGE (fc:FormerChampion {former_champion_id: $former_champion_id})
+  ON CREATE SET fc.created_at = datetime()
+  SET fc.strategy_id     = $strategy_id,
+      fc.champion_id     = $champion_id,
+      fc.degraded_at     = datetime($degraded_at),
+      fc.oos_reason      = $oos_reason,
+      fc.metrics_sharpe_at_degradation = $sharpe_at_degradation,
+      fc.updated_at      = datetime()
+MERGE (ch)-[:DEGRADED_TO {detected_at: datetime($degraded_at)}]->(fc)
+RETURN fc.former_champion_id AS former_champion_id
+"""
+
+GET_FORMER_CHAMPION_BY_ID_QUERY = """
+MATCH (fc:FormerChampion {former_champion_id: $former_champion_id})
+RETURN fc.former_champion_id AS former_champion_id,
+       fc.strategy_id AS strategy_id,
+       fc.champion_id AS champion_id,
+       fc.oos_reason AS oos_reason
+"""
+
+RETIRE_FORMER_CHAMPION_QUERY = """
+MATCH (fc:FormerChampion {former_champion_id: $former_champion_id})
+MERGE (rc:RetiredChampion {champion_id: $retired_champion_id})
+  ON CREATE SET rc.created_at = datetime()
+  SET rc.strategy_id      = fc.strategy_id,
+      rc.oos_reason       = fc.oos_reason,
+      rc.retirement_note  = $retirement_note,
+      rc.retired_at       = datetime($retired_at),
+      rc.is_demo          = fc.is_demo,
+      rc.updated_at       = datetime()
+MERGE (fc)-[:RETIRED_TO {retired_at: datetime($retired_at)}]->(rc)
+RETURN rc.champion_id AS retired_champion_id
+"""
+
+GET_FORMER_CHAMPIONS_V1_CYPHER = """
+MATCH (fc:FormerChampion)
+OPTIONAL MATCH (s:Strategy {strategy_id: fc.strategy_id})
+OPTIONAL MATCH (fc)-[:RETIRED_TO]->(rc:RetiredChampion)
+RETURN {
+  former_champion_id: fc.former_champion_id,
+  strategy_id:        fc.strategy_id,
+  instrument:         s.instrument,
+  degraded_at:        fc.degraded_at,
+  oos_reason:         fc.oos_reason,
+  retirement_note:    rc.retirement_note,
+  status:             CASE WHEN rc IS NULL THEN 'DEGRADED' ELSE 'RETIRED' END
+} AS result
+ORDER BY fc.degraded_at DESC
+"""
+
+# ---------------------------------------------------------------------------
 # All nodes carry is_demo=true for clean teardown via DEMO_TEARDOWN_CYPHER.
 # ---------------------------------------------------------------------------
 
@@ -794,6 +856,21 @@ MERGE (sb_corr)-[es2:CORRELATED_WITH {pair_key: 'demo-strategy-alpha|demo-strate
       es2.lookback    = 'full',
       es2.computed_at = datetime('2026-04-11T00:00:00'),
       es2.is_demo     = true
+
+// ── FormerChampion — alpha degraded (QWS-0801) ──────────────────────────────
+
+// Demo FormerChampion 001 — alpha champion demoted; OOS Sharpe decay in Oct CPI spike
+MERGE (fc1:FormerChampion {former_champion_id: 'demo_former_champ_001'})
+  ON CREATE SET fc1.created_at = datetime()
+  SET fc1.strategy_id     = 'demo-strategy-alpha',
+      fc1.champion_id     = 'demo_champ_001',
+      fc1.degraded_at     = datetime('2026-04-01T12:00:00'),
+      fc1.oos_reason      = 'MaxDD breached -15% in Oct CPI spike; OOS Sharpe dropped from 3.1 to 0.4',
+      fc1.metrics_sharpe_at_degradation = 0.4,
+      fc1.is_demo         = true,
+      fc1.updated_at      = datetime()
+MERGE (ch1_deg:Champion {champion_id: 'demo_champ_001'})
+MERGE (ch1_deg)-[:DEGRADED_TO {detected_at: datetime('2026-04-01T12:00:00')}]->(fc1)
 """.strip()
 
 

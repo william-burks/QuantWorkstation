@@ -140,7 +140,7 @@ Dependency notes: QWS-0602 and QWS-0603 are independent — start parallel. QWS-
 - Objective: close gaps blocking real end-to-end research sessions
 
 Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
-1. `QWS-0801` `story_1_former_champion_lifecycle.md` — `READY`
+1. `QWS-0801` `story_1_former_champion_lifecycle.md` — `TESTING`
 2. `QWS-0703` `story_2_openai_curation.md` — `READY`
 3. `QWS-0804` `story_3_correlation_gate_recheck.md` — `BLOCKED` _(blocked on QWS-0801 CLOSED)_
 
