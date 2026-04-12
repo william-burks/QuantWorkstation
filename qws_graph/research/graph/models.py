@@ -105,23 +105,6 @@ class Champion(BaseModel):
         return self
 
 
-class FormerChampionNode(BaseModel):
-    """FormerChampion node: decay-watch state between Champion and RetiredChampion.
-
-    Created by qw degrade. Sits between Champion (DEGRADED_TO) and
-    RetiredChampion (RETIRED_TO). oos_reason is mandatory and non-empty.
-    """
-
-    model_config = ConfigDict(extra="ignore")
-
-    former_champion_id: str  # hash12(champion_id + degraded_at_iso)
-    strategy_id: str
-    champion_id: str  # source Champion node ID
-    degraded_at: datetime
-    oos_reason: str  # mandatory; rejects empty string
-    metrics_sharpe_at_degradation: float | None = None
-
-
 class RunStatsSummary(BaseModel):
     """Aggregate stats for grid-sweep runs that did not pass the significance gate.
 

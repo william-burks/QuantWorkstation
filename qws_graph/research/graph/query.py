@@ -530,22 +530,6 @@ RETURN {
 LIMIT 1
 """.strip()
 
-GET_FORMER_CHAMPIONS_V1_CYPHER = """
-MATCH (fc:FormerChampion)
-OPTIONAL MATCH (s:Strategy {strategy_id: fc.strategy_id})
-OPTIONAL MATCH (fc)-[:RETIRED_TO]->(rc:RetiredChampion)
-RETURN {
-  former_champion_id: fc.former_champion_id,
-  strategy_id: fc.strategy_id,
-  instrument: s.instrument,
-  degraded_at: toString(fc.degraded_at),
-  oos_reason: fc.oos_reason,
-  retirement_note: rc.retirement_note,
-  status: CASE WHEN rc IS NOT NULL THEN 'RETIRED' ELSE 'DEGRADED' END
-} AS result
-ORDER BY fc.degraded_at DESC
-""".strip()
-
 GET_SIMILAR_HYPOTHESES_V1_CYPHER = """
 MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})-[r:SEMANTICALLY_RELATED]->(other:Hypothesis)
 RETURN {
@@ -701,10 +685,6 @@ class GraphQueryService:
     def get_similar_hypotheses_v1(self, hypothesis_id: str) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_similar_hypotheses_v1(session, hypothesis_id=hypothesis_id)
-
-    def get_former_champions_v1(self) -> list[dict[str, Any]]:
-        with self._driver.session(database=self._database) as session:
-            return get_former_champions_v1(session)
 
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
@@ -1162,16 +1142,6 @@ def get_similar_hypotheses_v1(
     return _all_results(session, GET_SIMILAR_HYPOTHESES_V1_CYPHER, hypothesis_id=hypothesis_id)
 
 
-def get_former_champions_v1(session: QuerySession) -> list[dict[str, Any]]:
-    """Return all FormerChampion nodes with cemetery view fields.
-
-    Columns: former_champion_id, strategy_id, instrument, degraded_at,
-    oos_reason, retirement_note (null if DEGRADED), status (DEGRADED | RETIRED).
-    Ordered by degraded_at DESC.
-    """
-    return _all_results(session, GET_FORMER_CHAMPIONS_V1_CYPHER)
-
-
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -1196,7 +1166,6 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_hypothesis_audit_v1": get_hypothesis_audit_v1,
     "get_check_redundancy_v1": get_check_redundancy_v1,
     "get_similar_hypotheses_v1": get_similar_hypotheses_v1,
-    "get_former_champions_v1": get_former_champions_v1,
 }
 
 

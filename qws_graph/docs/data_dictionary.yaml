@@ -629,75 +629,17 @@ nodes:
         nullable: false
         graph_only: true
 
-  FormerChampion:
-    description: >
-      Decay-watch intermediate node between Champion and RetiredChampion. Created
-      via qw degrade when a Champion shows declining performance. Mandatory
-      oos_reason captures cause-of-death for cemetery-view queries. May be
-      further retired via qw retire to produce a RetiredChampion node.
-    id_key: former_champion_id
-    id_source: "hash12(champion_id, degraded_at_iso)"
-    labels: ["FormerChampion"]
-    story: QWS-0801
-    properties:
-      former_champion_id:
-        type: str
-        nullable: false
-        description: "hash12(champion_id, degraded_at_iso)"
-      strategy_id:
-        type: str
-        nullable: false
-        description: Foreign key to Strategy.strategy_id.
-      champion_id:
-        type: str
-        nullable: false
-        description: Source Champion node ID.
-      degraded_at:
-        type: datetime
-        nullable: false
-        description: Timestamp of demotion via qw degrade.
-      oos_reason:
-        type: str
-        nullable: false
-        description: >
-          Mandatory cause-of-death string. Cannot be empty. Set at qw degrade time.
-          Copied to RetiredChampion at qw retire time.
-      metrics_sharpe_at_degradation:
-        type: float
-        nullable: true
-        description: Sharpe ratio at time of demotion, if provided by caller.
-      created_at:
-        type: datetime
-        nullable: false
-        graph_only: true
-      updated_at:
-        type: datetime
-        nullable: false
-        graph_only: true
-
   RetiredChampion:
     description: >
       A Champion node that has been displaced by a newer promotion. Carries all
       the same properties as Champion. Label is swapped atomically — the node is
       never deleted, only relabeled. Querying :Champion returns only the active
       set; querying :RetiredChampion returns the full lineage chain.
-      May also be created via qw retire (FormerChampion → RetiredChampion path)
-      in which case it carries oos_reason and retirement_note from QWS-0801.
     id_key: champion_id
     labels: ["RetiredChampion"]
     note: >
       Do not MERGE on :RetiredChampion — the store layer handles re-labeling.
       Bare MATCH (ch:Champion) will never return RetiredChampion nodes.
-    new_properties_qws_0801:
-      oos_reason:
-        type: str
-        nullable: true
-        description: Copied from FormerChampion.oos_reason at qw retire time.
-      retirement_note:
-        type: str
-        nullable: true
-        description: >
-          Free-text reason for final retirement. Optional — set at qw retire time.
 
   RunStatsSummary:
     description: >
