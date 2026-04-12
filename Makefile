@@ -56,11 +56,10 @@ to-master: check-clean
 # 4. Commit story status update + arm agent phase gate (atomic — sentinel cannot be skipped)
 # Usage: make commit-story-status STORY=QWS-0801
 #        make commit-story-status STORY=QWS-0801 MSG="custom commit message"
-COMMIT_MSG ?= status($(STORY)): READY → TESTING
 commit-story-status:
 	@[ -n "$(STORY)" ] || (echo "ERROR: STORY required. Usage: make commit-story-status STORY=QWS-0801"; exit 1)
 	git add -u
-	git commit -m "$(COMMIT_MSG)"
+	git commit -m "$(if $(MSG),$(MSG),status($(STORY)): READY → TESTING)"
 	@echo "done" > /tmp/agent-step8-committed.txt
 	@echo "Phase gate armed. Agent hard stop active."
 
