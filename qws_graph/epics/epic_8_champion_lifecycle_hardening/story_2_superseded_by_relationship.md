@@ -4,7 +4,7 @@
 QWS-0802
 
 ## Status
-READY
+TESTING
 
 ## Blocked On
 None (independent of QWS-0801)
