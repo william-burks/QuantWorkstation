@@ -6,16 +6,9 @@ using FakeDriver duck-types — no live Neo4j required.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from typing import Any
 
 import pytest
-
-QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
-if str(QWS_GRAPH_ROOT) not in sys.path:
-    sys.path.insert(0, str(QWS_GRAPH_ROOT))
-
 from research.graph.store import GraphStore, StoreInfraError
 
 # ---------------------------------------------------------------------------

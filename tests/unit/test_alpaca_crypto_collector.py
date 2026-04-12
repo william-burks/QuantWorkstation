@@ -3,11 +3,10 @@ Unit tests for the Alpaca crypto collector.
 All external calls (Alpaca API, arcticdb store) are mocked.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
-import pytest
 
 from data.collectors.alpaca_crypto import _bars_to_df, collect
 
@@ -35,7 +34,7 @@ def _make_response(symbol: str, bars: list) -> MagicMock:
 # ------------------------------------------------------------------
 
 def test_bars_to_df_shape():
-    ts = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    ts = datetime(2024, 1, 1, tzinfo=UTC)
     bars = [_make_mock_bar(ts), _make_mock_bar(ts + timedelta(days=1))]
     df = _bars_to_df(bars)
     assert len(df) == 2
@@ -47,7 +46,7 @@ def test_bars_to_df_shape():
 
 
 def test_bars_to_df_index_is_utc():
-    ts = datetime(2024, 6, 1, tzinfo=timezone.utc)
+    ts = datetime(2024, 6, 1, tzinfo=UTC)
     bars = [_make_mock_bar(ts)]
     df = _bars_to_df(bars)
     assert df.index.tz is not None
@@ -65,7 +64,7 @@ def test_collect_init_fetches_two_years(mock_client, mock_get_store):
     store.has_symbol.return_value = False
     mock_get_store.return_value = store
 
-    ts = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    ts = datetime(2024, 1, 1, tzinfo=UTC)
     mock_bars = [_make_mock_bar(ts + timedelta(days=i)) for i in range(5)]
     response = _make_response("BTC/USD", mock_bars)
 
@@ -98,7 +97,7 @@ def test_collect_init_start_is_approx_two_years_ago(mock_client, mock_get_store)
 
     request = client.get_crypto_bars.call_args[0][0]
     # CryptoBarsRequest stores start as tz-naive; compare without tz
-    now = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+    now = datetime.now(tz=UTC).replace(tzinfo=None)
     start = request.start if isinstance(request.start, datetime) else request.start.to_pydatetime().replace(tzinfo=None)
     age = now - start
     assert 720 <= age.days <= 732  # ~2 years

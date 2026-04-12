@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 import json
-import sys
 from datetime import UTC, date, datetime
 from importlib import import_module
 from pathlib import Path
 
 import pytest
-
-QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
-if str(QWS_GRAPH_ROOT) not in sys.path:
-    sys.path.insert(0, str(QWS_GRAPH_ROOT))
 
 ids_module = import_module("research.graph.ids")
 models_module = import_module("research.graph.models")

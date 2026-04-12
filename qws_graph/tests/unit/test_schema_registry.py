@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-import sys
+from datetime import UTC, datetime
 from importlib import import_module
 from pathlib import Path
 
 import pytest
-
-QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
-if str(QWS_GRAPH_ROOT) not in sys.path:
-    sys.path.insert(0, str(QWS_GRAPH_ROOT))
 
 registry_module = import_module("research.graph.schema_registry")
 parsers_module = import_module("research.graph.parsers")
@@ -24,8 +20,6 @@ get_config_keys = registry_module.get_config_keys
 all_config_keys = registry_module.all_config_keys
 
 CSVParser = parsers_module.CSVParser
-
-from datetime import UTC, datetime
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "artifacts"
 

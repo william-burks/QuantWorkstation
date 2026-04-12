@@ -6,7 +6,7 @@ Incremental run: fetches bars since the last stored timestamp.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pandas as pd
 from alpaca.data.historical import CryptoHistoricalDataClient
@@ -62,7 +62,7 @@ def collect(symbol: str, timeframe: str = "daily") -> None:
     lib = "crypto"
     store_key = f"{symbol}_{timeframe}"
 
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
 
     if store.has_symbol(lib, store_key):
         existing = store.read_bars(lib, store_key)

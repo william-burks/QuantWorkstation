@@ -1,6 +1,6 @@
 """Quote schema tests."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -11,7 +11,7 @@ from data.schemas import Quote
 def make_quote(**overrides):
     defaults = dict(
         symbol="BTC/USD",
-        timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        timestamp=datetime(2024, 1, 1, tzinfo=UTC),
         bid=40000.0,
         ask=40010.0,
         bid_size=0.5,

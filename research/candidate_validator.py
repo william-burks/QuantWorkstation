@@ -17,17 +17,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, field_validator, model_validator
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError, field_validator, model_validator
 
 from research.experiments.standards import (
-    CALMAR,
     MAX_DRAWDOWN_LIMIT,
     MIN_TRADES_PER_YEAR,
-    PROFIT_FACTOR,
     SHARPE,
 )
-
 
 # ---------------------------------------------------------------------------
 # Schema models
@@ -125,7 +121,7 @@ class StrategyCandidate(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def non_empty_required_strings(self) -> "StrategyCandidate":
+    def non_empty_required_strings(self) -> StrategyCandidate:
         for field in ("hypothesis", "signal_logic", "researcher_notes"):
             if not getattr(self, field, "").strip():
                 raise ValueError(f"{field} must not be empty")

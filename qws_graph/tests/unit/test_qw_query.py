@@ -4,17 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
-from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
-if str(QWS_GRAPH_ROOT) not in sys.path:
-    sys.path.insert(0, str(QWS_GRAPH_ROOT))
-
 from research.graph.cli import cmd_query
 from research.graph.query_presets import (
     PRESET_CATALOG,

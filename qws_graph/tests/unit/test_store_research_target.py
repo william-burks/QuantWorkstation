@@ -8,16 +8,9 @@ Covers:
 
 from __future__ import annotations
 
-import sys
 from argparse import Namespace
-from pathlib import Path
 
 import pytest
-
-QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
-if str(QWS_GRAPH_ROOT) not in sys.path:
-    sys.path.insert(0, str(QWS_GRAPH_ROOT))
-
 from research.graph.cli import cmd_seed
 from research.graph.store import (
     _RESEARCH_TARGET_DEFAULTS,

@@ -1,6 +1,6 @@
 """Roll calendar + continuous series builder tests."""
 
-from datetime import date, timezone
+from datetime import date
 
 import pandas as pd
 import pytest

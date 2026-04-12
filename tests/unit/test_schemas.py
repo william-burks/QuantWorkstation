@@ -1,6 +1,6 @@
 """Schema validation tests."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -11,7 +11,7 @@ from data.schemas import Bar, FuturesContract, Position, Signal
 def make_bar(**overrides):
     defaults = dict(
         symbol="BTC/USD",
-        timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        timestamp=datetime(2024, 1, 1, tzinfo=UTC),
         open=40000.0,
         high=41000.0,
         low=39000.0,
@@ -67,7 +67,7 @@ def test_signal_valid():
     s = Signal(
         strategy="mars",
         symbol="ES_continuous",
-        timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        timestamp=datetime(2024, 1, 1, tzinfo=UTC),
         direction="long",
         strength=0.8,
     )
@@ -79,7 +79,7 @@ def test_signal_strength_out_of_range():
         Signal(
             strategy="mars",
             symbol="ES_continuous",
-            timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
             direction="long",
             strength=1.5,
         )

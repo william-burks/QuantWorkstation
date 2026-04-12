@@ -1,5 +1,6 @@
-from data.store import get_store
 from strategies.ema_crossover import EMACrossover
+
+from data.store import get_store
 from research.experiments.sweep import sweep
 
 bars = get_store().read_bars("crypto", "BTC/USD_1D")

@@ -878,7 +878,7 @@ def cmd_record(args: argparse.Namespace) -> int:
                     artifact = analyst.annotate(candidates)
                     artifact = _keep_approved(artifact)
                 except AnalystUnavailableError as _exc:
-                    print(f"WARNING: AI analyst unavailable — falling back to math tier", file=sys.stderr)
+                    print("WARNING: AI analyst unavailable — falling back to math tier", file=sys.stderr)
                     artifact, summary = apply_significance_gate(artifact)
             except ImportError:
                 artifact, summary = apply_significance_gate(artifact)

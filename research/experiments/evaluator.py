@@ -10,7 +10,7 @@ Public API:
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -408,7 +408,7 @@ def _record_passing(results: pd.DataFrame, metadata: dict) -> None:
             continue
         row = subset.sort_values("sharpe", ascending=False).iloc[0]
         entry = {
-            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "recorded_at": datetime.now(UTC).isoformat(),
             "strategy":    metadata.get("strategy", "unknown"),
             "symbol":      metadata.get("symbol", "unknown"),
             "freq":        metadata.get("freq", "unknown"),

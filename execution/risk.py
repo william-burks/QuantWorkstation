@@ -17,7 +17,7 @@ All state is in-memory. Resets on process restart.
 import logging
 from collections import deque
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 log = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ LOT_SPIKE_FACTOR = 2.0
 COMPLIANCE_LOT_FRACTION = 0.001  # 0.1% of equity in compliance mode
 
 
-class TradingState(str, Enum):
+class TradingState(StrEnum):
     TRADING = "TRADING"
     DAILY_CAP_HIT = "DAILY_CAP_HIT"      # 2.5% profit reached — done for day
     DAILY_LOSS_HALT = "DAILY_LOSS_HALT"  # 5% daily loss breached — kill-switch

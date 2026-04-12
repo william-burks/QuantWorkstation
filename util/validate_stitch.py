@@ -11,14 +11,12 @@ Usage:
 import logging
 import sys
 
-import pandas as pd
 from ib_insync import IB
 
 from data.collectors.ibkr_futures import (
-    _CONTRACT_SPECS,
     _TIMEFRAMES,
-    _get_contract_chain,
     _fetch_contract_bars,
+    _get_contract_chain,
     _ratio_stitch,
 )
 from data.config import get_settings
@@ -47,7 +45,7 @@ try:
     for c in chain:
         print(f"  {c.lastTradeDateOrContractMonth[:8]}")
 
-    print(f"\nFetching bars for each contract...")
+    print("\nFetching bars for each contract...")
     frames = []
     for contract in chain:
         expiry = contract.lastTradeDateOrContractMonth[:8]
@@ -69,7 +67,7 @@ if not frames:
 print(f"\nStitching {len(frames)} frames (logs show roll detail)...")
 stitched = _ratio_stitch(frames, label=f"{ROOT} {TIMEFRAME}")
 
-print(f"\n=== Stitched series ===")
+print("\n=== Stitched series ===")
 print(f"  Bars:  {len(stitched):,}")
 print(f"  Span:  {stitched.index.min()} → {stitched.index.max()}")
 
@@ -133,7 +131,7 @@ else:
 # === Cross-timeframe return check (uses stored data — no IBKR needed) ===
 # Price levels will differ between timeframes (different cumulative back-adjustment chains).
 # Returns must match: hourly return computed from 15min closes == 1H return at same timestamp.
-print(f"\n=== Cross-timeframe return check (15min vs 1H from store) ===")
+print("\n=== Cross-timeframe return check (15min vs 1H from store) ===")
 try:
     from data.store import get_store
     store = get_store()

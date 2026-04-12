@@ -1,9 +1,8 @@
 import pytest
 
-from data.schemas.order import Order
 from execution.oms import OMS
-from execution.types import PositionState
 from execution.risk import RiskEngine
+from execution.types import PositionState
 
 BALANCE = 100_000.0
 
