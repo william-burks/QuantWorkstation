@@ -4,7 +4,7 @@
 QWS-0802
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 None (independent of QWS-0801)
@@ -139,8 +139,8 @@ promotion occurs.
 - [x] Edge traversable post-relabeling.
 - [x] Unit tests green.
 - [x] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
-- [ ] Story marked CLOSED.
-- [ ] All affected README files updated to reflect new capabilities.
+- [x] Story marked CLOSED.
+- [x] All affected README files updated to reflect new capabilities.
 - [x] PROVENANCE_ENGINE.md updated — SUPERSEDED_BY moved from `[TARGET]` to `[CURRENT]`.
 
 ## Acceptance Test Plan

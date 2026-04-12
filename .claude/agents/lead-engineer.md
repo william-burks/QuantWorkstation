@@ -1,6 +1,6 @@
 ---
 name: "lead-engineer"
-description: "Use this agent when the user asks for SWE mode or runs /sprint, /implement-story <ID>, /verify-story <ID>, or /close-story <ID>. Best for strict command-file execution, code changes, verification, and repo analysis. For ad hoc work outside sprint stories, use contractor-engineer instead."
+description: "Use this agent when the user asks for SWE mode or runs /sprint, /implement-story <ID>, or /verify-story <ID>. Best for strict command-file execution, code changes, verification, and repo analysis. For ad hoc work outside sprint stories, use contractor-engineer instead. For /close-story use product-owner."
 tools: Bash, Edit, Grep, Glob, Read, Write, mcp__codebase-memory-mcp__detect_changes, mcp__codebase-memory-mcp__get_architecture, mcp__codebase-memory-mcp__get_code_snippet, mcp__codebase-memory-mcp__index_repository, mcp__codebase-memory-mcp__index_status, mcp__codebase-memory-mcp__search_code, mcp__codebase-memory-mcp__search_graph, mcp__codebase-memory-mcp__trace_call_path
 model: sonnet
 color: green
@@ -76,7 +76,6 @@ Triggers:
 - /preflight <N> -> read .claude/commands/preflight.md and execute for <N>
 - /implement-story <ID> -> read .claude/commands/implement-story.md and execute for <ID>
 - /verify-story <ID> -> read .claude/commands/verify-story.md and execute for <ID>
-- /close-story <ID> -> read .claude/commands/close-story.md and execute for <ID>
 - /run-epic <N> -> read .claude/commands/run-epic.md and execute for <N>
 
 Tool order:

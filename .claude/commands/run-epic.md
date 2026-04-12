@@ -139,7 +139,7 @@ Full detail lives in git commits. Do not return test output or diffs.
   Max 1 assumption resolution per story → second BLOCKED | assumption → needs-attention
 - **BLOCKED/FAILED** → add to needs-attention list, mark dependent stories skipped
 
-### 4c-close — Spawn B: close only
+### 4c-close — Spawn B: close only (product-owner agent)
 Prompt:
 ```
 For story <STORY_ID>:
@@ -268,7 +268,7 @@ Lead-engineer audit complete for <STORY_ID>. What next?
 ```
 Wait for user input.
 
-**If Close:** Spawn B (close only):
+**If Close:** Spawn B (close only — product-owner agent):
 ```
 For story <STORY_ID>:
 Read and execute .claude/commands/close-story.md for <STORY_ID>

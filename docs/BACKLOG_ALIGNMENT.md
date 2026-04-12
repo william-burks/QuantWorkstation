@@ -75,7 +75,7 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| SUPERSEDED_BY Relationship | QWS-0802 (**TESTING**) | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
+| SUPERSEDED_BY Relationship | QWS-0802 (**CLOSED**) | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
 | Recursive Validation Loop | QWS-0803 (**READY**) | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | ~~QWS-0801 CLOSED~~ (satisfied) |
 | Champion Promotion Rationale | QWS-0805 (**READY**) | `promotion_rationale` property on Champion node; `--rationale` flag on `qw record`; included in `recent_champions` preset output | — |
 
@@ -147,7 +147,7 @@ _(None pending — FormerChampion implemented in QWS-0801)_
 ### Relationships
 | Relationship | Story |
 |---|---|
-| `SUPERSEDED_BY` | QWS-0802 |
+| `SUPERSEDED_BY` | QWS-0802 (**IMPLEMENTED**) |
 | `CORRELATED_WITH` | QWS-0603 (**IMPLEMENTED**) |
 | `SEMANTICALLY_RELATED` | QWS-0604 (**IMPLEMENTED**) |
 
