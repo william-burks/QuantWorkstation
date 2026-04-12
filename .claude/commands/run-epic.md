@@ -152,10 +152,17 @@ Return max 3 lines: CLOSED | BLOCKED | FAILED — one-line summary — any block
 - **CLOSED** → `make to-release` (pushes feature, merges to release, pushes release)
 - **BLOCKED/FAILED** → add to needs-attention list, mark dependent stories skipped
 
-### 4e — Update progress file
+### 4e — Update progress file + continue loop
 After each story completes (any outcome), update `/tmp/run_epic_$EPIC_progress.md`:
 - Set story row to `CLOSED`, `BLOCKED`, `FAILED`, or `SKIPPED` with one-line summary
-- Report to user: `QWS-XXXX CLOSED. N/M complete. Next: QWS-YYYY`
+
+**Do NOT wait for user input. Immediately proceed to the next story in the list (back to Step 4a).**
+Only stop the loop when:
+- All stories are processed → proceed to Step 5
+- A story is BLOCKED/FAILED and has dependents that must be skipped → skip dependents, then continue with remaining independent stories
+- No remaining stories → proceed to Step 5
+
+Print one line between stories: `QWS-XXXX CLOSED. N/M complete. Continuing → QWS-YYYY`
 
 This file is the resume checkpoint. If the session dies, `/run-epic $EPIC QWS-YYYY` picks up here.
 
