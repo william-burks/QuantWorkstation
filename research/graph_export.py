@@ -35,19 +35,21 @@ COLUMN_ALIASES: dict[str, str] = {
 # Must match the required set of qws_graph CSV parser.
 # ---------------------------------------------------------------------------
 
-REQUIRED_FIELDS: frozenset[str] = frozenset({
-    "instrument",
-    "timeframe",
-    "direction",
-    "logic_type",
-    "total_trades",
-    "sharpe",
-    "profit_factor",
-    "win_rate",
-    "max_drawdown",
-    "first_trade_ts",
-    "last_trade_ts",
-})
+REQUIRED_FIELDS: frozenset[str] = frozenset(
+    {
+        "instrument",
+        "timeframe",
+        "direction",
+        "logic_type",
+        "total_trades",
+        "sharpe",
+        "profit_factor",
+        "win_rate",
+        "max_drawdown",
+        "first_trade_ts",
+        "last_trade_ts",
+    }
+)
 
 VALID_DIRECTIONS: frozenset[str] = frozenset({"long", "short", "bear", "bull"})
 

@@ -155,9 +155,7 @@ class TestOpenAIAnalystAnnotation:
             ' {"run_id": "run-001", "approved": false, "curator_note": "High drawdown concern."}]'
         )
         mock_response.read.return_value = (
-            '{"choices": [{"message": {"content": '
-            + __import__("json").dumps(_runs)
-            + "}}]}"
+            '{"choices": [{"message": {"content": ' + __import__("json").dumps(_runs) + "}}]}"
         ).encode()
         mock_response.__enter__.return_value = mock_response
         mock_urlopen.return_value = mock_response

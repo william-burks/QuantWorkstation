@@ -30,10 +30,10 @@ CALMAR: dict[str, float] = {
 }
 
 # --- Hard limits — automatic FAIL regardless of other metrics ---
-MAX_DRAWDOWN_LIMIT: float = -0.20   # DD worse than -20% = FAIL
+MAX_DRAWDOWN_LIMIT: float = -0.20  # DD worse than -20% = FAIL
 
 # --- Statistical reliability floor ---
-MIN_TRADES_PER_YEAR: int = 12       # Below this trade count = unreliable
+MIN_TRADES_PER_YEAR: int = 12  # Below this trade count = unreliable
 
 # --- Tier ordering (best → worst) ---
 TIERS: list[str] = ["institutional", "professional", "pass", "fail"]

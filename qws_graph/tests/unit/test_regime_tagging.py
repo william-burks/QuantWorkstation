@@ -18,6 +18,7 @@ from research.graph.query_presets import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_run(**kwargs: Any) -> Run:
     defaults: dict[str, Any] = {
         "run_id": "abc123def456",
@@ -61,6 +62,7 @@ class FakeRegimeService:
 # Run model: regime field
 # ---------------------------------------------------------------------------
 
+
 class TestRunModelRegimeField:
     def test_regime_defaults_to_none(self) -> None:
         run = _make_run()
@@ -89,6 +91,7 @@ class TestRunModelRegimeField:
 # ---------------------------------------------------------------------------
 # CLI: --regime flag parsing
 # ---------------------------------------------------------------------------
+
 
 def _parse_qw_args(argv: list[str]) -> argparse.Namespace:
     """Parse qw CLI args by invoking main's parser setup via sys.argv substitution."""
@@ -125,9 +128,7 @@ class TestCliRegimeFlag:
         assert args.regime == "high_vol"
 
     def test_regime_absent_is_none(self) -> None:
-        args = _parse_qw_args(
-            ["record", "--file", "results.csv", "--kind", "baseline_csv"]
-        )
+        args = _parse_qw_args(["record", "--file", "results.csv", "--kind", "baseline_csv"])
         assert args.regime is None
 
     def test_regime_injected_into_runs(self) -> None:
@@ -255,6 +256,7 @@ class TestCliRegimeFlag:
 # ---------------------------------------------------------------------------
 # Preset catalog: runs_by_regime
 # ---------------------------------------------------------------------------
+
 
 class TestRunsByRegimePreset:
     def test_runs_by_regime_in_catalog(self) -> None:
@@ -414,8 +416,14 @@ class TestRegimePerformancePreset:
         svc = FakeRegimePerformanceService(rows)
         result = run_preset("regime_performance", {}, service=svc)
         required = {
-            "strategy_id", "instrument", "family_id", "regime",
-            "best_sharpe", "run_count", "diversity_score", "fragility_class",
+            "strategy_id",
+            "instrument",
+            "family_id",
+            "regime",
+            "best_sharpe",
+            "run_count",
+            "diversity_score",
+            "fragility_class",
         }
         for row in result:
             assert required.issubset(row.keys()), f"Missing fields in {row}"

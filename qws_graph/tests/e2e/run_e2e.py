@@ -35,31 +35,32 @@ NEO4J_PASSWORD = "password"
 # Test case definitions
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class E2ECase:
     name: str
     kind: str
     fixture: Path
-    strategy_id: str                     # used for targeted graph queries
-    expect_promotion: bool               # at least one PROMOTION CANDIDATE in stdout
-    expect_institutional: bool = False   # tier=institutional in stdout
-    expect_run_count: int = 0            # delta Run nodes expected (0 = skip)
-    expect_pivot: bool = False           # this strategy's champion has PIVOTED_FROM
-    expect_no_pivot: bool = False        # this strategy's champion has no PIVOTED_FROM
-    expect_blob: bool = False            # BlobArtifact node created for this strategy
-    pivot_from_strategy: str = ""        # if set, runner queries a real run_id for this
-                                         # strategy and passes it as --pivot-from at ingest
+    strategy_id: str  # used for targeted graph queries
+    expect_promotion: bool  # at least one PROMOTION CANDIDATE in stdout
+    expect_institutional: bool = False  # tier=institutional in stdout
+    expect_run_count: int = 0  # delta Run nodes expected (0 = skip)
+    expect_pivot: bool = False  # this strategy's champion has PIVOTED_FROM
+    expect_no_pivot: bool = False  # this strategy's champion has no PIVOTED_FROM
+    expect_blob: bool = False  # BlobArtifact node created for this strategy
+    pivot_from_strategy: str = ""  # if set, runner queries a real run_id for this
+    # strategy and passes it as --pivot-from at ingest
     # Non-record commands (qw seed, qw abort, qw query, qw record --oos)
     qw_args: list[str] = field(default_factory=list)
-    oos_champion_strategy: str = ""      # oos_update: look up live champion_id for this strategy
+    oos_champion_strategy: str = ""  # oos_update: look up live champion_id for this strategy
     # Additional assertion fields
-    expect_ok_substr: str = ""           # stdout must contain this string
-    expect_oos_status: str = ""          # champion for strategy_id has this oos_status
-    expect_run_awf: bool = False         # run for strategy_id has non-null active_window_frequency
+    expect_ok_substr: str = ""  # stdout must contain this string
+    expect_oos_status: str = ""  # champion for strategy_id has this oos_status
+    expect_run_awf: bool = False  # run for strategy_id has non-null active_window_frequency
     expect_run_duty_cycle: bool = False  # run for strategy_id has non-null duty_cycle
     expect_strategy_aborted: bool = False  # strategy_id has status=ABORTED
-    expect_research_target: bool = False   # ResearchTarget singleton node exists in graph
-    expect_query_nonempty: bool = False    # stdout does not contain "No results"
+    expect_research_target: bool = False  # ResearchTarget singleton node exists in graph
+    expect_query_nonempty: bool = False  # stdout does not contain "No results"
     # max trial_number on RunStatsSummary for strategy_id (0 = skip)
     expect_trial_number: int = 0
 
@@ -78,7 +79,6 @@ CASES: list[E2ECase] = [
         expect_ok_substr="OK: ResearchTarget seeded",
         expect_research_target=True,
     ),
-
     # -----------------------------------------------------------------------
     # QWS-0405: Promotion alert evaluation
     # -----------------------------------------------------------------------
@@ -99,7 +99,6 @@ CASES: list[E2ECase] = [
         expect_institutional=True,
         expect_run_count=2,  # institutional + professional rows (low-sharpe + null-AWF skipped)
     ),
-
     # -----------------------------------------------------------------------
     # QWS-0406: list_oos_pending — preset executes without error
     # Note: expect_query_nonempty is intentionally omitted — this preset queries
@@ -116,7 +115,6 @@ CASES: list[E2ECase] = [
         expect_promotion=False,
         qw_args=["query", "--name", "list_oos_pending"],
     ),
-
     # -----------------------------------------------------------------------
     # QWS-0406: promotion_candidates — preset executes without error
     # Note: expect_query_nonempty is intentionally omitted — results depend on
@@ -131,7 +129,6 @@ CASES: list[E2ECase] = [
         expect_promotion=False,
         qw_args=["query", "--name", "promotion_candidates"],
     ),
-
     # -----------------------------------------------------------------------
     # QWS-0402: OOS status update
     # -----------------------------------------------------------------------
@@ -146,7 +143,6 @@ CASES: list[E2ECase] = [
         expect_ok_substr="OK: Champion",
         expect_oos_status="oos_pass",
     ),
-
     # -----------------------------------------------------------------------
     # QWS-0408: research_targets query — ResearchTarget seeded in case 0
     # -----------------------------------------------------------------------
@@ -159,7 +155,6 @@ CASES: list[E2ECase] = [
         qw_args=["query", "--name", "research_targets"],
         expect_query_nonempty=True,
     ),
-
     # -----------------------------------------------------------------------
     # QWS-0405: low sharpe — no alert
     # -----------------------------------------------------------------------
@@ -172,7 +167,6 @@ CASES: list[E2ECase] = [
         strategy_id="cl-1h-bear-liquidity-sweep",
         expect_promotion=False,
     ),
-
     # -----------------------------------------------------------------------
     # QWS-0407: Significance gate properties — AWF + duty_cycle written to Run
     # -----------------------------------------------------------------------
@@ -186,7 +180,6 @@ CASES: list[E2ECase] = [
         expect_run_awf=True,
         expect_run_duty_cycle=True,
     ),
-
     # -----------------------------------------------------------------------
     # Grid ingest — explicit strategy cols
     # -----------------------------------------------------------------------
@@ -198,7 +191,6 @@ CASES: list[E2ECase] = [
         expect_promotion=False,
         expect_run_count=3,
     ),
-
     # -----------------------------------------------------------------------
     # Strategy abort + QWS-0406: list_aborted
     # es-1h-bear-baseline was seeded by the with_duty_cycle case above
@@ -210,7 +202,11 @@ CASES: list[E2ECase] = [
         strategy_id="es-1h-bear-baseline",
         expect_promotion=False,
         qw_args=[
-            "abort", "--strategy", "es-1h-bear-baseline", "--reason", "e2e: data quality issue",
+            "abort",
+            "--strategy",
+            "es-1h-bear-baseline",
+            "--reason",
+            "e2e: data quality issue",
         ],
         expect_ok_substr="OK: Strategy",
         expect_strategy_aborted=True,
@@ -224,7 +220,6 @@ CASES: list[E2ECase] = [
         qw_args=["query", "--name", "list_aborted"],
         expect_query_nonempty=True,
     ),
-
     # -----------------------------------------------------------------------
     # Champion pivot — grid setup then champion_md ingest
     # -----------------------------------------------------------------------
@@ -266,7 +261,6 @@ CASES: list[E2ECase] = [
         expect_promotion=False,
         expect_blob=True,
     ),
-
     # -----------------------------------------------------------------------
     # trial_number — monotonic per-strategy execution counter on RunStatsSummary
     # -----------------------------------------------------------------------
@@ -285,6 +279,7 @@ CASES: list[E2ECase] = [
 # ---------------------------------------------------------------------------
 # Neo4j helpers
 # ---------------------------------------------------------------------------
+
 
 def _connect():
     try:
@@ -316,8 +311,10 @@ def _query_counts(driver) -> dict[str, int]:
     when a label hasn't been created yet (e.g. BlobArtifact on first run).
     """
     with driver.session(database="neo4j") as s:
+
         def c(q):
             return s.run(q).single()["c"]
+
         return {
             "Strategy": c("OPTIONAL MATCH (n:Strategy) RETURN count(n) AS c"),
             "Run": c("OPTIONAL MATCH (n:Run) RETURN count(n) AS c"),
@@ -449,6 +446,7 @@ def _delete_nodes_by_element_ids(driver, eids: set[str]) -> int:
         ).single()
         return result["c"] if result else 0
 
+
 # ---------------------------------------------------------------------------
 # Reporting helpers
 # ---------------------------------------------------------------------------
@@ -547,9 +545,7 @@ def _check(result: CaseResult, driver) -> None:
     if case.expect_run_duty_cycle:
         dc = _run_duty_cycle(driver, case.strategy_id)
         if dc is None:
-            result.failures.append(
-                f"expected non-null duty_cycle on a Run for {case.strategy_id}"
-            )
+            result.failures.append(f"expected non-null duty_cycle on a Run for {case.strategy_id}")
 
     # Strategy abort check
     if case.expect_strategy_aborted:
@@ -576,6 +572,7 @@ def _check(result: CaseResult, driver) -> None:
 # ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
+
 
 def run_case(case: E2ECase, driver) -> CaseResult:
     before = _query_counts(driver)
@@ -631,10 +628,12 @@ def print_result(i: int, total: int, result: CaseResult) -> None:
 
     # Show relevant stdout lines
     relevant = [
-        ln for ln in result.stdout.splitlines()
-        if any(kw in ln for kw in (
-            "[PROMOTION", "[PROMOTED]", "[SKIPPED]", "OK:", "ERROR", "No results"
-        ))
+        ln
+        for ln in result.stdout.splitlines()
+        if any(
+            kw in ln
+            for kw in ("[PROMOTION", "[PROMOTED]", "[SKIPPED]", "OK:", "ERROR", "No results")
+        )
     ]
     for ln in relevant[:8]:
         print(f"  │ {ln}")
@@ -650,9 +649,11 @@ def print_result(i: int, total: int, result: CaseResult) -> None:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def _wipe_graph(driver) -> None:
     with driver.session(database="neo4j") as s:
         s.run("MATCH (n) DETACH DELETE n").consume()
+
 
 def _cleanup_nodes(driver, eids: set[str]) -> None:
     deleted = _delete_nodes_by_element_ids(driver, eids)

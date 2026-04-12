@@ -22,6 +22,7 @@ from research.graph.store import (
 # Fake store
 # ---------------------------------------------------------------------------
 
+
 class FakeGraphStore:
     """Minimal duck-type for GraphStore used by cmd_seed."""
 
@@ -69,9 +70,13 @@ def _run_seed(
     monkeypatch.setattr(
         cli_module,
         "GraphStore",
-        type("FakeGS", (), {
-            "from_env": staticmethod(lambda **_: store),
-        }),
+        type(
+            "FakeGS",
+            (),
+            {
+                "from_env": staticmethod(lambda **_: store),
+            },
+        ),
     )
 
     args = Namespace(
@@ -86,6 +91,7 @@ def _run_seed(
 # ---------------------------------------------------------------------------
 # Store defaults
 # ---------------------------------------------------------------------------
+
 
 class TestResearchTargetDefaults:
     def test_all_expected_keys_present(self) -> None:
@@ -122,6 +128,7 @@ class TestResearchTargetDefaults:
 # CLI — basic seed
 # ---------------------------------------------------------------------------
 
+
 class TestSeedBasic:
     def test_seed_targets_exits_0(self, monkeypatch) -> None:
         code, store = _run_seed(monkeypatch=monkeypatch)
@@ -146,6 +153,7 @@ class TestSeedBasic:
 # ---------------------------------------------------------------------------
 # CLI — --set overrides
 # ---------------------------------------------------------------------------
+
 
 class TestSeedSetOverrides:
     def test_set_known_key_exits_0(self, monkeypatch) -> None:
@@ -183,6 +191,7 @@ class TestSeedSetOverrides:
 # CLI — unknown key rejection
 # ---------------------------------------------------------------------------
 
+
 class TestSeedUnknownKey:
     def test_unknown_key_exits_1(self, monkeypatch, capsys) -> None:
         code, store = _run_seed(sets=["unknown_key=1.0"], monkeypatch=monkeypatch)
@@ -209,6 +218,7 @@ class TestSeedUnknownKey:
 # CLI — infrastructure errors
 # ---------------------------------------------------------------------------
 
+
 class TestSeedInfra:
     def test_neo4j_unavailable_exits_2(self, monkeypatch) -> None:
         code, store = _run_seed(available=False, monkeypatch=monkeypatch)
@@ -230,6 +240,7 @@ class TestSeedInfra:
 # ---------------------------------------------------------------------------
 # Store method — direct unit tests (no Neo4j)
 # ---------------------------------------------------------------------------
+
 
 class TestEnsureResearchTargetStore:
     def test_unknown_key_raises_value_error(self) -> None:
@@ -256,18 +267,26 @@ class TestEnsureResearchTargetStore:
         class _FakeSession:
             def execute_write(self, fn):
                 call_log.append("write")
+
                 class _FakeTx:
                     def run(self, *a, **kw):
                         class _FakeResult:
-                            def consume(self): pass
+                            def consume(self):
+                                pass
+
                         return _FakeResult()
+
                 fn(_FakeTx())
 
-            def __enter__(self): return self
-            def __exit__(self, *a): pass
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                pass
 
         class _FakeDriver:
-            def session(self, **_kw): return _FakeSession()
+            def session(self, **_kw):
+                return _FakeSession()
 
         store = GraphStore.__new__(GraphStore)
         store._database = "neo4j"

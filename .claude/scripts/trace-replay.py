@@ -8,6 +8,7 @@ and simulates guard hook responses to predict how many calls would be blocked.
 Usage:
     python .claude/scripts/trace-replay.py <trace.jsonl> [--verbose]
 """
+
 import json
 import os
 import re
@@ -35,6 +36,7 @@ DISCOVERY_CAP = 10
 EXCLUDED_EXTENSIONS = {".yaml", ".yml", ".json", ".toml", ".cfg", ".txt"}
 EXCLUDED_PREFIXES = ("test_", "conftest")
 
+
 def is_tracked_file(path: str) -> bool:
     if not path:
         return False
@@ -49,6 +51,7 @@ def is_tracked_file(path: str) -> bool:
         return False
     return True
 
+
 def sim_read(target: str) -> tuple[bool, str]:
     if not is_tracked_file(target):
         return False, "excluded"
@@ -59,37 +62,39 @@ def sim_read(target: str) -> tuple[bool, str]:
         return True, f"{name} read #{count} (cap={READ_CAP})"
     return False, f"{name} read {count}/{READ_CAP}"
 
+
 catn_tracker: dict[str, int] = {}
+
 
 def sim_bash(command: str) -> tuple[bool, str]:
     """Simulate agent-bash-grep-guard.sh checks."""
     # 1. Block ALL bare mypy (file, directory, or piped) — no .py requirement
-    if re.search(r'(^|\s|&&\s*|;\s*)mypy\s', command):
+    if re.search(r"(^|\s|&&\s*|;\s*)mypy\s", command):
         return True, "bare mypy (use make typecheck)"
 
     # 2. sed/awk/nl on ANY .py/.yaml/.yml/.md file — unconditional block
-    if re.search(r'(^|\|)[^|]*(sed|awk|nl)\s', command):
+    if re.search(r"(^|\|)[^|]*(sed|awk|nl)\s", command):
         for segment in command.split("|"):
-            if re.search(r'(^|\s)(sed|awk|nl)\s', segment):
+            if re.search(r"(^|\s)(sed|awk|nl)\s", segment):
                 for token in segment.split():
-                    if re.search(r'\.(py|yaml|yml|md)$', token):
+                    if re.search(r"\.(py|yaml|yml|md)$", token):
                         name = os.path.basename(token)
                         return True, f"sed/awk/nl on {name} (unconditional — use Read+offset)"
 
     # 2a. python3/python inline script — heredoc stdin or /tmp script bypass
     # Catches: python3 - << 'PYEOF', python3 << 'PYEOF', python3 /tmp/script.py, python -
-    if re.search(r'python3?\s+(-[^a-zA-Z0-9_]|/tmp/\S+\.py|<<)', command):
+    if re.search(r"python3?\s+(-[^a-zA-Z0-9_]|/tmp/\S+\.py|<<)", command):
         return True, "python3 inline script bypass (use Read/Edit tools directly)"
 
     # 2b. cp of source files to /tmp/ — unconditional block (snapshot bypass)
-    if re.search(r'(^|\s|&&\s*|;\s*)cp\s', command):
-        if re.search(r'\.(py|yaml|yml|md)\s.*/tmp/', command):
+    if re.search(r"(^|\s|&&\s*|;\s*)cp\s", command):
+        if re.search(r"\.(py|yaml|yml|md)\s.*/tmp/", command):
             return True, "cp source to /tmp/ (snapshot bypass — use Read+offset)"
 
     # 3. cat -n on .py files — tracked, block 3rd+ access
-    if re.search(r'(^|\s)cat\s+-n\s', command):
+    if re.search(r"(^|\s)cat\s+-n\s", command):
         for segment in command.split("|"):
-            if re.search(r'(^|\s)cat\s+-n\s', segment):
+            if re.search(r"(^|\s)cat\s+-n\s", segment):
                 for token in segment.split():
                     if token.endswith(".py"):
                         name = os.path.basename(token)
@@ -99,14 +104,14 @@ def sim_bash(command: str) -> tuple[bool, str]:
                             return True, f"cat -n on {name} (access #{count}, cap=2)"
 
     # 4. grep/rg/head/tail on tracked .py/.yaml/.yml/.md files
-    if re.search(r'(^|\s)(grep|rg|head|tail)\s', command):
+    if re.search(r"(^|\s)(grep|rg|head|tail)\s", command):
         for segment in command.split("|"):
-            if re.search(r'(^|\s)(grep|rg|head|tail)\s', segment):
+            if re.search(r"(^|\s)(grep|rg|head|tail)\s", segment):
                 for token in segment.split():
-                    if re.search(r'\.(py|yaml|yml|md)$', token):
+                    if re.search(r"\.(py|yaml|yml|md)$", token):
                         name = os.path.basename(token)
                         if name in read_tracker:
-                            if re.search(r'(^|\s)(grep|rg)\s', segment):
+                            if re.search(r"(^|\s)(grep|rg)\s", segment):
                                 return True, f"grep on {name} (already Read)"
                             else:
                                 return True, f"head/tail on {name} (already Read)"
@@ -114,9 +119,10 @@ def sim_bash(command: str) -> tuple[bool, str]:
     REFERENCE_FILES = ("data_dictionary.yaml", "graph_v1_contract.md")
     for ref in REFERENCE_FILES:
         if ref in command:
-            if re.search(r'(^|\s|\|)(cat|grep|rg|wc|head|tail|less)\s', command):
+            if re.search(r"(^|\s|\|)(cat|grep|rg|wc|head|tail|less)\s", command):
                 return True, f"{ref} Bash read (use Read tool)"
     return False, ""
+
 
 def sim_search_code() -> tuple[bool, str]:
     global discovery_count
@@ -124,6 +130,7 @@ def sim_search_code() -> tuple[bool, str]:
     if discovery_count > DISCOVERY_CAP:
         return True, f"search_code call #{discovery_count} (cap={DISCOVERY_CAP})"
     return False, f"search_code #{discovery_count}/{DISCOVERY_CAP}"
+
 
 # --- Parse trace ---
 calls: list[tuple[str, str]] = []  # (tool, target)
@@ -177,11 +184,13 @@ for i, (tool, target) in enumerate(calls, 1):
                 print(f"  [SRCH BLOCK]   #{i:3d} search_code '{target[:40]}' — {reason}")
 
 # --- Breakdown by sub-category ---
-bash_grep   = [(i, t, r) for i, t, r in blocked_bash if "grep" in r or "head/tail" in r]
-bash_sed    = [(i, t, r) for i, t, r in blocked_bash if any(x in r for x in ("sed/awk", "awk", " nl "))]
-bash_catn   = [(i, t, r) for i, t, r in blocked_bash if "cat -n" in r]
-bash_mypy   = [(i, t, r) for i, t, r in blocked_bash if "mypy" in r]
-bash_cp     = [(i, t, r) for i, t, r in blocked_bash if "cp source" in r or "snapshot bypass" in r]
+bash_grep = [(i, t, r) for i, t, r in blocked_bash if "grep" in r or "head/tail" in r]
+bash_sed = [
+    (i, t, r) for i, t, r in blocked_bash if any(x in r for x in ("sed/awk", "awk", " nl "))
+]
+bash_catn = [(i, t, r) for i, t, r in blocked_bash if "cat -n" in r]
+bash_mypy = [(i, t, r) for i, t, r in blocked_bash if "mypy" in r]
+bash_cp = [(i, t, r) for i, t, r in blocked_bash if "cp source" in r or "snapshot bypass" in r]
 bash_py3tmp = [(i, t, r) for i, t, r in blocked_bash if "python3 /tmp" in r or "script bypass" in r]
 bash_reffile = [(i, t, r) for i, t, r in blocked_bash if "Bash read (use Read tool)" in r]
 
@@ -196,13 +205,17 @@ print(f"Total tool calls in trace:  {total}")
 print()
 print("Calls guards would BLOCK:")
 print(f"  Read re-reads (3rd+):     {len(blocked_reads):3d}  [agent-read-guard]")
-print(f"  Bash grep on Read files:  {len(bash_grep):3d}  [agent-bash-grep-guard — grep/rg/head/tail]")
+print(
+    f"  Bash grep on Read files:  {len(bash_grep):3d}  [agent-bash-grep-guard — grep/rg/head/tail]"
+)
 print(f"  Bash sed/awk/nl (any):    {len(bash_sed):3d}  [agent-bash-grep-guard — unconditional]")
 print(f"  Bash cat -n (3rd+):       {len(bash_catn):3d}  [agent-bash-grep-guard — cat-n cap]")
 print(f"  Bash bare mypy (any):     {len(bash_mypy):3d}  [agent-bash-grep-guard — mypy block]")
 print(f"  Bash cp to /tmp/ (any):   {len(bash_cp):3d}  [agent-bash-grep-guard — snapshot bypass]")
 print(f"  Bash python3 /tmp (any):  {len(bash_py3tmp):3d}  [agent-bash-grep-guard — script bypass]")
-print(f"  Bash ref-file reads (any):{len(bash_reffile):3d}  [agent-bash-grep-guard — reference file block]")
+print(
+    f"  Bash ref-file reads (any):{len(bash_reffile):3d}  [agent-bash-grep-guard — reference file block]"
+)
 print(f"  search_code over-cap:     {len(blocked_searches):3d}  [agent-discovery-guard]")
 print(f"  Total would-be blocked:   {total_blocked:3d}")
 print()

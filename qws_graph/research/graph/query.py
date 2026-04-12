@@ -556,8 +556,12 @@ class GraphQueryService:
     """Thin Neo4j-backed wrapper around the Story 1 query functions."""
 
     def __init__(
-        self, uri: str, username: str, password: str,
-        timeout_seconds: int = 3, database: str = "neo4j",
+        self,
+        uri: str,
+        username: str,
+        password: str,
+        timeout_seconds: int = 3,
+        database: str = "neo4j",
     ):
         self._database = database
         self._driver = GraphDatabase.driver(
@@ -577,8 +581,11 @@ class GraphQueryService:
         database = os.getenv("QW_GRAPH_DATABASE", "neo4j")
         uri = f"{scheme}://{host}:{port}"
         return cls(
-            uri=uri, username=user, password=password,
-            timeout_seconds=timeout_seconds, database=database,
+            uri=uri,
+            username=user,
+            password=password,
+            timeout_seconds=timeout_seconds,
+            database=database,
         )
 
     def close(self) -> None:
@@ -1169,10 +1176,7 @@ def get_former_champions_v1(session: QuerySession) -> list[dict[str, Any]]:
     """Return all FormerChampion nodes with cemetery view fields."""
     rows = _all_results(session, GET_FORMER_CHAMPIONS_V1_CYPHER)
     return [
-        {
-            k: _normalize_temporal(v) if k == "degraded_at" else v
-            for k, v in row.items()
-        }
+        {k: _normalize_temporal(v) if k == "degraded_at" else v for k, v in row.items()}
         for row in rows
     ]
 
@@ -1259,5 +1263,3 @@ __all__ = [
     "get_strategy_lineage_v1",
     "get_strategy_summary_v1",
 ]
-
-

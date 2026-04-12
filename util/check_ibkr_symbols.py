@@ -27,19 +27,40 @@ def check_futures(ib: IB) -> list[dict]:
         c.includeExpired = False
         try:
             details = ib.reqContractDetails(c)
-            if details:
+            if details and details[0].contract is not None:
                 expiry = details[0].contract.lastTradeDateOrContractMonth[:6]
-                results.append({"symbol": root, "type": "FUT", "status": "PASS",
-                                 "detail": f"{len(details)} contract(s), front={expiry}",
-                                 "exchange": spec["exchange"], "currency": spec["currency"]})
+                results.append(
+                    {
+                        "symbol": root,
+                        "type": "FUT",
+                        "status": "PASS",
+                        "detail": f"{len(details)} contract(s), front={expiry}",
+                        "exchange": spec["exchange"],
+                        "currency": spec["currency"],
+                    }
+                )
             else:
-                results.append({"symbol": root, "type": "FUT", "status": "FAIL",
-                                 "detail": "no contract details returned",
-                                 "exchange": spec["exchange"], "currency": spec["currency"]})
+                results.append(
+                    {
+                        "symbol": root,
+                        "type": "FUT",
+                        "status": "FAIL",
+                        "detail": "no contract details returned",
+                        "exchange": spec["exchange"],
+                        "currency": spec["currency"],
+                    }
+                )
         except Exception as e:
-            results.append({"symbol": root, "type": "FUT", "status": "FAIL",
-                             "detail": str(e),
-                             "exchange": spec["exchange"], "currency": spec["currency"]})
+            results.append(
+                {
+                    "symbol": root,
+                    "type": "FUT",
+                    "status": "FAIL",
+                    "detail": str(e),
+                    "exchange": spec["exchange"],
+                    "currency": spec["currency"],
+                }
+            )
         ib.sleep(0.2)
     return results
 
@@ -55,17 +76,38 @@ def check_indices(ib: IB) -> list[dict]:
         try:
             details = ib.reqContractDetails(c)
             if details:
-                results.append({"symbol": sym, "type": "IND", "status": "PASS",
-                                 "detail": f"conId={details[0].contract.conId}",
-                                 "exchange": spec["exchange"], "currency": spec["currency"]})
+                results.append(
+                    {
+                        "symbol": sym,
+                        "type": "IND",
+                        "status": "PASS",
+                        "detail": f"conId={details[0].contract.conId}",
+                        "exchange": spec["exchange"],
+                        "currency": spec["currency"],
+                    }
+                )
             else:
-                results.append({"symbol": sym, "type": "IND", "status": "FAIL",
-                                 "detail": "no contract details returned",
-                                 "exchange": spec["exchange"], "currency": spec["currency"]})
+                results.append(
+                    {
+                        "symbol": sym,
+                        "type": "IND",
+                        "status": "FAIL",
+                        "detail": "no contract details returned",
+                        "exchange": spec["exchange"],
+                        "currency": spec["currency"],
+                    }
+                )
         except Exception as e:
-            results.append({"symbol": sym, "type": "IND", "status": "FAIL",
-                             "detail": str(e),
-                             "exchange": spec["exchange"], "currency": spec["currency"]})
+            results.append(
+                {
+                    "symbol": sym,
+                    "type": "IND",
+                    "status": "FAIL",
+                    "detail": str(e),
+                    "exchange": spec["exchange"],
+                    "currency": spec["currency"],
+                }
+            )
         ib.sleep(0.2)
     return results
 
@@ -115,7 +157,7 @@ def main() -> None:
             sys.exit(1)
 
     finally:
-        ib.disconnect()
+        ib.disconnect()  # type: ignore[no-untyped-call]
 
 
 if __name__ == "__main__":

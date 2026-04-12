@@ -125,4 +125,3 @@ def run_stats_summary_id(
     (mtime changes → new summary replaces old).
     """
     return hash12(strategy_id_value, normalize_text(artifact_path), artifact_mtime_iso)
-

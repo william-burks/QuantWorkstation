@@ -15,6 +15,7 @@ from research.graph.store import GraphStore, StoreInfraError
 # Fake driver helpers
 # ---------------------------------------------------------------------------
 
+
 class FakeRecord(dict):
     """dict-compatible record returned by tx.run() iterables."""
 
@@ -103,6 +104,7 @@ def _store_with_driver(driver) -> GraphStore:
 # audit_null_family_ids
 # ---------------------------------------------------------------------------
 
+
 class TestAuditNullFamilyIds:
     def test_returns_empty_list_when_no_nulls(self) -> None:
         store = _store_with_driver(FakeDriver(rows=[]))
@@ -112,12 +114,16 @@ class TestAuditNullFamilyIds:
     def test_returns_one_row_per_null_strategy(self) -> None:
         rows = [
             {
-                "strategy_id": "es-1h-bear", "logic_type": "TrendFollowing",
-                "direction": "bear", "created_at": "2024-01-01T00:00:00",
+                "strategy_id": "es-1h-bear",
+                "logic_type": "TrendFollowing",
+                "direction": "bear",
+                "created_at": "2024-01-01T00:00:00",
             },
             {
-                "strategy_id": "nq-1h-bear", "logic_type": "TrendFollowing",
-                "direction": "bear", "created_at": "2024-01-02T00:00:00",
+                "strategy_id": "nq-1h-bear",
+                "logic_type": "TrendFollowing",
+                "direction": "bear",
+                "created_at": "2024-01-02T00:00:00",
             },
         ]
         store = _store_with_driver(FakeDriver(rows=rows))
@@ -129,8 +135,10 @@ class TestAuditNullFamilyIds:
     def test_result_dicts_include_expected_keys(self) -> None:
         rows = [
             {
-                "strategy_id": "es-1h-bear", "logic_type": "Momentum",
-                "direction": "bull", "created_at": "2024-03-01",
+                "strategy_id": "es-1h-bear",
+                "logic_type": "Momentum",
+                "direction": "bull",
+                "created_at": "2024-03-01",
             },
         ]
         store = _store_with_driver(FakeDriver(rows=rows))
@@ -139,6 +147,7 @@ class TestAuditNullFamilyIds:
 
     def test_uses_audit_query(self) -> None:
         from research.graph.cypher import AUDIT_NULL_FAMILY_ID_QUERY
+
         driver = FakeDriver(rows=[])
         store = _store_with_driver(driver)
         store.audit_null_family_ids()
@@ -146,6 +155,7 @@ class TestAuditNullFamilyIds:
 
     def test_neo4j_error_raises_store_infra_error(self) -> None:
         from neo4j.exceptions import ServiceUnavailable
+
         store = _store_with_driver(FakeErrorDriver(ServiceUnavailable("boom")))
         with pytest.raises(StoreInfraError):
             store.audit_null_family_ids()
@@ -159,6 +169,7 @@ class TestAuditNullFamilyIds:
 # ---------------------------------------------------------------------------
 # patch_family_id
 # ---------------------------------------------------------------------------
+
 
 class TestPatchFamilyId:
     def test_returns_true_when_strategy_found(self) -> None:
@@ -188,6 +199,7 @@ class TestPatchFamilyId:
 
     def test_uses_patch_query(self) -> None:
         from research.graph.cypher import PATCH_FAMILY_ID_QUERY
+
         driver = FakeDriver(rows=[{"strategy_id": "es-1h-bear"}])
         store = _store_with_driver(driver)
         store.patch_family_id("es-1h-bear", "abc123def456")
@@ -202,6 +214,7 @@ class TestPatchFamilyId:
 
     def test_neo4j_error_raises_store_infra_error(self) -> None:
         from neo4j.exceptions import ServiceUnavailable
+
         store = _store_with_driver(FakeErrorDriver(ServiceUnavailable("boom")))
         with pytest.raises(StoreInfraError):
             store.patch_family_id("es-1h-bear", "abc123def456")

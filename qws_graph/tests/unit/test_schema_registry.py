@@ -32,12 +32,13 @@ def _fixed_ingested_at() -> datetime:
 # Schema registry unit tests
 # ---------------------------------------------------------------------------
 
+
 class TestGetConfigKeys:
     def test_returns_core_plus_risk_params_when_no_logic_type(self):
         keys = get_config_keys()
         assert "sizing_mode" in keys
         assert "target_r" in keys
-        assert "atr_mult_stop" in keys   # risk param, still a Config key
+        assert "atr_mult_stop" in keys  # risk param, still a Config key
         assert "wick_mode" in keys
 
     def test_adds_mars_extensions_for_mars_logic_type(self):
@@ -70,10 +71,10 @@ class TestGetConfigKeys:
 class TestAllConfigKeys:
     def test_includes_all_strategy_extensions(self):
         keys = all_config_keys()
-        assert "atr_period" in keys       # mars
-        assert "vol_threshold" in keys    # mars
-        assert "time_stop" in keys        # liquidity-sweep
-        assert "sizing_mode" in keys      # core
+        assert "atr_period" in keys  # mars
+        assert "vol_threshold" in keys  # mars
+        assert "time_stop" in keys  # liquidity-sweep
+        assert "sizing_mode" in keys  # core
 
     def test_superset_of_get_config_keys_for_any_logic_type(self):
         for logic_type in list(STRATEGY_EXTENSIONS) + [None]:
@@ -101,6 +102,7 @@ class TestRegistrySets:
 # ---------------------------------------------------------------------------
 # Parser integration: new columns route correctly
 # ---------------------------------------------------------------------------
+
 
 class TestCsvParserSchemaRouting:
     def test_calmar_and_return_and_tier_do_not_produce_warnings(self, tmp_path: Path):

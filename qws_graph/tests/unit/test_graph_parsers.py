@@ -57,9 +57,8 @@ class TestIdUtilities:
         assert config_id({"target_r": 1.5}, {"atr_mult_stop": 0.5}) == config_id(
             {"target_r": 1.5}, {"atr_mult_stop": 0.5}
         )
-        assert (
-            champion_id("es-1h-bear-sweep", "2026-04-02")
-            == champion_id("es-1h-bear-sweep", "2026-04-02")
+        assert champion_id("es-1h-bear-sweep", "2026-04-02") == champion_id(
+            "es-1h-bear-sweep", "2026-04-02"
         )
 
 
@@ -222,14 +221,12 @@ class TestCsvParser:
             "grid_csv",
         ).parse()
 
-        assert (
-            research_artifact_payload_hash(artifact_1)
-            == research_artifact_payload_hash(artifact_2)
+        assert research_artifact_payload_hash(artifact_1) == research_artifact_payload_hash(
+            artifact_2
         )
-        assert (
-            [config.config_id for config in artifact_1.configs]
-            == [config.config_id for config in artifact_2.configs]
-        )
+        assert [config.config_id for config in artifact_1.configs] == [
+            config.config_id for config in artifact_2.configs
+        ]
 
 
 class TestChampionMarkdownParser:
@@ -303,9 +300,8 @@ class TestChampionMarkdownParser:
             FIXTURES_DIR / "champion" / "es_bear_sweep_1h_v1.md"
         ).parse()
 
-        assert (
-            research_artifact_payload_hash(artifact_1)
-            == research_artifact_payload_hash(artifact_2)
+        assert research_artifact_payload_hash(artifact_1) == research_artifact_payload_hash(
+            artifact_2
         )
         assert (
             artifact_1.champion.champion_id  # type: ignore[union-attr]
@@ -327,7 +323,9 @@ class TestParserIntegration:
 
         b, c = baseline.strategy, champion.strategy
         assert (b.instrument, b.timeframe, b.direction) == (
-            c.instrument, c.timeframe, c.direction,
+            c.instrument,
+            c.timeframe,
+            c.direction,
         )
 
 
@@ -364,7 +362,12 @@ class TestArtifactPathNormalization:
     def test_csv_and_champion_md_paths_normalize_consistently(self, tmp_path):
         repo_root = tmp_path / "repo"
         csv = (
-            repo_root / "research" / "results" / "futures" / "runs" / "20260101-120000"
+            repo_root
+            / "research"
+            / "results"
+            / "futures"
+            / "runs"
+            / "20260101-120000"
             / "baseline.csv"
         )
         md = repo_root / "research" / "results" / "champions" / "es_bear_v1.md"
@@ -377,8 +380,15 @@ class TestArtifactPathNormalization:
 class TestSignificanceGateProperties:
     """Tests for QWS-0407: active_window_frequency and duty_cycle computation."""
 
-    def _make_csv(self, tmp_path, extra_header="", extra_vals="", n_trades=60,
-                  first_ts="2024-01-01T00:00:00Z", last_ts="2024-07-01T00:00:00Z"):
+    def _make_csv(
+        self,
+        tmp_path,
+        extra_header="",
+        extra_vals="",
+        n_trades=60,
+        first_ts="2024-01-01T00:00:00Z",
+        last_ts="2024-07-01T00:00:00Z",
+    ):
         """Build a minimal valid CSV with timestamp columns."""
         path = tmp_path / "es_bear_baseline_test.csv"
         path.write_text(
@@ -454,4 +464,3 @@ class TestSignificanceGateProperties:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

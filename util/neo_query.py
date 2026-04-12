@@ -7,6 +7,7 @@ Usage:
 
 Delete this file when done. Not a permanent tool — use qw query for preset queries.
 """
+
 import argparse
 import csv
 import json

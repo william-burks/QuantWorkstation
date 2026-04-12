@@ -297,9 +297,14 @@ def test_similar_hypotheses_preset_delegates_to_service(capsys: pytest.CaptureFi
     """run_preset routes similar_hypotheses to service.get_similar_hypotheses_v1."""
     mock_service = MagicMock()
     mock_service.get_similar_hypotheses_v1 = MagicMock(
-        return_value=[{
-            "hypothesis_id": "aaa111", "title": "Related", "similarity": 0.92, "status": "open",
-        }]
+        return_value=[
+            {
+                "hypothesis_id": "aaa111",
+                "title": "Related",
+                "similarity": 0.92,
+                "status": "open",
+            }
+        ]
     )
 
     results = run_preset("similar_hypotheses", {"hypothesis_id": "bbb222"}, service=mock_service)
@@ -316,15 +321,17 @@ def test_check_redundancy_preset_routes_to_service() -> None:
     """check_redundancy routes to service.get_check_redundancy_v1."""
     mock_service = MagicMock()
     mock_service.get_check_redundancy_v1 = MagicMock(
-        return_value=[{
-            "hypothesis_id": "ccc333",
-            "title": "Test",
-            "active_champion_matches": [],
-            "aborted_strategy_matches": [],
-            "semantic_matches": [
-                {"hypothesis_id": "ddd444", "title": "Similar", "similarity": 0.88},
-            ],
-        }]
+        return_value=[
+            {
+                "hypothesis_id": "ccc333",
+                "title": "Test",
+                "active_champion_matches": [],
+                "aborted_strategy_matches": [],
+                "semantic_matches": [
+                    {"hypothesis_id": "ddd444", "title": "Similar", "similarity": 0.88},
+                ],
+            }
+        ]
     )
 
     results = run_preset("check_redundancy", {"hypothesis_id": "ccc333"}, service=mock_service)

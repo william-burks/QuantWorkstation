@@ -65,6 +65,7 @@ if TYPE_CHECKING:
 # Envelope types
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class McpError:
     code: Literal["INVALID_PARAMS", "INFRA_ERROR"]
@@ -83,9 +84,7 @@ class McpResult:
             "ok": self.ok,
             "data": self.data,
             "error": (
-                {"code": self.error.code, "message": self.error.message}
-                if self.error
-                else None
+                {"code": self.error.code, "message": self.error.message} if self.error else None
             ),
         }
 
@@ -106,6 +105,7 @@ TOOL_BINDINGS: dict[str, str] = {
 # Adapter
 # ---------------------------------------------------------------------------
 
+
 class McpReadAdapter:
     """Read-only MCP adapter backed by ``GraphQueryService``.
 
@@ -119,10 +119,12 @@ class McpReadAdapter:
     @classmethod
     def from_env(cls, timeout_seconds: int = 3) -> McpReadAdapter:
         from .query import GraphQueryService as _Svc
+
         return cls(_Svc.from_env(timeout_seconds=timeout_seconds))
 
     def _get_store(self, timeout_seconds: int = 3) -> GraphStore:
         from .store import GraphStore as _Store
+
         return _Store.from_env(timeout_seconds=timeout_seconds)
 
     def close(self) -> None:
@@ -183,9 +185,7 @@ class McpReadAdapter:
                 error=McpError(code="INFRA_ERROR", message=str(exc)),
             )
 
-    def get_context_neighborhood(
-        self, champion_id: str, max_runs: int = 50
-    ) -> McpResult:
+    def get_context_neighborhood(self, champion_id: str, max_runs: int = 50) -> McpResult:
         """Return the context neighborhood for a champion.
 
         Fans out to four view functions::
@@ -252,7 +252,6 @@ class McpReadAdapter:
                 data=None,
                 error=McpError(code="INFRA_ERROR", message=str(exc)),
             )
-
 
     def log_hypothesis(self, title: str) -> McpResult:
         """Create a Hypothesis node with source='llm' on the SUGGESTED edge.

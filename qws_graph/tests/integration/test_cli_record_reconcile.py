@@ -278,5 +278,3 @@ class TestReconcileCommand:
         # Should be valid JSON
         result = json.loads(output)
         assert "missing_in_graph" in result
-
-

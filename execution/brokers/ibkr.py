@@ -21,6 +21,7 @@ Or as a context manager:
 """
 
 import logging
+from typing import Literal
 
 from ib_insync import IB, Contract, MarketOrder
 
@@ -32,16 +33,16 @@ log = logging.getLogger(__name__)
 
 # Contract specs for supported futures roots
 # Add micro contracts (MES, MNQ) for lower margin requirements
-_CONTRACT_SPECS: dict[str, dict] = {
-    "MES": {"multiplier": "5",    "exchange": "CME",   "currency": "USD"},
-    "MNQ": {"multiplier": "2",    "exchange": "CME",   "currency": "USD"},
-    "MGC": {"multiplier": "10",   "exchange": "COMEX", "currency": "USD"},
-    "CL":  {"multiplier": "1000", "exchange": "NYMEX", "currency": "USD"},
-    "ES":  {"multiplier": "50",   "exchange": "CME",   "currency": "USD"},
-    "NQ":  {"multiplier": "20",   "exchange": "CME",   "currency": "USD"},
-    "GC":  {"multiplier": "100",  "exchange": "COMEX", "currency": "USD"},
-    "RTY": {"multiplier": "50",   "exchange": "CME",   "currency": "USD"},
-    "M2K": {"multiplier": "5",    "exchange": "CME",   "currency": "USD"},
+_CONTRACT_SPECS: dict[str, dict[str, str]] = {
+    "MES": {"multiplier": "5", "exchange": "CME", "currency": "USD"},
+    "MNQ": {"multiplier": "2", "exchange": "CME", "currency": "USD"},
+    "MGC": {"multiplier": "10", "exchange": "COMEX", "currency": "USD"},
+    "CL": {"multiplier": "1000", "exchange": "NYMEX", "currency": "USD"},
+    "ES": {"multiplier": "50", "exchange": "CME", "currency": "USD"},
+    "NQ": {"multiplier": "20", "exchange": "CME", "currency": "USD"},
+    "GC": {"multiplier": "100", "exchange": "COMEX", "currency": "USD"},
+    "RTY": {"multiplier": "50", "exchange": "CME", "currency": "USD"},
+    "M2K": {"multiplier": "5", "exchange": "CME", "currency": "USD"},
 }
 
 
@@ -51,7 +52,7 @@ class IBKRBroker:
         self._host = s.ibkr_host
         self._port = s.ibkr_port
         self._client_id = s.ibkr_client_id
-        self._ib = IB()
+        self._ib = IB()  # type: ignore[no-untyped-call]
 
     # ------------------------------------------------------------------
     # Connection
@@ -65,7 +66,7 @@ class IBKRBroker:
 
     def disconnect(self) -> None:
         if self._ib.isConnected():
-            self._ib.disconnect()
+            self._ib.disconnect()  # type: ignore[no-untyped-call]
             log.info("IBKR disconnected")
 
     def __enter__(self) -> "IBKRBroker":
@@ -125,7 +126,10 @@ class IBKRBroker:
         self._ib.sleep(0)  # yield to event loop so order is registered
         log.info(
             "Order placed: %s %s qty=%d id=%s",
-            order.side, order.symbol, order.qty, trade.order.orderId,
+            order.side,
+            order.symbol,
+            order.qty,
+            trade.order.orderId,
         )
         return str(trade.order.orderId)
 
@@ -138,7 +142,7 @@ class IBKRBroker:
         for pos in self.get_positions():
             if pos.qty == 0:
                 continue
-            side = "sell" if pos.qty > 0 else "buy"
+            side: Literal["buy", "sell"] = "sell" if pos.qty > 0 else "buy"
             self.submit_order(
                 Order(symbol=pos.symbol, side=side, qty=abs(pos.qty), reason="close_all")
             )
@@ -147,7 +151,7 @@ class IBKRBroker:
     def close_position(self, symbol: str) -> None:
         for pos in self.get_positions():
             if pos.symbol == symbol and pos.qty != 0:
-                side = "sell" if pos.qty > 0 else "buy"
+                side: Literal["buy", "sell"] = "sell" if pos.qty > 0 else "buy"
                 self.submit_order(Order(symbol=symbol, side=side, qty=abs(pos.qty), reason="close"))
                 return
         log.warning("close_position: no open position for %s", symbol)
@@ -171,7 +175,10 @@ class IBKRBroker:
         if not details:
             raise ValueError(f"No contract details returned for {root} — is IB Gateway running?")
         # reqContractDetails returns all expiries sorted ascending — first = front month
-        return details[0].contract
+        front = details[0].contract
+        if front is None:
+            raise ValueError(f"Contract details returned no contract object for {root}")
+        return front
 
     def notional_to_qty(self, symbol: str, price: float, notional: float) -> int:
         """

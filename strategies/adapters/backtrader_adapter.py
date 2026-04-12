@@ -55,7 +55,7 @@ def run(
     bars: pd.DataFrame,
     init_cash: float = 10_000.0,
     commission: float = 0.001,  # 0.1% per trade
-    slippage: float = 0.001,    # 0.1% slippage model
+    slippage: float = 0.001,  # 0.1% slippage model
     leverage: float = 5.0,
 ) -> dict:
     """
@@ -82,10 +82,15 @@ def run(
 
     # backtrader needs a specific DataFrame column layout
     bt_data = bt.feeds.PandasData(
-        dataname=bars.rename(columns={
-            "open": "open", "high": "high", "low": "low",
-            "close": "close", "volume": "volume",
-        }),
+        dataname=bars.rename(
+            columns={
+                "open": "open",
+                "high": "high",
+                "low": "low",
+                "close": "close",
+                "volume": "volume",
+            }
+        ),
         openinterest=-1,
     )
 

@@ -152,4 +152,3 @@ __all__ = [
     "StrategyLineageV1",
     "StrategySummaryV1",
 ]
-

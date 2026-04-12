@@ -80,19 +80,29 @@ def walk_forward(
     window = 0
 
     while start + test_bars <= total:
-        train = bars.iloc[start - train_bars: start]
-        test = bars.iloc[start: start + test_bars]
+        train = bars.iloc[start - train_bars : start]
+        test = bars.iloc[start : start + test_bars]
 
         log.info(
             "Window %d: train %s→%s (%d bars), test %s→%s (%d bars)",
             window,
-            train.index[0].date(), train.index[-1].date(), len(train),
-            test.index[0].date(), test.index[-1].date(), len(test),
+            train.index[0].date(),
+            train.index[-1].date(),
+            len(train),
+            test.index[0].date(),
+            test.index[-1].date(),
+            len(test),
         )
 
         in_sample = sweep(
-            strategy_cls, train, param_grid,
-            init_cash=init_cash, fees=fees, freq=freq, min_trades=min_trades, leverage=leverage,
+            strategy_cls,
+            train,
+            param_grid,
+            init_cash=init_cash,
+            fees=fees,
+            freq=freq,
+            min_trades=min_trades,
+            leverage=leverage,
         )
 
         if in_sample.empty:
@@ -108,16 +118,18 @@ def walk_forward(
         pf = run(strategy, test, init_cash=init_cash, fees=fees, freq=freq, leverage=leverage)
         oos_metrics = summary(pf.value())
 
-        rows.append({
-            "window": window,
-            "train_start": train.index[0],
-            "train_end": train.index[-1],
-            "test_start": test.index[0],
-            "test_end": test.index[-1],
-            **{f"param_{k}": v for k, v in best_params.items()},
-            "in_sample_sharpe": best["sharpe"],
-            **{f"oos_{k}": v for k, v in oos_metrics.items()},
-        })
+        rows.append(
+            {
+                "window": window,
+                "train_start": train.index[0],
+                "train_end": train.index[-1],
+                "test_start": test.index[0],
+                "test_end": test.index[-1],
+                **{f"param_{k}": v for k, v in best_params.items()},
+                "in_sample_sharpe": best["sharpe"],
+                **{f"oos_{k}": v for k, v in oos_metrics.items()},
+            }
+        )
 
         start += step
         window += 1

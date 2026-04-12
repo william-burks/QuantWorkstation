@@ -6,6 +6,7 @@ are unaffected.
 Usage:
     python3 util/reseed_all_stitched.py MGC
 """
+
 import sys
 
 from data.collectors.ibkr_futures import _TIMEFRAMES, collect

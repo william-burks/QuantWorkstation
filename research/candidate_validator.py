@@ -29,6 +29,7 @@ from research.experiments.standards import (
 # Schema models
 # ---------------------------------------------------------------------------
 
+
 class ParameterSpec(BaseModel):
     default: Any
     min: Any
@@ -108,9 +109,7 @@ class StrategyCandidate(BaseModel):
     @classmethod
     def valid_slug(cls, v: str) -> str:
         if not re.match(r"^[a-z0-9-]+-\d{4}-\d{2}$", v):
-            raise ValueError(
-                f"candidate_id must match <concept>-YYYY-MM, got {v!r}"
-            )
+            raise ValueError(f"candidate_id must match <concept>-YYYY-MM, got {v!r}")
         return v
 
     @field_validator("asset_class")
@@ -136,14 +135,13 @@ class StrategyCandidate(BaseModel):
 # Promotion criteria check
 # ---------------------------------------------------------------------------
 
+
 def check_promotion(results: PreliminaryResults, n_years: float | None = None) -> list[str]:
     """Return a list of promotion failures. Empty list = passes all criteria."""
     failures: list[str] = []
 
     if results.sharpe < SHARPE["pass"]:
-        failures.append(
-            f"Sharpe {results.sharpe:.2f} < minimum {SHARPE['pass']}"
-        )
+        failures.append(f"Sharpe {results.sharpe:.2f} < minimum {SHARPE['pass']}")
 
     if results.max_drawdown < MAX_DRAWDOWN_LIMIT:
         failures.append(
@@ -168,6 +166,7 @@ def check_promotion(results: PreliminaryResults, n_years: float | None = None) -
 # Main
 # ---------------------------------------------------------------------------
 
+
 def validate(path: Path) -> tuple[bool, list[str]]:
     """Validate a candidate file. Returns (ok, list_of_errors)."""
     try:
@@ -185,6 +184,7 @@ def validate(path: Path) -> tuple[bool, list[str]]:
     n_years: float | None = None
     try:
         from datetime import date
+
         start = date.fromisoformat(candidate.data_used.date_range.start)
         end = date.fromisoformat(candidate.data_used.date_range.end)
         n_years = (end - start).days / 365.25

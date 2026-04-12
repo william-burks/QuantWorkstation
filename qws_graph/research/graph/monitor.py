@@ -115,9 +115,7 @@ class MonitorRunner:
             self._decay_threshold if self._decay_threshold is not None else _DEFAULT_DECAY_THRESHOLD
         )
 
-    def _get_champions(
-        self, store: Any, champion_id: str | None
-    ) -> list[dict[str, Any]]:
+    def _get_champions(self, store: Any, champion_id: str | None) -> list[dict[str, Any]]:
         """Return list of active Champion dicts."""
         all_champs = store.get_active_champions()
         if champion_id is not None:

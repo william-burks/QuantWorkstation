@@ -64,7 +64,7 @@ class Run(BaseModel):
     metrics_return: float | None = None  # CSV column "return" (reserved word)
     tier: str | None = None
     first_trade_ts: datetime  # timestamp of first closed trade; required CSV column
-    last_trade_ts: datetime   # timestamp of last closed trade; required CSV column
+    last_trade_ts: datetime  # timestamp of last closed trade; required CSV column
     # total_trades / active_days (trades/day); null on zero-duration edge case
     active_window_frequency: float | None = None
     # active_days / total_backtest_days; null when backtest_start/end not provided
@@ -183,4 +183,3 @@ class ResearchArtifact(BaseModel):
         if self.kind == "tracker_md" and self.blob is None:
             raise ValueError("tracker_md requires blob payload")
         return self
-

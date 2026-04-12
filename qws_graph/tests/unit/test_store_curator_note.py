@@ -72,6 +72,7 @@ class TestCuratorNoteNormalization:
                     if rows is not None:
                         captured_rows.extend(rows)
                     return MagicMock(consume=MagicMock())
+
             tx_fn(FakeTx())
 
         fake_session = MagicMock()
@@ -97,6 +98,7 @@ class TestCuratorNoteNormalization:
                     if rows is not None:
                         captured_rows.extend(rows)
                     return MagicMock(consume=MagicMock())
+
             tx_fn(FakeTx())
 
         fake_session = MagicMock()
@@ -119,6 +121,7 @@ class TestCuratorNoteNormalization:
                     if rows is not None:
                         captured_rows.extend(rows)
                     return MagicMock(consume=MagicMock())
+
             tx_fn(FakeTx())
 
         fake_session = MagicMock()

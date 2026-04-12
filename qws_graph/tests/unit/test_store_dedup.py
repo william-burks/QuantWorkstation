@@ -14,6 +14,7 @@ from research.graph.store import (
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
+
 def _make_store() -> GraphStore:
     with patch("research.graph.store.GraphDatabase.driver"):
         return GraphStore(uri="bolt://localhost:7687", username="neo4j", password="password")
@@ -25,6 +26,7 @@ def _make_tx_with_single(record: dict | None) -> MagicMock:
             result = MagicMock()
             result.single.return_value = record
             return result
+
     return FakeTx()
 
 
@@ -67,6 +69,7 @@ def _make_artifact(sharpe: float = 1.5, total_trades: int = 30):
 
 # ── _check_run_redundancy ─────────────────────────────────────────────────────
 
+
 class TestCheckRunRedundancy:
     def test_returns_false_when_no_competing_run(self):
         store = _make_store()
@@ -74,9 +77,12 @@ class TestCheckRunRedundancy:
         fake_session.execute_read.side_effect = lambda fn: fn(
             _make_tx_with_single({"is_redundant": False})
         )
-        assert store._check_run_redundancy(
-            fake_session, "cl-1h-bear", "abc123", 30, 2.0, "2026-04-05T00:00:00+00:00"
-        ) is False
+        assert (
+            store._check_run_redundancy(
+                fake_session, "cl-1h-bear", "abc123", 30, 2.0, "2026-04-05T00:00:00+00:00"
+            )
+            is False
+        )
 
     def test_returns_true_when_better_run_exists(self):
         store = _make_store()
@@ -84,20 +90,27 @@ class TestCheckRunRedundancy:
         fake_session.execute_read.side_effect = lambda fn: fn(
             _make_tx_with_single({"is_redundant": True})
         )
-        assert store._check_run_redundancy(
-            fake_session, "cl-1h-bear", "abc123", 30, 2.0, "2026-04-05T00:00:00+00:00"
-        ) is True
+        assert (
+            store._check_run_redundancy(
+                fake_session, "cl-1h-bear", "abc123", 30, 2.0, "2026-04-05T00:00:00+00:00"
+            )
+            is True
+        )
 
     def test_returns_false_when_no_strategy_exists(self):
         store = _make_store()
         fake_session = MagicMock()
         fake_session.execute_read.side_effect = lambda fn: fn(_make_tx_with_single(None))
-        assert store._check_run_redundancy(
-            fake_session, "new-strategy", "abc123", 5, 1.5, "2026-04-05T00:00:00+00:00"
-        ) is False
+        assert (
+            store._check_run_redundancy(
+                fake_session, "new-strategy", "abc123", 5, 1.5, "2026-04-05T00:00:00+00:00"
+            )
+            is False
+        )
 
 
 # ── _maybe_auto_promote_champion ──────────────────────────────────────────────
+
 
 class TestMaybeAutoPromoteChampion:
     def _make_run_data(self, sharpe: float = 3.0, total_trades: int = 20) -> dict:
@@ -140,7 +153,7 @@ class TestMaybeAutoPromoteChampion:
         fake_session.execute_write = MagicMock()
 
         champion_id = store._maybe_auto_promote_champion(
-            fake_session, "s-x", self._make_run_data(3.0, 20), 3.0 * (20 ** 0.5)
+            fake_session, "s-x", self._make_run_data(3.0, 20), 3.0 * (20**0.5)
         )
 
         assert champion_id is not None and len(champion_id) == 12
@@ -150,9 +163,13 @@ class TestMaybeAutoPromoteChampion:
         store = _make_store()
         fake_session = MagicMock()
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({
-                "champion_id": "oldchamp123", "evidence_score": 15.0, "auto_promoted": True,
-            })
+            _make_tx_with_single(
+                {
+                    "champion_id": "oldchamp123",
+                    "evidence_score": 15.0,
+                    "auto_promoted": True,
+                }
+            )
         )
         fake_session.execute_write = MagicMock()
 
@@ -169,13 +186,20 @@ class TestMaybeAutoPromoteChampion:
         fake_session = MagicMock()
         # auto_promoted is absent (manually curated champion_md)
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({
-                "champion_id": "manual_champ", "evidence_score": 15.0, "auto_promoted": None,
-            })
+            _make_tx_with_single(
+                {
+                    "champion_id": "manual_champ",
+                    "evidence_score": 15.0,
+                    "auto_promoted": None,
+                }
+            )
         )
 
         result = store._maybe_auto_promote_champion(
-            fake_session, "s-x", self._make_run_data(4.5, 33), 25.0  # beats evidence=15
+            fake_session,
+            "s-x",
+            self._make_run_data(4.5, 33),
+            25.0,  # beats evidence=15
         )
 
         assert result is None
@@ -185,13 +209,20 @@ class TestMaybeAutoPromoteChampion:
         store = _make_store()
         fake_session = MagicMock()
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({
-                "champion_id": "champion99", "evidence_score": 25.0, "auto_promoted": True,
-            })
+            _make_tx_with_single(
+                {
+                    "champion_id": "champion99",
+                    "evidence_score": 25.0,
+                    "auto_promoted": True,
+                }
+            )
         )
 
         result = store._maybe_auto_promote_champion(
-            fake_session, "s-x", self._make_run_data(3.0, 25), 15.0  # ev=15 < 25
+            fake_session,
+            "s-x",
+            self._make_run_data(3.0, 25),
+            15.0,  # ev=15 < 25
         )
 
         assert result is None
@@ -210,12 +241,14 @@ class TestMaybeAutoPromoteChampion:
                     if "ch.tier" in query:
                         captured_params.append(kwargs)
                     return MagicMock(consume=MagicMock())
+
             fn(FakeTx())
 
         fake_session.execute_write.side_effect = fake_write
 
         store._maybe_auto_promote_champion(
-            fake_session, "s-x",
+            fake_session,
+            "s-x",
             self._make_run_data(sharpe=_INSTITUTIONAL_SHARPE_THRESHOLD + 0.5),
             30.0,
         )
@@ -227,9 +260,13 @@ class TestMaybeAutoPromoteChampion:
         store = _make_store()
         fake_session = MagicMock()
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({
-                "champion_id": "oldchamp999", "evidence_score": 10.0, "auto_promoted": True,
-            })
+            _make_tx_with_single(
+                {
+                    "champion_id": "oldchamp999",
+                    "evidence_score": 10.0,
+                    "auto_promoted": True,
+                }
+            )
         )
 
         captured_queries: list[str] = []
@@ -239,6 +276,7 @@ class TestMaybeAutoPromoteChampion:
                 def run(self_tx, query, **kwargs):
                     captured_queries.append(query)
                     return MagicMock(consume=MagicMock())
+
             fn(FakeTx())
 
         fake_session.execute_write.side_effect = fake_write
@@ -266,6 +304,7 @@ class TestMaybeAutoPromoteChampion:
                 def run(self_tx, query, **kwargs):
                     captured_queries.append(query)
                     return MagicMock(consume=MagicMock())
+
             fn(FakeTx())
 
         fake_session.execute_write.side_effect = fake_write
@@ -290,13 +329,18 @@ class TestMaybeAutoPromoteChampion:
         fake_session = MagicMock()
 
         import hashlib
+
         expected_champ_id = hashlib.sha256(b"s-x|newrun123").hexdigest()[:12]
 
         # execute_read returns the SAME champion_id that would be generated → idempotent exit.
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({
-                "champion_id": expected_champ_id, "evidence_score": 10.0, "auto_promoted": True,
-            })
+            _make_tx_with_single(
+                {
+                    "champion_id": expected_champ_id,
+                    "evidence_score": 10.0,
+                    "auto_promoted": True,
+                }
+            )
         )
 
         result = store._maybe_auto_promote_champion(
@@ -308,6 +352,7 @@ class TestMaybeAutoPromoteChampion:
 
 
 # ── _reconcile_champion ───────────────────────────────────────────────────────
+
 
 class TestReconcileChampion:
     """_reconcile_champion reads best run from DB and delegates to _maybe_auto_promote."""
@@ -334,7 +379,7 @@ class TestReconcileChampion:
             "total_trades": 30,
             "total_r": 0.15,
             "artifact_path": "results/x.csv",
-            "evidence_score": 3.0 * (30 ** 0.5),
+            "evidence_score": 3.0 * (30**0.5),
         }
         # _maybe_auto_promote_champion will call execute_read for the champion check
         call_idx = [0]
@@ -370,7 +415,7 @@ class TestReconcileChampion:
             "total_trades": 10,
             "total_r": 0.05,
             "artifact_path": "results/x.csv",
-            "evidence_score": 1.0 * (10 ** 0.5),
+            "evidence_score": 1.0 * (10**0.5),
         }
         fake_session.execute_read.side_effect = lambda fn: fn(
             _make_tx_with_single(low_sharpe_record)
@@ -384,6 +429,7 @@ class TestReconcileChampion:
 
 
 # ── persist_artifact — dedup and promotion integration ───────────────────────
+
 
 class TestPersistArtifactDedup:
     def test_all_skipped_runs_reconcile_champion(self):
@@ -431,16 +477,19 @@ class TestPersistArtifactDedup:
 
                 class FakeTx:
                     _inner = [0]
+
                     def run(self_tx, q, **kw):
                         r = MagicMock()
                         if self_tx._inner[0] == 0:
                             r.single.return_value = {"brid": None}
                         else:
                             r.single.return_value = {
-                                "run_id": "aabbcc112233", "evidence_score": 8.2,
+                                "run_id": "aabbcc112233",
+                                "evidence_score": 8.2,
                             }
                         self_tx._inner[0] += 1
                         return r
+
                 return fn(FakeTx())
 
             mock_session.execute_read.side_effect = fake_read
@@ -466,7 +515,7 @@ class TestPersistArtifactDedup:
 
         with patch.object(store, "_reconcile_champion", return_value="newchamp999"):
             _call_idx = [0]
-            ev = 3.0 * (25 ** 0.5)
+            ev = 3.0 * (25**0.5)
 
             def fake_read(fn):
                 idx = _call_idx[0]
@@ -476,6 +525,7 @@ class TestPersistArtifactDedup:
 
                 class FakeTx:
                     _inner = [0]
+
                     def run(self_tx, q, **kw):
                         r = MagicMock()
                         if self_tx._inner[0] == 0:
@@ -484,6 +534,7 @@ class TestPersistArtifactDedup:
                             r.single.return_value = {"run_id": "aabbcc112233", "evidence_score": ev}
                         self_tx._inner[0] += 1
                         return r
+
                 return fn(FakeTx())
 
             mock_session.execute_read.side_effect = fake_read
@@ -508,7 +559,7 @@ class TestPersistArtifactDedup:
 
         with patch.object(store, "_reconcile_champion", return_value=None):
             _call_idx = [0]
-            ev = 2.5 * (10 ** 0.5)
+            ev = 2.5 * (10**0.5)
 
             def fake_read(fn):
                 idx = _call_idx[0]
@@ -518,6 +569,7 @@ class TestPersistArtifactDedup:
 
                 class FakeTx:
                     _inner = [0]
+
                     def run(self_tx, q, **kw):
                         r = MagicMock()
                         if self_tx._inner[0] == 0:
@@ -526,6 +578,7 @@ class TestPersistArtifactDedup:
                             r.single.return_value = {"run_id": "aabbcc112233", "evidence_score": ev}
                         self_tx._inner[0] += 1
                         return r
+
                 return fn(FakeTx())
 
             mock_session.execute_read.side_effect = fake_read
@@ -537,6 +590,7 @@ class TestPersistArtifactDedup:
 
 
 # ── champion_md quality gate ─────────────────────────────────────────────────
+
 
 class TestChampionMdQualityGate:
     def _make_champion_artifact(self, tier: str = "professional"):
@@ -614,6 +668,7 @@ class TestChampionMdQualityGate:
 
 # ── EvolutionOutcome ──────────────────────────────────────────────────────────
 
+
 class TestEvolutionOutcome:
     def test_fields_default_champion_id_none(self):
         o = EvolutionOutcome(run_id="a", status="promoted", reason="", evidence_score=17.5)
@@ -627,7 +682,8 @@ class TestEvolutionOutcome:
 
     def test_skipped_has_reason(self):
         o = EvolutionOutcome(
-            run_id="x", status="skipped",
+            run_id="x",
+            status="skipped",
             reason="existing run with total_trades=30 has sharpe >= 2.000 within 30 days",
             evidence_score=10.0,
         )
@@ -635,6 +691,7 @@ class TestEvolutionOutcome:
 
 
 # ── StoreResult ───────────────────────────────────────────────────────────────
+
 
 class TestStoreResultEvolution:
     def test_default_empty(self):
@@ -654,6 +711,7 @@ class TestStoreResultEvolution:
 
 
 # ── threshold constants ───────────────────────────────────────────────────────
+
 
 class TestThresholdConstants:
     def test_professional_below_institutional(self):

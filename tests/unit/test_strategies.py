@@ -21,6 +21,7 @@ BARS = _make_bars()
 
 # --- MARS ---
 
+
 class TestMARS:
     def test_signal_shape(self) -> None:
         sig = MARS().generate_signals(BARS)

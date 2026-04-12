@@ -14,7 +14,7 @@ from data.collectors.ibkr_futures import _bars_to_df, collect
 
 def _make_ibkr_bar(date_str: str, price: float = 4800.0) -> MagicMock:
     bar = MagicMock()
-    bar.date = date_str          # IBKR returns date as "YYYYMMDD" string
+    bar.date = date_str  # IBKR returns date as "YYYYMMDD" string
     bar.open = price
     bar.high = price * 1.005
     bar.low = price * 0.995
@@ -36,9 +36,10 @@ def _mock_settings() -> MagicMock:
 # _bars_to_df
 # ------------------------------------------------------------------
 
+
 def test_bars_to_df_filters_zero_price_bars():
     good = _make_ibkr_bar("20240101", 4800.0)
-    bad = _make_ibkr_bar("20240102", 0.0)   # IBKR sometimes returns empty bars
+    bad = _make_ibkr_bar("20240102", 0.0)  # IBKR sometimes returns empty bars
     df = _bars_to_df([good, bad])
     assert len(df) == 1
     assert df["close"].iloc[0] == 4800.0
@@ -64,6 +65,7 @@ def test_bars_to_df_index_is_utc():
 # collect — unknown root raises
 # ------------------------------------------------------------------
 
+
 def test_collect_unknown_root_raises():
     with pytest.raises(ValueError, match="Unknown root"):
         collect("ZZ", "1D")
@@ -72,6 +74,7 @@ def test_collect_unknown_root_raises():
 # ------------------------------------------------------------------
 # collect — init path
 # ------------------------------------------------------------------
+
 
 @patch("data.collectors.ibkr_futures.get_settings")
 @patch("data.collectors.ibkr_futures.IB")
@@ -86,7 +89,7 @@ def test_collect_init_connects_and_writes(mock_get_store, mock_ib_class, mock_ge
     ib = MagicMock()
     mock_ib_class.return_value = ib
 
-    mock_bars = [_make_ibkr_bar(f"2024010{i+1}", 4800.0) for i in range(3)]
+    mock_bars = [_make_ibkr_bar(f"2024010{i + 1}", 4800.0) for i in range(3)]
     ib.reqHistoricalData.return_value = mock_bars
 
     collect("ES", "1D")
@@ -144,6 +147,7 @@ def test_collect_skips_write_when_no_bars(mock_get_store, mock_ib_class, mock_ge
 # ------------------------------------------------------------------
 # collect — incremental path
 # ------------------------------------------------------------------
+
 
 @patch("data.collectors.ibkr_futures.get_settings")
 @patch("data.collectors.ibkr_futures.IB")

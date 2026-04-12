@@ -24,6 +24,7 @@ if str(ROOT) not in sys.path:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _minimal_df(**overrides) -> pd.DataFrame:
     """Return a one-row DataFrame with all required run fields."""
     row = {
@@ -42,6 +43,7 @@ def _minimal_df(**overrides) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # write_baseline_csv: required field validation
 # ---------------------------------------------------------------------------
+
 
 class TestWriteBaselineCsvValidation:
     def test_raises_before_writing_when_sharpe_missing(self, tmp_path: Path):
@@ -94,6 +96,7 @@ class TestWriteBaselineCsvValidation:
 # write_baseline_csv: alias mapping
 # ---------------------------------------------------------------------------
 
+
 class TestWriteBaselineCsvAliases:
     def test_n_trades_becomes_total_trades(self, tmp_path: Path):
         df = _minimal_df()
@@ -136,6 +139,7 @@ class TestWriteBaselineCsvAliases:
 # ---------------------------------------------------------------------------
 # write_baseline_csv: metadata injection
 # ---------------------------------------------------------------------------
+
 
 class TestWriteBaselineCsvMetadata:
     def test_strategy_metadata_injected(self, tmp_path: Path):
@@ -185,32 +189,35 @@ class TestWriteBaselineCsvMetadata:
 # write_grid_csv
 # ---------------------------------------------------------------------------
 
+
 class TestWriteGridCsv:
     def _grid_df(self) -> pd.DataFrame:
-        return pd.DataFrame([
-            {
-                "label": "mode_a",
-                "sharpe": 1.2,
-                "win_rate": 0.50,
-                "profit_factor": 1.5,
-                "max_drawdown": -0.10,
-                "total_trades": 30,
-                "first_trade_ts": "2024-01-02T10:00:00Z",
-                "last_trade_ts": "2025-10-01T16:00:00Z",
-                "params_json": {"label": "mode_a", "sizing_mode": "flat"},
-            },
-            {
-                "label": "mode_b",
-                "sharpe": 1.8,
-                "win_rate": 0.60,
-                "profit_factor": 2.0,
-                "max_drawdown": -0.07,
-                "total_trades": 30,
-                "first_trade_ts": "2024-01-02T10:00:00Z",
-                "last_trade_ts": "2025-10-01T16:00:00Z",
-                "params_json": {"label": "mode_b", "sizing_mode": "rdist"},
-            },
-        ])
+        return pd.DataFrame(
+            [
+                {
+                    "label": "mode_a",
+                    "sharpe": 1.2,
+                    "win_rate": 0.50,
+                    "profit_factor": 1.5,
+                    "max_drawdown": -0.10,
+                    "total_trades": 30,
+                    "first_trade_ts": "2024-01-02T10:00:00Z",
+                    "last_trade_ts": "2025-10-01T16:00:00Z",
+                    "params_json": {"label": "mode_a", "sizing_mode": "flat"},
+                },
+                {
+                    "label": "mode_b",
+                    "sharpe": 1.8,
+                    "win_rate": 0.60,
+                    "profit_factor": 2.0,
+                    "max_drawdown": -0.07,
+                    "total_trades": 30,
+                    "first_trade_ts": "2024-01-02T10:00:00Z",
+                    "last_trade_ts": "2025-10-01T16:00:00Z",
+                    "params_json": {"label": "mode_b", "sizing_mode": "rdist"},
+                },
+            ]
+        )
 
     def test_writes_grid_with_two_rows(self, tmp_path: Path):
         df = self._grid_df()
@@ -229,6 +236,7 @@ class TestWriteGridCsv:
 
         result = pd.read_csv(out)
         import json
+
         parsed = json.loads(result["params_json"].iloc[0])
         assert isinstance(parsed, dict)
 
@@ -245,6 +253,7 @@ class TestWriteGridCsv:
 # ---------------------------------------------------------------------------
 # Sync test: REQUIRED_FIELDS matches qws_graph CSV_REQUIRED_ALIASES
 # ---------------------------------------------------------------------------
+
 
 class TestRequiredFieldsSync:
     def test_required_fields_matches_qws_graph_parser(self):

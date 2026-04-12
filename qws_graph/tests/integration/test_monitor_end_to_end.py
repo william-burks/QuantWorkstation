@@ -17,17 +17,20 @@ from research.graph.monitor import MonitorRunner
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture()
 def trial_script_below_threshold(tmp_path: Path) -> tuple[Path, Path]:
     """Create a trial script that outputs sharpe within threshold of 2.5."""
     script_dir = tmp_path / "research" / "trials"
     script_dir.mkdir(parents=True)
     script = script_dir / "01_stable.py"
-    script.write_text(textwrap.dedent("""\
+    script.write_text(
+        textwrap.dedent("""\
         import sys
         print("sharpe: 2.45")
         sys.exit(0)
-    """))
+    """)
+    )
     return tmp_path, script
 
 
@@ -37,11 +40,13 @@ def trial_script_above_threshold(tmp_path: Path) -> tuple[Path, Path]:
     script_dir = tmp_path / "research" / "trials"
     script_dir.mkdir(parents=True)
     script = script_dir / "02_degraded.py"
-    script.write_text(textwrap.dedent("""\
+    script.write_text(
+        textwrap.dedent("""\
         import sys
         print("sharpe: 1.0")
         sys.exit(0)
-    """))
+    """)
+    )
     return tmp_path, script
 
 
@@ -62,6 +67,7 @@ def _make_store_for_integration(
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestMonitorEndToEnd:
     def test_below_threshold_no_degrade(

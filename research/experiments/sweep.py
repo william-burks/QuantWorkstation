@@ -89,9 +89,15 @@ def sweep(
 
         try:
             pf = run(
-                strategy, bars,
-                init_cash=init_cash, fees=fees, freq=freq,
-                leverage=leverage, sl_stop=sl_stop, tp_stop=tp_stop, time_stop=time_stop,
+                strategy,
+                bars,
+                init_cash=init_cash,
+                fees=fees,
+                freq=freq,
+                leverage=leverage,
+                sl_stop=sl_stop,
+                tp_stop=tp_stop,
+                time_stop=time_stop,
             )
         except Exception as exc:
             log.warning("Combo %s failed: %s", params, exc)
@@ -110,12 +116,15 @@ def sweep(
         # (assumes full position size throughout — declines as account depletes)
         fees_dollar = n_trades * 2 * fees * init_cash * leverage
 
-        rows.append({
-            **params, **m,
-            "n_trades": n_trades,
-            "gain": round(gain, 2),
-            "fees": round(fees_dollar, 2),
-        })
+        rows.append(
+            {
+                **params,
+                **m,
+                "n_trades": n_trades,
+                "gain": round(gain, 2),
+                "fees": round(fees_dollar, 2),
+            }
+        )
 
     if not rows:
         return pd.DataFrame()

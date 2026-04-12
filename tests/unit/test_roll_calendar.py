@@ -43,10 +43,12 @@ def test_build_continuous_single_contract():
 def test_build_continuous_two_contracts_ratio_applied():
     expiry1 = date(2024, 3, 15)
     expiry2 = date(2024, 6, 21)
-    contracts = pd.DataFrame([
-        {"expiry": expiry1, "front_month": False},
-        {"expiry": expiry2, "front_month": True},
-    ])
+    contracts = pd.DataFrame(
+        [
+            {"expiry": expiry1, "front_month": False},
+            {"expiry": expiry2, "front_month": True},
+        ]
+    )
     # Old contract closes at 4800, new at 4820 on roll date
     # Ratio = 4820/4800 ≈ 1.00417, so old bars get multiplied
     bars1 = _make_bars(["2024-01-02", "2024-01-03"], 4800.0)

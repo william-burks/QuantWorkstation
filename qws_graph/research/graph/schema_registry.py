@@ -85,7 +85,7 @@ def all_config_keys() -> set[str]:
 # directly; this set covers additional optional result columns.
 RUN_PROPERTIES: set[str] = {
     "calmar",
-    "return",   # CSV column name; stored as Run.metrics_return (reserved word)
+    "return",  # CSV column name; stored as Run.metrics_return (reserved word)
     "tier",
     # first_trade_ts and last_trade_ts are in CSV_REQUIRED_ALIASES (required columns),
     # not here — the _collect_unknown_columns method already includes required aliases in
@@ -103,8 +103,8 @@ IGNORED_COLUMNS: set[str] = {
     "beat_bh",
     "bh_exposure_return",
     "breakeven_win_rate",
-    "backtest_end",     # used to compute duty_cycle; not stored as a Run property
-    "backtest_start",   # used to compute duty_cycle; not stored as a Run property
+    "backtest_end",  # used to compute duty_cycle; not stored as a Run property
+    "backtest_start",  # used to compute duty_cycle; not stored as a Run property
     "exposure_frac",
     "fee_pct_of_gain",
     "fees",
@@ -114,5 +114,5 @@ IGNORED_COLUMNS: set[str] = {
     "sample_size",
     "total_hours",
     "mode",
-    "risk_avg"
+    "risk_avg",
 }

@@ -6,7 +6,7 @@ from pydantic import BaseModel, model_validator
 class Order(BaseModel):
     symbol: str
     side: Literal["buy", "sell"]
-    qty: float | None = None       # mutually exclusive with notional
+    qty: float | None = None  # mutually exclusive with notional
     notional: float | None = None  # USD value — mutually exclusive with qty
     order_type: Literal["market", "limit"] = "market"
     limit_price: float | None = None

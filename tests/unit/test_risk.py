@@ -24,6 +24,7 @@ def risk() -> RiskEngine:
 
 # --- Daily loss halt ---
 
+
 def test_daily_loss_halt(risk: RiskEngine) -> None:
     loss_equity = BALANCE * (1 - MAX_DAILY_LOSS_PCT) - 0.01
     state = risk.update(loss_equity)
@@ -39,6 +40,7 @@ def test_daily_loss_below_threshold_stays_trading(risk: RiskEngine) -> None:
 
 # --- Trailing drawdown halt ---
 
+
 def test_drawdown_halt(risk: RiskEngine) -> None:
     # Push HWM up first
     risk.update(BALANCE * 1.05)
@@ -51,6 +53,7 @@ def test_drawdown_halt(risk: RiskEngine) -> None:
 
 
 # --- Daily profit ceiling ---
+
 
 def test_daily_cap_hit(risk: RiskEngine) -> None:
     cap_equity = BALANCE * (1 + DAILY_PROFIT_CEILING_PCT) + 0.01
@@ -65,6 +68,7 @@ def test_daily_cap_blocks_orders(risk: RiskEngine) -> None:
 
 
 # --- Day reset ---
+
 
 def test_day_reset_lifts_daily_loss_halt(risk: RiskEngine) -> None:
     risk.update(BALANCE * (1 - MAX_DAILY_LOSS_PCT) - 1.0)
@@ -85,6 +89,7 @@ def test_day_reset_does_not_lift_drawdown_halt(risk: RiskEngine) -> None:
 
 # --- Consistency / compliance mode ---
 
+
 def test_compliance_mode_triggered(risk: RiskEngine) -> None:
     # Simulate a best day that exceeds 30% of eval goal
     profit = GOAL * CONSISTENCY_THRESHOLD + 1.0
@@ -100,6 +105,7 @@ def test_compliance_mode_caps_notional(risk: RiskEngine) -> None:
 
 
 # --- Order checks ---
+
 
 def test_symbol_exposure_capped(risk: RiskEngine) -> None:
     # Request more than 5% of equity
@@ -128,6 +134,7 @@ def test_halted_blocks_all_orders(risk: RiskEngine) -> None:
 
 # --- Lot size spike guard ---
 
+
 def test_lot_spike_guard_insufficient_history(risk: RiskEngine) -> None:
     risk.record_fill(0.1)
     risk.record_fill(0.1)
@@ -151,6 +158,7 @@ def test_lot_within_bounds_unchanged(risk: RiskEngine) -> None:
 
 
 # --- Position sizer ---
+
 
 def test_size_position(risk: RiskEngine) -> None:
     # 1% of $100k with 2% stop = $1000 / 0.02 = $50,000 notional

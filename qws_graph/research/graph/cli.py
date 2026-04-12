@@ -11,7 +11,7 @@ import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from . import ids as _ids
 from .curator import apply_significance_gate
@@ -48,6 +48,7 @@ def _embed_text(text: str) -> list[float]:
     vector = model.encode(text, normalize_embeddings=True)
     return [float(v) for v in vector]
 
+
 # Promotion alert thresholds — imported read-only from standards.py
 # fmt: off
 try:
@@ -57,9 +58,9 @@ try:
         MIN_ACTIVE_WINDOW_FREQUENCY as _MIN_AWF,
     )
 except ImportError:  # standards.py not on path in some test environments
-    _SHARPE: dict[str, float] = {"professional": 1.5, "institutional": 2.5}
-    _PROFIT_FACTOR: dict[str, float] = {"professional": 1.75, "institutional": 3.0}
-    _MIN_AWF: float = 0.06
+    _SHARPE = {"professional": 1.5, "institutional": 2.5}
+    _PROFIT_FACTOR = {"professional": 1.75, "institutional": 3.0}
+    _MIN_AWF = 0.06
 # fmt: on
 
 _PROMOTION_MIN_TRADES: int = 30
@@ -191,6 +192,8 @@ def _get_artifact_id(artifact: ResearchArtifact) -> str:
         return artifact.champion.champion_id if artifact.champion else "unknown"
     elif artifact.kind == "tracker_md":
         # Use artifact path hash for tracker blobs
+        if artifact.blob is None:
+            return "unknown"
         path_hash = hashlib.sha256(artifact.blob.artifact_path.encode()).hexdigest()[:12]
         return path_hash
     return "unknown"
@@ -221,7 +224,7 @@ def _parse_artifact(
         parser = CSVParser(file_path, kind, repo_root=repo_root)
         return parser.parse()
     elif kind == "champion_md":
-        parser = ChampionMarkdownParser(
+        parser = ChampionMarkdownParser(  # type: ignore[assignment]
             file_path,
             registry_path=(
                 repo_root / "research" / "results" / "registry.json" if repo_root else None
@@ -263,8 +266,10 @@ def _parse_artifact(
         inferred = _infer_strategy_from_artifact_name(file_path.stem)
         strategy = Strategy(
             strategy_id=make_strategy_id(
-                inferred["instrument"], inferred["timeframe"],
-                inferred["direction"], inferred["logic_type"],
+                inferred["instrument"],
+                inferred["timeframe"],
+                inferred["direction"],
+                inferred["logic_type"],
             ),
             instrument=inferred["instrument"],
             timeframe=inferred["timeframe"],
@@ -292,7 +297,7 @@ def _keep_approved(artifact: ResearchArtifact) -> ResearchArtifact:
     return artifact.model_copy(update={"runs": approved_runs, "configs": approved_configs})
 
 
-def _read_bundle_manifest(bundle_dir: Path) -> dict:
+def _read_bundle_manifest(bundle_dir: Path) -> dict[str, Any]:
     """Read and minimally validate bundle.json from a bundle directory.
 
     Raises:
@@ -305,7 +310,7 @@ def _read_bundle_manifest(bundle_dir: Path) -> dict:
             f"bundle.json not found in {bundle_dir}. "
             "Bundle directories must contain a bundle.json manifest written by the shell runner."
         )
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest: dict[str, Any] = json.loads(manifest_path.read_text(encoding="utf-8"))
     files = manifest.get("files", {})
     missing = [k for k in ("csv", "csv_kind") if not files.get(k)]
     if missing:
@@ -420,9 +425,7 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
             # Phase 3: patch html path onto persisted run nodes only.
             # SKIPPED runs were never written to the graph in this ingest pass,
             # so their run_id does not exist as a :Run node and MATCH would fail.
-            persisted_run_ids = [
-                o.run_id for o in result.evolution if o.status != "skipped"
-            ]
+            persisted_run_ids = [o.run_id for o in result.evolution if o.status != "skipped"]
             html_abs_path: str | None = None
             patched_count = 0
             if html_filename:
@@ -652,8 +655,7 @@ def cmd_seed(args: argparse.Namespace) -> int:
         k = k.strip()
         if k not in RESEARCH_TARGET_ALLOWED_KEYS:
             print(
-                f"ERROR: unknown target key {k!r}. "
-                f"Allowed: {sorted(RESEARCH_TARGET_ALLOWED_KEYS)}",
+                f"ERROR: unknown target key {k!r}. Allowed: {sorted(RESEARCH_TARGET_ALLOWED_KEYS)}",
                 file=sys.stderr,
             )
             return 1
@@ -900,6 +902,7 @@ def cmd_record(args: argparse.Namespace) -> int:
         if not no_analyze:
             try:
                 from .analyst import AnalystFactory, AnalystUnavailableError
+
                 try:
                     analyst = AnalystFactory.from_env()
                     candidates, summary = apply_significance_gate(
@@ -1021,7 +1024,7 @@ def cmd_record(args: argparse.Namespace) -> int:
             kind=kind,
             artifact_path=file_path.as_posix(),
             artifact_hash=artifact_hash,
-            status=result.status,
+            status=cast(Literal["persisted", "pending_offline", "skipped"], result.status),
             node_counts=node_counts,
             relationship_counts=relationship_counts,
             warnings=all_warnings,
@@ -1066,7 +1069,7 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
     _receipts_dir = repo_root / ".qws" / "receipts"  # reserved for full reconcile impl
     pending_dir = repo_root / ".qws" / "pending"
 
-    audit = {
+    audit: dict[str, list[dict[str, str]]] = {
         "missing_in_graph": [],
         "missing_in_artifacts": [],
         "hash_mismatch": [],
@@ -1075,11 +1078,13 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
     # Check pending files
     if pending_dir.exists():
         for pending_file in pending_dir.glob("*.json"):
-            audit["missing_in_graph"].append({
-                "id": pending_file.stem,
-                "status": "pending_offline",
-                "path": pending_file.as_posix(),
-            })
+            audit["missing_in_graph"].append(
+                {
+                    "id": pending_file.stem,
+                    "status": "pending_offline",
+                    "path": pending_file.as_posix(),
+                }
+            )
 
     if output_json:
         print(json.dumps(audit, indent=2))
@@ -1716,8 +1721,7 @@ def main() -> int:
         help="Run a predefined graph query preset",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-            "Run a predefined graph query preset.\n\n"
-            f"Available presets:\n{_preset_help_lines}"
+            f"Run a predefined graph query preset.\n\nAvailable presets:\n{_preset_help_lines}"
         ),
     )
     query_parser.add_argument(
@@ -1888,13 +1892,12 @@ def main() -> int:
     )
     monitor_parser.set_defaults(func=cmd_monitor)
 
-
     # Parse arguments
     args = parser.parse_args()
 
     # Dispatch to command handler
     if hasattr(args, "func"):
-        return args.func(args)
+        return cast(int, args.func(args))
 
     # No command specified
     parser.print_help()
@@ -1903,7 +1906,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
-
-

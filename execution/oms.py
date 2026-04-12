@@ -16,6 +16,7 @@ Usage:
 """
 
 import logging
+from typing import Literal
 
 from data.schemas.order import Order
 from execution.risk import RiskEngine, RiskViolation
@@ -72,7 +73,7 @@ class OMS:
                 log.warning("OMS blocked by risk: %s delta=%.2f — %s", symbol, delta, exc)
                 continue
 
-            side = "buy" if delta > 0 else "sell"
+            side: Literal["buy", "sell"] = "buy" if delta > 0 else "sell"
             orders.append(Order(symbol=symbol, side=side, notional=approved, reason="rebalance"))
             log.info("OMS order: %s %s notional=%.2f", side, symbol, approved)
 

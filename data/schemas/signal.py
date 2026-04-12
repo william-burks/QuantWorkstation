@@ -9,8 +9,8 @@ class Signal(BaseModel):
     symbol: str
     timestamp: datetime
     direction: Literal["long", "short", "flat"]
-    strength: float              # 0.0–1.0
-    params: dict[str, Any] = {} # strategy params that generated this signal
+    strength: float  # 0.0–1.0
+    params: dict[str, Any] = {}  # strategy params that generated this signal
 
     @field_validator("strength")
     @classmethod

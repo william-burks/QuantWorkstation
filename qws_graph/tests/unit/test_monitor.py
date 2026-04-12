@@ -14,6 +14,7 @@ from research.graph.monitor import MonitorResult, MonitorRunner
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_champion(
     champion_id: str = "champ_001",
     strategy_id: str = "strat_001",
@@ -44,6 +45,7 @@ def _make_store(
 # ---------------------------------------------------------------------------
 # MonitorRunner._resolve_threshold
 # ---------------------------------------------------------------------------
+
 
 class TestResolveThreshold:
     def test_uses_research_target_when_present(self, tmp_path: Path) -> None:
@@ -76,6 +78,7 @@ class TestResolveThreshold:
 # MonitorRunner._parse_sharpe
 # ---------------------------------------------------------------------------
 
+
 class TestParseSharpe:
     def test_parses_standard_line(self) -> None:
         assert MonitorRunner._parse_sharpe("sharpe: 2.34\n") == pytest.approx(2.34)
@@ -97,6 +100,7 @@ class TestParseSharpe:
 # ---------------------------------------------------------------------------
 # MonitorRunner._resolve_script
 # ---------------------------------------------------------------------------
+
 
 class TestResolveScript:
     def test_resolves_py_sibling_of_csv(self, tmp_path: Path) -> None:
@@ -129,6 +133,7 @@ class TestResolveScript:
 # MonitorRunner._evaluate_champion — above threshold
 # ---------------------------------------------------------------------------
 
+
 class TestEvaluateChampionAboveThreshold:
     def test_creates_former_champion_when_above_threshold(self, tmp_path: Path) -> None:
         (tmp_path / "research" / "trials").mkdir(parents=True)
@@ -154,9 +159,10 @@ class TestEvaluateChampionAboveThreshold:
             former_champion_id="fc_abc",
             artifact_type="monitor_notification",
             content=(
-            result.message if False
-            else store.attach_blob_to_former_champion.call_args.kwargs["content"]
-        ),
+                result.message
+                if False
+                else store.attach_blob_to_former_champion.call_args.kwargs["content"]
+            ),
         )
 
     def test_oos_reason_format(self, tmp_path: Path) -> None:
@@ -198,6 +204,7 @@ class TestEvaluateChampionAboveThreshold:
 # MonitorRunner._evaluate_champion — below threshold
 # ---------------------------------------------------------------------------
 
+
 class TestEvaluateChampionBelowThreshold:
     def test_no_degrade_when_below_threshold(self, tmp_path: Path) -> None:
         store = _make_store()
@@ -230,6 +237,7 @@ class TestEvaluateChampionBelowThreshold:
 # MonitorRunner._evaluate_champion — dry-run
 # ---------------------------------------------------------------------------
 
+
 class TestDryRun:
     def test_dry_run_does_not_write_edges(self, tmp_path: Path) -> None:
         store = _make_store()
@@ -261,6 +269,7 @@ class TestDryRun:
 # ---------------------------------------------------------------------------
 # MonitorRunner._evaluate_champion — missing/unresolvable script
 # ---------------------------------------------------------------------------
+
 
 class TestMissingScript:
     def test_skipped_when_script_unresolvable(self, tmp_path: Path) -> None:
@@ -302,6 +311,7 @@ class TestMissingScript:
 # ---------------------------------------------------------------------------
 # MonitorRunner.run — single champion scope
 # ---------------------------------------------------------------------------
+
 
 class TestSingleChampionScope:
     def test_run_with_champion_id_filters_to_one(self, tmp_path: Path) -> None:
@@ -349,6 +359,7 @@ class TestSingleChampionScope:
 # ---------------------------------------------------------------------------
 # CLI — cmd_monitor
 # ---------------------------------------------------------------------------
+
 
 class TestCmdMonitor:
     def _make_args(
@@ -411,6 +422,7 @@ class TestCmdMonitor:
         """qw monitor --help exits 0 (subcommand registered in main parser)."""
         import subprocess  # noqa: PLC0415
         import sys
+
         result = subprocess.run(
             [sys.executable, "-m", "research.graph.cli", "monitor", "--help"],
             capture_output=True,

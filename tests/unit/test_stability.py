@@ -242,8 +242,7 @@ class TestScoreClamping:
         # Very high σ/μ ratio → raw score negative → clamped to 0
         champion = RunRecord("c", 2.0, {"x": 10.0})
         neighbors = [
-            RunRecord(f"n{i}", s, {"x": 10.0 + i})
-            for i, s in enumerate([0.1, 0.2, 5.0, 6.0])
+            RunRecord(f"n{i}", s, {"x": 10.0 + i}) for i, s in enumerate([0.1, 0.2, 5.0, 6.0])
         ]
         result = compute_stability(champion, [champion] + neighbors)
         assert result.stability_score >= 0.0

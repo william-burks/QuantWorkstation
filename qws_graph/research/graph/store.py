@@ -126,8 +126,11 @@ class GraphStore:
         database = os.getenv("QW_GRAPH_DATABASE", "neo4j")
         uri = f"{scheme}://{host}:{port}"
         return cls(
-            uri=uri, username=user, password=password,
-            timeout_seconds=timeout_seconds, database=database,
+            uri=uri,
+            username=user,
+            password=password,
+            timeout_seconds=timeout_seconds,
+            database=database,
         )
 
     def close(self) -> None:
@@ -167,16 +170,18 @@ class GraphStore:
                         )
 
                         if is_redundant:
-                            ev = sharpe * (total_trades ** 0.5) if total_trades > 0 else 0.0
-                            evolution_outcomes.append(EvolutionOutcome(
-                                run_id=run_id,
-                                status="skipped",
-                                reason=(
-                                    f"existing run with total_trades={total_trades} "
-                                    f"has sharpe >= {sharpe:.3f} within 30 days"
-                                ),
-                                evidence_score=ev,
-                            ))
+                            ev = sharpe * (total_trades**0.5) if total_trades > 0 else 0.0
+                            evolution_outcomes.append(
+                                EvolutionOutcome(
+                                    run_id=run_id,
+                                    status="skipped",
+                                    reason=(
+                                        f"existing run with total_trades={total_trades} "
+                                        f"has sharpe >= {sharpe:.3f} within 30 days"
+                                    ),
+                                    evidence_score=ev,
+                                )
+                            )
                             skipped_run_ids.add(run_id)
 
                     # Build filtered payload (drop redundant runs)
@@ -218,15 +223,17 @@ class GraphStore:
                         run_id = run_d["run_id"]
                         t = int(run_d.get("total_trades") or 0)
                         s = float(run_d.get("sharpe") or 0.0)
-                        ev = s * (t ** 0.5) if t > 0 else 0.0
+                        ev = s * (t**0.5) if t > 0 else 0.0
                         is_promoted = run_id == best_run_id
-                        evolution_outcomes.append(EvolutionOutcome(
-                            run_id=run_id,
-                            status="promoted" if is_promoted else "recorded",
-                            reason="",
-                            evidence_score=ev,
-                            champion_id=auto_champion_id if is_promoted else None,
-                        ))
+                        evolution_outcomes.append(
+                            EvolutionOutcome(
+                                run_id=run_id,
+                                status="promoted" if is_promoted else "recorded",
+                                reason="",
+                                evidence_score=ev,
+                                champion_id=auto_champion_id if is_promoted else None,
+                            )
+                        )
 
                     n_written = len(filtered_payload["runs"])
                     node_counts: dict[str, int] = {
@@ -250,9 +257,7 @@ class GraphStore:
 
                 if artifact.kind == "champion_md":
                     champion_tier = str(
-                        (payload.get("champion") or {})
-                        .get("metrics_summary", {})
-                        .get("tier", "")
+                        (payload.get("champion") or {}).get("metrics_summary", {}).get("tier", "")
                     ).lower()
                     if champion_tier == "fail":
                         return StoreResult(
@@ -296,6 +301,7 @@ class GraphStore:
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx):
                     result = tx.run(ABORT_STRATEGY_QUERY, strategy_id=strategy_id, reason=reason)
                     return list(result)
@@ -318,6 +324,7 @@ class GraphStore:
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx):
                     return [dict(r) for r in tx.run(AUDIT_NULL_FAMILY_ID_QUERY)]
 
@@ -338,6 +345,7 @@ class GraphStore:
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx):
                     result = tx.run(
                         PATCH_FAMILY_ID_QUERY, strategy_id=strategy_id, family_id=family_id
@@ -364,6 +372,7 @@ class GraphStore:
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx):
                     result = tx.run(PATCH_RUN_HTML_PATH_QUERY, run_id=run_id, html_path=html_path)
                     return list(result)
@@ -403,6 +412,7 @@ class GraphStore:
 
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx):
                     result = tx.run(GET_CHAMPION_OOS_STATUS_QUERY, champion_id=champion_id).single()
                     return result
@@ -462,6 +472,7 @@ class GraphStore:
 
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx) -> None:
                     tx.run(ENSURE_RESEARCH_TARGET_QUERY, **_RESEARCH_TARGET_DEFAULTS).consume()
                     if overrides:
@@ -526,6 +537,7 @@ class GraphStore:
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx) -> str:
                     tx.run(
                         HYPOTHESIS_CREATE_QUERY, hypothesis_id=hypothesis_id, title=title
@@ -549,6 +561,7 @@ class GraphStore:
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _check_strategy(tx) -> bool:
                     result = tx.run(
                         "MATCH (s:Strategy {strategy_id: $strategy_id})"
@@ -592,6 +605,7 @@ class GraphStore:
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _check_node(tx) -> bool:
                     result = tx.run(
                         """
@@ -645,6 +659,7 @@ class GraphStore:
             )
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx):
                     result = tx.run(
                         HYPOTHESIS_UPDATE_STATUS_QUERY,
@@ -665,6 +680,7 @@ class GraphStore:
         """Return True when a Hypothesis node with this ID exists."""
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx) -> bool:
                     result = tx.run(
                         GET_HYPOTHESIS_BY_ID_QUERY,
@@ -717,6 +733,7 @@ class GraphStore:
 
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _check(tx):
                     result = tx.run(
                         GET_CHAMPION_BY_ID_QUERY,
@@ -731,6 +748,7 @@ class GraphStore:
                 strategy_id = row["strategy_id"]
                 degraded_at = _dt.now(UTC).isoformat()
                 from .ids import hash12 as _hash12
+
                 former_champion_id = _hash12(champion_id, degraded_at)
 
                 def _write(tx):
@@ -784,6 +802,7 @@ class GraphStore:
 
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _check(tx):
                     result = tx.run(
                         GET_FORMER_CHAMPION_BY_ID_QUERY,
@@ -793,12 +812,11 @@ class GraphStore:
 
                 row = session.execute_read(_check)
                 if row is None:
-                    raise ValueError(
-                        f"FormerChampion {former_champion_id!r} not found"
-                    )
+                    raise ValueError(f"FormerChampion {former_champion_id!r} not found")
 
                 retired_at = _dt.now(UTC).isoformat()
                 from .ids import hash12 as _hash12
+
                 retired_champion_id = _hash12(former_champion_id, retired_at)
 
                 def _write(tx):
@@ -845,6 +863,7 @@ class GraphStore:
 
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
                     return [dict(r) for r in tx.run(GET_ALL_ACTIVE_CHAMPIONS_QUERY)]
 
@@ -863,6 +882,7 @@ class GraphStore:
         _QUERY = "MATCH (rt:ResearchTarget {target_id: 'singleton'}) RETURN rt{.*} AS rt"
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
                     return [dict(r["rt"]) for r in tx.run(_QUERY)]
 
@@ -905,6 +925,7 @@ class GraphStore:
 
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx) -> str:  # type: ignore[no-untyped-def]
                     result = tx.run(
                         FORMER_CHAMPION_BLOB_QUERY,
@@ -961,6 +982,7 @@ class GraphStore:
 
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx) -> None:  # type: ignore[no-untyped-def]
                     tx.run(
                         CORRELATED_WITH_CHAMPION_QUERY,
@@ -995,6 +1017,7 @@ class GraphStore:
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
                     return [dict(r["result"]) for r in tx.run(GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY)]
 
@@ -1034,6 +1057,7 @@ RETURN {
 """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
                     return [
                         dict(r["result"])
@@ -1088,17 +1112,20 @@ ORDER BY candidate_id
 """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
                     rows = []
                     for r in tx.run(_RECHECK_CYPHER):
                         candidate_id = r["candidate_id"]
                         max_corr = float(r["max_corr"])
                         gate = "PASS" if max_corr < corr_threshold else "FAIL"
-                        rows.append({
-                            "candidate_id": candidate_id,
-                            "max_corr": max_corr,
-                            "gate": gate,
-                        })
+                        rows.append(
+                            {
+                                "candidate_id": candidate_id,
+                                "max_corr": max_corr,
+                                "gate": gate,
+                            }
+                        )
                     return rows
 
                 return session.execute_read(_read)
@@ -1126,6 +1153,7 @@ ORDER BY candidate_id
         The run is excluded from its own comparison (by ``run_id``) so
         re-ingesting the same file is idempotent.
         """
+
         def _read(tx):
             result = tx.run(
                 RUN_REDUNDANCY_CHECK_CYPHER,
@@ -1153,6 +1181,7 @@ ORDER BY candidate_id
         ``displaced_run_id`` is non-None only when a different run held the
         top spot before this call.
         """
+
         def _read(tx):
             s_row = tx.run(
                 "MATCH (s:Strategy {strategy_id: $sid}) RETURN s.best_run_id AS brid",
@@ -1180,9 +1209,7 @@ ORDER BY candidate_id
         new_best_run_id: str = best_row["run_id"]
         evidence_score = float(best_row["evidence_score"])
         displaced = (
-            old_best_run_id
-            if old_best_run_id and old_best_run_id != new_best_run_id
-            else None
+            old_best_run_id if old_best_run_id and old_best_run_id != new_best_run_id else None
         )
 
         def _write(tx) -> None:
@@ -1398,6 +1425,7 @@ ORDER BY candidate_id
         returns ``None`` when the quality gate blocks promotion or the current
         champion already holds the peak.
         """
+
         def _flatten(tx) -> None:
             tx.run(
                 """
@@ -1455,7 +1483,10 @@ ORDER BY candidate_id
             "artifact_path": best["artifact_path"] or "",
         }
         return self._maybe_auto_promote_champion(
-            session, strategy_id, run_data, float(best["evidence_score"] or 0.0),
+            session,
+            strategy_id,
+            run_data,
+            float(best["evidence_score"] or 0.0),
             promotion_rationale=promotion_rationale,
         )
 
@@ -1465,7 +1496,7 @@ ORDER BY candidate_id
         for run_payload, config_payload in zip(payload["runs"], payload["configs"], strict=True):
             _sharpe = float(run_payload.get("sharpe") or 0.0)
             _trades = int(run_payload.get("total_trades") or 0)
-            _ev = _sharpe * (_trades ** 0.5) if _trades > 0 else 0.0
+            _ev = _sharpe * (_trades**0.5) if _trades > 0 else 0.0
             run_for_query = {
                 **run_payload,
                 "curator_note": truncate_curator_note(run_payload.get("curator_note")) or "",
@@ -1479,7 +1510,9 @@ ORDER BY candidate_id
                 ),
                 "risk_params_text": json.dumps(
                     config_payload.get("risk_params", {}),
-                    sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=True,
                 ),
                 # First-class Config properties: unpacked by SET c += row.config.params_dict
                 "params_dict": params_dict,
@@ -1521,9 +1554,7 @@ ORDER BY candidate_id
         tier = str(metrics.get("tier", "")).lower() or "pass"
         # Flatten numeric metrics into individual properties for direct Cypher queryability.
         flat_metrics = {
-            f"metrics_{k}": v
-            for k, v in metrics.items()
-            if isinstance(v, (int, float))
+            f"metrics_{k}": v for k, v in metrics.items() if isinstance(v, (int, float))
         }
         champion_payload = {
             **payload["champion"],
@@ -1579,6 +1610,7 @@ ORDER BY candidate_id
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx) -> list[object]:  # type: ignore[no-untyped-def]
                     result = tx.run(
                         HYPOTHESIS_SET_EMBEDDING_QUERY,
@@ -1604,6 +1636,7 @@ ORDER BY candidate_id
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
                     return [dict(r) for r in tx.run(GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY)]
 
@@ -1622,6 +1655,7 @@ ORDER BY candidate_id
         """
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
                     return [dict(r) for r in tx.run(GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY)]
 
@@ -1673,18 +1707,21 @@ ORDER BY candidate_id
             sim = _cosine(new_embedding, other_emb)
             if sim >= threshold:
                 sorted_ids = sorted([new_hypothesis_id, other_id])
-                pairs.append({
-                    "hypothesis_id_a": sorted_ids[0],
-                    "hypothesis_id_b": sorted_ids[1],
-                    "pair_key": f"{sorted_ids[0]}|{sorted_ids[1]}",
-                    "similarity": round(sim, 6),
-                })
+                pairs.append(
+                    {
+                        "hypothesis_id_a": sorted_ids[0],
+                        "hypothesis_id_b": sorted_ids[1],
+                        "pair_key": f"{sorted_ids[0]}|{sorted_ids[1]}",
+                        "similarity": round(sim, 6),
+                    }
+                )
 
         if not pairs:
             return 0
 
         try:
             with self._driver.session(database=self._database) as session:
+
                 def _write(tx) -> None:  # type: ignore[no-untyped-def]
                     tx.run(SEMANTICALLY_RELATED_MERGE_QUERY, pairs=pairs).consume()
 
@@ -1695,5 +1732,3 @@ ORDER BY candidate_id
             raise StoreInfraError(f"Unexpected store error: {exc}") from exc
 
         return len(pairs)
-
-

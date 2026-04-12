@@ -94,6 +94,6 @@ def test_position_valid():
         unrealized_pnl=250.0,
         broker="alpaca",
         risk=100.0,
-        to_make=300.0
+        to_make=300.0,
     )
     assert p.qty == 0.5

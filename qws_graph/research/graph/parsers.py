@@ -6,10 +6,10 @@ import csv
 import hashlib
 import json
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 from .ids import canonical_json, champion_id, config_id, run_id, strategy_id
 from .models import Champion, Config, Provenance, ResearchArtifact, Run, Strategy
@@ -124,9 +124,8 @@ def _parse_scalar(value: str) -> Any:
     try:
         if re.fullmatch(r"[-+]?\d+", numeric_candidate):
             return int(numeric_candidate)
-        if (
-            re.fullmatch(r"[-+]?\d*\.\d+", numeric_candidate)
-            or re.fullmatch(r"[-+]?\d+\.\d*", numeric_candidate)
+        if re.fullmatch(r"[-+]?\d*\.\d+", numeric_candidate) or re.fullmatch(
+            r"[-+]?\d+\.\d*", numeric_candidate
         ):
             number = float(numeric_candidate)
             return number / 100 if text.endswith("%") else number
@@ -337,15 +336,16 @@ class CSVParser:
             configs.append(config_obj)
             runs.append(run_obj)
 
+        assert strategy_obj is not None  # guaranteed: rows is non-empty (checked above)
         artifact = ResearchArtifact(
-            kind=self.kind,
+            kind=cast(Literal["baseline_csv", "grid_csv", "champion_md", "tracker_md"], self.kind),
             strategy=strategy_obj,
             runs=runs,
             configs=configs,
         )
         return artifact, self.unknown_warnings.messages()
 
-    def _validate_required_columns(self, fieldnames: list[str]) -> None:
+    def _validate_required_columns(self, fieldnames: Sequence[str]) -> None:
         missing = [
             field
             for field, aliases in CSV_REQUIRED_ALIASES.items()
@@ -354,7 +354,7 @@ class CSVParser:
         if missing:
             raise ValueError(f"missing required columns: {', '.join(sorted(missing))}")
 
-    def _collect_unknown_columns(self, fieldnames: list[str]) -> None:
+    def _collect_unknown_columns(self, fieldnames: Sequence[str]) -> None:
         recognized = set(STRATEGY_COLUMNS) | all_config_keys() | IGNORED_COLUMNS
         for aliases in CSV_REQUIRED_ALIASES.values():
             recognized.update(aliases)
@@ -398,7 +398,7 @@ class CSVParser:
             strategy_id=canonical_strategy_id,
             instrument=instrument,
             timeframe=timeframe,
-            direction=direction,
+            direction=cast(Literal["long", "short", "bear", "bull"], direction),
             logic_type=logic_type,
         )
 
@@ -544,9 +544,8 @@ class ChampionMarkdownParser:
         metrics_summary = self._parse_metrics_section(sections["is_metrics"])
         fragilities = self._parse_fragilities(sections["known_fragilities"])
         strategy_obj = self._resolve_strategy(config_values)
-        pivot_from_run_id = (
-            self.explicit_pivot_from_run_id
-            or self._extract_pivot_from_run_id(sections["oos_command"])
+        pivot_from_run_id = self.explicit_pivot_from_run_id or self._extract_pivot_from_run_id(
+            sections["oos_command"]
         )
 
         champion_obj = Champion(
@@ -636,7 +635,8 @@ class ChampionMarkdownParser:
         timeframe = (
             _normalize_timeframe(
                 config_values.get("sweep_timeframe") or config_values.get("timeframe")
-            ) or inferred["timeframe"]
+            )
+            or inferred["timeframe"]
         )
         direction = (config_values.get("direction") or inferred["direction"] or "").strip().lower()
         logic_type = inferred["logic_type"]
@@ -656,7 +656,7 @@ class ChampionMarkdownParser:
             strategy_id=strategy_id(instrument, timeframe, direction, logic_type),
             instrument=instrument,
             timeframe=timeframe,
-            direction=direction,
+            direction=cast(Literal["long", "short", "bear", "bull"], direction),
             logic_type=logic_type,
         )
 
@@ -723,11 +723,11 @@ def _infer_strategy_from_artifact_name(stem: str) -> dict[str, str]:
         and timeframe_index is not None
         and direction_index < timeframe_index
     ):
-        logic_tokens = tokens[direction_index + 1:timeframe_index]
+        logic_tokens = tokens[direction_index + 1 : timeframe_index]
     elif direction_index is not None:
         logic_tokens = [
             token
-            for token in tokens[direction_index + 1:]
+            for token in tokens[direction_index + 1 :]
             if not TIMEFRAME_TOKEN_RE.match(token) and not re.fullmatch(r"v\d+", token)
         ]
     logic_type = "-".join(logic_tokens)
@@ -748,4 +748,3 @@ def _default_registry_path(artifact_path: Path) -> Path | None:
         if candidate.exists():
             return candidate
     return None
-

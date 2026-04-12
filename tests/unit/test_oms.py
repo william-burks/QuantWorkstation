@@ -32,6 +32,7 @@ def _pos(symbol: str, qty: float, price: float) -> PositionState:
 
 # --- Basic rebalance ---
 
+
 def test_open_new_position(oms: OMS) -> None:
     orders = oms.rebalance(
         targets={"BTC/USD": 5000.0},
@@ -97,6 +98,7 @@ def test_no_order_for_sub_dollar_delta(oms: OMS) -> None:
 
 
 # --- Risk integration ---
+
 
 def test_risk_blocked_order_skipped(oms: OMS, risk: RiskEngine) -> None:
     # Force a halt

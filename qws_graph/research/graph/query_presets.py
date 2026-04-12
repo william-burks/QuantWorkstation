@@ -512,15 +512,22 @@ def _run_pending_offline(repo_root: Path) -> list[dict[str, Any]]:
         try:
             raw: dict[str, Any] = json.loads(pending_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
-            items.append({
-                "id": pending_file.stem, "kind": None, "artifact_path": None, "error": "unreadable",
-            })
+            items.append(
+                {
+                    "id": pending_file.stem,
+                    "kind": None,
+                    "artifact_path": None,
+                    "error": "unreadable",
+                }
+            )
             continue
-        items.append({
-            "id": pending_file.stem,
-            "kind": raw.get("kind"),
-            "artifact_path": _extract_artifact_path(raw),
-        })
+        items.append(
+            {
+                "id": pending_file.stem,
+                "kind": raw.get("kind"),
+                "artifact_path": _extract_artifact_path(raw),
+            }
+        )
 
     return items
 

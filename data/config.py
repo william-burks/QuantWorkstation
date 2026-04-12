@@ -25,17 +25,38 @@ class Settings(BaseSettings):
 
     # Futures root symbols to collect
     futures_symbols: list[str] = [
-        "MES", "MNQ", "MGC", "CL", "ES", "NQ", "GC", "RTY", "M2K",
-        "ZN", "ZB", "6E", "6J", "6B", "NG", "SI", "ZC", "ZS", "MBT",
-        "DX", "VX", "NKD", "DAX", "Z",
+        "MES",
+        "MNQ",
+        "MGC",
+        "CL",
+        "ES",
+        "NQ",
+        "GC",
+        "RTY",
+        "M2K",
+        "ZN",
+        "ZB",
+        "6E",
+        "6J",
+        "6B",
+        "NG",
+        "SI",
+        "ZC",
+        "ZS",
+        "MBT",
+        "DX",
+        "VX",
+        "NKD",
+        "DAX",
+        "Z",
     ]
 
     # Cash index symbols to collect (secType=IND, daily/weekly/monthly only)
     index_symbols: list[str] = ["VIX", "VIX9D", "VIX3M", "VIX6M", "SKEW"]
 
     # Risk / evaluation
-    eval_profit_target: float = 3000.0   # evaluation profit goal (USD)
-    risk_per_trade_pct: float = 0.01     # 1% of balance per trade (range: 0.005–0.01)
+    eval_profit_target: float = 3000.0  # evaluation profit goal (USD)
+    risk_per_trade_pct: float = 0.01  # 1% of balance per trade (range: 0.005–0.01)
 
 
 _settings: Settings | None = None

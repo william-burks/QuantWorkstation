@@ -946,5 +946,3 @@ MERGE (fc1)-[rt1:RETIRED_TO]->(rc2)
 DEMO_TEARDOWN_CYPHER = """
 MATCH (n) WHERE n.is_demo = true DETACH DELETE n
 """.strip()
-
-

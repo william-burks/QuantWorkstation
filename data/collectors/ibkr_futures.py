@@ -48,105 +48,160 @@ _TIMEFRAMES: dict[str, dict] = {
     # duration / chunk_days: size of each individual API request window.
     # contract_chunks: max request batches per contract.
     "5min": {
-        "bar_size": "5 mins", "duration": "1 W", "chunk_days": 7,
-        "contract_chunks": 14, "max_contract_age_days": 365, "use_rth": False, "contfut": False,
+        "bar_size": "5 mins",
+        "duration": "1 W",
+        "chunk_days": 7,
+        "contract_chunks": 14,
+        "max_contract_age_days": 365,
+        "use_rth": False,
+        "contfut": False,
     },
     "10min": {
-        "bar_size": "10 mins", "duration": "2 W", "chunk_days": 14,
-        "contract_chunks": 7, "max_contract_age_days": 730, "use_rth": False, "contfut": False,
+        "bar_size": "10 mins",
+        "duration": "2 W",
+        "chunk_days": 14,
+        "contract_chunks": 7,
+        "max_contract_age_days": 730,
+        "use_rth": False,
+        "contfut": False,
     },
     "15min": {
-        "bar_size": "15 mins", "duration": "2 W", "chunk_days": 14,
-        "contract_chunks": 7, "max_contract_age_days": 730, "use_rth": False, "contfut": False,
+        "bar_size": "15 mins",
+        "duration": "2 W",
+        "chunk_days": 14,
+        "contract_chunks": 7,
+        "max_contract_age_days": 730,
+        "use_rth": False,
+        "contfut": False,
     },
     "30min": {
-        "bar_size": "30 mins", "duration": "1 M", "chunk_days": 30,
-        "contract_chunks": 4, "max_contract_age_days": 730, "use_rth": False, "contfut": False,
+        "bar_size": "30 mins",
+        "duration": "1 M",
+        "chunk_days": 30,
+        "contract_chunks": 4,
+        "max_contract_age_days": 730,
+        "use_rth": False,
+        "contfut": False,
     },
     "1H": {
-        "bar_size": "1 hour", "duration": "1 M", "chunk_days": 30,
-        "contract_chunks": 4, "max_contract_age_days": 1825, "use_rth": False, "contfut": False,
+        "bar_size": "1 hour",
+        "duration": "1 M",
+        "chunk_days": 30,
+        "contract_chunks": 4,
+        "max_contract_age_days": 1825,
+        "use_rth": False,
+        "contfut": False,
     },
     "2H": {
-        "bar_size": "2 hours", "duration": "2 M", "chunk_days": 60,
-        "contract_chunks": 3, "max_contract_age_days": 1825, "use_rth": False, "contfut": False,
+        "bar_size": "2 hours",
+        "duration": "2 M",
+        "chunk_days": 60,
+        "contract_chunks": 3,
+        "max_contract_age_days": 1825,
+        "use_rth": False,
+        "contfut": False,
     },
     "4H": {
-        "bar_size": "4 hours", "duration": "2 M", "chunk_days": 60,
-        "contract_chunks": 3, "max_contract_age_days": 1825, "use_rth": False, "contfut": False,
+        "bar_size": "4 hours",
+        "duration": "2 M",
+        "chunk_days": 60,
+        "contract_chunks": 3,
+        "max_contract_age_days": 1825,
+        "use_rth": False,
+        "contfut": False,
     },
     "8H": {
-        "bar_size": "8 hours", "duration": "3 M", "chunk_days": 90,
-        "contract_chunks": 2, "max_contract_age_days": 1825, "use_rth": False, "contfut": False,
+        "bar_size": "8 hours",
+        "duration": "3 M",
+        "chunk_days": 90,
+        "contract_chunks": 2,
+        "max_contract_age_days": 1825,
+        "use_rth": False,
+        "contfut": False,
     },
     # ── CONTFUT (daily / weekly / monthly) ──────────────────────────────
     # contfut=True: single IBKR CONTFUT request, auto back-adjusted.
     # duration "20 Y" pushes to max available history (~20 years for liquid futures).
     # Keys stored as "{ROOT}_contfut_{TF}" e.g. "MES_contfut_1D".
     "1D": {
-        "bar_size": "1 day", "duration": "20 Y", "chunk_days": None,
-        "contract_chunks": None, "max_contract_age_days": None, "use_rth": True, "contfut": True,
+        "bar_size": "1 day",
+        "duration": "20 Y",
+        "chunk_days": None,
+        "contract_chunks": None,
+        "max_contract_age_days": None,
+        "use_rth": True,
+        "contfut": True,
     },
     "1W": {
-        "bar_size": "1 week", "duration": "20 Y", "chunk_days": None,
-        "contract_chunks": None, "max_contract_age_days": None, "use_rth": True, "contfut": True,
+        "bar_size": "1 week",
+        "duration": "20 Y",
+        "chunk_days": None,
+        "contract_chunks": None,
+        "max_contract_age_days": None,
+        "use_rth": True,
+        "contfut": True,
     },
     "1M": {
-        "bar_size": "1 month", "duration": "20 Y", "chunk_days": None,
-        "contract_chunks": None, "max_contract_age_days": None, "use_rth": True, "contfut": True,
+        "bar_size": "1 month",
+        "duration": "20 Y",
+        "chunk_days": None,
+        "contract_chunks": None,
+        "max_contract_age_days": None,
+        "use_rth": True,
+        "contfut": True,
     },
 }
 
 _CONTRACT_SPECS: dict[str, dict] = {
     # ── US Equity Micros ──
-    "MES": {"multiplier": "5",    "exchange": "CME",   "currency": "USD"},  # Micro E-mini S&P 500
-    "MNQ": {"multiplier": "2",    "exchange": "CME",   "currency": "USD"},  # Micro E-mini Nasdaq
-    "M2K": {"multiplier": "5",    "exchange": "CME",   "currency": "USD"},  # Micro E-mini Russell2k
+    "MES": {"multiplier": "5", "exchange": "CME", "currency": "USD"},  # Micro E-mini S&P 500
+    "MNQ": {"multiplier": "2", "exchange": "CME", "currency": "USD"},  # Micro E-mini Nasdaq
+    "M2K": {"multiplier": "5", "exchange": "CME", "currency": "USD"},  # Micro E-mini Russell2k
     # ── US Equity Full-size ──
-    "ES":  {"multiplier": "50",   "exchange": "CME",   "currency": "USD"},  # E-mini S&P 500
-    "NQ":  {"multiplier": "20",   "exchange": "CME",   "currency": "USD"},  # E-mini Nasdaq 100
-    "RTY": {"multiplier": "50",   "exchange": "CME",   "currency": "USD"},  # E-mini Russell 2000
+    "ES": {"multiplier": "50", "exchange": "CME", "currency": "USD"},  # E-mini S&P 500
+    "NQ": {"multiplier": "20", "exchange": "CME", "currency": "USD"},  # E-mini Nasdaq 100
+    "RTY": {"multiplier": "50", "exchange": "CME", "currency": "USD"},  # E-mini Russell 2000
     # ── Energy ──
-    "CL":  {"multiplier": "1000", "exchange": "NYMEX", "currency": "USD"},  # Crude Oil WTI
-    "NG":  {"multiplier": "10000",   "exchange": "NYMEX", "currency": "USD"},  # Natural Gas
+    "CL": {"multiplier": "1000", "exchange": "NYMEX", "currency": "USD"},  # Crude Oil WTI
+    "NG": {"multiplier": "10000", "exchange": "NYMEX", "currency": "USD"},  # Natural Gas
     # ── Metals ──
-    "GC":  {"multiplier": "100",  "exchange": "COMEX", "currency": "USD"},  # Gold
-    "MGC": {"multiplier": "10",   "exchange": "COMEX", "currency": "USD"},  # Micro Gold
-    "SI":  {"multiplier": "5000",    "exchange": "COMEX", "currency": "USD"},  # Silver
+    "GC": {"multiplier": "100", "exchange": "COMEX", "currency": "USD"},  # Gold
+    "MGC": {"multiplier": "10", "exchange": "COMEX", "currency": "USD"},  # Micro Gold
+    "SI": {"multiplier": "5000", "exchange": "COMEX", "currency": "USD"},  # Silver
     # ── Rates ──
-    "ZN":  {"multiplier": "1000",    "exchange": "CBOT",  "currency": "USD"},  # 10yr T-Note
-    "ZB":  {"multiplier": "1000",    "exchange": "CBOT",  "currency": "USD"},  # 30yr T-Bond
+    "ZN": {"multiplier": "1000", "exchange": "CBOT", "currency": "USD"},  # 10yr T-Note
+    "ZB": {"multiplier": "1000", "exchange": "CBOT", "currency": "USD"},  # 30yr T-Bond
     # ── FX ──
-    "6E":  {"multiplier": "125000",  "exchange": "CME",   "currency": "USD"},  # EUR/USD
-    "6J":  {"multiplier": "12500000","exchange": "CME",   "currency": "USD"},  # JPY/USD
-    "6B":  {"multiplier": "62500",   "exchange": "CME",   "currency": "USD"},  # GBP/USD
-    "DX":  {"multiplier": "1000",    "exchange": "NYBOT",  "currency": "USD"},  # Dollar Index
+    "6E": {"multiplier": "125000", "exchange": "CME", "currency": "USD"},  # EUR/USD
+    "6J": {"multiplier": "12500000", "exchange": "CME", "currency": "USD"},  # JPY/USD
+    "6B": {"multiplier": "62500", "exchange": "CME", "currency": "USD"},  # GBP/USD
+    "DX": {"multiplier": "1000", "exchange": "NYBOT", "currency": "USD"},  # Dollar Index
     # ── Grains ──
-    "ZC":  {"multiplier": "50",      "exchange": "CBOT",  "currency": "USD"},  # Corn
-    "ZS":  {"multiplier": "50",      "exchange": "CBOT",  "currency": "USD"},  # Soybeans
+    "ZC": {"multiplier": "50", "exchange": "CBOT", "currency": "USD"},  # Corn
+    "ZS": {"multiplier": "50", "exchange": "CBOT", "currency": "USD"},  # Soybeans
     # ── Volatility ──
-    "VX":  {"multiplier": "1000",    "exchange": "CFE",    "currency": "USD"},  # VIX futures
+    "VX": {"multiplier": "1000", "exchange": "CFE", "currency": "USD"},  # VIX futures
     # ── Crypto ──
-    "MBT": {"multiplier": "0.1",     "exchange": "CME",   "currency": "USD"},  # Micro Bitcoin
+    "MBT": {"multiplier": "0.1", "exchange": "CME", "currency": "USD"},  # Micro Bitcoin
     # ── Global Equity ──
-    "NKD": {"multiplier": "5",   "exchange": "CME",   "currency": "USD"},  # Nikkei 225 (dollar)
-    "DAX": {"multiplier": "25",  "exchange": "EUREX",  "currency": "EUR"},  # DAX
-    "Z":   {"multiplier": "10",  "exchange": "ICEEU",  "currency": "GBP"},  # FTSE 100
+    "NKD": {"multiplier": "5", "exchange": "CME", "currency": "USD"},  # Nikkei 225 (dollar)
+    "DAX": {"multiplier": "25", "exchange": "EUREX", "currency": "EUR"},  # DAX
+    "Z": {"multiplier": "10", "exchange": "ICEEU", "currency": "GBP"},  # FTSE 100
 }
 
 # Cash index specs — secType="IND", no roll mechanics.
 _INDEX_SPECS: dict[str, dict] = {
-    "VIX":   {"exchange": "CBOE", "currency": "USD"},
+    "VIX": {"exchange": "CBOE", "currency": "USD"},
     "VIX9D": {"exchange": "CBOE", "currency": "USD"},  # 9-day VIX
     "VIX3M": {"exchange": "CBOE", "currency": "USD"},  # 3-month VIX
     "VIX6M": {"exchange": "CBOE", "currency": "USD"},  # 6-month VIX
-    "SKEW":  {"exchange": "CBOE", "currency": "USD"},  # CBOE SKEW tail risk index
+    "SKEW": {"exchange": "CBOE", "currency": "USD"},  # CBOE SKEW tail risk index
 }
 
 # Indices only at daily/weekly/monthly — intraday IBKR history is limited for cash indices.
 _INDEX_TIMEFRAMES: dict[str, dict] = {
-    "1D": {"bar_size": "1 day",   "duration": "20 Y", "use_rth": True},
-    "1W": {"bar_size": "1 week",  "duration": "20 Y", "use_rth": True},
+    "1D": {"bar_size": "1 day", "duration": "20 Y", "use_rth": True},
+    "1W": {"bar_size": "1 week", "duration": "20 Y", "use_rth": True},
     "1M": {"bar_size": "1 month", "duration": "20 Y", "use_rth": True},
 }
 
@@ -198,8 +253,16 @@ def _bars_to_df(bars: list) -> pd.DataFrame:
     if not valid:
         return pd.DataFrame()
     records = [
-        {"open": b.open, "high": b.high, "low": b.low, "close": b.close,
-         "volume": b.volume, "market": "futures", "source": "ibkr", "adjusted": False}
+        {
+            "open": b.open,
+            "high": b.high,
+            "low": b.low,
+            "close": b.close,
+            "volume": b.volume,
+            "market": "futures",
+            "source": "ibkr",
+            "adjusted": False,
+        }
         for b in valid
     ]
     index = pd.DatetimeIndex([_bar_ts_utc(b.date) for b in valid])
@@ -211,6 +274,7 @@ def _bars_to_df(bars: list) -> pd.DataFrame:
 # ------------------------------------------------------------------
 # CONTFUT path (daily / weekly)
 # ------------------------------------------------------------------
+
 
 def _fetch_contfut(ib: IB, root: str, tf: dict, label: str) -> pd.DataFrame:
     """Single request, empty endDateTime. Returns whatever IBKR gives for the duration."""
@@ -237,6 +301,7 @@ def _fetch_contfut(ib: IB, root: str, tf: dict, label: str) -> pd.DataFrame:
 # ------------------------------------------------------------------
 # Stitched FUT path (intraday)
 # ------------------------------------------------------------------
+
 
 def _get_contract_chain(
     ib: IB, root: str, years_back: int = 3, max_age_days: int | None = None
@@ -269,8 +334,10 @@ def _get_contract_chain(
         cutoff = oldest_by_years
 
     chain = [
-        d.contract for d in details
-        if cutoff <= d.contract.lastTradeDateOrContractMonth[:8] <= today_str
+        d.contract
+        for d in details
+        if d.contract is not None
+        and cutoff <= d.contract.lastTradeDateOrContractMonth[:8] <= today_str
     ]
     return sorted(chain, key=lambda c: c.lastTradeDateOrContractMonth[:8])
 
@@ -385,8 +452,15 @@ def _ratio_stitch(frames: list[pd.DataFrame], label: str = "") -> pd.DataFrame:
         log.info(
             "[%s] roll %d: older=%s  newer=%s  p_old=%.4f  p_new=%.4f  "
             "ratio=%.6f  cumulative=%.6f  method=%s",
-            label, i, older_span, newer_span, p_old, p_new,
-            ratio, cumulative_ratio, method,
+            label,
+            i,
+            older_span,
+            newer_span,
+            p_old,
+            p_new,
+            ratio,
+            cumulative_ratio,
+            method,
         )
 
         adjusted = older.copy()
@@ -443,8 +517,14 @@ def _update_stitched(
         return pd.DataFrame()
 
     contract = details[0].contract
+    if contract is None:
+        log.warning("Front-month contract for %s has no details", root)
+        return pd.DataFrame()
     expiry = contract.lastTradeDateOrContractMonth[:8]
-    print(f"  [{root} {timeframe}] Incremental from {since.date()} (front month: {expiry})", flush=True)  # noqa: E501
+    print(
+        f"  [{root} {timeframe}] Incremental from {since.date()} (front month: {expiry})",
+        flush=True,
+    )  # noqa: E501
 
     # Single chunk from now backward — just need recent bars
     end_str = datetime.now(tz=UTC).strftime("%Y%m%d %H:%M:%S UTC")
@@ -472,6 +552,7 @@ def _update_stitched(
 # Index collection (cash indices — secType=IND)
 # ------------------------------------------------------------------
 
+
 def collect_index(symbol: str) -> None:
     """Fetch and store bars for one cash index symbol across all index timeframes."""
     if symbol not in _INDEX_SPECS:
@@ -482,7 +563,7 @@ def collect_index(symbol: str) -> None:
     s = get_settings()
     contract = _make_index(symbol, spec["exchange"])
 
-    ib = IB()
+    ib = IB()  # type: ignore[no-untyped-call]
     try:
         ib.connect(s.ibkr_host, s.ibkr_port, clientId=s.ibkr_client_id)
 
@@ -529,12 +610,13 @@ def collect_index(symbol: str) -> None:
             log.info("Stored %d bars for %s", len(df), label)
 
     finally:
-        ib.disconnect()
+        ib.disconnect()  # type: ignore[no-untyped-call]
 
 
 # ------------------------------------------------------------------
 # Public interface
 # ------------------------------------------------------------------
+
 
 def collect(root: str, timeframe: str = "1D") -> None:
     """Fetch and store bars for one futures root symbol and timeframe."""
@@ -546,9 +628,7 @@ def collect(root: str, timeframe: str = "1D") -> None:
     tf = _TIMEFRAMES[timeframe]
     store = get_store()
     s = get_settings()
-    store_key = (
-        f"{root}_contfut_{timeframe}" if tf["contfut"] else f"{root}_{timeframe}"
-    )
+    store_key = f"{root}_contfut_{timeframe}" if tf["contfut"] else f"{root}_{timeframe}"
     now = datetime.now(tz=UTC)
     label = f"{root} {timeframe}"
 
@@ -559,7 +639,7 @@ def collect(root: str, timeframe: str = "1D") -> None:
             print(f"  [{label}] Already up to date (last: {last_bar.date()})", flush=True)
             return
 
-    ib = IB()
+    ib = IB()  # type: ignore[no-untyped-call]
     try:
         ib.connect(s.ibkr_host, s.ibkr_port, clientId=s.ibkr_client_id)
 
@@ -572,7 +652,7 @@ def collect(root: str, timeframe: str = "1D") -> None:
             df = _seed_stitched(ib, root, timeframe, tf)
 
     finally:
-        ib.disconnect()
+        ib.disconnect()  # type: ignore[no-untyped-call]
 
     if df.empty:
         print(f"  [{label}] No bars returned", flush=True)
@@ -619,7 +699,10 @@ def collect_all_timeframes() -> None:
     for i, tf_key in enumerate(timeframes, 1):
         tf_cfg = _TIMEFRAMES[tf_key]
         mode = "CONTFUT" if tf_cfg["contfut"] else "stitched FUT"
-        print(f"── Timeframe {i}/{len(timeframes)}: {tf_key} ({tf_cfg['bar_size']}, {mode}) ──", flush=True)  # noqa: E501
+        print(
+            f"── Timeframe {i}/{len(timeframes)}: {tf_key} ({tf_cfg['bar_size']}, {mode}) ──",
+            flush=True,
+        )  # noqa: E501
         for root in symbols:
             try:
                 collect(root, tf_key)

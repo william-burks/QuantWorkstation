@@ -26,12 +26,12 @@ def run(
     strategy: BaseStrategy,
     bars: pd.DataFrame,
     init_cash: float = 100_000.0,
-    fees: float = 0.001,       # 0.1% per trade — Alpaca crypto taker fee
+    fees: float = 0.001,  # 0.1% per trade — Alpaca crypto taker fee
     freq: str = "1H",
     leverage: float = 5.0,
-    sl_stop: float = 0.008,    # 0.8% stop loss from entry
-    tp_stop: float = 0.020,    # 2.0% take profit from entry
-    time_stop: int = 6,        # exit after N bars regardless of signal
+    sl_stop: float = 0.008,  # 0.8% stop loss from entry
+    tp_stop: float = 0.020,  # 2.0% take profit from entry
+    time_stop: int = 6,  # exit after N bars regardless of signal
 ) -> "vbt.Portfolio":
     """
     Run a strategy backtest using vectorbt.
@@ -105,6 +105,7 @@ def leveraged_to_margin(pf: "vbt.Portfolio", init_cash: float, leverage: float) 
 
 
 # --- Helpers ---
+
 
 def _time_exits(entries: np.ndarray, n_bars: int) -> np.ndarray:
     """Generate exit signals exactly n_bars after each entry."""

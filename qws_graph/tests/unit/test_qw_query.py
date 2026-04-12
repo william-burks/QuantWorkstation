@@ -23,6 +23,7 @@ from research.graph.query_presets import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 class FakeGraphQueryService:
     """Minimal duck-type for GraphQueryService used in preset routing tests."""
 
@@ -61,8 +62,10 @@ class FakeGraphQueryService:
         self.calls.append(("get_staleness_report_v1", {}))
         return [
             {
-                "champion_id": "c1", "strategy_id": "s1",
-                "freeze_date": "2025-01-01", "days_stale": 90,
+                "champion_id": "c1",
+                "strategy_id": "s1",
+                "freeze_date": "2025-01-01",
+                "days_stale": 90,
             },
         ]
 
@@ -142,6 +145,7 @@ def _make_query_args(**kwargs: Any) -> argparse.Namespace:
 # PRESET_CATALOG
 # ---------------------------------------------------------------------------
 
+
 class TestPresetCatalog:
     def test_core_presets_present(self) -> None:
         # Checks that Story 2 presets are present; Story 4 adds more (see test_lineage_queries.py).
@@ -167,6 +171,7 @@ class TestPresetCatalog:
 # ---------------------------------------------------------------------------
 # resolve_preset
 # ---------------------------------------------------------------------------
+
 
 class TestResolvePreset:
     def test_known_presets_resolve(self) -> None:
@@ -196,6 +201,7 @@ class TestResolvePreset:
 # ---------------------------------------------------------------------------
 # validate_params
 # ---------------------------------------------------------------------------
+
 
 class TestValidateParams:
     def test_recent_champions_no_params_valid(self) -> None:
@@ -238,6 +244,7 @@ class TestValidateParams:
 # ---------------------------------------------------------------------------
 # run_preset — pending_offline (no graph required)
 # ---------------------------------------------------------------------------
+
 
 class TestRunPresetPendingOffline:
     def test_empty_pending_dir_returns_empty_list(self, tmp_path: Path) -> None:
@@ -301,6 +308,7 @@ class TestRunPresetPendingOffline:
 # ---------------------------------------------------------------------------
 # run_preset — graph-backed presets (fake service)
 # ---------------------------------------------------------------------------
+
 
 class TestRunPresetRecentChampions:
     def test_routes_to_get_recent_champions_v1(self) -> None:
@@ -366,6 +374,7 @@ class TestRunPresetUnknown:
 # _extract_artifact_path
 # ---------------------------------------------------------------------------
 
+
 class TestExtractArtifactPath:
     def test_runs_list(self) -> None:
         payload = {"kind": "baseline_csv", "runs": [{"artifact_path": "a/b.csv"}]}
@@ -389,6 +398,7 @@ class TestExtractArtifactPath:
 # ---------------------------------------------------------------------------
 # cmd_query — CLI orchestration
 # ---------------------------------------------------------------------------
+
 
 class TestCmdQueryErrors:
     def test_unknown_preset_returns_exit_1(self, capsys: pytest.CaptureFixture[str]) -> None:
@@ -452,9 +462,7 @@ class TestCmdQueryPendingOffline:
         payload = {"kind": "champion_md", "champion": {"artifact_path": "r/c.md"}}
         (pending / "champ-001.json").write_text(json.dumps(payload))
 
-        args = _make_query_args(
-            name="pending_offline", repo_root=str(tmp_path), **{"json": True}
-        )
+        args = _make_query_args(name="pending_offline", repo_root=str(tmp_path), **{"json": True})
         exit_code = cmd_query(args)
 
         assert exit_code == 0
@@ -482,14 +490,13 @@ class TestCmdQueryGraphBacked:
         fake_service = FakeGraphQueryService(
             recent_champions=[
                 {
-                    "champion_id": "c1", "strategy_id": "es-1h-bear-sweep",
+                    "champion_id": "c1",
+                    "strategy_id": "es-1h-bear-sweep",
                     "freeze_date": "2026-04-01",
                 }
             ]
         )
-        args = _make_query_args(
-            name="recent_champions", repo_root=str(tmp_path), **{"json": True}
-        )
+        args = _make_query_args(name="recent_champions", repo_root=str(tmp_path), **{"json": True})
         with patch("research.graph.cli.NeoConnector") as mock_connector_cls:
             mock_connector_cls.return_value.is_available.return_value = True
             with patch("research.graph.cli.GraphQueryService") as mock_svc_cls:
@@ -578,9 +585,11 @@ class TestCmdQueryGraphBacked:
     def test_run_history_shortcut_flag_routes_to_preset(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        fake_service = FakeGraphQueryService(run_history=[
-            {"run_id": "run-001", "sharpe": 1.1, "max_drawdown": -5.0, "curator_note": None},
-        ])
+        fake_service = FakeGraphQueryService(
+            run_history=[
+                {"run_id": "run-001", "sharpe": 1.1, "max_drawdown": -5.0, "curator_note": None},
+            ]
+        )
         args = _make_query_args(
             name=None,
             param=["strategy_id=es-1h-bear-sweep"],
@@ -597,10 +606,10 @@ class TestCmdQueryGraphBacked:
         assert fake_service.calls[0][0] == "get_run_history_v1"
 
 
-
 # ---------------------------------------------------------------------------
 # run_preset — new analytical presets (QWS-0302)
 # ---------------------------------------------------------------------------
+
 
 class TestRunPresetPortfolioAlpha:
     def test_routes_to_get_portfolio_alpha_v1(self) -> None:
@@ -694,19 +703,29 @@ class TestRemovedPresetRankByEvidence:
 class TestNewPresetCatalogEntries:
     def test_analytical_presets_present_in_catalog(self) -> None:
         assert {
-            "portfolio_alpha", "fragility_report",
-            "staleness_report", "instrument_concentration",
+            "portfolio_alpha",
+            "fragility_report",
+            "staleness_report",
+            "instrument_concentration",
         }.issubset(set(PRESET_CATALOG))
 
     def test_workflow_presets_present_in_catalog(self) -> None:
         assert {
-            "list_oos_pending", "list_aborted", "promotion_candidates",
+            "list_oos_pending",
+            "list_aborted",
+            "promotion_candidates",
         }.issubset(set(PRESET_CATALOG))
 
     def test_all_graph_presets_require_graph(self) -> None:
-        for name in ("portfolio_alpha", "fragility_report", "staleness_report",
-                     "instrument_concentration", "list_oos_pending", "list_aborted",
-                     "promotion_candidates"):
+        for name in (
+            "portfolio_alpha",
+            "fragility_report",
+            "staleness_report",
+            "instrument_concentration",
+            "list_oos_pending",
+            "list_aborted",
+            "promotion_candidates",
+        ):
             assert PRESET_CATALOG[name].requires_graph is True
 
     def test_promotion_candidates_has_optional_params(self) -> None:
@@ -723,6 +742,7 @@ class TestNewPresetCatalogEntries:
 # ---------------------------------------------------------------------------
 # run_preset — QWS-0406 workflow presets
 # ---------------------------------------------------------------------------
+
 
 class TestRunPresetListOosPending:
     def test_routes_to_get_list_oos_pending_v1(self) -> None:
@@ -759,8 +779,14 @@ class TestRunPresetListOosPending:
         service = FakeGraphQueryService()
         results = run_preset("list_oos_pending", {}, service=service)
         row = results[0]
-        assert {"champion_id", "strategy_id", "freeze_date", "metrics_sharpe",
-                "metrics_total_trades", "days_pending"}.issubset(row.keys())
+        assert {
+            "champion_id",
+            "strategy_id",
+            "freeze_date",
+            "metrics_sharpe",
+            "metrics_total_trades",
+            "days_pending",
+        }.issubset(row.keys())
 
 
 class TestRunPresetListAborted:
@@ -798,8 +824,14 @@ class TestRunPresetListAborted:
         service = FakeGraphQueryService()
         results = run_preset("list_aborted", {}, service=service)
         row = results[0]
-        assert {"strategy_id", "instrument", "direction", "logic_type",
-                "abort_reason", "aborted_at"}.issubset(row.keys())
+        assert {
+            "strategy_id",
+            "instrument",
+            "direction",
+            "logic_type",
+            "abort_reason",
+            "aborted_at",
+        }.issubset(row.keys())
 
 
 class TestRunPresetPromotionCandidates:
@@ -858,9 +890,18 @@ class TestRunPresetPromotionCandidates:
         service = FakeGraphQueryService()
         results = run_preset("promotion_candidates", {}, service=service)
         row = results[0]
-        assert {"run_id", "strategy_id", "sharpe", "tier", "profit_factor",
-                "total_trades", "active_window_frequency", "duty_cycle",
-                "evidence_score", "ingested_at"}.issubset(row.keys())
+        assert {
+            "run_id",
+            "strategy_id",
+            "sharpe",
+            "tier",
+            "profit_factor",
+            "total_trades",
+            "active_window_frequency",
+            "duty_cycle",
+            "evidence_score",
+            "ingested_at",
+        }.issubset(row.keys())
 
     def test_output_includes_tier_column(self) -> None:
         service = FakeGraphQueryService()

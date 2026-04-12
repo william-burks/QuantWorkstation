@@ -35,9 +35,9 @@ COMPLIANCE_LOT_FRACTION = 0.001  # 0.1% of equity in compliance mode
 
 class TradingState(StrEnum):
     TRADING = "TRADING"
-    DAILY_CAP_HIT = "DAILY_CAP_HIT"      # 2.5% profit reached — done for day
+    DAILY_CAP_HIT = "DAILY_CAP_HIT"  # 2.5% profit reached — done for day
     DAILY_LOSS_HALT = "DAILY_LOSS_HALT"  # 5% daily loss breached — kill-switch
-    DRAWDOWN_HALT = "DRAWDOWN_HALT"      # 10% trailing drawdown — kill-switch
+    DRAWDOWN_HALT = "DRAWDOWN_HALT"  # 10% trailing drawdown — kill-switch
     COMPLIANCE_MODE = "COMPLIANCE_MODE"  # best day > 30% of goal — min lots only
 
 
@@ -61,8 +61,12 @@ class RiskEngine:
             self._starting_day_balance = equity
         if self._high_water_mark == 0.0:
             self._high_water_mark = equity
-        log.info("RiskEngine seeded: balance=%.2f hwm=%.2f target=%.2f",
-                 self._starting_day_balance, self._high_water_mark, self.eval_profit_target)
+        log.info(
+            "RiskEngine seeded: balance=%.2f hwm=%.2f target=%.2f",
+            self._starting_day_balance,
+            self._high_water_mark,
+            self.eval_profit_target,
+        )
 
     def reset_day(self, equity: float) -> None:
         """Call at UTC midnight. Locks in new starting balance, lifts daily halts."""
@@ -86,21 +90,28 @@ class RiskEngine:
 
         # Kill-switches first (these don't lift until day reset / manual intervention)
         if equity <= self._high_water_mark * (1 - MAX_TOTAL_DRAWDOWN_PCT):
-            self._transition(TradingState.DRAWDOWN_HALT,
-                             "equity=%.2f hwm=%.2f", equity, self._high_water_mark)
+            self._transition(
+                TradingState.DRAWDOWN_HALT, "equity=%.2f hwm=%.2f", equity, self._high_water_mark
+            )
             return self._state
 
         if daily_pnl <= -(self._starting_day_balance * MAX_DAILY_LOSS_PCT):
-            self._transition(TradingState.DAILY_LOSS_HALT,
-                             "daily_pnl=%.2f limit=%.2f",
-                             daily_pnl, -(self._starting_day_balance * MAX_DAILY_LOSS_PCT))
+            self._transition(
+                TradingState.DAILY_LOSS_HALT,
+                "daily_pnl=%.2f limit=%.2f",
+                daily_pnl,
+                -(self._starting_day_balance * MAX_DAILY_LOSS_PCT),
+            )
             return self._state
 
         # Daily profit ceiling — done for day, not a hard halt
         if daily_pnl >= self._starting_day_balance * DAILY_PROFIT_CEILING_PCT:
-            self._transition(TradingState.DAILY_CAP_HIT,
-                             "daily_pnl=%.2f cap=%.2f",
-                             daily_pnl, self._starting_day_balance * DAILY_PROFIT_CEILING_PCT)
+            self._transition(
+                TradingState.DAILY_CAP_HIT,
+                "daily_pnl=%.2f cap=%.2f",
+                daily_pnl,
+                self._starting_day_balance * DAILY_PROFIT_CEILING_PCT,
+            )
             return self._state
 
         # Consistency rule — best day must be < 30% of eval goal
@@ -109,8 +120,12 @@ class RiskEngine:
 
         consistency_limit = self.eval_profit_target * CONSISTENCY_THRESHOLD
         if self._best_day_pnl > consistency_limit:
-            self._transition(TradingState.COMPLIANCE_MODE,
-                             "best_day=%.2f limit=%.2f", self._best_day_pnl, consistency_limit)
+            self._transition(
+                TradingState.COMPLIANCE_MODE,
+                "best_day=%.2f limit=%.2f",
+                self._best_day_pnl,
+                consistency_limit,
+            )
         elif self._state == TradingState.COMPLIANCE_MODE:
             self._state = TradingState.TRADING
 

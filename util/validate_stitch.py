@@ -36,7 +36,7 @@ tf = _TIMEFRAMES[TIMEFRAME]
 
 print(f"\n=== Stitch validation: {ROOT} {TIMEFRAME} ===\n")
 
-ib = IB()
+ib = IB()  # type: ignore[no-untyped-call]
 try:
     ib.connect(s.ibkr_host, s.ibkr_port, clientId=s.ibkr_client_id + 10)
 
@@ -59,7 +59,7 @@ try:
             print(f"  {expiry}: NO BARS")
 
 finally:
-    ib.disconnect()
+    ib.disconnect()  # type: ignore[no-untyped-call]
 
 if not frames:
     print("No frames — cannot stitch")
@@ -119,8 +119,10 @@ for i in range(len(frames) - 1):
     # Allow larger tolerance here since cumulative from later rolls shifts the value
     # We just want to confirm no catastrophic mismatch
     status = "OK" if delta_pct < 0.05 else f"SUSPICIOUS ({delta_pct:.2%} from raw newer price)"
-    print(f"  roll {i} ({roll_ts.date()}):  p_old={p_old:.2f}  p_new={p_new:.2f}  "
-          f"ratio={ratio:.6f}  stitched={stitched_price:.2f}  {status}")
+    print(
+        f"  roll {i} ({roll_ts.date()}):  p_old={p_old:.2f}  p_new={p_new:.2f}  "
+        f"ratio={ratio:.6f}  stitched={stitched_price:.2f}  {status}"
+    )
     if delta_pct >= 0.05:
         roll_failures.append(i)
 
@@ -135,6 +137,7 @@ else:
 print("\n=== Cross-timeframe return check (15min vs 1H from store) ===")
 try:
     from data.store import get_store
+
     store = get_store()
     if store.has_symbol("futures", f"{ROOT}_continuous_1H"):
         bars_1h = store.read_bars("futures", f"{ROOT}_continuous_1H")
@@ -147,9 +150,11 @@ try:
             common_ret = ret_15.index.intersection(ret_1h.index)
             ret_diff = (ret_15.loc[common_ret] - ret_1h.loc[common_ret]).abs()
             print(f"  Common hourly bars: {len(common):,}")
-            print(f"  Return delta (|15min - 1H|):  mean={ret_diff.mean():.6f}  "
-                  f"std={ret_diff.std():.6f}  "
-                  f"max={ret_diff.max():.6f}")
+            print(
+                f"  Return delta (|15min - 1H|):  mean={ret_diff.mean():.6f}  "
+                f"std={ret_diff.std():.6f}  "
+                f"max={ret_diff.max():.6f}"
+            )
             if ret_diff.mean() < 0.0001:
                 print("  Returns are consistent ✓  (mean delta < 0.01%)")
             else:

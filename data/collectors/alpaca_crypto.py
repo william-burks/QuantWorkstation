@@ -20,13 +20,13 @@ log = logging.getLogger(__name__)
 
 _TWO_YEARS = timedelta(days=730)
 _TIMEFRAMES = {
-    "1T":  TimeFrame(1,  TimeFrameUnit.Minute),
-    "5T":  TimeFrame(5,  TimeFrameUnit.Minute),
+    "1T": TimeFrame(1, TimeFrameUnit.Minute),
+    "5T": TimeFrame(5, TimeFrameUnit.Minute),
     "15T": TimeFrame(15, TimeFrameUnit.Minute),
-    "1H":    TimeFrame(1,  TimeFrameUnit.Hour),
-    "4H":    TimeFrame(4,  TimeFrameUnit.Hour),
-    "1D":     TimeFrame(1,  TimeFrameUnit.Day),
-    "1W":    TimeFrame(1,  TimeFrameUnit.Week),
+    "1H": TimeFrame(1, TimeFrameUnit.Hour),
+    "4H": TimeFrame(4, TimeFrameUnit.Hour),
+    "1D": TimeFrame(1, TimeFrameUnit.Day),
+    "1W": TimeFrame(1, TimeFrameUnit.Week),
 }
 
 
@@ -99,6 +99,7 @@ def collect(symbol: str, timeframe: str = "daily") -> None:
 def collect_all(timeframe: str = "daily") -> None:
     """Collect all configured crypto symbols."""
     from data.config import get_settings
+
     symbols = get_settings().crypto_symbols
     for symbol in symbols:
         try:

@@ -20,6 +20,7 @@ from research.graph.store import StoreError, StoreInfraError
 # Fake store
 # ---------------------------------------------------------------------------
 
+
 class FakeGraphStore:
     """Minimal duck-type for GraphStore used by _cmd_oos_update."""
 
@@ -45,17 +46,18 @@ class FakeGraphStore:
             raise StoreInfraError("fake infra failure")
         if self._current_oos_status == "retired":
             raise StoreError(
-                f"Champion {champion_id!r} has lifecycle status 'retired'; "
-                "use qw retire instead"
+                f"Champion {champion_id!r} has lifecycle status 'retired'; use qw retire instead"
             )
         if not self._champion_exists:
             return False
-        self.updates.append({
-            "champion_id": champion_id,
-            "status": status,
-            "oos_date": oos_date,
-            "sharpe": sharpe,
-        })
+        self.updates.append(
+            {
+                "champion_id": champion_id,
+                "status": status,
+                "oos_date": oos_date,
+                "sharpe": sharpe,
+            }
+        )
         return True
 
     def close(self) -> None:
@@ -95,9 +97,13 @@ def _run_oos(
     monkeypatch.setattr(
         cli_module,
         "GraphStore",
-        type("FakeGS", (), {
-            "from_env": staticmethod(lambda **_: store),
-        }),
+        type(
+            "FakeGS",
+            (),
+            {
+                "from_env": staticmethod(lambda **_: store),
+            },
+        ),
     )
 
     args = Namespace(
@@ -116,6 +122,7 @@ def _run_oos(
 # ---------------------------------------------------------------------------
 # Store method — valid transitions
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateChampionOosStatusStore:
     def test_oos_pass_returns_exit_0(self, monkeypatch, tmp_path) -> None:
@@ -164,6 +171,7 @@ class TestUpdateChampionOosStatusStore:
 # CLI validation
 # ---------------------------------------------------------------------------
 
+
 class TestOosCliValidation:
     def test_invalid_status_returns_1(self, monkeypatch, tmp_path, capsys) -> None:
         code, store = _run_oos(
@@ -186,6 +194,7 @@ class TestOosCliValidation:
         connector = FakeNeoConnector()
 
         import research.graph.cli as cli_module
+
         monkeypatch.setattr(cli_module, "NeoConnector", lambda **_kw: connector)
         monkeypatch.setattr(
             cli_module,
@@ -215,6 +224,7 @@ class TestOosCliValidation:
 # ---------------------------------------------------------------------------
 # Receipt
 # ---------------------------------------------------------------------------
+
 
 class TestOosReceipt:
     def test_receipt_written_on_success(self, monkeypatch, tmp_path) -> None:
@@ -250,6 +260,7 @@ class TestOosReceipt:
 # Valid status enum
 # ---------------------------------------------------------------------------
 
+
 class TestValidOosStatuses:
     def test_expected_values(self) -> None:
         assert _VALID_OOS_STATUSES == {"oos_pending", "oos_pass", "oos_fail"}
@@ -263,11 +274,10 @@ class TestValidOosStatuses:
 # QWS-0402C: --sharpe propagation
 # ---------------------------------------------------------------------------
 
+
 class TestOosSharpePropagation:
     def test_sharpe_stored_when_passed(self, monkeypatch, tmp_path) -> None:
-        code, store = _run_oos(
-            sharpe=3.21, monkeypatch=monkeypatch, tmp_path=tmp_path
-        )
+        code, store = _run_oos(sharpe=3.21, monkeypatch=monkeypatch, tmp_path=tmp_path)
         assert code == 0
         assert store.updates[0]["sharpe"] == 3.21
 
@@ -278,16 +288,16 @@ class TestOosSharpePropagation:
 
     def test_sharpe_stored_on_oos_fail(self, monkeypatch, tmp_path) -> None:
         code, store = _run_oos(
-            oos_status="oos_fail", sharpe=0.8,
-            monkeypatch=monkeypatch, tmp_path=tmp_path,
+            oos_status="oos_fail",
+            sharpe=0.8,
+            monkeypatch=monkeypatch,
+            tmp_path=tmp_path,
         )
         assert code == 0
         assert store.updates[0]["sharpe"] == 0.8
 
     def test_sharpe_negative_rejected(self, monkeypatch, tmp_path, capsys) -> None:
-        code, store = _run_oos(
-            sharpe=-1.0, monkeypatch=monkeypatch, tmp_path=tmp_path
-        )
+        code, store = _run_oos(sharpe=-1.0, monkeypatch=monkeypatch, tmp_path=tmp_path)
         assert code == 1
         assert len(store.updates) == 0
         err = capsys.readouterr().err
@@ -295,8 +305,10 @@ class TestOosSharpePropagation:
 
     def test_sharpe_in_receipt_payload(self, monkeypatch, tmp_path) -> None:
         _run_oos(
-            sharpe=3.21, champion_id="abc123def456",
-            monkeypatch=monkeypatch, tmp_path=tmp_path,
+            sharpe=3.21,
+            champion_id="abc123def456",
+            monkeypatch=monkeypatch,
+            tmp_path=tmp_path,
         )
         receipt = json.loads((tmp_path / ".qws" / "receipts" / "abc123def456.json").read_text())
         assert receipt["oos_sharpe"] == 3.21

@@ -18,6 +18,7 @@ from research.graph.store import StoreError
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_store_mock(**kwargs: Any) -> MagicMock:
     store = MagicMock()
     for attr, val in kwargs.items():
@@ -36,21 +37,25 @@ def _make_service_mock(**kwargs: Any) -> MagicMock:
 # ID generation
 # ---------------------------------------------------------------------------
 
+
 class TestHypothesisIdGeneration:
     def test_hash12_is_12_chars(self) -> None:
         from research.graph.ids import hash12
+
         result = hash12("test title", "2026-01-01T00:00:00")
         assert len(result) == 12
         assert result.isalnum()
 
     def test_same_inputs_same_id(self) -> None:
         from research.graph.ids import hash12
+
         r1 = hash12("same title", "2026-01-01T00:00:00")
         r2 = hash12("same title", "2026-01-01T00:00:00")
         assert r1 == r2
 
     def test_different_titles_different_ids(self) -> None:
         from research.graph.ids import hash12
+
         r1 = hash12("title A", "2026-01-01T00:00:00")
         r2 = hash12("title B", "2026-01-01T00:00:00")
         assert r1 != r2
@@ -59,6 +64,7 @@ class TestHypothesisIdGeneration:
 # ---------------------------------------------------------------------------
 # Store: create_hypothesis
 # ---------------------------------------------------------------------------
+
 
 class TestStoreCreateHypothesis:
     def test_create_hypothesis_calls_cypher(self) -> None:
@@ -98,6 +104,7 @@ class TestStoreCreateHypothesis:
 # ---------------------------------------------------------------------------
 # Store: update_hypothesis_status
 # ---------------------------------------------------------------------------
+
 
 class TestStoreUpdateHypothesisStatus:
     def _make_store(self, found: bool = True) -> Any:
@@ -146,6 +153,7 @@ class TestStoreUpdateHypothesisStatus:
 # Store: link_hypothesis_tested_as
 # ---------------------------------------------------------------------------
 
+
 class TestStoreLinkHypothesisTestedAs:
     def test_strategy_not_found_raises(self) -> None:
         from research.graph.store import GraphStore
@@ -188,6 +196,7 @@ class TestStoreLinkHypothesisTestedAs:
 # Store: link_hypothesis_branched_from
 # ---------------------------------------------------------------------------
 
+
 class TestStoreLinkHypothesisBranchedFrom:
     def test_node_not_found_raises(self) -> None:
         from research.graph.store import GraphStore
@@ -226,6 +235,7 @@ class TestStoreLinkHypothesisBranchedFrom:
 # ---------------------------------------------------------------------------
 # Query presets: catalog entries
 # ---------------------------------------------------------------------------
+
 
 class TestHypothesisPresetCatalog:
     def test_list_hypotheses_in_catalog(self) -> None:
@@ -268,6 +278,7 @@ class TestHypothesisPresetCatalog:
 # Query presets: run_preset routing
 # ---------------------------------------------------------------------------
 
+
 class FakeHypothesisService:
     """Duck-type for hypothesis query routing tests."""
 
@@ -275,20 +286,26 @@ class FakeHypothesisService:
         self.calls: list[tuple[str, dict[str, Any]]] = []
         self._hypotheses = [
             {
-                "hypothesis_id": "abc123def456", "title": "Test",
-                "status": "open", "created_at": "2026-01-01T00:00:00",
+                "hypothesis_id": "abc123def456",
+                "title": "Test",
+                "status": "open",
+                "created_at": "2026-01-01T00:00:00",
             },
         ]
         self._audit = [
             {
-                "hypothesis_id": "abc123def456", "title": "Test",
-                "status": "open", "strategy_id": None,
+                "hypothesis_id": "abc123def456",
+                "title": "Test",
+                "status": "open",
+                "strategy_id": None,
             },
         ]
         self._redundancy = [
             {
-                "hypothesis_id": "abc123def456", "title": "Test",
-                "active_champion_matches": [], "aborted_strategy_matches": [],
+                "hypothesis_id": "abc123def456",
+                "title": "Test",
+                "active_champion_matches": [],
+                "aborted_strategy_matches": [],
             },
         ]
 
@@ -337,6 +354,7 @@ class TestHypothesisPresetRouting:
 # CLI: qw record --hypothesis
 # ---------------------------------------------------------------------------
 
+
 class TestHypothesisCLI:
     def _make_args(self, **kwargs: Any) -> argparse.Namespace:
         defaults = {
@@ -361,8 +379,10 @@ class TestHypothesisCLI:
 
         args = self._make_args(hypothesis="Tuesday London Open has a liquidity trap in CL bear")
 
-        with patch("research.graph.cli.NeoConnector") as mock_nc, \
-             patch("research.graph.cli.GraphStore") as mock_gs:
+        with (
+            patch("research.graph.cli.NeoConnector") as mock_nc,
+            patch("research.graph.cli.GraphStore") as mock_gs,
+        ):
             mock_nc.return_value.is_available.return_value = True
             mock_gs.from_env.return_value = mock_store
 
@@ -376,9 +396,11 @@ class TestHypothesisCLI:
 
         args = self._make_args(hypothesis="x" * 201)
 
-        with patch("research.graph.cli.NeoConnector") as mock_nc, \
-             patch("research.graph.cli.GraphStore") as mock_gs, \
-             patch("builtins.print"):
+        with (
+            patch("research.graph.cli.NeoConnector") as mock_nc,
+            patch("research.graph.cli.GraphStore") as mock_gs,
+            patch("builtins.print"),
+        ):
             mock_nc.return_value.is_available.return_value = True
             mock_store = MagicMock()
             ctx = MagicMock()
@@ -406,8 +428,10 @@ class TestHypothesisCLI:
 
         args = self._make_args(hypothesis="abc123def456", status="pending")
 
-        with patch("research.graph.cli.NeoConnector") as mock_nc, \
-             patch("research.graph.cli.GraphStore") as mock_gs:
+        with (
+            patch("research.graph.cli.NeoConnector") as mock_nc,
+            patch("research.graph.cli.GraphStore") as mock_gs,
+        ):
             mock_nc.return_value.is_available.return_value = True
             mock_store = MagicMock()
             ctx = MagicMock()
@@ -424,8 +448,10 @@ class TestHypothesisCLI:
 
         args = self._make_args(hypothesis="abc123def456", tested_as="nonexistent-strategy")
 
-        with patch("research.graph.cli.NeoConnector") as mock_nc, \
-             patch("research.graph.cli.GraphStore") as mock_gs:
+        with (
+            patch("research.graph.cli.NeoConnector") as mock_nc,
+            patch("research.graph.cli.GraphStore") as mock_gs,
+        ):
             mock_nc.return_value.is_available.return_value = True
             mock_store = MagicMock()
             mock_store.link_hypothesis_tested_as.side_effect = StoreError(
@@ -444,8 +470,10 @@ class TestHypothesisCLI:
             hypothesis="abc123def456", branched_from="some-node-id", rationale=None
         )
 
-        with patch("research.graph.cli.NeoConnector") as mock_nc, \
-             patch("research.graph.cli.GraphStore") as mock_gs:
+        with (
+            patch("research.graph.cli.NeoConnector") as mock_nc,
+            patch("research.graph.cli.GraphStore") as mock_gs,
+        ):
             mock_nc.return_value.is_available.return_value = True
             mock_store = MagicMock()
             mock_gs.from_env.return_value = mock_store
@@ -459,8 +487,10 @@ class TestHypothesisCLI:
 
         args = self._make_args(hypothesis="abc123def456", status="confirmed")
 
-        with patch("research.graph.cli.NeoConnector") as mock_nc, \
-             patch("research.graph.cli.GraphStore") as mock_gs:
+        with (
+            patch("research.graph.cli.NeoConnector") as mock_nc,
+            patch("research.graph.cli.GraphStore") as mock_gs,
+        ):
             mock_nc.return_value.is_available.return_value = True
             mock_store = MagicMock()
             mock_store.update_hypothesis_status.return_value = False
@@ -474,6 +504,7 @@ class TestHypothesisCLI:
 # ---------------------------------------------------------------------------
 # MCP: log_hypothesis
 # ---------------------------------------------------------------------------
+
 
 class TestMcpLogHypothesis:
     def test_log_hypothesis_creates_with_llm_source(self) -> None:

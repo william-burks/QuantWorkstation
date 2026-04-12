@@ -75,7 +75,10 @@ def build_continuous(
                 cumulative_ratio *= ratio
                 log.debug(
                     "Roll %s → next on %s: ratio=%.6f cumulative=%.6f",
-                    expiry, roll_date, ratio, cumulative_ratio
+                    expiry,
+                    roll_date,
+                    ratio,
+                    cumulative_ratio,
                 )
 
             # Trim this contract's bars to its active period
@@ -108,8 +111,13 @@ def build_continuous(
 
     result = pd.concat(segments).sort_index()
     result = result[~result.index.duplicated(keep="last")]
-    log.info("Built continuous series for %s: %d bars (%s to %s)",
-             root, len(result), result.index.min(), result.index.max())
+    log.info(
+        "Built continuous series for %s: %d bars (%s to %s)",
+        root,
+        len(result),
+        result.index.min(),
+        result.index.max(),
+    )
     return result
 
 

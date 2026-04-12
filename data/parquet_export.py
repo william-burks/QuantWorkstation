@@ -1,4 +1,5 @@
 """Export ArcticDB bars to parquet for consumption by the quant sandbox."""
+
 import logging
 from pathlib import Path
 

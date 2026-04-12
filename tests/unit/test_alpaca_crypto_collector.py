@@ -33,13 +33,21 @@ def _make_response(symbol: str, bars: list) -> MagicMock:
 # _bars_to_df  (now takes a list, not a response object)
 # ------------------------------------------------------------------
 
+
 def test_bars_to_df_shape():
     ts = datetime(2024, 1, 1, tzinfo=UTC)
     bars = [_make_mock_bar(ts), _make_mock_bar(ts + timedelta(days=1))]
     df = _bars_to_df(bars)
     assert len(df) == 2
     assert list(df.columns) == [
-        "open", "high", "low", "close", "volume", "market", "source", "adjusted",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "market",
+        "source",
+        "adjusted",
     ]
     assert df.index.name == "timestamp"
     assert df["market"].iloc[0] == "crypto"
@@ -58,6 +66,7 @@ def test_bars_to_df_index_is_utc():
 # ------------------------------------------------------------------
 # collect — init path (no existing data)
 # ------------------------------------------------------------------
+
 
 @patch("data.collectors.alpaca_crypto.get_store")
 @patch("data.collectors.alpaca_crypto._client")
@@ -101,7 +110,8 @@ def test_collect_init_start_is_approx_two_years_ago(mock_client, mock_get_store)
     # CryptoBarsRequest stores start as tz-naive; compare without tz
     now = datetime.now(tz=UTC).replace(tzinfo=None)
     start = (
-        request.start if isinstance(request.start, datetime)
+        request.start
+        if isinstance(request.start, datetime)
         else request.start.to_pydatetime().replace(tzinfo=None)
     )
     age = now - start
@@ -111,6 +121,7 @@ def test_collect_init_start_is_approx_two_years_ago(mock_client, mock_get_store)
 # ------------------------------------------------------------------
 # collect — incremental path (existing data)
 # ------------------------------------------------------------------
+
 
 @patch("data.collectors.alpaca_crypto.get_store")
 @patch("data.collectors.alpaca_crypto._client")

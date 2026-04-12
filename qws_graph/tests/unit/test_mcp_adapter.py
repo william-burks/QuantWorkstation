@@ -15,6 +15,7 @@ from research.graph.mcp_adapter import (
 # Fake service
 # ---------------------------------------------------------------------------
 
+
 class FakeGraphQueryService:
     """Minimal duck-type for GraphQueryService."""
 
@@ -83,6 +84,7 @@ def _adapter(service: FakeGraphQueryService) -> McpReadAdapter:
 # McpResult envelope
 # ---------------------------------------------------------------------------
 
+
 class TestMcpResult:
     def test_success_to_dict(self) -> None:
         result = McpResult(ok=True, data={"champion_id": "c1"})
@@ -133,6 +135,7 @@ class TestMcpResult:
 # TOOL_BINDINGS
 # ---------------------------------------------------------------------------
 
+
 class TestToolBindings:
     def test_all_three_tools_bound(self) -> None:
         assert set(TOOL_BINDINGS) == {
@@ -143,6 +146,7 @@ class TestToolBindings:
 
     def test_bindings_reference_query_view_names(self) -> None:
         from research.graph.query import QUERY_VIEW_REGISTRY
+
         for tool, view_name in TOOL_BINDINGS.items():
             assert view_name in QUERY_VIEW_REGISTRY, (
                 f"tool {tool!r} is bound to {view_name!r} which is not in QUERY_VIEW_REGISTRY"
@@ -152,6 +156,7 @@ class TestToolBindings:
 # ---------------------------------------------------------------------------
 # get_recent_champions
 # ---------------------------------------------------------------------------
+
 
 class TestGetRecentChampions:
     def test_success_returns_list(self) -> None:
@@ -212,6 +217,7 @@ class TestGetRecentChampions:
 # ---------------------------------------------------------------------------
 # get_strategy_lineage
 # ---------------------------------------------------------------------------
+
 
 class TestGetStrategyLineage:
     def test_success_returns_lineage_rows(self) -> None:
@@ -418,9 +424,7 @@ class TestGetContextNeighborhood:
         assert len(result.data["recent_runs"]) == 3
 
     def test_max_runs_zero_returns_invalid_params(self) -> None:
-        result = _adapter(FakeGraphQueryService()).get_context_neighborhood(
-            "champ-001", max_runs=0
-        )
+        result = _adapter(FakeGraphQueryService()).get_context_neighborhood("champ-001", max_runs=0)
         assert result.ok is False
         assert result.error.code == "INVALID_PARAMS"
 
@@ -441,7 +445,8 @@ class TestGetContextNeighborhood:
 
     def test_max_runs_invalid_type_returns_invalid_params(self) -> None:
         result = _adapter(FakeGraphQueryService()).get_context_neighborhood(
-            "champ-001", max_runs="50"  # type: ignore[arg-type]
+            "champ-001",
+            max_runs="50",  # type: ignore[arg-type]
         )
         assert result.ok is False
         assert result.error.code == "INVALID_PARAMS"
@@ -461,13 +466,12 @@ class TestGetContextNeighborhood:
 # Deterministic JSON compatibility
 # ---------------------------------------------------------------------------
 
+
 class TestJsonCompatibility:
     def test_to_dict_is_json_serializable(self) -> None:
         import json
 
-        service = FakeGraphQueryService(
-            recent_champions=[{"champion_id": "c1", "version": "v1"}]
-        )
+        service = FakeGraphQueryService(recent_champions=[{"champion_id": "c1", "version": "v1"}])
         result = _adapter(service).get_recent_champions()
         # Must not raise
         serialized = json.dumps(result.to_dict())

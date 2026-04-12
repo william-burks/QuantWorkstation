@@ -110,9 +110,7 @@ class OpenAIAnalyst:
 
         return artifact.model_copy(update={"runs": updated_runs})
 
-    def _batch_annotate(
-        self, strategy: Strategy, runs: list[Run]
-    ) -> dict[str, AnnotationResult]:
+    def _batch_annotate(self, strategy: Strategy, runs: list[Run]) -> dict[str, AnnotationResult]:
         """Evaluate runs in batch and return annotation results.
 
         Args:
@@ -135,14 +133,16 @@ class OpenAIAnalyst:
         try:
             request = urllib.request.Request(
                 "https://api.openai.com/v1/chat/completions",
-                data=json.dumps({
-                    "model": self._model_id,
-                    "messages": [
-                        {"role": "system", "content": _SYSTEM_PROMPT},
-                        {"role": "user", "content": prompt},
-                    ],
-                    "temperature": self._temperature,
-                }).encode("utf-8"),
+                data=json.dumps(
+                    {
+                        "model": self._model_id,
+                        "messages": [
+                            {"role": "system", "content": _SYSTEM_PROMPT},
+                            {"role": "user", "content": prompt},
+                        ],
+                        "temperature": self._temperature,
+                    }
+                ).encode("utf-8"),
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self._api_key}",
@@ -152,16 +152,12 @@ class OpenAIAnalyst:
             with urllib.request.urlopen(request, timeout=30) as response:
                 result = json.loads(response.read().decode("utf-8"))
         except (urllib.error.URLError, json.JSONDecodeError, OSError) as exc:
-            raise AnalystUnavailableError(
-                f"Failed to reach OpenAI API: {exc}"
-            ) from exc
+            raise AnalystUnavailableError(f"Failed to reach OpenAI API: {exc}") from exc
 
         try:
             message = result["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
-            raise AnalystUnavailableError(
-                f"Unexpected response format from OpenAI: {exc}"
-            ) from exc
+            raise AnalystUnavailableError(f"Unexpected response format from OpenAI: {exc}") from exc
 
         return self._parse_response(message)
 
@@ -223,7 +219,7 @@ def truncate_curator_note(note: str | None, max_length: int = 280) -> str | None
     """Cap curator notes to a stable max length for lean graph neighborhoods."""
     if note is None:
         return None
-    return note[: max_length].strip()
+    return note[:max_length].strip()
 
 
 class AnalystFactory:

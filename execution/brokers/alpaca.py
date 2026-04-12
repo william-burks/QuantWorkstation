@@ -9,6 +9,9 @@ import logging
 
 from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, TimeInForce
+from alpaca.trading.models import Order as AlpacaOrder
+from alpaca.trading.models import Position as AlpacaPosition
+from alpaca.trading.models import TradeAccount
 from alpaca.trading.requests import MarketOrderRequest
 
 from data.config import get_settings
@@ -16,6 +19,7 @@ from data.schemas.order import Order
 from execution.types import AccountState, PositionState
 
 log = logging.getLogger(__name__)
+
 
 class AlpacaBroker:
     def __init__(self) -> None:
@@ -28,23 +32,29 @@ class AlpacaBroker:
 
     def get_account(self) -> AccountState:
         acct = self._client.get_account()
+        if not isinstance(acct, TradeAccount):
+            raise TypeError(f"Expected TradeAccount, got {type(acct)}")
         return AccountState(
-            equity=float(acct.equity),
-            cash=float(acct.cash),
-            buying_power=float(acct.buying_power),
+            equity=float(acct.equity or 0),
+            cash=float(acct.cash or 0),
+            buying_power=float(acct.buying_power or 0),
         )
 
     def get_positions(self) -> list[PositionState]:
-        return [
-            PositionState(
-                symbol=p.symbol,
-                qty=float(p.qty),
-                avg_entry_price=float(p.avg_entry_price),
-                market_value=float(p.market_value),
-                unrealized_pnl=float(p.unrealized_pl),
+        results = []
+        for p in self._client.get_all_positions():
+            if not isinstance(p, AlpacaPosition):
+                raise TypeError(f"Expected Position, got {type(p)}")
+            results.append(
+                PositionState(
+                    symbol=p.symbol,
+                    qty=float(p.qty or 0),
+                    avg_entry_price=float(p.avg_entry_price or 0),
+                    market_value=float(p.market_value or 0),
+                    unrealized_pnl=float(p.unrealized_pl or 0),
+                )
             )
-            for p in self._client.get_all_positions()
-        ]
+        return results
 
     def submit_order(self, order: Order) -> str:
         """Submit a market order. Returns the Alpaca order ID."""
@@ -56,9 +66,15 @@ class AlpacaBroker:
             time_in_force=TimeInForce.GTC,
         )
         result = self._client.submit_order(request)
+        if not isinstance(result, AlpacaOrder):
+            raise TypeError(f"Expected Order, got {type(result)}")
         log.info(
             "Order submitted: %s %s qty=%s notional=%s id=%s",
-            order.side, order.symbol, order.qty, order.notional, result.id,
+            order.side,
+            order.symbol,
+            order.qty,
+            order.notional,
+            result.id,
         )
         return str(result.id)
 

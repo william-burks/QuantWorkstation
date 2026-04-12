@@ -66,6 +66,7 @@ def _make_artifact(
 # Gate application
 # ---------------------------------------------------------------------------
 
+
 class TestApplySignificanceGate:
     def test_rejects_non_grid_csv(self) -> None:
         artifact = _make_artifact(3)
@@ -166,6 +167,7 @@ class TestApplySignificanceGate:
 # ---------------------------------------------------------------------------
 # --all bypass (pass-through)
 # ---------------------------------------------------------------------------
+
 
 class TestAllPassthrough:
     def test_all_rows_pass_through_when_top_n_exceeds_count(self) -> None:

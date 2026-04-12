@@ -29,15 +29,35 @@ from strategies.base import BaseStrategy
 log = logging.getLogger(__name__)
 
 # Columns produced by sweep() that are metrics (not strategy params)
-_METRIC_COLS: frozenset[str] = frozenset({
-    "sharpe", "calmar", "max_drawdown", "return", "annual_return",
-    "annual_volatility", "n_bars", "win_rate", "profit_factor",
-    "n_trades", "gain", "fees",
-    "beat_bh", "tier", "fee_pct_of_gain",
-    "sample_size", "total_r", "avg_r_per_trade", "breakeven_win_rate",
-    "strategy_return", "bh_exposure_return", "outperformance_x",
-    "max_hours_in_market", "total_hours", "exposure_frac",
-})
+_METRIC_COLS: frozenset[str] = frozenset(
+    {
+        "sharpe",
+        "calmar",
+        "max_drawdown",
+        "return",
+        "annual_return",
+        "annual_volatility",
+        "n_bars",
+        "win_rate",
+        "profit_factor",
+        "n_trades",
+        "gain",
+        "fees",
+        "beat_bh",
+        "tier",
+        "fee_pct_of_gain",
+        "sample_size",
+        "total_r",
+        "avg_r_per_trade",
+        "breakeven_win_rate",
+        "strategy_return",
+        "bh_exposure_return",
+        "outperformance_x",
+        "max_hours_in_market",
+        "total_hours",
+        "exposure_frac",
+    }
+)
 
 _REGISTRY_PATH = Path(__file__).parent.parent / "results" / "registry.json"
 
@@ -45,6 +65,7 @@ _REGISTRY_PATH = Path(__file__).parent.parent / "results" / "registry.json"
 # ---------------------------------------------------------------------------
 # Tier classification
 # ---------------------------------------------------------------------------
+
 
 def tier(
     sharpe_val: float,
@@ -86,6 +107,7 @@ def tier(
 # Evaluate: annotate sweep results DataFrame
 # ---------------------------------------------------------------------------
 
+
 def evaluate(results: pd.DataFrame, bh: dict) -> pd.DataFrame:
     """
     Add evaluation columns to sweep results.
@@ -120,9 +142,7 @@ def evaluate(results: pd.DataFrame, bh: dict) -> pd.DataFrame:
         for i, (_, row) in enumerate(df.iterrows())
     ]
     df["beat_bh"] = df["sharpe"] > bh["sharpe"]
-    df["fee_pct_of_gain"] = (
-        df["fees"] / df["gain"].replace(0, float("nan"))
-    ).round(4)
+    df["fee_pct_of_gain"] = (df["fees"] / df["gain"].replace(0, float("nan"))).round(4)
 
     return df
 
@@ -130,6 +150,7 @@ def evaluate(results: pd.DataFrame, bh: dict) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Report: standardized trial output
 # ---------------------------------------------------------------------------
+
 
 def report(
     results: pd.DataFrame,
@@ -176,6 +197,7 @@ def report(
 # Worst trades inspector
 # ---------------------------------------------------------------------------
 
+
 def worst_trades(
     strategy_cls: type[BaseStrategy],
     bars: pd.DataFrame,
@@ -219,9 +241,15 @@ def worst_trades(
 
     strategy = strategy_cls(**params)
     pf = run(
-        strategy, bars,
-        init_cash=init_cash, fees=fees, freq=freq,
-        leverage=leverage, sl_stop=sl_stop, tp_stop=tp_stop, time_stop=time_stop,
+        strategy,
+        bars,
+        init_cash=init_cash,
+        fees=fees,
+        freq=freq,
+        leverage=leverage,
+        sl_stop=sl_stop,
+        tp_stop=tp_stop,
+        time_stop=time_stop,
     )
 
     trades = pf.trades
@@ -232,16 +260,18 @@ def worst_trades(
     entry_idx = trades.entry_idx.values
     exit_idx = trades.exit_idx.values
 
-    records = pd.DataFrame({
-        "entry_time":   bars.index[entry_idx],
-        "exit_time":    bars.index[exit_idx],
-        "direction":    ["long" if d == 0 else "short" for d in trades.direction.values],
-        "entry_price":  trades.entry_price.values,
-        "exit_price":   trades.exit_price.values,
-        "pnl_usd":      trades.pnl.values,
-        "pnl_pct":      trades.return_.values,
-        "bars_held":    exit_idx - entry_idx,
-    })
+    records = pd.DataFrame(
+        {
+            "entry_time": bars.index[entry_idx],
+            "exit_time": bars.index[exit_idx],
+            "direction": ["long" if d == 0 else "short" for d in trades.direction.values],
+            "entry_price": trades.entry_price.values,
+            "exit_price": trades.exit_price.values,
+            "pnl_usd": trades.pnl.values,
+            "pnl_pct": trades.return_.values,
+            "bars_held": exit_idx - entry_idx,
+        }
+    )
 
     return records.sort_values("pnl_usd").head(n).reset_index(drop=True)
 
@@ -250,16 +280,21 @@ def worst_trades(
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+
 def _print_metadata(metadata: dict) -> None:
     sep = "=" * 10
     print(f"\n{sep} METADATA {sep}")
     fields = [
-        ("SYMBOL",    metadata.get("symbol", "—")),
-        ("FREQ",      metadata.get("freq", "—")),
-        ("LEVERAGE",  metadata.get("leverage", "—")),
-        ("FEES",      metadata.get("fees", "—")),
-        ("SL/TP",     f"{metadata['sl_stop']:.1%} / {metadata['tp_stop']:.1%}"
-                      if "sl_stop" in metadata and "tp_stop" in metadata else "—"),
+        ("SYMBOL", metadata.get("symbol", "—")),
+        ("FREQ", metadata.get("freq", "—")),
+        ("LEVERAGE", metadata.get("leverage", "—")),
+        ("FEES", metadata.get("fees", "—")),
+        (
+            "SL/TP",
+            f"{metadata['sl_stop']:.1%} / {metadata['tp_stop']:.1%}"
+            if "sl_stop" in metadata and "tp_stop" in metadata
+            else "—",
+        ),
         ("TIME_STOP", f"{metadata['time_stop']} bars" if "time_stop" in metadata else "—"),
         ("DATA_SPAN", metadata.get("data_span", "—")),
     ]
@@ -270,8 +305,10 @@ def _print_metadata(metadata: dict) -> None:
 def _print_bh(bh: dict) -> None:
     sep = "=" * 10
     print(f"\n{sep} BUY & HOLD {sep}")
-    print(f"  return={bh['return']:+.2%}   sharpe={bh['sharpe']:+.3f}   "
-          f"dd={bh['max_drawdown']:+.2%}   calmar={bh['calmar']:+.3f}")
+    print(
+        f"  return={bh['return']:+.2%}   sharpe={bh['sharpe']:+.3f}   "
+        f"dd={bh['max_drawdown']:+.2%}   calmar={bh['calmar']:+.3f}"
+    )
 
 
 def _print_tier_assessment(results: pd.DataFrame, bh: dict) -> None:
@@ -296,12 +333,16 @@ def _print_tier_assessment(results: pd.DataFrame, bh: dict) -> None:
     calmar_flag = _flag(best["calmar"], CALMAR)
     dd_flag = "PASS" if best["max_drawdown"] >= MAX_DRAWDOWN_LIMIT else "FAIL"
 
-    failures = [m for m, f in [
-        (f"Sharpe {best['sharpe']:.2f} < {SHARPE['pass']}", sharpe_flag == "FAIL"),
-        (f"PF {pf_val:.2f} < {PROFIT_FACTOR['pass']}", pf_flag == "FAIL"),
-        (f"Calmar {best['calmar']:.2f} < {CALMAR['pass']}", calmar_flag == "FAIL"),
-        (f"DD {best['max_drawdown']:.1%} < {MAX_DRAWDOWN_LIMIT:.0%}", dd_flag == "FAIL"),
-    ] if f]
+    failures = [
+        m
+        for m, f in [
+            (f"Sharpe {best['sharpe']:.2f} < {SHARPE['pass']}", sharpe_flag == "FAIL"),
+            (f"PF {pf_val:.2f} < {PROFIT_FACTOR['pass']}", pf_flag == "FAIL"),
+            (f"Calmar {best['calmar']:.2f} < {CALMAR['pass']}", calmar_flag == "FAIL"),
+            (f"DD {best['max_drawdown']:.1%} < {MAX_DRAWDOWN_LIMIT:.0%}", dd_flag == "FAIL"),
+        ]
+        if f
+    ]
 
     tier_label = t.upper()
     reason = f"  ({' · '.join(failures)})" if failures else ""
@@ -366,9 +407,17 @@ def _print_full(results: pd.DataFrame, n: int) -> None:
     sep = "=" * 10
     pcols = _param_cols(results)
     display_cols = pcols + [
-        "sharpe", "calmar", "max_drawdown", "return",
-        "profit_factor", "win_rate", "n_trades",
-        "gain", "fees", "fee_pct_of_gain", "tier",
+        "sharpe",
+        "calmar",
+        "max_drawdown",
+        "return",
+        "profit_factor",
+        "win_rate",
+        "n_trades",
+        "gain",
+        "fees",
+        "fee_pct_of_gain",
+        "tier",
     ]
     available = [c for c in display_cols if c in results.columns]
     print(f"\n{sep} TOP {n} RESULTS {sep}")
@@ -403,8 +452,15 @@ def _record_passing(results: pd.DataFrame, metadata: dict) -> None:
             existing = []
 
     pcols = _param_cols(results)
-    metric_keys = ["sharpe", "calmar", "max_drawdown", "return",
-                   "profit_factor", "win_rate", "n_trades"]
+    metric_keys = [
+        "sharpe",
+        "calmar",
+        "max_drawdown",
+        "return",
+        "profit_factor",
+        "win_rate",
+        "n_trades",
+    ]
 
     # Record the best result per tier
     recorded_tiers = []
@@ -415,15 +471,20 @@ def _record_passing(results: pd.DataFrame, metadata: dict) -> None:
         row = subset.sort_values("sharpe", ascending=False).iloc[0]
         entry = {
             "recorded_at": datetime.now(UTC).isoformat(),
-            "strategy":    metadata.get("strategy", "unknown"),
-            "symbol":      metadata.get("symbol", "unknown"),
-            "freq":        metadata.get("freq", "unknown"),
-            "tier":        t,
-            "params":      _json_safe({c: row[c] for c in pcols}),
-            "metrics":     {k: round(float(row[k]), 6) for k in metric_keys if k in row},
-            "beat_bh":     bool(row.get("beat_bh", False)),
-            "metadata":    _json_safe({k: v for k, v in metadata.items()
-                            if k not in ("data_span", "strategy", "symbol", "freq")}),
+            "strategy": metadata.get("strategy", "unknown"),
+            "symbol": metadata.get("symbol", "unknown"),
+            "freq": metadata.get("freq", "unknown"),
+            "tier": t,
+            "params": _json_safe({c: row[c] for c in pcols}),
+            "metrics": {k: round(float(row[k]), 6) for k in metric_keys if k in row},
+            "beat_bh": bool(row.get("beat_bh", False)),
+            "metadata": _json_safe(
+                {
+                    k: v
+                    for k, v in metadata.items()
+                    if k not in ("data_span", "strategy", "symbol", "freq")
+                }
+            ),
         }
         existing.append(entry)
         recorded_tiers.append(t.upper())

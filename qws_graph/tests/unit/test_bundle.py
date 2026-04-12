@@ -19,6 +19,7 @@ _STRATEGY_FIXTURE = (
 # _read_bundle_manifest
 # ---------------------------------------------------------------------------
 
+
 class TestReadBundleManifest:
     def test_returns_manifest_when_valid(self, tmp_path: Path):
         manifest = {
@@ -51,7 +52,9 @@ class TestReadBundleManifest:
 
     def test_raises_value_error_when_csv_missing(self, tmp_path: Path):
         manifest = {
-            "trial": "x", "run_ts": "20260405-000000", "files": {"csv_kind": "baseline_csv"},
+            "trial": "x",
+            "run_ts": "20260405-000000",
+            "files": {"csv_kind": "baseline_csv"},
         }
         (tmp_path / "bundle.json").write_text(json.dumps(manifest))
 
@@ -81,9 +84,11 @@ class TestReadBundleManifest:
 # _cmd_bundle: error paths (no Neo4j needed)
 # ---------------------------------------------------------------------------
 
+
 class TestCmdBundleErrors:
     def _make_args(self, bundle: str, offline: bool = False, dry_run: bool = False):
         import argparse
+
         return argparse.Namespace(
             bundle=bundle,
             offline=offline,
@@ -175,8 +180,10 @@ class TestCmdBundleErrors:
             source_file=str(source_py),
         )
 
-        with patch("research.graph.cli.NeoConnector") as mock_connector, \
-             patch("research.graph.cli.GraphStore.from_env") as mock_store_factory:
+        with (
+            patch("research.graph.cli.NeoConnector") as mock_connector,
+            patch("research.graph.cli.GraphStore.from_env") as mock_store_factory,
+        ):
             mock_connector.return_value.is_available.return_value = True
             mock_store = MagicMock()
             mock_store.persist_artifact.side_effect = fake_persist
@@ -231,8 +238,10 @@ class TestCmdBundleErrors:
             source_file=None,
         )
 
-        with patch("research.graph.cli.NeoConnector") as mock_connector, \
-             patch("research.graph.cli.GraphStore.from_env") as mock_store_factory:
+        with (
+            patch("research.graph.cli.NeoConnector") as mock_connector,
+            patch("research.graph.cli.GraphStore.from_env") as mock_store_factory,
+        ):
             mock_connector.return_value.is_available.return_value = True
             mock_store = MagicMock()
             mock_store.persist_artifact.side_effect = fake_persist
@@ -249,6 +258,7 @@ class TestCmdBundleErrors:
 # ---------------------------------------------------------------------------
 # patch_run_html_path
 # ---------------------------------------------------------------------------
+
 
 class TestPatchRunHtmlPath:
     def _make_store(self) -> GraphStore:
@@ -273,8 +283,12 @@ class TestPatchRunHtmlPath:
                 return result
 
         class FakeSession:
-            def __enter__(self): return self
-            def __exit__(self, *a): pass
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                pass
+
             def execute_write(self, fn):
                 return list(fn(FakeTx()))
 
@@ -295,8 +309,12 @@ class TestPatchRunHtmlPath:
                 return result
 
         class FakeSession:
-            def __enter__(self): return self
-            def __exit__(self, *a): pass
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                pass
+
             def execute_write(self, fn):
                 return list(fn(FakeTx()))
 
@@ -313,8 +331,12 @@ class TestPatchRunHtmlPath:
                 return result
 
         class FakeSession:
-            def __enter__(self): return self
-            def __exit__(self, *a): pass
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                pass
+
             def execute_write(self, fn):
                 return list(fn(FakeTx()))
 

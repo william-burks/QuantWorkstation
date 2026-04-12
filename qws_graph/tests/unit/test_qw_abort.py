@@ -15,6 +15,7 @@ QWS_GRAPH_ROOT = Path(__file__).resolve().parents[2]
 # Fake store
 # ---------------------------------------------------------------------------
 
+
 class FakeGraphStore:
     """Minimal duck-type for GraphStore used by cmd_abort."""
 
@@ -59,9 +60,13 @@ def _run_abort(
     monkeypatch.setattr(
         cli_module,
         "GraphStore",
-        type("FakeGS", (), {
-            "from_env": staticmethod(lambda **_: store),
-        }),
+        type(
+            "FakeGS",
+            (),
+            {
+                "from_env": staticmethod(lambda **_: store),
+            },
+        ),
     )
 
     args = Namespace(
@@ -76,6 +81,7 @@ def _run_abort(
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestCmdAbort:
     def test_success_returns_0(self, monkeypatch, capsys) -> None:
@@ -136,6 +142,7 @@ class TestCmdAbort:
 # Argparse integration
 # ---------------------------------------------------------------------------
 
+
 class TestAbortSubparser:
     def test_abort_subcommand_registered(self) -> None:
         import argparse
@@ -151,6 +158,7 @@ class TestAbortSubparser:
 
     def test_abort_requires_strategy(self) -> None:
         import subprocess
+
         result = subprocess.run(
             [sys.executable, "-m", "research.graph.cli", "abort", "--reason", "test"],
             capture_output=True,
@@ -162,6 +170,7 @@ class TestAbortSubparser:
 
     def test_abort_requires_reason(self) -> None:
         import subprocess
+
         result = subprocess.run(
             [sys.executable, "-m", "research.graph.cli", "abort", "--strategy", "es-1h-bear"],
             capture_output=True,

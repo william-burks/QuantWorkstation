@@ -72,15 +72,13 @@ class StabilityResult:
             f"  Neighbors found:     {self.neighbor_count} runs",
             f"  Neighbor sharpe μ:   {self.neighbor_sharpe_mean:.2f}",
             f"  Neighbor sharpe σ:   {self.neighbor_sharpe_std:.2f}",
-            f"  Stability score:     {self.stability_score:.2f}"
-            "  (1.0 = perfectly stable plateau)",
+            f"  Stability score:     {self.stability_score:.2f}  (1.0 = perfectly stable plateau)",
             f"  Assessment:          {_assessment_label(self.assessment)}",
         ]
         if self.nearest_failing_neighbor is not None:
             nfn = self.nearest_failing_neighbor
             parts.append(
-                f"\n  Nearest failing neighbor: run_id={nfn.run_id},"
-                f" sharpe={nfn.sharpe:.2f}"
+                f"\n  Nearest failing neighbor: run_id={nfn.run_id}, sharpe={nfn.sharpe:.2f}"
             )
         return "\n".join(parts)
 
@@ -100,9 +98,7 @@ def _assessment_label(code: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _normalize_params(
-    runs: list[RunRecord], param_keys: list[str]
-) -> list[RunRecord]:
+def _normalize_params(runs: list[RunRecord], param_keys: list[str]) -> list[RunRecord]:
     """
     Return new RunRecords with params normalized per-dimension to [0, 1].
     Dimensions with zero range are left as-is (all values equal → distance = 0).
@@ -119,8 +115,7 @@ def _normalize_params(
             df[col] = 0.0  # constant dimension — contributes 0 distance
 
     return [
-        RunRecord(run_id=r.run_id, sharpe=r.sharpe, params=dict(df.loc[r.run_id]))
-        for r in runs
+        RunRecord(run_id=r.run_id, sharpe=r.sharpe, params=dict(df.loc[r.run_id])) for r in runs
     ]
 
 
@@ -232,9 +227,7 @@ def compute_stability(
         norm_map = {r.run_id: r for r in normalized}
         nearest_failing = min(
             failing,
-            key=lambda r: _param_distance(
-                norm_map[r.run_id].params, champ_norm.params
-            ),
+            key=lambda r: _param_distance(norm_map[r.run_id].params, champ_norm.params),
         )
 
     return StabilityResult(

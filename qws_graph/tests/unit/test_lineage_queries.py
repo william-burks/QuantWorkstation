@@ -36,6 +36,7 @@ from research.graph.query_presets import (
 # Fake session helpers (same pattern as test_graph_query_models.py)
 # ---------------------------------------------------------------------------
 
+
 class FakeRecord:
     def __init__(self, payload: dict[str, object]) -> None:
         self._payload = payload
@@ -149,10 +150,12 @@ class FakeGraphQueryService:
         depth: int = 1,
         include_retired: bool = False,
     ) -> list[dict[str, Any]]:
-        self.calls.append((
-            "get_downstream_champions_v1",
-            {"run_id": run_id, "depth": depth, "include_retired": include_retired},
-        ))
+        self.calls.append(
+            (
+                "get_downstream_champions_v1",
+                {"run_id": run_id, "depth": depth, "include_retired": include_retired},
+            )
+        )
         return self._downstream
 
     def get_cross_artifact_correlation_v1(
@@ -160,10 +163,12 @@ class FakeGraphQueryService:
         strategy_id: str | None = None,
         family_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        self.calls.append((
-            "get_cross_artifact_correlation_v1",
-            {"strategy_id": strategy_id, "family_id": family_id},
-        ))
+        self.calls.append(
+            (
+                "get_cross_artifact_correlation_v1",
+                {"strategy_id": strategy_id, "family_id": family_id},
+            )
+        )
         return self._cross_artifact
 
     def get_strategy_lineage_v1(self, strategy_id: str, depth: int = 1) -> list[dict[str, Any]]:
@@ -181,40 +186,47 @@ class FakeGraphQueryService:
 # AC1 — Strategy lineage query returns ordered chain
 # ---------------------------------------------------------------------------
 
+
 class TestStrategyLineageOrderedChain:
     def test_single_champion_returns_one_row(self) -> None:
-        session = FakeSession({
-            GET_STRATEGY_LINEAGE_V1_CYPHER: [
-                _lineage_record(
-                    "es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id="run-001"
-                ),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_STRATEGY_LINEAGE_V1_CYPHER: [
+                    _lineage_record(
+                        "es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id="run-001"
+                    ),
+                ]
+            }
+        )
         rows = get_strategy_lineage_v1(session, "es-1h-bear-sweep")
         assert len(rows) == 1
         assert rows[0]["champion_id"] == "champ-001"
         assert rows[0]["pivot_from_run_id"] == "run-001"
 
     def test_multiple_champions_ordered_by_freeze_date_desc(self) -> None:
-        session = FakeSession({
-            GET_STRATEGY_LINEAGE_V1_CYPHER: [
-                _lineage_record("es-1h-bear-sweep", "champ-002", "2026-03-01"),
-                _lineage_record("es-1h-bear-sweep", "champ-003", "2026-04-01"),
-                _lineage_record("es-1h-bear-sweep", "champ-001", "2026-02-01"),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_STRATEGY_LINEAGE_V1_CYPHER: [
+                    _lineage_record("es-1h-bear-sweep", "champ-002", "2026-03-01"),
+                    _lineage_record("es-1h-bear-sweep", "champ-003", "2026-04-01"),
+                    _lineage_record("es-1h-bear-sweep", "champ-001", "2026-02-01"),
+                ]
+            }
+        )
         rows = get_strategy_lineage_v1(session, "es-1h-bear-sweep")
         freeze_dates = [r["freeze_date"] for r in rows]
         assert freeze_dates == sorted(freeze_dates, reverse=True)
 
     def test_champion_without_pivot_edge_included(self) -> None:
-        session = FakeSession({
-            GET_STRATEGY_LINEAGE_V1_CYPHER: [
-                _lineage_record(
-                    "es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id=None
-                ),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_STRATEGY_LINEAGE_V1_CYPHER: [
+                    _lineage_record(
+                        "es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id=None
+                    ),
+                ]
+            }
+        )
         rows = get_strategy_lineage_v1(session, "es-1h-bear-sweep")
         assert len(rows) == 1
         assert rows[0]["pivot_from_run_id"] is None
@@ -225,16 +237,24 @@ class TestStrategyLineageOrderedChain:
         assert rows == []
 
     def test_output_has_stable_keys(self) -> None:
-        session = FakeSession({
-            GET_STRATEGY_LINEAGE_V1_CYPHER: [
-                _lineage_record("es-1h-bear-sweep", "champ-001", "2026-04-01"),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_STRATEGY_LINEAGE_V1_CYPHER: [
+                    _lineage_record("es-1h-bear-sweep", "champ-001", "2026-04-01"),
+                ]
+            }
+        )
         row = get_strategy_lineage_v1(session, "es-1h-bear-sweep")[0]
         expected_keys = {
-            "version", "strategy_id", "champion_id", "freeze_date", "oos_status",
-            "pivot_from_run_id", "pivot_run_timestamp",
-            "pivot_run_artifact_path", "pivot_config_id",
+            "version",
+            "strategy_id",
+            "champion_id",
+            "freeze_date",
+            "oos_status",
+            "pivot_from_run_id",
+            "pivot_run_timestamp",
+            "pivot_run_artifact_path",
+            "pivot_config_id",
         }
         assert set(row) == expected_keys
 
@@ -250,6 +270,7 @@ class TestStrategyLineageOrderedChain:
 # AC2 — Pivot query returns empty list when no explicit pivot edges exist
 # ---------------------------------------------------------------------------
 
+
 class TestDownstreamChampionsNoPivotEdge:
     def test_no_pivot_edges_returns_empty_list(self) -> None:
         session = FakeSession({GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: []})
@@ -262,29 +283,33 @@ class TestDownstreamChampionsNoPivotEdge:
         assert session.calls[0][1] == {"run_id": "run-abc"}
 
     def test_champions_with_pivot_returned(self) -> None:
-        session = FakeSession({
-            GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
-                _champion_record(
-                    "champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"
-                ),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record(
+                        "champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"
+                    ),
+                ]
+            }
+        )
         rows = get_downstream_champions_v1(session, "run-001")
         assert len(rows) == 1
         assert rows[0]["champion_id"] == "champ-001"
         assert rows[0]["pivot_from_run_id"] == "run-001"
 
     def test_multiple_downstream_champions_ordered(self) -> None:
-        session = FakeSession({
-            GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
-                _champion_record(
-                    "champ-002", "nq-1h-bear-sweep", "2026-03-15", pivot_from_run_id="run-001"
-                ),
-                _champion_record(
-                    "champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"
-                ),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record(
+                        "champ-002", "nq-1h-bear-sweep", "2026-03-15", pivot_from_run_id="run-001"
+                    ),
+                    _champion_record(
+                        "champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"
+                    ),
+                ]
+            }
+        )
         rows = get_downstream_champions_v1(session, "run-001")
         # Both returned; freeze_date ordering is delegated to Cypher ORDER BY
         assert len(rows) == 2
@@ -292,11 +317,13 @@ class TestDownstreamChampionsNoPivotEdge:
         assert champion_ids == {"champ-001", "champ-002"}
 
     def test_reuses_champion_details_v1_dto(self) -> None:
-        session = FakeSession({
-            GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
-                _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+                ]
+            }
+        )
         row = get_downstream_champions_v1(session, "run-001")[0]
         assert row["version"] == "v1"
         assert "fragilities" in row
@@ -331,6 +358,7 @@ class TestDownstreamChampionsNoPivotEdge:
 # AC3 — Multi-hop lineage traversal bounded and documented
 # ---------------------------------------------------------------------------
 
+
 class TestTraversalDepthBounded:
     def test_get_strategy_lineage_cypher_uses_bounded_variable_length(self) -> None:
         # QWS-0504: Cypher must use variable-length path with depth inlined as literal.
@@ -341,6 +369,7 @@ class TestTraversalDepthBounded:
         assert "PIVOTED_FROM*1..3" in _build_lineage_cypher(3)
         # Must NOT use unbounded [*]
         import re
+
         unbounded = re.search(r"\[:\w+\s*\*\s*]", GET_STRATEGY_LINEAGE_V1_CYPHER)
         assert unbounded is None, "Cypher must not contain unbounded variable-length paths"
 
@@ -349,6 +378,7 @@ class TestTraversalDepthBounded:
         assert "PIVOTED_FROM" in GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER
         assert "PIVOTED_FROM*1..5" in _build_downstream_cypher(5)
         import re
+
         unbounded = re.search(r"\[:\w+\s*\*\s*]", GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER)
         assert unbounded is None, "Cypher must not contain unbounded variable-length paths"
 
@@ -372,6 +402,7 @@ class TestTraversalDepthBounded:
 # ---------------------------------------------------------------------------
 # QWS-0504 — depth param, include_retired, validation
 # ---------------------------------------------------------------------------
+
 
 class TestDepthParameter:
     """AC coverage for QWS-0504: depth param + include_retired on downstream_champions
@@ -416,32 +447,38 @@ class TestDepthParameter:
     # --- include_retired ---
 
     def test_include_retired_false_no_node_type(self) -> None:
-        session = FakeSession({
-            GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
-                _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+                ]
+            }
+        )
         rows = get_downstream_champions_v1(session, "run-001", include_retired=False)
         assert len(rows) == 1
         assert "node_type" not in rows[0]
 
     def test_include_retired_true_adds_node_type_champion(self) -> None:
-        session = FakeSession({
-            GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
-                _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
-                _champion_record("champ-002", "nq-1h-bear-sweep", "2026-03-01"),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+                    _champion_record("champ-002", "nq-1h-bear-sweep", "2026-03-01"),
+                ]
+            }
+        )
         rows = get_downstream_champions_v1(session, "run-001", include_retired=True)
         assert len(rows) == 2
         assert all(r["node_type"] == "champion" for r in rows)
 
     def test_include_retired_false_is_default(self) -> None:
-        session = FakeSession({
-            GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
-                _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
-            ]
-        })
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+                ]
+            }
+        )
         rows = get_downstream_champions_v1(session, "run-001")
         assert "node_type" not in rows[0]
 
@@ -511,6 +548,7 @@ class TestDepthParameter:
 # AC4 — Cross-artifact correlation through shared Strategy anchors
 # ---------------------------------------------------------------------------
 
+
 class TestCrossArtifactCorrelation:
     def test_no_related_strategies_returns_empty_list(self) -> None:
         session = FakeSession({GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: []})
@@ -518,24 +556,26 @@ class TestCrossArtifactCorrelation:
         assert rows == []
 
     def test_related_strategy_returned(self) -> None:
-        session = FakeSession({
-            GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: [
-                {
-                    "result": {
-                        "anchor_strategy_id": "es-1h-bear-sweep",
-                        "related_strategy_id": "nq-1h-bear-sweep",
-                        "instrument": "NQ",
-                        "timeframe": "1H",
-                        "direction": "bear",
-                        "logic_type": "sweep",
-                        "run_count": 3,
-                        "champion_count": 1,
-                        "latest_champion_id": "champ-nq-001",
-                        "latest_champion_freeze_date": "2026-04-01",
+        session = FakeSession(
+            {
+                GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: [
+                    {
+                        "result": {
+                            "anchor_strategy_id": "es-1h-bear-sweep",
+                            "related_strategy_id": "nq-1h-bear-sweep",
+                            "instrument": "NQ",
+                            "timeframe": "1H",
+                            "direction": "bear",
+                            "logic_type": "sweep",
+                            "run_count": 3,
+                            "champion_count": 1,
+                            "latest_champion_id": "champ-nq-001",
+                            "latest_champion_freeze_date": "2026-04-01",
+                        }
                     }
-                }
-            ]
-        })
+                ]
+            }
+        )
         rows = get_cross_artifact_correlation_v1(session, "es-1h-bear-sweep")
         assert len(rows) == 1
         assert rows[0]["anchor_strategy_id"] == "es-1h-bear-sweep"
@@ -552,24 +592,26 @@ class TestCrossArtifactCorrelation:
         assert "direction = anchor.direction" in GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER
 
     def test_output_has_stable_keys(self) -> None:
-        session = FakeSession({
-            GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: [
-                {
-                    "result": {
-                        "anchor_strategy_id": "es-1h-bear-sweep",
-                        "related_strategy_id": "nq-1h-bear-sweep",
-                        "instrument": "NQ",
-                        "timeframe": "1H",
-                        "direction": "bear",
-                        "logic_type": "sweep",
-                        "run_count": 0,
-                        "champion_count": 0,
-                        "latest_champion_id": None,
-                        "latest_champion_freeze_date": None,
+        session = FakeSession(
+            {
+                GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: [
+                    {
+                        "result": {
+                            "anchor_strategy_id": "es-1h-bear-sweep",
+                            "related_strategy_id": "nq-1h-bear-sweep",
+                            "instrument": "NQ",
+                            "timeframe": "1H",
+                            "direction": "bear",
+                            "logic_type": "sweep",
+                            "run_count": 0,
+                            "champion_count": 0,
+                            "latest_champion_id": None,
+                            "latest_champion_freeze_date": None,
+                        }
                     }
-                }
-            ]
-        })
+                ]
+            }
+        )
         row = get_cross_artifact_correlation_v1(session, "es-1h-bear-sweep")[0]
         expected_keys = {
             "version",
@@ -588,24 +630,26 @@ class TestCrossArtifactCorrelation:
         assert set(row) == expected_keys
 
     def test_output_is_json_serializable(self) -> None:
-        session = FakeSession({
-            GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: [
-                {
-                    "result": {
-                        "anchor_strategy_id": "es-1h-bear-sweep",
-                        "related_strategy_id": "nq-1h-bear-sweep",
-                        "instrument": "NQ",
-                        "timeframe": "1H",
-                        "direction": "bear",
-                        "logic_type": "sweep",
-                        "run_count": 2,
-                        "champion_count": 1,
-                        "latest_champion_id": "champ-001",
-                        "latest_champion_freeze_date": "2026-04-01",
+        session = FakeSession(
+            {
+                GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: [
+                    {
+                        "result": {
+                            "anchor_strategy_id": "es-1h-bear-sweep",
+                            "related_strategy_id": "nq-1h-bear-sweep",
+                            "instrument": "NQ",
+                            "timeframe": "1H",
+                            "direction": "bear",
+                            "logic_type": "sweep",
+                            "run_count": 2,
+                            "champion_count": 1,
+                            "latest_champion_id": "champ-001",
+                            "latest_champion_freeze_date": "2026-04-01",
+                        }
                     }
-                }
-            ]
-        })
+                ]
+            }
+        )
         rows = get_cross_artifact_correlation_v1(session, "es-1h-bear-sweep")
         # Must not raise
         json.dumps(rows)
@@ -684,6 +728,7 @@ class TestCrossArtifactCorrelation:
 # CrossArtifactRowV1 DTO
 # ---------------------------------------------------------------------------
 
+
 class TestCrossArtifactRowV1:
     def test_stable_json_keys(self) -> None:
         model = CrossArtifactRowV1(
@@ -722,6 +767,7 @@ class TestCrossArtifactRowV1:
 # ---------------------------------------------------------------------------
 # Preset catalog completeness
 # ---------------------------------------------------------------------------
+
 
 class TestPresetCatalogStory4:
     def test_five_presets_exist(self) -> None:

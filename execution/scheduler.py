@@ -54,6 +54,7 @@ def _get_risk() -> RiskEngine:
 
 # --- Jobs ---
 
+
 def job_risk_day_reset() -> None:
     """00:00 UTC — lock in new starting balance, lift daily halts."""
     try:
@@ -74,8 +75,11 @@ def job_collect_crypto() -> None:
         s = get_settings()
         for tf in _CRYPTO_TIMEFRAMES:
             collect_all_crypto(tf)
-        log.info("Crypto collection complete: %d symbols × %d timeframes",
-                 len(s.crypto_symbols), len(_CRYPTO_TIMEFRAMES))
+        log.info(
+            "Crypto collection complete: %d symbols × %d timeframes",
+            len(s.crypto_symbols),
+            len(_CRYPTO_TIMEFRAMES),
+        )
     except Exception:
         log.exception("job_collect_crypto failed")
 
@@ -86,8 +90,11 @@ def job_collect_futures() -> None:
         s = get_settings()
         for tf in _FUTURES_TIMEFRAMES:
             collect_all_futures(tf)
-        log.info("Futures collection complete: %d symbols × %d timeframes",
-                 len(s.futures_symbols), len(_FUTURES_TIMEFRAMES))
+        log.info(
+            "Futures collection complete: %d symbols × %d timeframes",
+            len(s.futures_symbols),
+            len(_FUTURES_TIMEFRAMES),
+        )
     except Exception:
         log.exception("job_collect_futures failed")
 
@@ -96,6 +103,7 @@ def job_export_parquet() -> None:
     """Export all ArcticDB bars to parquet for the quant sandbox."""
     try:
         from data.parquet_export import export_all
+
         log.info("Exporting parquet snapshots")
         export_all()
     except Exception:
@@ -117,6 +125,7 @@ def job_risk_heartbeat() -> None:
 
 
 # --- Entry point ---
+
 
 def build_scheduler() -> BlockingScheduler:
     scheduler = BlockingScheduler(timezone="UTC")
@@ -171,8 +180,7 @@ def main() -> None:
     try:
         acct = _get_broker().get_account()
         _get_risk().seed(acct.equity)
-        log.info("Startup: equity=%.2f risk_state=%s",
-                 acct.equity, _get_risk().state.value)
+        log.info("Startup: equity=%.2f risk_state=%s", acct.equity, _get_risk().state.value)
     except Exception:
         log.exception("Failed to seed risk engine — check Alpaca credentials")
         sys.exit(1)

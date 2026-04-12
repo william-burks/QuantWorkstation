@@ -58,20 +58,26 @@ def _build_neo4j_records(rows: list[dict[str, Any]]) -> list[MagicMock]:
 class TestGetCorrelationGateRecheckV1:
     def test_all_pass(self) -> None:
         store = _make_store()
-        _mock_session(store, [
-            {"candidate_id": "strat-alpha", "max_corr": 0.18},
-            {"candidate_id": "strat-beta", "max_corr": 0.05},
-        ])
+        _mock_session(
+            store,
+            [
+                {"candidate_id": "strat-alpha", "max_corr": 0.18},
+                {"candidate_id": "strat-beta", "max_corr": 0.05},
+            ],
+        )
         rows = store.get_correlation_gate_recheck_v1(corr_threshold=0.30)
         assert len(rows) == 2
         assert all(r["gate"] == "PASS" for r in rows)
 
     def test_partial_fail(self) -> None:
         store = _make_store()
-        _mock_session(store, [
-            {"candidate_id": "strat-alpha", "max_corr": 0.18},
-            {"candidate_id": "strat-beta", "max_corr": 0.34},
-        ])
+        _mock_session(
+            store,
+            [
+                {"candidate_id": "strat-alpha", "max_corr": 0.18},
+                {"candidate_id": "strat-beta", "max_corr": 0.34},
+            ],
+        )
         rows = store.get_correlation_gate_recheck_v1(corr_threshold=0.30)
         gates = {r["candidate_id"]: r["gate"] for r in rows}
         assert gates["strat-alpha"] == "PASS"
@@ -86,9 +92,12 @@ class TestGetCorrelationGateRecheckV1:
     def test_empty_portfolio_no_corr_edges(self) -> None:
         """Candidate with no CORRELATED_WITH edges → max_corr=0.0, gate=PASS."""
         store = _make_store()
-        _mock_session(store, [
-            {"candidate_id": "strat-gamma", "max_corr": 0.0},
-        ])
+        _mock_session(
+            store,
+            [
+                {"candidate_id": "strat-gamma", "max_corr": 0.0},
+            ],
+        )
         rows = store.get_correlation_gate_recheck_v1(corr_threshold=0.30)
         assert rows[0]["gate"] == "PASS"
         assert rows[0]["max_corr"] == pytest.approx(0.0)
@@ -96,17 +105,23 @@ class TestGetCorrelationGateRecheckV1:
     def test_boundary_exactly_at_threshold_fails(self) -> None:
         """corr == threshold → FAIL (gate is strict <)."""
         store = _make_store()
-        _mock_session(store, [
-            {"candidate_id": "strat-delta", "max_corr": 0.30},
-        ])
+        _mock_session(
+            store,
+            [
+                {"candidate_id": "strat-delta", "max_corr": 0.30},
+            ],
+        )
         rows = store.get_correlation_gate_recheck_v1(corr_threshold=0.30)
         assert rows[0]["gate"] == "FAIL"
 
     def test_threshold_customizable(self) -> None:
         store = _make_store()
-        _mock_session(store, [
-            {"candidate_id": "strat-alpha", "max_corr": 0.25},
-        ])
+        _mock_session(
+            store,
+            [
+                {"candidate_id": "strat-alpha", "max_corr": 0.25},
+            ],
+        )
         rows = store.get_correlation_gate_recheck_v1(corr_threshold=0.20)
         assert rows[0]["gate"] == "FAIL"
 

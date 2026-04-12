@@ -141,4 +141,3 @@ def test_infra_errors_propagate_as_store_layer_exceptions() -> None:
             broken.persist_artifact(artifact)
     finally:
         broken.close()
-

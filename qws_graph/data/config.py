@@ -48,4 +48,3 @@ def get_settings() -> Settings:
 def load_settings() -> Settings:
     # Alias kept to align with common "load_*" config call sites.
     return get_settings()
-
