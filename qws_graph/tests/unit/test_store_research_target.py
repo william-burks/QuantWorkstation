@@ -106,6 +106,7 @@ class TestResearchTargetDefaults:
             "calmar_min",
             "max_drawdown_floor",
             "correlation_gate",
+            "decay_threshold",
         }
         assert set(_RESEARCH_TARGET_DEFAULTS) == expected
 

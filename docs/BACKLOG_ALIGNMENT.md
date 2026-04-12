@@ -76,7 +76,7 @@
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | SUPERSEDED_BY Relationship | QWS-0802 (**CLOSED**) | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
-| Recursive Validation Loop | QWS-0803 (**READY**) | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | ~~QWS-0801 CLOSED~~ (satisfied) |
+| Recursive Validation Loop | QWS-0803 (**TESTING**) | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | ~~QWS-0801 CLOSED~~ (satisfied) |
 | Champion Promotion Rationale | QWS-0805 (**CLOSED**) | `promotion_rationale` property on Champion node; `--rationale` flag on `qw record`; included in `recent_champions` preset output | — |
 
 ### Epic 9 — Strategy Development
@@ -164,7 +164,7 @@ _(None pending — FormerChampion implemented in QWS-0801)_
 ### MCP Tools
 | Tool | Story |
 |---|---|
-| `monitor_champion` | QWS-0803 |
+| `monitor_champion` | QWS-0803 (**IMPLEMENTED**) |
 | `similar_hypotheses` | QWS-0604 (**IMPLEMENTED**) |
 
 ---

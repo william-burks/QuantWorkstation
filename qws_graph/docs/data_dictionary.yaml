@@ -798,6 +798,15 @@ nodes:
         default: -0.20
         unit: fraction (negative)
         description: Worst acceptable peak-to-trough drawdown (e.g. -0.20 = -20%).
+      decay_threshold:
+        type: float
+        nullable: false
+        default: 0.75
+        description: >
+          Sharpe drift threshold for monitor_champion decay detection (QWS-0803).
+          When abs(new_sharpe - champion.metrics_sharpe) exceeds this value,
+          qw monitor auto-creates a DEGRADED_TO edge and FormerChampion node.
+          Falls back to 0.75 when ResearchTarget is absent or property is unset.
       correlation_gate:
         type: float
         nullable: false
@@ -1026,10 +1035,13 @@ relationships:
       created when the source CSV is modified (mtime changes).
 
   HAS_BLOB:
-    source: Strategy
+    source: "Strategy | FormerChampion"
     target: BlobArtifact
     cardinality: one-to-one per artifact_path
-    description: Attaches a raw unstructured artifact to a Strategy.
+    description: >
+      Attaches a raw unstructured artifact to a Strategy or FormerChampion.
+      FormerChampion→BlobArtifact created by qw monitor for monitor_notification blobs (QWS-0803).
+      Strategy→BlobArtifact created by qw record for tracker markdown artifacts.
 
   IN_REGIME:
     source: Run

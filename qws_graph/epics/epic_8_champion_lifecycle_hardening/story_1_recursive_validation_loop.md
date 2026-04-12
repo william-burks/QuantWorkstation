@@ -4,7 +4,7 @@
 QWS-0803
 
 ## Status
-READY
+TESTING
 
 ## Blocked On
 ~~QWS-0801 CLOSED~~ (satisfied)
@@ -111,31 +111,93 @@ and is queryable.
 - `qws_graph/tests/integration/test_monitor_end_to_end.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw monitor --dry-run` reports Sharpe drift for all active Champions without
+- [x] `qw monitor --dry-run` reports Sharpe drift for all active Champions without
   writing any graph edges.
-- [ ] `qw monitor` creates a `DEGRADED_TO` edge and FormerChampion node when
+- [x] `qw monitor` creates a `DEGRADED_TO` edge and FormerChampion node when
   `sharpe_drift > decay_threshold` for any active Champion.
-- [ ] `qw monitor` does NOT create a `DEGRADED_TO` edge when drift is within threshold.
-- [ ] `qw monitor --champion-id <id>` runs the check for exactly one Champion.
-- [ ] Notification message includes: strategy_id, instrument, old Sharpe, new Sharpe,
+- [x] `qw monitor` does NOT create a `DEGRADED_TO` edge when drift is within threshold.
+- [x] `qw monitor --champion-id <id>` runs the check for exactly one Champion.
+- [x] Notification message includes: strategy_id, instrument, old Sharpe, new Sharpe,
   drift value, and the two manual follow-up options (pivot or retire).
-- [ ] Notification is stored as a `BlobArtifact` attached to the FormerChampion node.
-- [ ] A Champion with an unresolvable trial script path is skipped with a logged warning;
+- [x] Notification is stored as a `BlobArtifact` attached to the FormerChampion node.
+- [x] A Champion with an unresolvable trial script path is skipped with a logged warning;
   other Champions continue to be evaluated.
-- [ ] `decay_threshold` defaults to `0.75` when `ResearchTarget` node is absent or
+- [x] `decay_threshold` defaults to `0.75` when `ResearchTarget` node is absent or
   `decay_threshold` property is unset.
-- [ ] FormerChampion created by `qw monitor` has `oos_reason` set to the auto-generated
+- [x] FormerChampion created by `qw monitor` has `oos_reason` set to the auto-generated
   monitor format string (includes old Sharpe, new Sharpe, drift value, threshold).
-- [ ] Unit tests cover: above-threshold, below-threshold, dry-run, single-champion scope,
+- [x] Unit tests cover: above-threshold, below-threshold, dry-run, single-champion scope,
   missing script path.
 
 ## Definition of Done
-- [ ] `monitor.py` module implemented and tested.
-- [ ] `qw monitor` CLI subcommand operational with `--dry-run` and `--champion-id` flags.
-- [ ] Notification written to stdout and stored as BlobArtifact.
-- [ ] Integration test passes with mock trial runner.
-- [ ] `data_dictionary.yaml` updated.
+- [x] `monitor.py` module implemented and tested.
+- [x] `qw monitor` CLI subcommand operational with `--dry-run` and `--champion-id` flags.
+- [x] Notification written to stdout and stored as BlobArtifact.
+- [x] Integration test passes with mock trial runner.
+- [x] `data_dictionary.yaml` updated.
 - [ ] Story marked CLOSED.
-- [ ] All affected README files updated to reflect new capabilities.
-- [ ] PROVENANCE_ENGINE.md updated — monitor_champion tool moved from `[TARGET]` to
+- [x] All affected README files updated to reflect new capabilities.
+- [x] PROVENANCE_ENGINE.md updated — monitor_champion tool moved from `[TARGET]` to
   `[CURRENT]`; Recursive Validation Loop section updated to reflect actual implementation.
+
+## Acceptance Test Plan
+
+### AC1: dry-run reports drift without writing edges
+- type: cli
+- cmd: `qw monitor --dry-run`
+- expect_contains: "DRY-RUN"
+- expect_exit: 0
+
+### AC2: degradation creates DEGRADED_TO edge on drift > threshold
+- type: regression
+- cmd: unit test `TestEvaluateChampionAboveThreshold::test_creates_former_champion_when_above_threshold`
+- expect_contains: status=="degraded", former_champion_id set, degrade_champion called once
+- expect_exit: 0 (pytest)
+
+### AC3: no DEGRADED_TO edge when drift within threshold
+- type: regression
+- cmd: unit test `TestEvaluateChampionBelowThreshold::test_no_degrade_when_below_threshold`
+- expect_contains: status=="ok", degrade_champion not called
+- expect_exit: 0 (pytest)
+
+### AC4: --champion-id restricts to one champion
+- type: regression
+- cmd: unit test `TestSingleChampionScope::test_run_with_champion_id_filters_to_one`
+- expect_contains: len(results)==1, champion_id=="c1"
+- expect_exit: 0 (pytest)
+
+### AC5: notification includes strategy_id, drift, pivot/retire options
+- type: regression
+- cmd: unit test `TestEvaluateChampionAboveThreshold::test_notification_includes_strategy_id`
+- expect_contains: strategy_id in content, "pivot or retire" in content
+- expect_exit: 0 (pytest)
+
+### AC6: notification stored as BlobArtifact on FormerChampion
+- type: regression
+- cmd: integration test `TestMonitorEndToEnd::test_above_threshold_creates_degrade`
+- expect_contains: attach_blob_to_former_champion called with artifact_type="monitor_notification"
+- expect_exit: 0 (pytest)
+
+### AC7: unresolvable script path skipped, others continue
+- type: regression
+- cmd: unit test `TestMissingScript::test_other_champions_continue_after_skip`
+- expect_contains: statuses["c1"]=="skipped", statuses["c2"] in valid set
+- expect_exit: 0 (pytest)
+
+### AC8: decay_threshold falls back to 0.75
+- type: regression
+- cmd: unit test `TestResolveThreshold::test_falls_back_to_default_when_no_target`
+- expect_contains: threshold==0.75
+- expect_exit: 0 (pytest)
+
+### AC9: oos_reason format string correct
+- type: regression
+- cmd: unit test `TestEvaluateChampionAboveThreshold::test_oos_reason_format`
+- expect_contains: "Auto-detected by qw monitor", old/new sharpe values, drift, threshold
+- expect_exit: 0 (pytest)
+
+### AC10: unit tests cover all required cases
+- type: regression
+- cmd: `pytest qws_graph/tests/unit/test_monitor.py -v`
+- expect_contains: 29 passed
+- expect_exit: 0

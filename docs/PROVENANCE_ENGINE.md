@@ -246,6 +246,12 @@ JSON output: append `--json` to any preset. Pipe to `jq` for filtering.
 | `fragility_report` | Replaced — fragility signals distributed across `portfolio_alpha`, `former_champions`, `regime_performance` (see below) |
 | `staleness_report` | Low value — clutters the MCP interface |
 
+### [CURRENT] Monitor Tool (QWS-0803)
+
+| Tool | Purpose |
+|---|---|
+| `qw monitor` | Re-runs each active Champion's trial script with fresh data. Computes Sharpe drift. Creates DEGRADED_TO edge + FormerChampion when drift > decay_threshold. Emits notification to stdout and stores as BlobArtifact on FormerChampion. Options: `--dry-run` (report without writing), `--champion-id <id>` (scope to one). |
+
 ### [TARGET] New Tools (by story)
 
 | Preset | Story | Purpose |
@@ -292,20 +298,22 @@ This requires `CORRELATED_WITH` edges to exist (QWS-0603).
 
 ---
 
-## [TARGET] Recursive Validation Loop
+## [CURRENT] Recursive Validation Loop (QWS-0803)
 
-Scheduled MCP skill (`monitor_champion`) re-runs a Trial on every active Champion with fresh data.
+`qw monitor` re-runs each active Champion's trial script with fresh data.
 
 ```
 IF abs(new_trial.sharpe - champion.metrics_sharpe) > decay_threshold:
-    CREATE (FormerChampion) from current Champion
-    CREATE (Champion)-[DEGRADED_TO]->(FormerChampion)
-    NOTIFY Will: "Strategy-X hit decay threshold. Moved to FormerChampion. Pivot or retire?"
+    store.degrade_champion(champion_id, oos_reason="Auto-detected by qw monitor on {date}: ...")
+    store.attach_blob_to_former_champion(former_champion_id, artifact_type="monitor_notification", content=...)
+    NOTIFY Will (stdout): "Strategy-X hit decay threshold (drift=Y). Moved to FormerChampion."
 
 Will's options:
     a) CREATE (new Hypothesis)-[BRANCHED_FROM {rationale}]->(FormerChampion)  → research pivot
-    b) CREATE (FormerChampion)-[RETIRED_TO]->(RetiredChampion)               → archive
+    b) qw retire <former_champion_id>                                          → archive
 ```
+
+decay_threshold: read from ResearchTarget.decay_threshold; falls back to 0.75.
 
 ---
 

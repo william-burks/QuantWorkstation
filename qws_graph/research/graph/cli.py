@@ -19,6 +19,7 @@ from .models import ResearchArtifact, Run
 from .parsers import ChampionMarkdownParser, CSVParser, research_artifact_payload_hash
 from .query import GraphQueryService
 from .query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params
+from .monitor import MonitorRunner
 from .store import RESEARCH_TARGET_ALLOWED_KEYS, GraphStore, StoreError, StoreInfraError
 
 _VALID_HYPOTHESIS_STATUSES = frozenset({"open", "confirmed", "refuted", "abandoned"})
@@ -1364,6 +1365,48 @@ def cmd_gate(args: argparse.Namespace) -> int:
     return 1 if any_fail else 0
 
 
+def cmd_monitor(args: argparse.Namespace) -> int:
+    """Re-run Champion trials and flag decay: qw monitor [--dry-run] [--champion-id ID]."""
+    connector = NeoConnector(timeout_seconds=args.timeout_seconds)
+    if not connector.is_available():
+        print("error: Neo4j is unavailable", file=sys.stderr)
+        return 1
+
+    repo_root_str: str | None = getattr(args, "repo_root", None)
+    repo_root = Path(repo_root_str) if repo_root_str else None
+
+    runner = MonitorRunner(
+        repo_root=repo_root,
+        dry_run=args.dry_run,
+        timeout_seconds=args.timeout_seconds,
+    )
+
+    try:
+        results = runner.run(champion_id=args.champion_id)
+    except (StoreError, StoreInfraError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    if not results:
+        print("No active Champions found.")
+        return 0
+
+    degraded = [r for r in results if r.status == "degraded"]
+    ok = [r for r in results if r.status == "ok"]
+    skipped = [r for r in results if r.status in ("skipped", "error")]
+
+    for r in results:
+        print(r.message)
+
+    print()
+    print(
+        f"Summary: {len(results)} evaluated — "
+        f"{len(degraded)} degraded, {len(ok)} ok, {len(skipped)} skipped"
+    )
+
+    return 0
+
+
 def main() -> int:
     """Main entry point for `qw` CLI."""
     parser = argparse.ArgumentParser(
@@ -1756,6 +1799,40 @@ def main() -> int:
         help="Neo4j connection timeout in seconds (default 3)",
     )
     gate_parser.set_defaults(func=cmd_gate)
+
+    # `qw monitor` subcommand
+    monitor_parser = subparsers.add_parser(
+        "monitor",
+        help="Re-run Champion trial scripts and flag decay via DEGRADED_TO edges",
+    )
+    monitor_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        dest="dry_run",
+        help="Report drift without writing any graph edges",
+    )
+    monitor_parser.add_argument(
+        "--champion-id",
+        default=None,
+        metavar="CHAMPION_ID",
+        dest="champion_id",
+        help="Restrict check to exactly one Champion ID",
+    )
+    monitor_parser.add_argument(
+        "--repo-root",
+        default=None,
+        metavar="PATH",
+        dest="repo_root",
+        help="Repository root directory (auto-detected if not provided)",
+    )
+    monitor_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    monitor_parser.set_defaults(func=cmd_monitor)
+
 
     # Parse arguments
     args = parser.parse_args()

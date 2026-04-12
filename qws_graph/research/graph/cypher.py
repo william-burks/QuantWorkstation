@@ -239,6 +239,7 @@ ON CREATE SET
   rt.calmar_min = $calmar_min,
   rt.max_drawdown_floor = $max_drawdown_floor,
   rt.correlation_gate = $correlation_gate,
+  rt.decay_threshold = $decay_threshold,
   rt.created_at = datetime()
 SET rt.updated_at = datetime()
 """.strip()
@@ -247,6 +248,39 @@ SET rt.updated_at = datetime()
 PATCH_RESEARCH_TARGET_QUERY = """
 MATCH (rt:ResearchTarget {target_id: "singleton"})
 SET rt += $overrides
+""".strip()
+
+
+# ---------------------------------------------------------------------------
+# Monitor champion queries (QWS-0803)
+# ---------------------------------------------------------------------------
+
+GET_ALL_ACTIVE_CHAMPIONS_QUERY = """
+MATCH (s:Strategy)-[:PRODUCED_CHAMPION]->(ch:Champion)
+WHERE NOT EXISTS { (ch)-[:DEGRADED_TO]->() }
+  AND NOT EXISTS { (ch)-[:RETIRED_TO]->() }
+RETURN
+  ch.champion_id AS champion_id,
+  ch.strategy_id AS strategy_id,
+  ch.metrics_sharpe AS metrics_sharpe,
+  ch.artifact_path AS artifact_path
+ORDER BY ch.champion_id
+""".strip()
+
+
+FORMER_CHAMPION_BLOB_QUERY = """
+MATCH (fc:FormerChampion {former_champion_id: $former_champion_id})
+MERGE (b:BlobArtifact {artifact_path: $artifact_path})
+  ON CREATE SET
+    b.artifact_type = $artifact_type,
+    b.content = $content,
+    b.created_at = datetime()
+  ON MATCH SET
+    b.artifact_type = $artifact_type,
+    b.content = $content,
+    b.updated_at = datetime()
+MERGE (fc)-[:HAS_BLOB]->(b)
+RETURN b.artifact_path AS artifact_path
 """.strip()
 
 
@@ -877,6 +911,20 @@ MERGE (ch_demo:Champion {champion_id: 'demo_champ_001'})
 MERGE (ch_demo)-[dg1:DEGRADED_TO]->(fc1)
   SET dg1.detected_at = datetime('2026-03-25T10:00:00'),
       dg1.is_demo     = true
+
+// ── Monitor notification BlobArtifact (QWS-0803) ───────────────────────────
+// Demo monitor notification blob attached to FormerChampion 001
+MERGE (b_monitor:BlobArtifact {artifact_path: 'monitor:demo_former_champ_001:monitor_notification:demo_blob_001'})
+  ON CREATE SET
+    b_monitor.artifact_type = 'monitor_notification',
+    b_monitor.content = 'Strategy demo-strategy-alpha hit decay threshold (drift=1.10). Moved to FormerChampion.',
+    b_monitor.is_demo = true,
+    b_monitor.created_at = datetime()
+  ON MATCH SET
+    b_monitor.is_demo = true
+WITH b_monitor
+MATCH (fc_seed:FormerChampion {former_champion_id: 'demo_former_champ_001'})
+MERGE (fc_seed)-[:HAS_BLOB]->(b_monitor)
 
 // Demo Retired Champion 002 — result of retiring demo_former_champ_001
 MERGE (rc2:RetiredChampion {champion_id: 'demo_retired_champ_002'})

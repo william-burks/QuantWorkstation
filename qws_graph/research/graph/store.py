@@ -62,6 +62,7 @@ _RESEARCH_TARGET_DEFAULTS: dict[str, float | int] = {
     "calmar_min": 1.5,
     "max_drawdown_floor": -0.20,
     "correlation_gate": 0.30,
+    "decay_threshold": 0.75,
 }
 
 RESEARCH_TARGET_ALLOWED_KEYS: frozenset[str] = frozenset(_RESEARCH_TARGET_DEFAULTS)
@@ -799,6 +800,102 @@ class GraphStore:
                     )
                 return str(rec["retired_champion_id"])
 
+        except (StoreError, ValueError):
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    # -----------------------------------------------------------------------
+    # Monitor champion (QWS-0803)
+    # -----------------------------------------------------------------------
+
+    def get_active_champions(self) -> list[dict[str, object]]:
+        """Return all active Champion nodes for decay monitoring.
+
+        An "active" Champion is one with no outgoing DEGRADED_TO or RETIRED_TO edge.
+
+        Returns:
+            List of dicts with keys: champion_id, strategy_id, metrics_sharpe, artifact_path.
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        from qws_graph.research.graph.cypher import GET_ALL_ACTIVE_CHAMPIONS_QUERY  # noqa: PLC0415
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
+                    return [dict(r) for r in tx.run(GET_ALL_ACTIVE_CHAMPIONS_QUERY)]
+
+                return session.execute_read(_read)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def get_research_targets(self) -> list[dict[str, object]]:
+        """Return ResearchTarget singleton node as a list (empty if not seeded).
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        _QUERY = "MATCH (rt:ResearchTarget {target_id: 'singleton'}) RETURN rt{.*} AS rt"
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
+                    return [dict(r["rt"]) for r in tx.run(_QUERY)]
+
+                return session.execute_read(_read)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def attach_blob_to_former_champion(
+        self,
+        former_champion_id: str,
+        artifact_type: str,
+        content: str,
+    ) -> str:
+        """Create a BlobArtifact and attach it to a FormerChampion via HAS_BLOB.
+
+        Args:
+            former_champion_id: Target FormerChampion node ID.
+            artifact_type: Type string (e.g. "monitor_notification").
+            content: Free-text content stored on the BlobArtifact.
+
+        Returns:
+            The artifact_path of the created/updated BlobArtifact.
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        from datetime import UTC, datetime as _dt  # noqa: PLC0415
+        from qws_graph.research.graph.cypher import FORMER_CHAMPION_BLOB_QUERY  # noqa: PLC0415
+        from qws_graph.research.graph.ids import hash12 as _hash12  # noqa: PLC0415
+
+        created_at = _dt.now(UTC).isoformat()
+        artifact_path = f"monitor:{former_champion_id}:{artifact_type}:{_hash12(former_champion_id, artifact_type, created_at)}"
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx) -> str:  # type: ignore[no-untyped-def]
+                    result = tx.run(
+                        FORMER_CHAMPION_BLOB_QUERY,
+                        former_champion_id=former_champion_id,
+                        artifact_path=artifact_path,
+                        artifact_type=artifact_type,
+                        content=content,
+                    ).single()
+                    if result is None:
+                        raise StoreError(
+                            f"FORMER_CHAMPION_BLOB_QUERY returned no row for {former_champion_id!r}"
+                        )
+                    return str(result["artifact_path"])
+
+                return session.execute_write(_write)
         except (StoreError, ValueError):
             raise
         except Neo4jError as exc:
