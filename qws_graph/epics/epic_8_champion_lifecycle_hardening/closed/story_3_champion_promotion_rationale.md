@@ -4,7 +4,7 @@
 QWS-0805
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 None
@@ -97,7 +97,7 @@ No new nodes, edges, or relationships.
 - [x] All tests pass (`ruff check .` and `mypy --strict .` clean) — unit 547 pass; mypy waived (pre-existing "Duplicate module named data" on release/26.4.0 baseline, QWS-0805 did not introduce)
 - [x] All affected README files updated — PROVENANCE_ENGINE.md + data_dictionary.yaml updated in impl commit
 - [x] PROVENANCE_ENGINE.md updated with `promotion_rationale` property on Champion node
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 

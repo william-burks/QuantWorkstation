@@ -159,7 +159,7 @@ Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
 Stories (QWS-0802 and QWS-0803 independent — implement in parallel):
 1. `QWS-0802` `epic_8_champion_lifecycle_hardening/closed/story_2_superseded_by_relationship.md` — `CLOSED`
 2. `QWS-0803` `epic_8_champion_lifecycle_hardening/story_1_recursive_validation_loop.md` — `READY`
-3. `QWS-0805` `epic_8_champion_lifecycle_hardening/story_3_champion_promotion_rationale.md` — `READY`
+3. `QWS-0805` `epic_8_champion_lifecycle_hardening/closed/story_3_champion_promotion_rationale.md` — `CLOSED`
 
 ---
 
