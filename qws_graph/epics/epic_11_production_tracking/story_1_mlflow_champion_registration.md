@@ -130,7 +130,7 @@ all post-degradation history (FormerChampion, RetiredChampion) remain graph-only
   `docs/PROVENANCE_ENGINE.md` Champion node table
 - [ ] `mlflow` added to `pyproject.toml` dependencies
 - [ ] `mlruns/` added to `.gitignore`
-- [ ] `tests/unit/test_mlflow_registration.py` passes; `ruff check .` and `mypy --strict .`
+- [ ] `tests/unit/test_mlflow_registration.py` passes; `make verify`
   clean
 - [ ] All affected README files updated
 - [ ] Story marked CLOSED

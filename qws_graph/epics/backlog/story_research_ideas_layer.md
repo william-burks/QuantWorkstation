@@ -77,5 +77,5 @@ related_hypothesis_id: ""   # populated after qw record --hypothesis
 - [ ] `research/ideas/.gitkeep` committed
 - [ ] Example idea file present with valid frontmatter
 - [ ] RESEARCH_WORKFLOW.md Pre-Graph Ideation section merged
-- [ ] All tests pass (`ruff check .` and `mypy --strict .` clean)
+- [ ] All tests pass (`make verify` passes)
 - [ ] Story marked CLOSED

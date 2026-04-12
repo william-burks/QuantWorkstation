@@ -141,7 +141,7 @@ convention, not enforced at merge time.
 - [ ] `python data/flows/deployment.py` registers all 4 deployments in Prefect UI without error
 - [ ] `mlruns/` and `prefect.db` present in `.gitignore`
 - [ ] `pytest tests/unit/ -v` passes (collector tests unaffected by Prefect wrapping)
-- [ ] `ruff check . && mypy --strict .` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] `execution/risk_scheduler.py` merged; `execution/scheduler.py` deleted

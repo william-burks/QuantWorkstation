@@ -68,7 +68,7 @@ Initial term list:
 - [ ] Upsert behavior: re-running overwrites existing rows cleanly (no duplicate index)
 - [ ] `gtrends_terms` present in `data/config.py` with default list of 4 terms
 - [ ] `tests/unit/test_google_trends_collector.py` passes with mocked `pytrends.TrendReq` (no live requests)
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

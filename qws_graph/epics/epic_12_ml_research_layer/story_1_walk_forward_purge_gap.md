@@ -88,7 +88,7 @@ Per-fold results CSV gains column `purge_bars_used` (int). Existing columns unch
 - [ ] Calling with `purge_bars` large enough to eliminate all test bars raises `ValueError`
   with message including fold index, test window size, and purge_bars value.
 - [ ] Unit tests cover: purge_bars=0, purge_bars=positive, oversized purge.
-- [ ] `ruff check` and `mypy --strict` pass with no new violations.
+- [ ] `make verify` passes with no new violations.
 
 ## Definition of Done
 - [ ] `walk_forward.py` updated with `purge_bars` parameter.

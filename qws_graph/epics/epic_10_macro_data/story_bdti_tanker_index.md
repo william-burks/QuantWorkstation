@@ -62,7 +62,7 @@ Collect BDTI daily index values via Nasdaq Data Link API, write into ArcticDB `m
 - [ ] Re-running collector is idempotent (appends only new dates; no duplicates)
 - [ ] `nasdaq_data_link_api_key` present in `data/config.py`
 - [ ] `tests/unit/test_bdti_collector.py` passes with mocked `requests.get` (no live API calls in tests)
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

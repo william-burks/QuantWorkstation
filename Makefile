@@ -7,7 +7,7 @@ REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
 
-.PHONY: to-release to-master check-clean done-with-feature test test-unit lint typecheck check commit-close-story prime-agent prime-lint-mechanic feature-branch
+.PHONY: to-release to-master check-clean done-with-feature test test-unit lint typecheck check verify commit-close-story prime-agent prime-lint-mechanic feature-branch
 
 
 # --- QUALITY ---
@@ -25,6 +25,8 @@ typecheck:
 	source .venv/bin/activate && mypy --strict .
 
 check: lint typecheck test
+
+verify: lint typecheck test
 
 # --- GIT WORKFLOW ---
 

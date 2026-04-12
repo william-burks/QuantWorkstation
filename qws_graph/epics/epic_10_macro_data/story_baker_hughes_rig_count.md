@@ -62,7 +62,7 @@ Series to collect (weekly):
 - [ ] All 4 series (`BHI_US_TOTAL_RIGS`, `BHI_US_OIL_RIGS`, `BHI_US_GAS_RIGS`, `BHI_CANADA_RIGS`) write successfully with `count` column and DatetimeIndex
 - [ ] Re-running collector is idempotent (appends only new dates; no duplicates on second run)
 - [ ] `tests/unit/test_baker_hughes_collector.py` passes with mocked HTTP response (no live download in tests)
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

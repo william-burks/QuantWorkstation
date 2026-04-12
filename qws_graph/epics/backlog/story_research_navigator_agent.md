@@ -104,5 +104,5 @@ PreToolUse Bash and Write matchers → `agent-research-guard.sh`
 - [ ] `research-navigator.md` agent definition present and correctly formed
 - [ ] `agent-research-guard.sh` present, executable, blocks all prohibited patterns
 - [ ] Manual smoke test: spawn navigator, verify it runs graph queries before responding
-- [ ] All tests pass (`ruff check .` and `mypy --strict .` clean)
+- [ ] All tests pass (`make verify` passes)
 - [ ] Story marked CLOSED

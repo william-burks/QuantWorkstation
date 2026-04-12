@@ -93,7 +93,7 @@ Catch bad data at the write boundary — not in backtest, not in research review
 - [ ] `ibkr_futures.py` calls `validate_bars` before `write_bars`
 - [ ] Unit tests in `tests/unit/test_validation.py` cover all P1 conditions, both P2 gap triggers, stale feed trigger, schema drift trigger, P3 undercount trigger, and clean-pass case
 - [ ] No new pip dependencies introduced
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

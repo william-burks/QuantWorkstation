@@ -146,5 +146,5 @@ Write any unfinished ideas to `research/ideas/YYYY-MM-DD-<slug>.md` with `status
 - [ ] Phase 5 novel path: confirm redundancy check runs before hypothesis logged
 - [ ] Phase 5 trial spawn: confirm approval gate fires before trial-engineer spawned
 - [ ] Phase 6: confirm idea files written and next-pivot suggestion present
-- [ ] All tests pass (`ruff check .` and `mypy --strict .` clean)
+- [ ] All tests pass (`make verify` passes)
 - [ ] Story marked CLOSED

@@ -74,7 +74,7 @@ Collect economic calendar events daily from FMP, write into ArcticDB `calendar` 
 - [ ] `actual` stored as `NaN` for pre-release events (not 0)
 - [ ] Re-running collector is idempotent — no duplicate index entries
 - [ ] `tests/unit/test_economic_calendar_collector.py` passes with mocked HTTP calls
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

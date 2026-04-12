@@ -64,7 +64,7 @@ Series to collect (initial set):
 - [ ] `fred_api_key` and `fred_series` present in `data/config.py`
 - [ ] `FRED_API_KEY` documented in `.env.example`
 - [ ] `tests/unit/test_fred_collector.py` passes with mocked `fredapi` client
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

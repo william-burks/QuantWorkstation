@@ -134,7 +134,7 @@ final model. Selection is logged; Will confirms before any graph write.
   `qw record` without schema errors.
 - [ ] `data_dictionary.yaml` documents new Strategy properties.
 - [ ] `PROVENANCE_ENGINE.md` updated with ml_regime logic_type.
-- [ ] `ruff check` and `mypy --strict` pass with no new violations.
+- [ ] `make verify` passes with no new violations.
 - [ ] `hmmlearn` added to `pyproject.toml` dependencies.
 
 ## Definition of Done

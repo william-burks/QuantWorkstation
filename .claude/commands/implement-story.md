@@ -88,7 +88,7 @@ Work ACs one by one. After each:
 1. Story checkboxes — do NOT edit story file during Step 4. Wait until Step 5 (test plan) and batch ALL checkbox updates + test plan into ONE Edit call. If Step 7 finds failures, that's the 2nd allowed edit. **Max 2 Edit calls to story file total.**
 2. `git add` each changed file (never `-A` or `.`)
 3. `make test` after any Python change — fix all failures
-4. Run `make typecheck` on the project. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles. **If errors appear in files you did NOT edit: they are pre-existing — ignore them. Do NOT run git stash, git diff, or any other command to isolate pre-existing errors. Only fix errors in files you modified.**
+4. Run `make typecheck` on the project. Baseline is **0 errors** — any failure = you introduced it. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
 
 **data_dictionary.yaml edits:** Use `grep 'NodeOrEdgeName' /tmp/schema-index.txt` → get line N → `Read offset=N limit=40`. Compose the ENTIRE node or edge block (all properties) in ONE `new_string`. Max 2 Edit calls total for this file — one for nodes section, one for relationships section.
 

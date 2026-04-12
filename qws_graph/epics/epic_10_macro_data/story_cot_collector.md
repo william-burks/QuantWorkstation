@@ -58,7 +58,7 @@ Download CFTC Disaggregated COT reports weekly, map CFTC market codes to our sym
 - [ ] Re-running collector is idempotent (no duplicate rows, no crash)
 - [ ] `cot_symbols` present in `data/config.py` with sensible default list
 - [ ] `tests/unit/test_cot_collector.py` passes with mocked HTTP responses (no live download in tests)
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

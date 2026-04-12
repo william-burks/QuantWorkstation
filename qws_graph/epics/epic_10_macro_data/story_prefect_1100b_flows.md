@@ -58,7 +58,7 @@ Prefect server runs as a launchd daemon. Crypto, futures, and parquet collection
 - [ ] `python data/flows/deployment.py` registers all 4 deployments in Prefect UI without error
 - [ ] `mlruns/` and `prefect.db` present in `.gitignore`
 - [ ] `pytest tests/unit/ -v` passes
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

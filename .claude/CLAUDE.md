@@ -47,7 +47,7 @@ shared brain. Any model with MCP access reads the same research history.
 ## Quick reference
 ```bash
 pip install -e ".[dev]"          # install
-ruff check . && mypy --strict .  # lint + type check
+make verify                       # lint + type check + tests (clean baseline)
 pytest tests/unit/ -v            # tests
 python -m data.collectors.alpaca_crypto    # collect crypto (no gateway)
 python -m data.collectors.ibkr_futures    # collect futures (IB Gateway required)

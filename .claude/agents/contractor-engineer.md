@@ -56,11 +56,10 @@ Execute plan. Edit-batch: read file once, identify all targets, execute all edit
 ## Step 4 — Verify
 
 ```bash
-cd /Users/will/ClaudeProjects/QuantWorkstation && make test
-cd /Users/will/ClaudeProjects/QuantWorkstation && make typecheck
+cd /Users/will/ClaudeProjects/QuantWorkstation && make verify
 ```
 
-Fix all failures. Max 2 fix cycles. If still failing after 2: report failures, stop.
+Baseline is clean (0 lint errors, 0 type errors, all tests pass). Any failure = you introduced it. Fix all failures. Max 2 fix cycles. If still failing after 2: report failures, stop.
 
 ## Step 5 — Report
 

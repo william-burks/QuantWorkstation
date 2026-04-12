@@ -30,7 +30,7 @@ guards baked in — IS/OOS gap flag, fold stability stdev, parameter/trade ratio
   `overfit_flags` (comma-separated flag names, empty string if clean).
 - Model artifacts: `research/models/<experiment_id>/fold_N.pkl` per fold.
 - `qw record --bundle` accepts output CSV without modification.
-- `ruff check` and `mypy --strict` pass.
+- `make verify` passes.
 
 ## Dependencies
 QWS-1205 (LightGBM signal model) consumes trained artifacts.

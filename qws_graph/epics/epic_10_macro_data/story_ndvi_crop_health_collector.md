@@ -94,7 +94,7 @@ Regions and source:
 - [ ] `nasa_earthdata_token` present in `data/config.py`
 - [ ] `rasterio`, `earthpy`, `numpy` added to `pyproject.toml` dependencies
 - [ ] `tests/unit/test_ndvi_collector.py` passes with mocked download and fixture arrays
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

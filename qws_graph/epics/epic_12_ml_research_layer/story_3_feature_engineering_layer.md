@@ -29,7 +29,7 @@ features, and conditional external data (COT, VIX when available).
   set to data delivery lag; skipped gracefully when data absent.
 - Each feature spec includes: `name`, `series`, `transform`, `lookahead_risk`,
   `prior_usage` (list of run_ids that used this feature — populated manually).
-- `ruff check` and `mypy --strict` pass.
+- `make verify` passes.
 
 ## Dependencies
 QWS-1204 (ML walk-forward harness) consumes feature_builder output.

@@ -113,5 +113,5 @@ PreToolUse Bash, Write, Edit matchers → `agent-trial-guard.sh`
 - [ ] `agent-trial-guard.sh` present, executable, blocks all prohibited patterns
 - [ ] Manual smoke test: spawn trial-engineer with a direction, verify it reads base.py +
   standards.py before writing, verify it runs `qw record --bundle` after run
-- [ ] All tests pass (`ruff check .` and `mypy --strict .` clean)
+- [ ] All tests pass (`make verify` passes)
 - [ ] Story marked CLOSED

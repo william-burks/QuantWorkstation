@@ -10,9 +10,7 @@ All commands require venv activation: `source .venv/bin/activate`
 ALWAYS run from project root `/Users/will/ClaudeProjects/QuantWorkstation` — NOT from `qws_graph/`.
 
 - **Unit tests:** `make test` or `source .venv/bin/activate && pytest qws_graph/tests/unit/ -v`
-- **Lint:** `source .venv/bin/activate && ruff check qws_graph/path/to/file.py`
-- **Type check:** `source .venv/bin/activate && mypy --strict qws_graph/path/to/file.py`
-- **Both:** `make check`
+- **Type check:** `make typecheck` (bare mypy is blocked)
 - **Neo4j status:** `make -C qws_graph neo4j-status`
 
 Do NOT use `cd qws_graph && ruff check research/...` — breaks import resolution.
@@ -23,8 +21,7 @@ Do NOT use `python -m ruff` — use `ruff` directly after venv activation.
 Use `make typecheck` ONLY. Bare `mypy` is structurally blocked by agent-bash-grep-guard.sh —
 ALL bare mypy invocations (file, directory, or piped) are rejected. `mypy file.py`,
 `mypy --strict qws_graph/` and `mypy --strict dir/ | awk` will all be blocked.
-Run `make typecheck` once, read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
-Never fix-one-rerun-fix-one.
+Baseline is **0 errors** — any failure = you introduced it. Run `make typecheck` once, fix ALL in one pass, re-run once. Max 2 cycles. Never fix-one-rerun-fix-one.
 
 ## Ruff / Lint Protocol
 

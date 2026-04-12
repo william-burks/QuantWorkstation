@@ -40,7 +40,7 @@ INSUFFICIENT_SAMPLE | FAIL`.
 - Agent reads output CSV from `ml_walk_forward.py`; fails with clear message if CSV absent.
 - No graph writes. No `qw record` calls. Read-only.
 - All gate thresholds match architect spec above — no soft defaults.
-- `ruff check` and `mypy --strict` pass on any Python components.
+- `make verify` passes.
 
 ## Repo Touchpoints
 - `.claude/commands/interpret-ml-results.md` — new skill file

@@ -29,7 +29,7 @@ delegated to `ml_walk_forward.py`. `Strategy.logic_type = "ml_model"`,
   `qw record` without schema errors.
 - `vectorbt_adapter.run()` produces identical output structure to rule-based strategies.
 - Unit tests: signal output in {-1, 0, 1}; missing artifact raises; threshold edge cases.
-- `ruff check` and `mypy --strict` pass.
+- `make verify` passes.
 - `lightgbm` added to `pyproject.toml` dependencies.
 
 ## Repo Touchpoints

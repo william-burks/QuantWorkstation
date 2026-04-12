@@ -95,7 +95,7 @@ all post-degradation history (FormerChampion, RetiredChampion) remain graph-only
 
 - [ ] `sync()` implemented in `qws_graph/mlflow_integration.py`
 - [ ] `qw mlflow sync` subcommand wired in `qws_graph/cli.py`
-- [ ] `tests/unit/test_mlflow_oos_sync.py` passes; `ruff check .` and `mypy --strict .`
+- [ ] `tests/unit/test_mlflow_oos_sync.py` passes; `make verify`
   clean
 - [ ] All affected README files updated
 - [ ] Story marked CLOSED

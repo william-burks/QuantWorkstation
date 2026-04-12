@@ -66,7 +66,7 @@ Series to collect (initial set):
 - [ ] Re-running collector is idempotent (appends only new dates; no duplicates)
 - [ ] `noaa_api_key` and `noaa_series` present in `data/config.py`
 - [ ] `tests/unit/test_noaa_collector.py` passes with mocked `requests.get` (no live API calls in tests)
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

@@ -66,7 +66,7 @@ Crops and stages (national + top-5 states):
 - [ ] Off-season call (NASS returns empty): collector exits 0 with INFO log, no exception, no write
 - [ ] `usda_api_key` present in `data/config.py`
 - [ ] `tests/unit/test_usda_crop_collector.py` passes with mocked `requests.get` including fixture for empty off-season response
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

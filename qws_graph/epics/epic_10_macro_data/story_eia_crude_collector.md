@@ -65,7 +65,7 @@ Series to collect (initial set):
 - [ ] Re-running collector is idempotent (appends only new dates; no duplicates)
 - [ ] `eia_api_key` and `eia_series` present in `data/config.py`
 - [ ] `tests/unit/test_eia_collector.py` passes with mocked `requests.get`
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

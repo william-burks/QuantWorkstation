@@ -46,7 +46,7 @@ Data collection jobs and latency-sensitive risk jobs share `execution/scheduler.
 - [ ] `execution/scheduler.py` deleted; no remaining imports of it anywhere in codebase
 - [ ] `prefect` present in `pyproject.toml` dependencies
 - [ ] `pytest tests/unit/ -v` passes
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing

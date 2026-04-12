@@ -46,7 +46,7 @@ Collectors that store macro data have a correct, tested store interface. `write_
 - [ ] `write_series` followed by `read_series` on same symbol returns identical DataFrame
 - [ ] Calling `write_series` twice with overlapping date ranges does not create duplicate index entries
 - [ ] `read_series` with `start`/`end` returns only rows within specified range
-- [ ] `ruff check` and `mypy --strict` clean
+- [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing
