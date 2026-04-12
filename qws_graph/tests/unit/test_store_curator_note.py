@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for curator_note normalization in GraphStore._persist_csv."""
 
 from __future__ import annotations

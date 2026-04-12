@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Unit tests for the IBKR futures collector.
 IB Gateway connection and ib_insync are fully mocked.

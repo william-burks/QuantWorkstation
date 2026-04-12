@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Quote schema tests."""
 
 from datetime import UTC, datetime

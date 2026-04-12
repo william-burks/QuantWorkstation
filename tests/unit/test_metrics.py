@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import pandas as pd
 import pytest
 
@@ -38,7 +39,9 @@ def test_max_drawdown_known_value() -> None:
 
 def test_calmar_positive() -> None:
     # Needs a drawdown to produce a non-zero calmar
-    values = [10_000 + i * 5 for i in range(126)] + [10_000 + i * 10 for i in range(126)]
+    values = [float(10_000 + i * 5) for i in range(126)] + [
+        float(10_000 + i * 10) for i in range(126)
+    ]
     eq = _equity(values)
     assert calmar(eq) > 0
 

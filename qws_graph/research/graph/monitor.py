@@ -10,7 +10,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .store import GraphStore
 
@@ -121,7 +121,7 @@ class MonitorRunner:
         if champion_id is not None:
             filtered = [c for c in all_champs if c["champion_id"] == champion_id]
             return filtered
-        return all_champs
+        return cast(list[dict[str, Any]], all_champs)
 
     def _evaluate_champion(
         self, store: Any, champ: dict[str, Any], threshold: float

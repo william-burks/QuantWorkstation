@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for Story 4 lineage and pivot queries.
 
 Covers:

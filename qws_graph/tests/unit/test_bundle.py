@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for Story 6 bundle ingestion: manifest reading, CLI, and store patch."""
 
 from __future__ import annotations

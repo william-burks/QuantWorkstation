@@ -6,6 +6,8 @@ or a returns Series (pct change of equity). Functions are intentionally stateles
 and composable — call them individually or via summary().
 """
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -61,7 +63,7 @@ def profit_factor(pnl: pd.Series) -> float:
     return float(gross_profit / gross_loss)
 
 
-def summary(equity: pd.Series, pnl: pd.Series | None = None) -> dict:
+def summary(equity: pd.Series, pnl: pd.Series | None = None) -> dict[str, Any]:
     """
     Full performance summary.
 

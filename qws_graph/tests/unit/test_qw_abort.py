@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for `qw abort` CLI command."""
 
 from __future__ import annotations

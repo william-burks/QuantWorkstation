@@ -19,7 +19,7 @@ test-unit:
 	source .venv/bin/activate && pytest tests/unit/ -v
 
 lint:
-	source .venv/bin/activate && ruff check .
+	source .venv/bin/activate && ruff check . --fix && ruff format
 
 typecheck:
 	source .venv/bin/activate && mypy --strict .

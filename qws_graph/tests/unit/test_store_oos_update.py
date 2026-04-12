@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for QWS-0402 — OOS outcome tracking.
 
 Covers:

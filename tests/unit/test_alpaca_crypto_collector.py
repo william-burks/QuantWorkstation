@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Unit tests for the Alpaca crypto collector.
 All external calls (Alpaca API, arcticdb store) are mocked.

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for research/analytics/portfolio_correlation.py
 
 Uses synthetic time series and mock data — no live graph or broker connections.

@@ -13,6 +13,7 @@ import csv
 import json
 import os
 import sys
+from typing import Any
 
 _WRITE_KEYWORDS = {"CREATE", "MERGE", "SET", "DELETE", "REMOVE", "DROP", "CALL", "LOAD"}
 
@@ -24,7 +25,7 @@ def _check_readonly(cypher: str) -> None:
         sys.exit(1)
 
 
-def _get_driver():
+def _get_driver() -> tuple[Any, str]:
     try:
         from neo4j import GraphDatabase
     except ImportError:
@@ -43,7 +44,7 @@ def _get_driver():
     return driver, database
 
 
-def run_query(cypher: str, params: dict | None = None) -> list[dict]:
+def run_query(cypher: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     driver, database = _get_driver()
     try:
         with driver.session(database=database) as session:

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for Story 1 graph read DTOs and projection functions."""
 
 from __future__ import annotations

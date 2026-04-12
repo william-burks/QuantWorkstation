@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Roll calendar + continuous series builder tests."""
 
 from datetime import date

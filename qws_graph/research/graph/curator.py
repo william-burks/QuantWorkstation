@@ -21,7 +21,7 @@ Reference: ``docs/graph_v1_contract.md`` — § Ingestion / Significance Gate
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .ids import run_stats_summary_id
 
@@ -57,7 +57,7 @@ def apply_significance_gate(
             f"apply_significance_gate only accepts grid_csv artifacts, got {artifact.kind!r}"
         )
 
-    pairs: list[tuple] = list(zip(artifact.runs, artifact.configs, strict=True))
+    pairs: list[tuple[Any, Any]] = list(zip(artifact.runs, artifact.configs, strict=True))
     n = len(pairs)
     pinned = pinned_run_ids or set()
 

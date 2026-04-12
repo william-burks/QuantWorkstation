@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for QWS-0408 — ResearchTarget singleton node.
 
 Covers:
@@ -166,7 +167,9 @@ class TestSeedSetOverrides:
 
     def test_set_int_key_coerces_to_int(self, monkeypatch) -> None:
         _, store = _run_seed(sets=["max_holding_hours=8"], monkeypatch=monkeypatch)
-        value = store.seed_calls[0]["max_holding_hours"]
+        overrides_0 = store.seed_calls[0]
+        assert overrides_0 is not None
+        value = overrides_0["max_holding_hours"]
         assert value == 8
         assert isinstance(value, int)
 
@@ -176,6 +179,7 @@ class TestSeedSetOverrides:
             monkeypatch=monkeypatch,
         )
         overrides = store.seed_calls[0]
+        assert overrides is not None
         assert overrides["sharpe_professional"] == pytest.approx(2.5)
         assert overrides["profit_factor_min"] == pytest.approx(1.5)
         assert len(overrides) == 2
@@ -184,7 +188,9 @@ class TestSeedSetOverrides:
         # max_drawdown_floor is legitimately negative
         code, store = _run_seed(sets=["max_drawdown_floor=-0.25"], monkeypatch=monkeypatch)
         assert code == 0
-        assert store.seed_calls[0]["max_drawdown_floor"] == pytest.approx(-0.25)
+        overrides_neg = store.seed_calls[0]
+        assert overrides_neg is not None
+        assert overrides_neg["max_drawdown_floor"] == pytest.approx(-0.25)
 
 
 # ---------------------------------------------------------------------------

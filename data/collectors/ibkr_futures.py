@@ -29,6 +29,7 @@ Store key format:
 
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pandas as pd
 from ib_insync import IB, Contract
@@ -41,7 +42,7 @@ log = logging.getLogger(__name__)
 # contfut=True: single CONTFUT request, no endDateTime stepping.
 # contfut=False: stitch individual expired FUT contracts.
 # contract_chunks: max requests per contract when stitching (covers ~3 months each).
-_TIMEFRAMES: dict[str, dict] = {
+_TIMEFRAMES: dict[str, dict[str, Any]] = {
     # ── Stitched FUT (intraday) ─────────────────────────────────────────
     # contfut=False: fetches individual expired contracts, ratio back-adjusts at rolls.
     # max_contract_age_days: how far back to attempt expired contracts (IBKR retention limit).
@@ -152,7 +153,7 @@ _TIMEFRAMES: dict[str, dict] = {
     },
 }
 
-_CONTRACT_SPECS: dict[str, dict] = {
+_CONTRACT_SPECS: dict[str, dict[str, Any]] = {
     # ── US Equity Micros ──
     "MES": {"multiplier": "5", "exchange": "CME", "currency": "USD"},  # Micro E-mini S&P 500
     "MNQ": {"multiplier": "2", "exchange": "CME", "currency": "USD"},  # Micro E-mini Nasdaq
@@ -190,7 +191,7 @@ _CONTRACT_SPECS: dict[str, dict] = {
 }
 
 # Cash index specs — secType="IND", no roll mechanics.
-_INDEX_SPECS: dict[str, dict] = {
+_INDEX_SPECS: dict[str, dict[str, Any]] = {
     "VIX": {"exchange": "CBOE", "currency": "USD"},
     "VIX9D": {"exchange": "CBOE", "currency": "USD"},  # 9-day VIX
     "VIX3M": {"exchange": "CBOE", "currency": "USD"},  # 3-month VIX
@@ -199,7 +200,7 @@ _INDEX_SPECS: dict[str, dict] = {
 }
 
 # Indices only at daily/weekly/monthly — intraday IBKR history is limited for cash indices.
-_INDEX_TIMEFRAMES: dict[str, dict] = {
+_INDEX_TIMEFRAMES: dict[str, dict[str, Any]] = {
     "1D": {"bar_size": "1 day", "duration": "20 Y", "use_rth": True},
     "1W": {"bar_size": "1 week", "duration": "20 Y", "use_rth": True},
     "1M": {"bar_size": "1 month", "duration": "20 Y", "use_rth": True},
@@ -240,7 +241,7 @@ def _make_fut(root: str, expiry: str = "") -> Contract:
     return c
 
 
-def _bar_ts_utc(date_val) -> pd.Timestamp:
+def _bar_ts_utc(date_val: Any) -> pd.Timestamp:
     """Convert an IBKR bar date to UTC. Handles both tz-naive strings and tz-aware datetimes."""
     ts = pd.Timestamp(date_val)
     if ts.tzinfo is None:
@@ -248,7 +249,7 @@ def _bar_ts_utc(date_val) -> pd.Timestamp:
     return ts.tz_convert("UTC")
 
 
-def _bars_to_df(bars: list) -> pd.DataFrame:
+def _bars_to_df(bars: list[Any]) -> pd.DataFrame:
     valid = [b for b in bars if b.open > 0]
     if not valid:
         return pd.DataFrame()
@@ -276,7 +277,7 @@ def _bars_to_df(bars: list) -> pd.DataFrame:
 # ------------------------------------------------------------------
 
 
-def _fetch_contfut(ib: IB, root: str, tf: dict, label: str) -> pd.DataFrame:
+def _fetch_contfut(ib: IB, root: str, tf: dict[str, Any], label: str) -> pd.DataFrame:
     """Single request, empty endDateTime. Returns whatever IBKR gives for the duration."""
     print(f"  [{label}] CONTFUT request ({tf['duration']}, {tf['bar_size']})...", flush=True)
     try:
@@ -305,7 +306,7 @@ def _fetch_contfut(ib: IB, root: str, tf: dict, label: str) -> pd.DataFrame:
 
 def _get_contract_chain(
     ib: IB, root: str, years_back: int = 3, max_age_days: int | None = None
-) -> list:
+) -> list[Any]:
     """
     Return expired + currently-active contracts for root, sorted oldest → newest.
     Excludes: future contracts (not yet front month) and contracts older than max_age_days.
@@ -342,7 +343,9 @@ def _get_contract_chain(
     return sorted(chain, key=lambda c: c.lastTradeDateOrContractMonth[:8])
 
 
-def _fetch_contract_bars(ib: IB, contract: Contract, tf: dict, label: str) -> pd.DataFrame:
+def _fetch_contract_bars(
+    ib: IB, contract: Contract, tf: dict[str, Any], label: str
+) -> pd.DataFrame:
     """
     Fetch bars for one specific (possibly expired) FUT contract by stepping
     endDateTime backward from the contract's expiry (or now, if still active).
@@ -480,7 +483,7 @@ def _ratio_stitch(frames: list[pd.DataFrame], label: str = "") -> pd.DataFrame:
     return result
 
 
-def _seed_stitched(ib: IB, root: str, timeframe: str, tf: dict) -> pd.DataFrame:
+def _seed_stitched(ib: IB, root: str, timeframe: str, tf: dict[str, Any]) -> pd.DataFrame:
     """Full 3-year stitch across all contracts. Called on first run."""
     print(f"  [{root} {timeframe}] Fetching contract chain...", flush=True)
     chain = _get_contract_chain(ib, root, years_back=3, max_age_days=tf["max_contract_age_days"])
@@ -508,7 +511,7 @@ def _seed_stitched(ib: IB, root: str, timeframe: str, tf: dict) -> pd.DataFrame:
 
 
 def _update_stitched(
-    ib: IB, root: str, timeframe: str, tf: dict, since: pd.Timestamp
+    ib: IB, root: str, timeframe: str, tf: dict[str, Any], since: pd.Timestamp
 ) -> pd.DataFrame:
     """Incremental update: fetch only from current front-month contract since last bar."""
     details = ib.reqContractDetails(_make_fut(root))

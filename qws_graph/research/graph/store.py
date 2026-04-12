@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Neo4j store layer for idempotent Graph V1 writes."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Integration tests for qw record and qw reconcile commands."""
 
 from __future__ import annotations

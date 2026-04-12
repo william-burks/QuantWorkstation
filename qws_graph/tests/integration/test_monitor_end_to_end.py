@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Integration test — MonitorRunner end-to-end with mock trial script (QWS-0803).
 
 Uses a temporary Python script that outputs ``sharpe: <float>`` to stdout.

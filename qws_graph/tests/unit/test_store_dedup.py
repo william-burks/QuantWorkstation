@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for evolutionary run deduplication and champion auto-promotion."""
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ def _make_store() -> GraphStore:
         return GraphStore(uri="bolt://localhost:7687", username="neo4j", password="password")
 
 
-def _make_tx_with_single(record: dict | None) -> MagicMock:
+def _make_tx_with_single(record: dict | None):
     class FakeTx:
         def run(self, *args, **kwargs):
             result = MagicMock()

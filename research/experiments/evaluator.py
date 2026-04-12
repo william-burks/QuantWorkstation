@@ -108,7 +108,7 @@ def tier(
 # ---------------------------------------------------------------------------
 
 
-def evaluate(results: pd.DataFrame, bh: dict) -> pd.DataFrame:
+def evaluate(results: pd.DataFrame, bh: dict[str, Any]) -> pd.DataFrame:
     """
     Add evaluation columns to sweep results.
 
@@ -154,8 +154,8 @@ def evaluate(results: pd.DataFrame, bh: dict) -> pd.DataFrame:
 
 def report(
     results: pd.DataFrame,
-    bh: dict,
-    metadata: dict,
+    bh: dict[str, Any],
+    metadata: dict[str, Any],
     top_n: int = 3,
     full_n: int = 10,
 ) -> None:
@@ -281,7 +281,7 @@ def worst_trades(
 # ---------------------------------------------------------------------------
 
 
-def _print_metadata(metadata: dict) -> None:
+def _print_metadata(metadata: dict[str, Any]) -> None:
     sep = "=" * 10
     print(f"\n{sep} METADATA {sep}")
     fields = [
@@ -302,7 +302,7 @@ def _print_metadata(metadata: dict) -> None:
         print(f"{label}: {value}")
 
 
-def _print_bh(bh: dict) -> None:
+def _print_bh(bh: dict[str, Any]) -> None:
     sep = "=" * 10
     print(f"\n{sep} BUY & HOLD {sep}")
     print(
@@ -311,13 +311,13 @@ def _print_bh(bh: dict) -> None:
     )
 
 
-def _print_tier_assessment(results: pd.DataFrame, bh: dict) -> None:
+def _print_tier_assessment(results: pd.DataFrame, bh: dict[str, Any]) -> None:
     sep = "=" * 10
     best = results.iloc[0]
     t = best.get("tier", "—")
     pf_val = best.get("profit_factor", float("nan"))
 
-    def _flag(value: float, thresholds: dict, hard_limit: float | None = None) -> str:
+    def _flag(value: float, thresholds: dict[str, Any], hard_limit: float | None = None) -> str:
         if hard_limit is not None and value < hard_limit:
             return "FAIL"
         if value >= thresholds.get("institutional", float("inf")):
@@ -379,7 +379,7 @@ def _fmt_params(row: pd.Series, param_cols: list[str]) -> str:
 
 def _print_top_n(
     results: pd.DataFrame,
-    bh: dict,
+    bh: dict[str, Any],
     n: int,
     sort_by: str,
     label: str,
@@ -424,7 +424,7 @@ def _print_full(results: pd.DataFrame, n: int) -> None:
     print(results[available].head(n).to_string(index=True))
 
 
-def _record_passing(results: pd.DataFrame, metadata: dict) -> None:
+def _record_passing(results: pd.DataFrame, metadata: dict[str, Any]) -> None:
     """Append any passing results to the registry file."""
 
     def _json_safe(value: Any) -> Any:
@@ -444,7 +444,7 @@ def _record_passing(results: pd.DataFrame, metadata: dict) -> None:
         return
 
     _REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
-    existing: list[dict] = []
+    existing: list[dict[str, Any]] = []
     if _REGISTRY_PATH.exists():
         try:
             existing = json.loads(_REGISTRY_PATH.read_text())

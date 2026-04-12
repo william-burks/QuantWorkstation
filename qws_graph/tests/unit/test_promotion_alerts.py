@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for promotion candidate evaluation logic (QWS-0405)."""
 
 from __future__ import annotations

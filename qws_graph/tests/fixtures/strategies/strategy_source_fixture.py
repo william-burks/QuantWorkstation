@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Fixture strategy script for unit tests.
 
 Represents a production-grade trial script. Used to compute a realistic

@@ -7,6 +7,7 @@ Incremental run: fetches bars since the last stored timestamp.
 
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pandas as pd
 from alpaca.data.historical import CryptoHistoricalDataClient
@@ -35,7 +36,7 @@ def _client() -> CryptoHistoricalDataClient:
     return CryptoHistoricalDataClient(s.alpaca_api_key, s.alpaca_api_secret)
 
 
-def _bars_to_df(bars: list) -> pd.DataFrame:
+def _bars_to_df(bars: list[Any]) -> pd.DataFrame:
     """Normalize a list of Alpaca Bar objects to a plain DataFrame."""
     records = [
         {
@@ -86,7 +87,7 @@ def collect(symbol: str, timeframe: str = "daily") -> None:
     response = client.get_crypto_bars(request)
 
     # BarSet exposes data via .data dict — does not support `in` or `[]` directly
-    bars = response.data.get(symbol)
+    bars = response.data.get(symbol)  # type: ignore[union-attr]
     if not bars:
         log.info("Already up to date: no new bars for %s %s", symbol, timeframe)
         return

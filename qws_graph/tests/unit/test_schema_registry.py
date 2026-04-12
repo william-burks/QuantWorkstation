@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for schema_registry and Story 4 CSV column routing."""
 
 from __future__ import annotations

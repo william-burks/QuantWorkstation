@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for research/graph_export.py."""
 
 from __future__ import annotations

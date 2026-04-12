@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Integration tests for the Neo4j idempotent store layer."""
 
 from __future__ import annotations

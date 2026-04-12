@@ -16,16 +16,18 @@ Usage:
     print(result)
 """
 
+from typing import Any
+
 import backtrader as bt
 import pandas as pd
 
 from strategies.base import BaseStrategy
 
 
-class _BTStrategy(bt.Strategy):
+class _BTStrategy(bt.Strategy):  # type: ignore[misc]
     """Internal backtrader Strategy that replays pre-computed signals."""
 
-    params = (("signals", None), ("leverage", 5.0))  # type: ignore[assignment]
+    params = (("signals", None), ("leverage", 5.0))
 
     def __init__(self) -> None:
         self._signals: pd.Series = self.params.signals  # type: ignore[attr-defined]
@@ -57,7 +59,7 @@ def run(
     commission: float = 0.001,  # 0.1% per trade
     slippage: float = 0.001,  # 0.1% slippage model
     leverage: float = 5.0,
-) -> dict:
+) -> dict[str, Any]:
     """
     Run a strategy through backtrader's execution simulation.
 

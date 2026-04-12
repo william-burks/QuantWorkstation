@@ -9,6 +9,7 @@ Usage:
 """
 
 import sys
+from typing import Any
 
 from ib_insync import IB, Contract
 
@@ -16,7 +17,7 @@ from data.collectors.ibkr_futures import _CONTRACT_SPECS, _INDEX_SPECS
 from data.config import get_settings
 
 
-def check_futures(ib: IB) -> list[dict]:
+def check_futures(ib: IB) -> list[dict[str, Any]]:
     results = []
     for root, spec in _CONTRACT_SPECS.items():
         c = Contract()
@@ -65,7 +66,7 @@ def check_futures(ib: IB) -> list[dict]:
     return results
 
 
-def check_indices(ib: IB) -> list[dict]:
+def check_indices(ib: IB) -> list[dict[str, Any]]:
     results = []
     for sym, spec in _INDEX_SPECS.items():
         c = Contract()
@@ -75,7 +76,7 @@ def check_indices(ib: IB) -> list[dict]:
         c.currency = spec["currency"]
         try:
             details = ib.reqContractDetails(c)
-            if details:
+            if details and details[0].contract is not None:
                 results.append(
                     {
                         "symbol": sym,
@@ -112,7 +113,7 @@ def check_indices(ib: IB) -> list[dict]:
     return results
 
 
-def print_table(rows: list[dict]) -> None:
+def print_table(rows: list[dict[str, Any]]) -> None:
     col_w = {"symbol": 8, "type": 5, "exchange": 8, "currency": 8, "status": 6, "detail": 50}
     header = (
         f"{'SYMBOL':<{col_w['symbol']}}  {'TYPE':<{col_w['type']}}  "
@@ -133,7 +134,7 @@ def print_table(rows: list[dict]) -> None:
 
 def main() -> None:
     s = get_settings()
-    ib = IB()
+    ib = IB()  # type: ignore[no-untyped-call]
     print(f"Connecting to {s.ibkr_host}:{s.ibkr_port} clientId={s.ibkr_client_id}...", flush=True)
     ib.connect(s.ibkr_host, s.ibkr_port, clientId=s.ibkr_client_id)
 

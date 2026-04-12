@@ -18,6 +18,7 @@ import logging
 from collections import deque
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Any
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class RiskEngine:
     _starting_day_balance: float = field(default=0.0, init=False)
     _high_water_mark: float = field(default=0.0, init=False)
     _best_day_pnl: float = field(default=0.0, init=False)
-    _last_qtys: deque = field(default_factory=lambda: deque(maxlen=10), init=False)
+    _last_qtys: deque[float] = field(default_factory=lambda: deque(maxlen=10), init=False)
 
     def seed(self, equity: float) -> None:
         """Initialize with current equity on process startup."""
@@ -195,7 +196,7 @@ class RiskEngine:
         avg = sum(self._last_qtys) / len(self._last_qtys)
         if qty > avg * LOT_SPIKE_FACTOR:
             log.warning("Lot spike: %.6f → %.6f (avg=%.6f)", qty, avg, avg)
-            return avg
+            return float(avg)
         return qty
 
     @property
@@ -205,7 +206,7 @@ class RiskEngine:
     def is_halted(self) -> bool:
         return self._state in (TradingState.DAILY_LOSS_HALT, TradingState.DRAWDOWN_HALT)
 
-    def get_status(self) -> dict:
+    def get_status(self) -> dict[str, Any]:
         return {
             "state": self._state.value,
             "starting_day_balance": self._starting_day_balance,

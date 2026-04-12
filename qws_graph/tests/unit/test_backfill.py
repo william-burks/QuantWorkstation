@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for family_id backfill store methods.
 
 Tests cover GraphStore.audit_null_family_ids() and GraphStore.patch_family_id()

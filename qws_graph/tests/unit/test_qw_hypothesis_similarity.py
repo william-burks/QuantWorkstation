@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for semantic hypothesis deduplication CLI (QWS-0604).
 
 Tests cover:

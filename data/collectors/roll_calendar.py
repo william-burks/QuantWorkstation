@@ -12,6 +12,7 @@ Usage:
 
 import logging
 from datetime import date
+from typing import cast
 
 import pandas as pd
 
@@ -25,7 +26,7 @@ def get_roll_date(expiry: date) -> date:
     """Return the date on which we roll to the next contract."""
     expiry_ts = pd.Timestamp(expiry)
     roll_ts = expiry_ts - pd.offsets.BDay(_ROLL_DAYS_BEFORE_EXPIRY)
-    return roll_ts.date()
+    return cast(date, roll_ts.date())
 
 
 def build_continuous(

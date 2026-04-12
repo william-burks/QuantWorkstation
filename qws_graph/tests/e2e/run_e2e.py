@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# mypy: ignore-errors
 """
 E2E functional test runner for `qw record`, `qw record --oos`, `qw seed`, `qw abort`,
 and `qw query` commands.

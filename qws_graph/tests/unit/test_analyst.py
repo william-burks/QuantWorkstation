@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for semantic analyst (Story: OpenAI Curation Switch QWS-0703)."""
 
 from __future__ import annotations
@@ -140,6 +141,7 @@ class TestOpenAIAnalystAnnotation:
         artifact = _test_artifact(1)
         # Then override to empty for the test
         artifact = artifact.model_copy(update={"runs": [], "configs": []}, deep=True)
+        assert artifact is not None
         result = analyst.annotate(artifact)
         assert result.runs == []
 
@@ -246,6 +248,7 @@ class TestPromptConstruction:
         artifact = _test_artifact(3)
         analyst = OpenAIAnalyst(api_key="sk-test")
 
+        assert artifact is not None
         prompt = analyst._build_prompt(artifact.strategy, artifact.runs)
 
         assert "es-1h-bear-sweep" in prompt
@@ -258,6 +261,7 @@ class TestPromptConstruction:
     def test_prompt_token_estimate_under_2000_for_20_runs(self) -> None:
         artifact = _test_artifact(20)
         analyst = OpenAIAnalyst(api_key="sk-test")
+        assert artifact is not None
         prompt = analyst._build_prompt(artifact.strategy, artifact.runs)
         assert analyst._estimate_prompt_tokens(prompt) < 2000
 

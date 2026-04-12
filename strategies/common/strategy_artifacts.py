@@ -1,6 +1,7 @@
 """Shared CSV artifact and simple CLI parsing helpers for strategy scripts."""
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -83,7 +84,7 @@ def normalize_trades_for_csv(trades_df: pd.DataFrame | None) -> pd.DataFrame:
     return trades_df.copy().reindex(columns=TRADE_CSV_COLUMNS)
 
 
-def _csv_scalar(value):
+def _csv_scalar(value: Any) -> Any:
     """Convert list-like values to CSV-friendly scalars."""
     if isinstance(value, (list, tuple, set)):
         return ",".join(str(item) for item in value)
@@ -91,7 +92,7 @@ def _csv_scalar(value):
 
 
 def build_baseline_summary_for_csv(
-    result: dict,
+    result: dict[str, Any],
     *,
     instrument: str,
     timeframe: str,
@@ -103,7 +104,7 @@ def build_baseline_summary_for_csv(
     config = dict(result.get("config") or {})
     metrics = dict(result.get("metrics") or {})
 
-    row = {column: None for column in BASELINE_CSV_COLUMNS}
+    row: dict[str, Any] = {column: None for column in BASELINE_CSV_COLUMNS}
     row.update(
         {
             "instrument": instrument.upper(),

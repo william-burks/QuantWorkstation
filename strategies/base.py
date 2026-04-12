@@ -7,7 +7,7 @@ Strategies never import vectorbt or backtrader directly.
 """
 
 from abc import ABC, abstractmethod
-from typing import Literal
+from typing import Any, Literal
 
 import pandas as pd
 
@@ -18,7 +18,7 @@ class BaseStrategy(ABC):
     #: Markets this strategy is designed for
     markets: list[Literal["futures", "crypto"]]
     #: Strategy hyperparameters — set in __init__, used in generate_signals
-    params: dict
+    params: dict[str, Any]
 
     @abstractmethod
     def generate_signals(self, bars: pd.DataFrame) -> pd.Series:

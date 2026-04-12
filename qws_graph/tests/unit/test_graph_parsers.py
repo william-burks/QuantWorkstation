@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Unit tests for V1 graph models and artifact parsers."""
 
 from __future__ import annotations

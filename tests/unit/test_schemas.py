@@ -1,6 +1,7 @@
+# mypy: ignore-errors
 """Schema validation tests."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -42,7 +43,7 @@ def test_bar_negative_volume_rejected():
 def test_futures_contract_valid():
     fc = FuturesContract(
         symbol="ES",
-        expiry="2024-03-15",
+        expiry=date.fromisoformat("2024-03-15"),
         multiplier=50.0,
         margin=12000.0,
         front_month=True,
@@ -55,7 +56,7 @@ def test_futures_contract_zero_multiplier_rejected():
     with pytest.raises(ValidationError):
         FuturesContract(
             symbol="ES",
-            expiry="2024-03-15",
+            expiry=date.fromisoformat("2024-03-15"),
             multiplier=0.0,
             margin=12000.0,
             front_month=True,

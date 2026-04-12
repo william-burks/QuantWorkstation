@@ -446,7 +446,7 @@ class TestGetContextNeighborhood:
     def test_max_runs_invalid_type_returns_invalid_params(self) -> None:
         result = _adapter(FakeGraphQueryService()).get_context_neighborhood(
             "champ-001",
-            max_runs="50",  # type: ignore[arg-type]
+            max_runs="50",
         )
         assert result.ok is False
         assert result.error.code == "INVALID_PARAMS"
