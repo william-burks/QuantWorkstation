@@ -6,14 +6,13 @@ Runs against a mock store (no live Neo4j required).
 
 from __future__ import annotations
 
+import textwrap
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-import textwrap
 
 import pytest
 
 from qws_graph.research.graph.monitor import MonitorRunner
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

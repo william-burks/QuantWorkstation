@@ -11,7 +11,6 @@ import pytest
 
 from qws_graph.research.graph.monitor import MonitorResult, MonitorRunner
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -401,7 +400,8 @@ class TestCmdMonitor:
 
     def test_qw_monitor_subcommand_registered(self) -> None:
         """qw monitor --help exits 0 (subcommand registered in main parser)."""
-        import subprocess, sys  # noqa: PLC0415
+        import subprocess  # noqa: PLC0415
+        import sys
         result = subprocess.run(
             [sys.executable, "-m", "qws_graph.research.graph.cli", "monitor", "--help"],
             capture_output=True,

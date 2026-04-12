@@ -872,7 +872,9 @@ class GraphStore:
         Raises:
             StoreInfraError: On Neo4j connectivity or execution failure.
         """
-        from datetime import UTC, datetime as _dt  # noqa: PLC0415
+        from datetime import UTC  # noqa: PLC0415
+        from datetime import datetime as _dt
+
         from qws_graph.research.graph.cypher import FORMER_CHAMPION_BLOB_QUERY  # noqa: PLC0415
         from qws_graph.research.graph.ids import hash12 as _hash12  # noqa: PLC0415
 

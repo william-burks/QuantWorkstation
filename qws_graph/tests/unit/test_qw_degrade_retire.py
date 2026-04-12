@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 
 from qws_graph.research.graph.cli import cmd_degrade, cmd_retire
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
