@@ -7,7 +7,7 @@ REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
 
-.PHONY: to-release to-master check-clean done-with-feature test lint typecheck check
+.PHONY: to-release to-master check-clean done-with-feature test lint typecheck check commit-close-story
 
 
 # --- QUALITY ---
@@ -62,6 +62,13 @@ commit-story-status:
 	git commit -m "$(if $(MSG),$(MSG),status($(STORY)): READY → TESTING)"
 	@echo "done" > /tmp/agent-step8-committed.txt
 	@echo "Phase gate armed. Agent hard stop active."
+
+# 4b. Commit story closure
+# Usage: make commit-close-story STORY=QWS-0801
+commit-close-story:
+	@[ -n "$(STORY)" ] || (echo "ERROR: STORY required. Usage: make commit-close-story STORY=QWS-0801"; exit 1)
+	git add -u
+	git commit -m "$(if $(MSG),$(MSG),close($(STORY)): story closed)"
 
 # 5. Optional: Delete feature branch after successful merge
 done-with-feature:

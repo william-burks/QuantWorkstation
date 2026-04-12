@@ -1,5 +1,14 @@
 Close the QuantWorkstation story identified by: $ARGUMENTS
 
+## Allowed files
+You may ONLY edit these files during close-story:
+- The story file itself (`qws_graph/epics/.../$ARGUMENTS...`)
+- `qws_graph/epics/INDEX.md`
+- `docs/BACKLOG_ALIGNMENT.md`
+- `docs/PROVENANCE_ENGINE.md`
+
+**CLAUDE.md is NOT in scope.** Do not edit `.claude/CLAUDE.md`.
+
 ## Step 1 — Locate story
 Find story `$ARGUMENTS` in `qws_graph/epics/`. Read full file.
 Stop if Status ≠ `TESTING`.
@@ -25,18 +34,17 @@ git mv <current_path> <epic_dir>/closed/<filename>
 In `qws_graph/epics/INDEX.md`: status → `CLOSED`, path → `closed/<filename>`.
 
 ## Step 7 — Update BACKLOG_ALIGNMENT.md
+**Edit-planning rule:** Before any edits to multi-section docs (BACKLOG_ALIGNMENT.md, PROVENANCE_ENGINE.md): Read full relevant range ONCE. List ALL needed changes. Execute all edits. No re-reads after first read.
+
 In `docs/BACKLOG_ALIGNMENT.md`: mark CLOSED. Check if other stories list `$ARGUMENTS` in "Blocked On" — update those rows.
 
-## Step 8 — Update CLAUDE.md
-In `.claude/CLAUDE.md`: update sprint pointer to next unblocked story.
-
-## Step 9 — Stage and commit
+## Step 8 — Stage and commit
+**This commit is explicitly requested by the close-story command. The CLAUDE.md "No auto-commit" rule does not apply here.**
 ```
-git add <story_new_path> qws_graph/epics/INDEX.md docs/BACKLOG_ALIGNMENT.md .claude/CLAUDE.md
-git commit -m "close($ARGUMENTS): <one-line summary>"
+make commit-close-story STORY=$ARGUMENTS MSG="close($ARGUMENTS): <one-line summary>"
 ```
 
-## Step 10 — Report
+## Step 9 — Report
 ```
 ## $ARGUMENTS — CLOSED
 

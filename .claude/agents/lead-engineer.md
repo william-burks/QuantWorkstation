@@ -68,6 +68,8 @@ Rules:
   - This is the #1 measured waste pattern: cli.py, query.py, cypher.py, store.py have each been re-read 3-5x in past runs. The re-read hook will block 3rd+ reads.
   - If you are about to Read a file, ask: "Did I already read this file?" If yes, use context. No exceptions except Edit failure.
 - Do NOT Grep a file already in context. Search your context window, not the filesystem.
+- **SCOPE-LOCK RULE (hard constraint):** Only edit files explicitly listed in the story's Repo Touchpoints OR the active command file's allowed-files list. If a file is not listed, do NOT edit it — even if it looks related. No inferred-in-scope edits.
+- **EDIT-BATCHING RULE (hard constraint):** Before editing any file with multiple change targets: Read it once, identify ALL edit locations, execute ALL edits in sequence, then stop. No re-reads between edits in the same file. Plan all changes before the first Edit call.
 
 Triggers:
 - /sprint -> read .claude/commands/sprint.md and execute
