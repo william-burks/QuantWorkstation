@@ -1308,6 +1308,55 @@ def cmd_retire(args: argparse.Namespace) -> int:
         return 1
 
 
+def cmd_gate(args: argparse.Namespace) -> int:
+    """Re-evaluate correlation gate for all promotion candidates: qw gate --recheck."""
+    connector = NeoConnector(timeout_seconds=args.timeout_seconds)
+    if not connector.is_available():
+        print("error: Neo4j is unavailable", file=sys.stderr)
+        return 1
+
+    from qws_graph.research.graph.store import GraphStore, StoreInfraError
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=args.timeout_seconds)
+        rows = store.get_correlation_gate_recheck_v1(corr_threshold=0.30)
+    except StoreInfraError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    if not rows:
+        print("No promotion candidates found.")
+        return 0
+
+    total = len(rows)
+    passing = sum(1 for r in rows if r["gate"] == "PASS")
+
+    # Header
+    col_id = max(len(str(r["candidate_id"])) for r in rows)
+    col_id = max(col_id, len("candidate_id"))
+    header = f"{'candidate_id':<{col_id}}  {'max_corr':>9}  {'gate':<6}"
+    sep = f"{'-' * col_id}  {'-' * 9}  {'-' * 6}"
+
+    candidate_count_label = "candidate" if total == 1 else "candidates"
+    champion_note = "active Champions"
+    print(f"Rechecking correlation gate for {total} {candidate_count_label} against {champion_note}...")
+    print()
+    print(header)
+    print(sep)
+    for r in rows:
+        cid = str(r["candidate_id"])
+        corr = float(r["max_corr"])  # type: ignore[arg-type]
+        gate = str(r["gate"])
+        print(f"{cid:<{col_id}}  {corr:>9.2f}  {gate:<6}")
+
+    print()
+    print(f"{passing} / {total} candidates pass (corr < 0.30)")
+
+    # Exit 1 if any candidate fails
+    any_fail = any(r["gate"] == "FAIL" for r in rows)
+    return 1 if any_fail else 0
+
+
 def main() -> int:
     """Main entry point for `qw` CLI."""
     parser = argparse.ArgumentParser(
@@ -1681,6 +1730,25 @@ def main() -> int:
         help="Neo4j connection timeout in seconds (default 3)",
     )
     retire_parser.set_defaults(func=cmd_retire)
+
+    # `qw gate` subcommand
+    gate_parser = subparsers.add_parser(
+        "gate",
+        help="Re-evaluate correlation gate for all promotion candidates",
+    )
+    gate_parser.add_argument(
+        "--recheck",
+        action="store_true",
+        required=True,
+        help="Re-evaluate corr < 0.30 gate for all promotion candidates against active Champions",
+    )
+    gate_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    gate_parser.set_defaults(func=cmd_gate)
 
     # Parse arguments
     args = parser.parse_args()

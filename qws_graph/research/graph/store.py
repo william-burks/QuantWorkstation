@@ -928,6 +928,63 @@ RETURN {
         except Exception as exc:  # noqa: BLE001
             raise StoreInfraError(f"Unexpected store error: {exc}") from exc
 
+    def get_correlation_gate_recheck_v1(
+        self,
+        corr_threshold: float = 0.30,
+    ) -> list[dict[str, object]]:
+        """Re-evaluate the correlation gate for all promotion candidates against active Champions.
+
+        Reads existing CORRELATED_WITH edges (written by QWS-0603). Writes nothing.
+
+        For each distinct strategy among promotion-candidate Runs, finds the maximum
+        CORRELATED_WITH coefficient against any active Champion's strategy. Candidates
+        with no edge get max_corr=0.0.
+
+        Returns a list of dicts with keys:
+            candidate_id (str): strategy_id of the promotion-candidate run
+            max_corr (float): max correlation coefficient against active Champions (0.0 if none)
+            gate (str): "PASS" if max_corr < corr_threshold else "FAIL"
+
+        Raises:
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        _RECHECK_CYPHER = """
+MATCH (s:Strategy)-[:HAS_RUN]->(r:Run)
+WHERE r.sharpe IS NOT NULL
+  AND r.total_trades >= 30
+  AND s.status <> 'ABORTED'
+  AND NOT (s)-[:PRODUCED_CHAMPION]->(:Champion)
+WITH DISTINCT s AS candidate_strat
+OPTIONAL MATCH (candidate_strat)-[e:CORRELATED_WITH]-(active_strat:Strategy)
+WHERE EXISTS {
+    MATCH (active_strat)-[:PRODUCED_CHAMPION]->(ac:Champion)
+    WHERE NOT ac:FormerChampion AND NOT ac:RetiredChampion
+}
+RETURN candidate_strat.strategy_id AS candidate_id,
+       COALESCE(max(abs(e.coefficient)), 0.0) AS max_corr
+ORDER BY candidate_id
+"""
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
+                    rows = []
+                    for r in tx.run(_RECHECK_CYPHER):
+                        candidate_id = r["candidate_id"]
+                        max_corr = float(r["max_corr"])
+                        gate = "PASS" if max_corr < corr_threshold else "FAIL"
+                        rows.append({
+                            "candidate_id": candidate_id,
+                            "max_corr": max_corr,
+                            "gate": gate,
+                        })
+                    return rows
+
+                return session.execute_read(_read)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
     def _check_run_redundancy(
         self,
         session,

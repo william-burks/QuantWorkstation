@@ -4,10 +4,10 @@
 QWS-0804
 
 ## Status
-BLOCKED
+READY
 
 ## Blocked On
-QWS-0801 (FormerChampion node must be CLOSED — AC#4 filters FormerChampion from the active portfolio set, which requires the node type to exist)
+—
 
 ## Summary
 Add `qw gate --recheck` CLI command that re-evaluates the correlation gate (`corr < 0.30`) for
@@ -61,16 +61,50 @@ No new schema. Reads `CORRELATED_WITH` edges written by QWS-0603. Writes nothing
 - `qws_graph/tests/unit/test_gate_recheck.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw gate --recheck` runs without error when graph has no `CORRELATED_WITH` edges (empty output, not exception)
-- [ ] Output table shows `candidate_id`, `max_corr`, and `gate` (PASS/FAIL) for each candidate
-- [ ] Gate threshold is `corr < 0.30` (consistent with QWS-0603)
-- [ ] Only active Champions (not FormerChampion, RetiredChampion) contribute to the portfolio set
-- [ ] Exit code is `0` if all candidates pass; `1` if any fail
-- [ ] No writes to the graph in any code path
+- [x] `qw gate --recheck` runs without error when graph has no `CORRELATED_WITH` edges (empty output, not exception)
+- [x] Output table shows `candidate_id`, `max_corr`, and `gate` (PASS/FAIL) for each candidate
+- [x] Gate threshold is `corr < 0.30` (consistent with QWS-0603)
+- [x] Only active Champions (not FormerChampion, RetiredChampion) contribute to the portfolio set
+- [x] Exit code is `0` if all candidates pass; `1` if any fail
+- [x] No writes to the graph in any code path
 
 ## Definition of Done
-- [ ] `qw gate --recheck` command implemented and tested
-- [ ] Unit tests cover: all-pass, partial-fail, empty portfolio, empty candidate set
+- [x] `qw gate --recheck` command implemented and tested
+- [x] Unit tests cover: all-pass, partial-fail, empty portfolio, empty candidate set
 - [ ] `ruff check .` and `mypy --strict .` clean
 - [ ] All affected README files updated
 - [ ] PROVENANCE_ENGINE.md updated if new nodes/edges/properties introduced
+
+## Acceptance Test Plan
+
+### AC1: Empty edge set — no exception
+- type: cli
+- cmd: `qw gate --recheck`
+- expect_contains: "No promotion candidates found."
+- expect_exit: 0
+
+### AC2: Output table columns present
+- type: cli
+- cmd: `qw gate --recheck`
+- expect_contains: "candidate_id"
+- expect_exit: 0
+
+### AC3: Gate threshold corr < 0.30
+- type: file_check
+- cmd: grep for `"PASS" if max_corr < corr_threshold` in `qws_graph/research/graph/store.py`
+- expect_contains: PASS if max_corr < corr_threshold
+
+### AC4: Only active Champions in portfolio set
+- type: file_check
+- cmd: grep for `FormerChampion` in `_RECHECK_CYPHER` in `qws_graph/research/graph/store.py`
+- expect_contains: NOT ac:FormerChampion AND NOT ac:RetiredChampion
+
+### AC5: Exit code 0 all-pass, 1 any-fail
+- type: regression
+- cmd: `python -m pytest qws_graph/tests/unit/test_gate_recheck.py::TestCmdGate::test_all_pass_exit_0 qws_graph/tests/unit/test_gate_recheck.py::TestCmdGate::test_any_fail_exit_1 -v`
+- expect_contains: 2 passed
+
+### AC6: No writes
+- type: file_check
+- cmd: grep for `execute_write` in `get_correlation_gate_recheck_v1` in `store.py`
+- expect_contains: (no match — only execute_read)
