@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 7 Workflow Readiness — QWS-0801 (FormerChampion) and QWS-0703 (OpenAI Curation) are READY to implement in parallel
+> Current sprint: Epic 7 Workflow Readiness — QWS-0801 CLOSED; QWS-0703 (OpenAI Curation) READY; QWS-0804 (Correlation Gate Re-check) now unblocked
 > ```
 
 ---
@@ -62,16 +62,16 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| FormerChampion Lifecycle | QWS-0801 (**TESTING**) | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
+| FormerChampion Lifecycle | QWS-0801 (**CLOSED**) | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
 | OpenAI Curation Switch | QWS-0703 | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
-| Correlation Gate Re-check | QWS-0804 | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
+| Correlation Gate Re-check | QWS-0804 (**READY**) | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
 
 ### Backlog
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | SUPERSEDED_BY Relationship | QWS-0802 | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
-| Recursive Validation Loop | QWS-0803 | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | QWS-0801 CLOSED |
+| Recursive Validation Loop | QWS-0803 (**READY**) | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | QWS-0801 CLOSED |
 | PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse | — |
 | CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push | — |
 
@@ -83,31 +83,24 @@ Do not reference any of the following in Cypher queries or implementation code u
 the linked story is marked COMPLETE above.
 
 ### Nodes
-| Node | Story |
-|---|---|
-| `FormerChampion` | QWS-0801 |
+_(None pending — FormerChampion implemented in QWS-0801)_
 
 ### Relationships
 | Relationship | Story |
 |---|---|
-| `DEGRADED_TO` | QWS-0801 |
 | `SUPERSEDED_BY` | QWS-0802 |
-| `RETIRED_TO` (FormerChampion→RetiredChampion) | QWS-0801 |
 | `CORRELATED_WITH` | QWS-0603 (**IMPLEMENTED**) |
 | `SEMANTICALLY_RELATED` | QWS-0604 (**IMPLEMENTED**) |
 
 ### Properties
 | Property | Node | Story |
 |---|---|---|
-| `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
-| `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
 | `embedding` | Hypothesis | QWS-0604 (**IMPLEMENTED**) |
 | `status = ARCHIVED` | Strategy | QWS-0406 amendment (ABORTED exists; ARCHIVED is new) |
 
 ### MCP Tools
 | Tool | Story |
 |---|---|
-| `former_champions` | QWS-0801 |
 | `monitor_champion` | QWS-0803 |
 | `similar_hypotheses` | QWS-0604 (**IMPLEMENTED**) |
 
