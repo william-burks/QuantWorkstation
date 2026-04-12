@@ -2,9 +2,9 @@
 
 > **LLM INSTRUCTION BLOCK**
 > ```
-> CURRENT schema nodes: Strategy, Run, Config, Champion, RetiredChampion, FormerChampion,
-> RunStatsSummary, BlobArtifact, ResearchTarget, Regime, Hypothesis (QWS-0601), HypothesisSource.
-> FormerChampion (QWS-0801 CLOSED): use DEGRADED_TO, RETIRED_TO, oos_reason, retirement_note freely.
+> CURRENT schema nodes: Strategy, Run, Config, Champion, RetiredChampion, RunStatsSummary,
+> BlobArtifact, ResearchTarget, Regime, Hypothesis (QWS-0601 CLOSED), HypothesisSource.
+> Do NOT use FormerChampion in Cypher until its story is marked COMPLETE in BACKLOG_ALIGNMENT.md.
 > The interface is qw CLI + MCP tools only. No FastAPI. No REST API.
 > Before proposing schema changes, check this document for the authoritative current state.
 > ```
@@ -87,11 +87,11 @@ provenance in the graph.
 **Query convention:** All MCP presets that traverse Strategy nodes filter with
 `WHERE s.status <> 'ABORTED'` by default. Aborted strategies are only surfaced via `list_aborted`.
 
-### [CURRENT] — FormerChampion Lifecycle (QWS-0801)
+### [TARGET] — Not Yet Implemented
 
 | Node | Story | Role |
 |---|---|---|
-| `FormerChampion` | QWS-0801 | Decay watch: alpha slipping but still monitored; sits between Champion and RetiredChampion |
+| `FormerChampion` | New story needed | Decay watch: alpha slipping but still monitored; sits between Champion and RetiredChampion |
 
 ### [NEW — QWS-0502] — Regime Context
 
@@ -127,9 +127,9 @@ provenance in the graph.
 | Relationship | Source | Target | Properties | Story |
 |---|---|---|---|---|
 | `HAS_TRIAL` | Strategy | Trial | Alias for `HAS_RUN` at the conceptual level | — |
-| `DEGRADED_TO` | Champion | FormerChampion | `detected_at: datetime` | QWS-0801 (**IMPLEMENTED**) |
-| `RETIRED_TO` | FormerChampion | RetiredChampion | `retired_at: datetime` | QWS-0801 (**IMPLEMENTED**) |
-| `SUPERSEDED_BY` | Champion | Champion | Replaced by better version of same idea | QWS-0802 |
+| `DEGRADED_TO` | Champion | FormerChampion | `detected_at: datetime` | New story |
+| `RETIRED_TO` | FormerChampion | RetiredChampion | Replaces direct Champion→RetiredChampion in target state | New story |
+| `SUPERSEDED_BY` | Champion | Champion | Replaced by better version of same idea | New story |
 
 **Name conflict note:** `PIVOTED_FROM` already exists in the current schema (Champion → Run, meaning "this
 champion was promoted based on this run"). The new target "context bridge" relationship uses a different
@@ -258,7 +258,7 @@ JSON output: append `--json` to any preset. Pipe to `jq` for filtering.
 | `list_aborted` | QWS-0406 | All Strategies where `status = ABORTED`, with `abort_reason` and `aborted_at`. LLM checks this before suggesting any new strategy. |
 | `promotion_candidates` | QWS-0406 | Runs meeting `standards.py` tier thresholds not yet promoted. Dual-hurdle gate: `total_trades >= 30` AND `active_window_frequency >= 0.06 trades/day`. Output includes **Tier** (Professional / Institutional), **Active-Window Frequency**, and **Regime Diversity Score** — so the LLM can distinguish "Regime Specialist" from "Robust Performer" before recommending promotion. |
 | `regime_performance` | QWS-0503 | Performance table grouped by `--regime` property. Includes **Regime Diversity Score** (count of distinct regimes meeting Sharpe threshold). Score = 1 → "Regime Specialist" (fragility flag). |
-| `former_champions` | QWS-0801 (**IMPLEMENTED**) | Cemetery view: FormerChampion nodes with oos_reason, retirement_note, status (DEGRADED\|RETIRED) |
+| `former_champions` | Epic 4/5 | The "Cemetery" view: strategies that failed OOS or were retired |
 | `hypothesis_audit` | QWS-0601 | Traces current state back to the original `curator_note` intent |
 
 ### [TARGET] Fragility Signal Distribution
@@ -278,8 +278,8 @@ where they have more context:
 - `regime_performance` Diversity Score = 1 → **Regime Specialist**
 - Any combination of the above → flag before promotion recommendation
 
-**Schema note:** `oos_reason` is on `FormerChampion` (mandatory) and copied to `RetiredChampion` at
-`qw retire` time. `retirement_note` is on `RetiredChampion` (optional). Both added by QWS-0801.
+**Schema note:** `oos_reason` and `retirement_note` are new properties on `FormerChampion` /
+`RetiredChampion` — not yet in the current schema. Required when FormerChampion story is implemented.
 
 ---
 

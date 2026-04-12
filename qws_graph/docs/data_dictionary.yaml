@@ -629,76 +629,14 @@ nodes:
         nullable: false
         graph_only: true
 
-  FormerChampion:
-    description: >
-      A Champion demoted to decay-watch state. Sits between Champion and RetiredChampion
-      in the lifecycle. Created by `qw degrade` when OOS performance degrades. The source
-      Champion node is NOT deleted — FormerChampion is a new node linked via DEGRADED_TO.
-      A FormerChampion can be archived via `qw retire`, which creates a RetiredChampion node
-      linked via RETIRED_TO.
-    id_key: former_champion_id
-    id_source: "hash12(champion_id, degraded_at_iso)"
-    labels: ["FormerChampion"]
-    story: QWS-0801
-    properties:
-      former_champion_id:
-        type: str
-        nullable: false
-        description: Deterministic 12-char hex ID.
-      strategy_id:
-        type: str
-        nullable: false
-        description: FK to parent Strategy node.
-      champion_id:
-        type: str
-        nullable: false
-        description: Source Champion node ID.
-      degraded_at:
-        type: datetime
-        nullable: false
-        description: Timestamp of demotion (set at `qw degrade` time).
-      oos_reason:
-        type: str
-        nullable: false
-        description: >
-          Mandatory cause-of-death explanation. Cannot be empty — qw degrade rejects
-          empty strings. This is the most valuable field: the LLM checks this before
-          recommending any strategy that resembles a dead edge.
-      metrics_sharpe_at_degradation:
-        type: float
-        nullable: true
-        description: Sharpe ratio at time of demotion. Null if not provided.
-      created_at:
-        type: datetime
-        nullable: false
-      updated_at:
-        type: datetime
-        nullable: false
-
   RetiredChampion:
     description: >
-      A Champion node that has been displaced by a newer promotion, or a FormerChampion
-      that has been fully retired via `qw retire`. Carries all the same properties as
-      Champion plus oos_reason and retirement_note (added by QWS-0801). Label is swapped
-      atomically — the node is never deleted, only relabeled. Querying :Champion returns
-      only the active set; querying :RetiredChampion returns the full lineage chain.
+      A Champion node that has been displaced by a newer promotion. Carries all
+      the same properties as Champion. Label is swapped atomically — the node is
+      never deleted, only relabeled. Querying :Champion returns only the active
+      set; querying :RetiredChampion returns the full lineage chain.
     id_key: champion_id
     labels: ["RetiredChampion"]
-    story_additions: QWS-0801 adds oos_reason and retirement_note
-    properties:
-      oos_reason:
-        type: str
-        nullable: true
-        description: >
-          Copied from FormerChampion at retirement time (via `qw retire`). Null for
-          RetiredChampion nodes created by normal champion displacement.
-        story: QWS-0801
-      retirement_note:
-        type: str
-        nullable: true
-        description: >
-          Optional free-text reason for final retirement. Set at `qw retire` time.
-        story: QWS-0801
     note: >
       Do not MERGE on :RetiredChampion — the store layer handles re-labeling.
       Bare MATCH (ch:Champion) will never return RetiredChampion nodes.
@@ -997,34 +935,6 @@ relationships:
       list: current Champion → last RetiredChampion → earlier RetiredChampion → ...
       Use [:WAS_CHAMPION*] to traverse the full lineage.
       Direction is always new → old.
-
-  DEGRADED_TO:
-    source: Champion
-    target: FormerChampion
-    cardinality: one-to-one
-    story: QWS-0801
-    properties:
-      detected_at:
-        type: datetime
-        description: Timestamp when the demotion was recorded (set at `qw degrade` time).
-    description: >
-      Links a Champion to its FormerChampion decay-watch node. Created by `qw degrade`.
-      The Champion node is NOT deleted — it remains queryable. Use this edge to find
-      which Champions have been demoted.
-
-  RETIRED_TO:
-    source: FormerChampion
-    target: RetiredChampion
-    cardinality: one-to-one
-    story: QWS-0801
-    properties:
-      retired_at:
-        type: datetime
-        description: Timestamp when the retirement was recorded (set at `qw retire` time).
-    description: >
-      Links a FormerChampion to a new RetiredChampion node. Created by `qw retire`.
-      The RetiredChampion node carries oos_reason (copied from FormerChampion) and
-      retirement_note (set at retire time).
 
   PIVOTED_FROM:
     source: "Champion"

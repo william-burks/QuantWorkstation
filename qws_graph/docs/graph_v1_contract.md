@@ -290,18 +290,6 @@ class Champion(BaseModel):
     provenance: Provenance
 
 
-class FormerChampionNode(BaseModel):
-    """QWS-0801: Champion demoted to decay-watch state."""
-    model_config = ConfigDict(extra="ignore")
-
-    former_champion_id: str          # hash12(champion_id, degraded_at_iso)
-    strategy_id: str
-    champion_id: str
-    degraded_at: datetime
-    oos_reason: str                  # mandatory; qw degrade rejects empty strings
-    metrics_sharpe_at_degradation: float | None = None
-
-
 class BlobArtifact(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -477,7 +465,6 @@ Each ingested node created from artifact data must include:
 - `Run`: `run_id`
 - `Config`: `config_id`
 - `Champion`: `champion_id`
-- `FormerChampion`: `former_champion_id` — `hash12(champion_id, degraded_at_iso)` (QWS-0801)
 
 ### MERGE pattern
 - MERGE nodes first by PK.
