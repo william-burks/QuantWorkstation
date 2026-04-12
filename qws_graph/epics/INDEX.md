@@ -142,7 +142,7 @@ Dependency notes: QWS-0602 and QWS-0603 are independent — start parallel. QWS-
 Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
 1. `QWS-0801` `closed/story_1_former_champion_lifecycle.md` — `CLOSED`
 2. `QWS-0703` `closed/story_2_openai_curation.md` — `CLOSED`
-3. `QWS-0804` `story_3_correlation_gate_recheck.md` — `TESTING`
+3. `QWS-0804` `closed/story_3_correlation_gate_recheck.md` — `CLOSED`
 
 ---
 
@@ -155,6 +155,32 @@ Stories (no order):
 - `QWS-0702` `story_ci_graph_integrity.md` — `READY`
 - `QWS-0802` `story_superseded_by_relationship.md` — `READY`
 - `QWS-0803` `story_recursive_validation_loop.md` — `READY` _(unblocked by QWS-0801 CLOSED)_
+- `QWS-1011` `backlog/story_ndvi_crop_health_collector.md` — `READY` _(blocked on QWS-1001)_
+
+---
+
+---
+
+## Epic 12 — ML Research Layer [PLANNED]
+- Epic README: [`epic_12_ml_research_layer/README.md`](epic_12_ml_research_layer/README.md)
+- Objective: extend research pipeline with ML regime classification and feature-engineered
+  signal generation; rule-based and ML strategies compete on identical evaluation criteria.
+
+Stories (execution order):
+1. `QWS-1201` [`story_1_walk_forward_purge_gap.md`](epic_12_ml_research_layer/story_1_walk_forward_purge_gap.md) — `READY`
+2. `QWS-1202` [`story_2_hmm_regime_classifier.md`](epic_12_ml_research_layer/story_2_hmm_regime_classifier.md) — `READY`
+3. `QWS-1203` [`story_3_feature_engineering_layer.md`](epic_12_ml_research_layer/story_3_feature_engineering_layer.md) — `PLANNED`
+4. `QWS-1204` [`story_4_ml_walk_forward_harness.md`](epic_12_ml_research_layer/story_4_ml_walk_forward_harness.md) — `PLANNED`
+5. `QWS-1205` [`story_5_lightgbm_signal_model.md`](epic_12_ml_research_layer/story_5_lightgbm_signal_model.md) — `PLANNED`
+6. `QWS-1206` [`story_6_results_interpreter_agent.md`](epic_12_ml_research_layer/story_6_results_interpreter_agent.md) — `PLANNED`
+7. `QWS-1207` [`story_7_hypothesis_miner_agent.md`](epic_12_ml_research_layer/story_7_hypothesis_miner_agent.md) — `PLANNED`
+
+Dependency notes: QWS-1201 is prerequisite for all. QWS-1202 and QWS-1203 parallel after
+QWS-1201. QWS-1204 blocked on QWS-1203. QWS-1205 and QWS-1206 blocked on QWS-1204.
+QWS-1207 blocked on QWS-1206.
+
+Epic entry blocked on: QWS-0803 CLOSED (decay monitor must be live before ML Champion
+promotion).
 
 ---
 
@@ -163,5 +189,5 @@ Stories (no order):
 - **Current sprint: Epic 7 Workflow Readiness**
   - QWS-0801 (FormerChampion Lifecycle) — CLOSED
   - QWS-0703 (OpenAI Curation Switch) — CLOSED
-  - QWS-0804 (Correlation Gate Re-check) — TESTING
+  - QWS-0804 (Correlation Gate Re-check) — CLOSED
 

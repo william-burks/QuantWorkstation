@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 7 Workflow Readiness — QWS-0801 CLOSED; QWS-0703 (OpenAI Curation) CLOSED; QWS-0804 (Correlation Gate Re-check) READY
+> Current sprint: Epic 7 Workflow Readiness — QWS-0801 CLOSED; QWS-0703 (OpenAI Curation) CLOSED; QWS-0804 (Correlation Gate Re-check) CLOSED — Epic 7 COMPLETE
 > ```
 
 ---
@@ -23,6 +23,7 @@
 | Epic 5 — Context Enrichment | **COMPLETE** | family_id, Regime tagging, cross-instrument aggregation |
 | Epic 6 — Research Analytics | **COMPLETE** | Hypothesis journaling, parameter stability, portfolio correlation, semantic dedup |
 | Epic 7 — Workflow Readiness | **PLANNED ← current** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
+| Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
 | Backlog | **UNSCHEDULED** | QWS-0701, 0702, 0802, 0803 — deferred until post-Epic 7 research sessions |
 
 ---
@@ -64,7 +65,19 @@
 |---|---|---|---|
 | FormerChampion Lifecycle | QWS-0801 (**CLOSED**) | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
 | OpenAI Curation Switch | QWS-0703 (**CLOSED**) | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
-| Correlation Gate Re-check | QWS-0804 (**TESTING**) | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
+| Correlation Gate Re-check | QWS-0804 (**CLOSED**) | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
+
+### Epic 12 — ML Research Layer
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| Walk-forward Purge Gap | QWS-1201 (**READY**) | `purge_bars` parameter on `walk_forward.py`; prevents rolling feature leakage between folds | — |
+| HMM Regime Classifier | QWS-1202 (**READY**) | `research/models/hmm_regime.py`; per-bar regime labels via existing `qw record --regime` path; `Strategy.logic_type = "ml_regime"`, `model_class = "hmm"` | QWS-1201 |
+| Feature Engineering Layer | QWS-1203 (**PLANNED**) | `research/features/` YAML specs; `feature_builder.py`; lookahead guard; starter feature library | QWS-1201 |
+| ML Walk-forward Harness | QWS-1204 (**PLANNED**) | `ml_walk_forward.py`; Optuna inner loop; overfitting flags; output CSV compatible with `qw record --bundle` | QWS-1203 |
+| LightGBM Signal Model | QWS-1205 (**PLANNED**) | `strategies/ml_signal_strategy.py`; `generate_signals()` via trained artifact; same vectorbt path as rule-based | QWS-1204 |
+| Results Interpreter Agent | QWS-1206 (**PLANNED**) | `/interpret-ml-results` skill; `verdict.md` per experiment; PROMOTION_CANDIDATE / OVERFIT / FAIL verdicts | QWS-1204 |
+| Hypothesis Miner Agent | QWS-1207 (**PLANNED**) | `/mine-ml-hypotheses` skill; proposal files in `research/ideas/` with graph-node citations | QWS-1206 |
 
 ### Backlog
 
@@ -97,6 +110,9 @@ _(None pending — FormerChampion implemented in QWS-0801)_
 |---|---|---|
 | `embedding` | Hypothesis | QWS-0604 (**IMPLEMENTED**) |
 | `status = ARCHIVED` | Strategy | QWS-0406 amendment (ABORTED exists; ARCHIVED is new) |
+| `logic_type = "ml_model"` or `"ml_regime"` | Strategy | QWS-1202 |
+| `model_class` | Strategy | QWS-1202 |
+| `feature_spec_path` | Strategy | QWS-1203 |
 
 ### MCP Tools
 | Tool | Story |
@@ -110,9 +126,9 @@ _(None pending — FormerChampion implemented in QWS-0801)_
 
 Identified during vision planning — not yet in the backlog. Will decides priority before scoping.
 
-| Candidate | What it delivers |
-|---|---|
-| _(no open candidates)_ | — |
+| Candidate | What it delivers | Instruments | Why speculative | Precondition |
+|---|---|---|---|---|
+| AIS Tanker Flow Tracker | Count of VLCCs loading at key crude export terminals (Ras Tanura, Basra, Fujairah). "Tanker demand index" as leading CL indicator 2–6 weeks before inventory impact. Regime signal — feeds regime classifier (QWS-1003). Not a 4H entry signal. | CL | MarineTraffic paid API (~$200/mo) or AISHub (free, limited ocean coverage). Cost not justified until CL strategies show live edge. Transit lag (2–6 weeks) limits usefulness for ≤4H holds. | CL strategy promoted to Champion with live OOS track record |
 
 ---
 
@@ -135,6 +151,16 @@ QWS-0402 (OOS tracking)
 
 QWS-0601 (Hypothesis journaling)
     └── QWS-0604 (Semantic Hypothesis deduplication)
+
+QWS-1201 (purge gap)
+    ├── QWS-1202 (HMM regime classifier)
+    └── QWS-1203 (feature engineering layer)
+            └── QWS-1204 (ML walk-forward harness)
+                    ├── QWS-1205 (LightGBM signal model)
+                    └── QWS-1206 (results interpreter)
+                            └── QWS-1207 (hypothesis miner)
+
+QWS-0803 (decay monitor) — must CLOSE before ML Champion promotion allowed
 ```
 
 ---

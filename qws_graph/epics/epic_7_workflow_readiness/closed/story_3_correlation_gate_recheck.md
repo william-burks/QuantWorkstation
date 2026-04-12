@@ -4,7 +4,7 @@
 QWS-0804
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 —
