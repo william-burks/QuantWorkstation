@@ -105,30 +105,6 @@ class Champion(BaseModel):
         return self
 
 
-class FormerChampionNode(BaseModel):
-    """FormerChampion node: a demoted Champion under decay watch.
-
-    Sits between Champion (active) and RetiredChampion (archived).
-    Created by ``qw degrade``; promoted to RetiredChampion by ``qw retire``.
-    """
-
-    model_config = ConfigDict(extra="ignore")
-
-    former_champion_id: str  # hash12(champion_id + degraded_at_iso)
-    strategy_id: str
-    champion_id: str
-    degraded_at: datetime
-    oos_reason: str  # mandatory — must be non-empty
-    metrics_sharpe_at_degradation: float | None = None
-
-    @field_validator("oos_reason")
-    @classmethod
-    def oos_reason_not_empty(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("oos_reason must be a non-empty string")
-        return v
-
-
 class RunStatsSummary(BaseModel):
     """Aggregate stats for grid-sweep runs that did not pass the significance gate.
 

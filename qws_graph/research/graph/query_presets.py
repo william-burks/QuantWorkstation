@@ -20,7 +20,6 @@ from .query import (
     get_downstream_champions_v1,
     get_fragility_report_v1,
     get_instrument_concentration_v1,
-    get_former_champions_v1,
     get_list_aborted_v1,
     get_list_oos_pending_v1,
     get_portfolio_alpha_v1,
@@ -176,16 +175,6 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         description=(
             "Return all Strategies with status = ABORTED, including abort_reason. "
             "Ordered by aborted_at DESC. Used before suggesting new strategies."
-        ),
-        params=(),
-        requires_graph=True,
-    ),
-    "former_champions": PresetSpec(
-        name="former_champions",
-        description=(
-            "Cemetery view: one row per FormerChampion with oos_reason, retirement_note "
-            "(null if still DEGRADED), and lifecycle status (DEGRADED | RETIRED). "
-            "Use before proposing a strategy — check whether it is a reskin of a dead edge."
         ),
         params=(),
         requires_graph=True,
@@ -423,10 +412,6 @@ def run_preset(
         assert service is not None
         return service.get_list_aborted_v1()
 
-    if name == "former_champions":
-        assert service is not None
-        return service.get_former_champions_v1()
-
     if name == "promotion_candidates":
         min_sharpe = float(params.get("min_sharpe", "2.0"))
         min_profit_factor = float(params.get("min_profit_factor", "1.3"))
@@ -549,7 +534,6 @@ _PRESET_VIEW_FUNCTIONS = {
     "instrument_concentration": get_instrument_concentration_v1,
     "list_oos_pending": get_list_oos_pending_v1,
     "list_aborted": get_list_aborted_v1,
-    "former_champions": get_former_champions_v1,
     "promotion_candidates": get_promotion_candidates_v1,
     "research_targets": get_research_targets_v1,
     "runs_by_regime": get_runs_by_regime_v1,

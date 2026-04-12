@@ -642,10 +642,6 @@ class GraphQueryService:
         with self._driver.session(database=self._database) as session:
             return get_list_oos_pending_v1(session)
 
-    def get_former_champions_v1(self) -> list[dict[str, Any]]:
-        with self._driver.session() as session:
-            return get_former_champions_v1(session)
-
     def get_list_aborted_v1(self) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_list_aborted_v1(session)
@@ -1065,15 +1061,6 @@ def get_list_aborted_v1(session: QuerySession) -> list[dict[str, Any]]:
     return _all_results(session, GET_LIST_ABORTED_V1_CYPHER)
 
 
-def get_former_champions_v1(session: QuerySession) -> list[dict[str, Any]]:
-    """Return cemetery view: one row per FormerChampion with lifecycle status.
-
-    ``status`` is ``DEGRADED`` when no RETIRED_TO edge exists, ``RETIRED`` when
-    a RetiredChampion has been linked via RETIRED_TO.
-    """
-    return _all_results(session, GET_FORMER_CHAMPIONS_V1_CYPHER)
-
-
 def get_promotion_candidates_v1(
     session: QuerySession,
     min_sharpe: float = 2.0,
@@ -1155,21 +1142,6 @@ def get_similar_hypotheses_v1(
     return _all_results(session, GET_SIMILAR_HYPOTHESES_V1_CYPHER, hypothesis_id=hypothesis_id)
 
 
-GET_FORMER_CHAMPIONS_V1_CYPHER = """
-MATCH (fc:FormerChampion)
-OPTIONAL MATCH (s:Strategy {strategy_id: fc.strategy_id})
-OPTIONAL MATCH (fc)-[:RETIRED_TO]->(rc:RetiredChampion)
-RETURN fc.former_champion_id  AS former_champion_id,
-       fc.strategy_id         AS strategy_id,
-       s.instrument           AS instrument,
-       fc.degraded_at         AS degraded_at,
-       fc.oos_reason          AS oos_reason,
-       rc.retirement_note     AS retirement_note,
-       CASE WHEN rc IS NULL THEN 'DEGRADED' ELSE 'RETIRED' END AS status
-ORDER BY fc.degraded_at DESC
-""".strip()
-
-
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -1186,7 +1158,6 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_instrument_concentration_v1": get_instrument_concentration_v1,
     "get_list_oos_pending_v1": get_list_oos_pending_v1,
     "get_list_aborted_v1": get_list_aborted_v1,
-    "get_former_champions_v1": get_former_champions_v1,
     "get_promotion_candidates_v1": get_promotion_candidates_v1,
     "get_research_targets_v1": get_research_targets_v1,
     "get_runs_by_regime_v1": get_runs_by_regime_v1,
@@ -1218,7 +1189,6 @@ __all__ = [
     "GET_FRAGILITY_REPORT_V1_CYPHER",
     "GET_INSTRUMENT_CONCENTRATION_V1_CYPHER",
     "GET_LIST_ABORTED_V1_CYPHER",
-    "GET_FORMER_CHAMPIONS_V1_CYPHER",
     "GET_LIST_OOS_PENDING_V1_CYPHER",
     "GET_PORTFOLIO_ALPHA_V1_CYPHER",
     "GET_PROMOTION_CANDIDATES_V1_CYPHER",
@@ -1238,7 +1208,6 @@ __all__ = [
     "get_fragility_report_v1",
     "get_instrument_concentration_v1",
     "get_list_aborted_v1",
-    "get_former_champions_v1",
     "get_list_oos_pending_v1",
     "get_portfolio_alpha_v1",
     "get_promotion_candidates_v1",

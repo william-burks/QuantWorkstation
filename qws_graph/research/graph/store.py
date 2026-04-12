@@ -20,14 +20,11 @@ from .cypher import (
     CORRELATED_WITH_CHAMPION_QUERY,
     CORRELATED_WITH_STRATEGY_QUERY,
     CSV_INGEST_QUERY,
-    DEGRADE_CHAMPION_QUERY,
     DEMO_SEED_CYPHER,
     DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY,
-    GET_CHAMPION_BY_ID_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
-    GET_FORMER_CHAMPION_BY_ID_QUERY,
     GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY,
     GET_HYPOTHESIS_BY_ID_QUERY,
     GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,
@@ -41,7 +38,6 @@ from .cypher import (
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
     REGIME_MERGE_QUERY,
-    RETIRE_FORMER_CHAMPION_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
     SEMANTICALLY_RELATED_MERGE_QUERY,
@@ -292,118 +288,6 @@ class GraphStore:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001
             raise StoreInfraError(f"Unexpected store error: {exc}") from exc
-
-    def degrade_champion(
-        self,
-        champion_id: str,
-        oos_reason: str,
-        metrics_sharpe_at_degradation: float | None = None,
-    ) -> str | None:
-        """Demote a Champion to FormerChampion.
-
-        Creates a FormerChampion node and a DEGRADED_TO edge from the Champion.
-        The Champion node is NOT deleted or relabeled — it remains readable.
-
-        Args:
-            champion_id: The Champion node ID to demote.
-            oos_reason: Mandatory non-empty cause-of-death string.
-            metrics_sharpe_at_degradation: Optional Sharpe at time of demotion.
-
-        Returns:
-            The new ``former_champion_id`` when the Champion was found,
-            ``None`` when no Champion with that ID exists.
-
-        Raises:
-            ValueError: when ``oos_reason`` is empty.
-            StoreInfraError: on Neo4j connectivity or execution failure.
-        """
-        oos_reason = oos_reason.strip()
-        if not oos_reason:
-            raise ValueError("oos_reason must be a non-empty string")
-
-        degraded_at = datetime.datetime.now(datetime.timezone.utc)
-        former_champion_id = _ids.hash12(champion_id, degraded_at.isoformat())
-
-        try:
-            with self._driver.session() as session:
-                def _check(tx) -> bool:
-                    result = tx.run(GET_CHAMPION_BY_ID_QUERY, champion_id=champion_id).single()
-                    return result is not None
-
-                exists = session.execute_read(_check)
-                if not exists:
-                    return None
-
-                def _write(tx) -> None:
-                    tx.run(
-                        DEGRADE_CHAMPION_QUERY,
-                        champion_id=champion_id,
-                        former_champion_id=former_champion_id,
-                        degraded_at=degraded_at.isoformat(),
-                        oos_reason=oos_reason,
-                        metrics_sharpe_at_degradation=metrics_sharpe_at_degradation,
-                    ).consume()
-
-                session.execute_write(_write)
-        except Neo4jError as exc:
-            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
-        except Exception as exc:
-            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
-
-        return former_champion_id
-
-    def retire_former_champion(
-        self,
-        former_champion_id: str,
-        retirement_note: str | None = None,
-    ) -> bool:
-        """Retire a FormerChampion to RetiredChampion.
-
-        Creates a new RetiredChampion node (or merges an existing one keyed on
-        ``champion_id``) and creates a RETIRED_TO edge from the FormerChampion.
-        Copies ``oos_reason`` from FormerChampion to RetiredChampion.
-
-        Args:
-            former_champion_id: The FormerChampion node ID to retire.
-            retirement_note: Optional free-text retirement reason.
-
-        Returns:
-            ``True`` when the FormerChampion was found and retired,
-            ``False`` when no FormerChampion with that ID exists.
-
-        Raises:
-            StoreInfraError: on Neo4j connectivity or execution failure.
-        """
-        retired_at = datetime.datetime.now(datetime.timezone.utc)
-
-        try:
-            with self._driver.session() as session:
-                def _check(tx) -> bool:
-                    result = tx.run(
-                        GET_FORMER_CHAMPION_BY_ID_QUERY,
-                        former_champion_id=former_champion_id,
-                    ).single()
-                    return result is not None
-
-                exists = session.execute_read(_check)
-                if not exists:
-                    return False
-
-                def _write(tx) -> None:
-                    tx.run(
-                        RETIRE_FORMER_CHAMPION_QUERY,
-                        former_champion_id=former_champion_id,
-                        retirement_note=retirement_note or "",
-                        retired_at=retired_at.isoformat(),
-                    ).consume()
-
-                session.execute_write(_write)
-        except Neo4jError as exc:
-            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
-        except Exception as exc:
-            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
-
-        return True
 
     def audit_null_family_ids(self) -> list[dict]:
         """Return all Strategy nodes that have no family_id set.

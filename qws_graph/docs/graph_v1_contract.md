@@ -465,7 +465,6 @@ Each ingested node created from artifact data must include:
 - `Run`: `run_id`
 - `Config`: `config_id`
 - `Champion`: `champion_id`
-- `FormerChampion`: `former_champion_id` (`hash12(champion_id + degraded_at_iso)`)
 
 ### MERGE pattern
 - MERGE nodes first by PK.
@@ -646,35 +645,6 @@ pre-QWS-0402 ingest are handled at write time:
 
 A receipt with `kind: oos_update` and `status: persisted` is written on success.
 The receipt includes an `oos_sharpe` key: float when `--sharpe` was provided, null when absent.
-
-### FormerChampion Lifecycle Contract (QWS-0801)
-
-`qw degrade <champion_id> --reason "..."` creates a FormerChampion node linked by DEGRADED_TO:
-
-```
-qw degrade <champion_id> --reason "<cause-of-death>"
-```
-
-- Champion node is NOT relabeled or deleted.
-- A new `:FormerChampion` node is created with `former_champion_id = hash12(champion_id + degraded_at_iso)`.
-- A `DEGRADED_TO` edge is created: `(Champion)-[:DEGRADED_TO {detected_at: datetime}]->(FormerChampion)`.
-- `--reason` is mandatory and must be non-empty (exit 1 otherwise).
-- Returns exit 0 on success; exit 1 when Champion not found or validation fails.
-
-`qw retire <former_champion_id> [--note "..."]` retires to RetiredChampion:
-
-```
-qw retire <former_champion_id> [--note "<retirement_reason>"]
-```
-
-- Creates or merges `:RetiredChampion {champion_id: fc.champion_id}`.
-- Creates `RETIRED_TO` edge: `(FormerChampion)-[:RETIRED_TO {retired_at: datetime}]->(RetiredChampion)`.
-- Copies `oos_reason` from FormerChampion to RetiredChampion.
-- Sets `retirement_note` on RetiredChampion (null when `--note` omitted).
-- `--note` is optional; retirement succeeds without it.
-
-Cemetery view: `qw query --name former_champions`
-Returns: `former_champion_id`, `strategy_id`, `instrument`, `degraded_at`, `oos_reason`, `retirement_note` (null if DEGRADED), `status` (`DEGRADED` | `RETIRED`).
 
 ### ResearchTarget Singleton Contract (QWS-0408)
 
