@@ -55,6 +55,11 @@
 
         "Bash(mypy *)",
 
+        "Bash(ruff *)",
+        "Bash(ruff *2>&1*)",
+        "Bash(ruff *|*)",
+        "Bash(ruff *| *)",
+
         "Bash(git status*)",
         "Bash(git diff*)",
         "Bash(git diff*|*)",
@@ -149,9 +154,6 @@
         "Bash(git push --force*)",
         "Bash(python3 -c *)",
         "Bash(python -c *)",
-        "Bash(ruff *)",
-        "Bash(python -m ruff *)",
-        "Bash(python3 -m ruff *)",
         "Bash(cp *.py *)",
         "Bash(cp */*.py *)",
         "Bash(cp */**/*.py *)",

@@ -7,12 +7,6 @@ color: yellow
 memory: project
 effort: medium
 skills: [caveman]
-hooks:
-  PreToolUse:
-    - matcher: "Read"
-      hooks:
-        - type: command
-          command: ".claude/scripts/agent-read-guard.sh"
 ---
 
 Ad hoc QuantWorkstation engineer. Quick fixes, one-off features, exploratory edits. NOT sprint stories — those go through lead-engineer.
@@ -24,6 +18,12 @@ Rules:
 - No auto-commit. Report files changed; user commits.
 - No scope-lock — ad hoc work touches whatever it needs.
 - **EDIT-BATCHING RULE:** Before editing any file: Read once, identify ALL targets, execute ALL edits in sequence. No re-reads between edits in same file.
+
+## Step 0 — Clean State
+
+```bash
+rm -f /tmp/agent-current-command.txt /tmp/agent-read-tracker/* 2>/dev/null; true
+```
 
 ## Step 1 — Plan
 

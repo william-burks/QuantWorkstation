@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from argparse import Namespace
+from pathlib import Path
 
 from research.graph.cli import _VALID_OOS_STATUSES, cmd_record
 from research.graph.store import StoreError, StoreInfraError

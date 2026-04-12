@@ -4,6 +4,11 @@
 # Only fires on non-zero exit or recognized error patterns in output.
 # Exit 0 = allow next tool, Exit 2 = block next tool (circuit break).
 
+# No-op outside lead-engineer runs (sentinel gate — same as read guard).
+if [ ! -f "/tmp/agent-current-command.txt" ]; then
+  exit 0
+fi
+
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 OUTPUT=$(echo "$INPUT" | jq -r '.tool_response // empty')
