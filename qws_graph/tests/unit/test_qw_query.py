@@ -58,7 +58,12 @@ class FakeGraphQueryService:
 
     def get_staleness_report_v1(self) -> list[dict[str, Any]]:
         self.calls.append(("get_staleness_report_v1", {}))
-        return [{"champion_id": "c1", "strategy_id": "s1", "freeze_date": "2025-01-01", "days_stale": 90}]
+        return [
+            {
+                "champion_id": "c1", "strategy_id": "s1",
+                "freeze_date": "2025-01-01", "days_stale": 90,
+            },
+        ]
 
     def get_instrument_concentration_v1(self) -> list[dict[str, Any]]:
         self.calls.append(("get_instrument_concentration_v1", {}))
@@ -96,7 +101,10 @@ class FakeGraphQueryService:
         min_profit_factor: float = 1.3,
     ) -> list[dict[str, Any]]:
         self.calls.append(
-            ("get_promotion_candidates_v1", {"min_sharpe": min_sharpe, "min_profit_factor": min_profit_factor})
+            (
+                "get_promotion_candidates_v1",
+                {"min_sharpe": min_sharpe, "min_profit_factor": min_profit_factor},
+            )
         )
         return [
             {
@@ -136,7 +144,8 @@ def _make_query_args(**kwargs: Any) -> argparse.Namespace:
 class TestPresetCatalog:
     def test_core_presets_present(self) -> None:
         # Checks that Story 2 presets are present; Story 4 adds more (see test_lineage_queries.py).
-        assert {"recent_champions", "strategy_lineage", "run_history", "pending_offline"}.issubset(set(PRESET_CATALOG))
+        presets = {"recent_champions", "strategy_lineage", "run_history", "pending_offline"}
+        assert presets.issubset(set(PRESET_CATALOG))
 
     def test_preset_specs_have_stable_fields(self) -> None:
         for name, spec in PRESET_CATALOG.items():
@@ -471,7 +480,10 @@ class TestCmdQueryGraphBacked:
     ) -> None:
         fake_service = FakeGraphQueryService(
             recent_champions=[
-                {"champion_id": "c1", "strategy_id": "es-1h-bear-sweep", "freeze_date": "2026-04-01"}
+                {
+                    "champion_id": "c1", "strategy_id": "es-1h-bear-sweep",
+                    "freeze_date": "2026-04-01",
+                }
             ]
         )
         args = _make_query_args(
@@ -565,7 +577,9 @@ class TestCmdQueryGraphBacked:
     def test_run_history_shortcut_flag_routes_to_preset(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        fake_service = FakeGraphQueryService(run_history=[{"run_id": "run-001", "sharpe": 1.1, "max_drawdown": -5.0, "curator_note": None}])
+        fake_service = FakeGraphQueryService(run_history=[
+            {"run_id": "run-001", "sharpe": 1.1, "max_drawdown": -5.0, "curator_note": None},
+        ])
         args = _make_query_args(
             name=None,
             param=["strategy_id=es-1h-bear-sweep"],

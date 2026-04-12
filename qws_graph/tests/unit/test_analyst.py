@@ -101,7 +101,8 @@ class TestOpenAIAnalystInitialization:
             OpenAIAnalyst(api_key="")
 
     def test_from_env_reads_model_env_var(self) -> None:
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test", "QW_AI_ANALYST_MODEL": "gpt-4o"}):
+        env = {"OPENAI_API_KEY": "sk-test", "QW_AI_ANALYST_MODEL": "gpt-4o"}
+        with patch.dict("os.environ", env):
             analyst = OpenAIAnalyst.from_env()
             assert analyst._model_id == "gpt-4o"
 
@@ -149,19 +150,22 @@ class TestOpenAIAnalystAnnotation:
 
         # Mock OpenAI response — only approves first 2 of 3 runs
         mock_response = MagicMock()
-        mock_response.read.return_value = b"""{
-            "choices": [{
-                "message": {
-                    "content": "[{\\"run_id\\": \\"run-000\\", \\"approved\\": true, \\"curator_note\\": \\"Strong Sharpe ratio.\\"}, {\\"run_id\\": \\"run-001\\", \\"approved\\": false, \\"curator_note\\": \\"High drawdown concern.\\"}]"
-                }
-            }]
-        }"""
+        _runs = (
+            '[{"run_id": "run-000", "approved": true, "curator_note": "Strong Sharpe ratio."},'
+            ' {"run_id": "run-001", "approved": false, "curator_note": "High drawdown concern."}]'
+        )
+        mock_response.read.return_value = (
+            '{"choices": [{"message": {"content": '
+            + __import__("json").dumps(_runs)
+            + "}}]}"
+        ).encode()
         mock_response.__enter__.return_value = mock_response
         mock_urlopen.return_value = mock_response
 
         result = analyst.annotate(artifact)
 
-        # First run approved and has note, second unapproved so no note, third not in response so no note
+        # First run approved and has note, second unapproved so no note,
+        # third not in response so no note
         assert result.runs[0].curator_note == "Strong Sharpe ratio."
         assert result.runs[1].curator_note is None
         # Third run not in LLM response, so no note set
@@ -206,14 +210,13 @@ class TestOpenAIAnalystAnnotation:
         analyst = OpenAIAnalyst(api_key="sk-test")
 
         long_note = "x" * 500
+        _run_content = f'[{{"run_id": "run-000", "approved": true, "curator_note": "{long_note}"}}]'
         mock_response = MagicMock()
-        mock_response.read.return_value = f"""{{
-            "choices": [{{
-                "message": {{
-                    "content": "[{{\\"run_id\\": \\"run-000\\", \\"approved\\": true, \\"curator_note\\": \\"{long_note}\\"}}]"
-                }}
-            }}]
-        }}""".encode()
+        mock_response.read.return_value = (
+            '{"choices": [{"message": {"content": '
+            + __import__("json").dumps(_run_content)
+            + "}}]}"
+        ).encode()
         mock_response.__enter__.return_value = mock_response
         mock_urlopen.return_value = mock_response
 

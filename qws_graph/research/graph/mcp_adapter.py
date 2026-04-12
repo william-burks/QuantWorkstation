@@ -97,7 +97,8 @@ class McpResult:
 TOOL_BINDINGS: dict[str, str] = {
     "get_recent_champions": "get_recent_champions_v1",
     "get_strategy_lineage": "get_strategy_lineage_v1",
-    "get_context_neighborhood": "get_champion_details_v1",  # entry point; also fans out to get_strategy_summary_v1 and get_config_linkage_v1
+    # entry point; also fans out to get_strategy_summary_v1 and get_config_linkage_v1
+    "get_context_neighborhood": "get_champion_details_v1",
 }
 
 
@@ -285,7 +286,10 @@ class McpReadAdapter:
                 store.create_hypothesis(hypothesis_id=hypothesis_id, title=title, source="llm")
             finally:
                 store.close()
-            return McpResult(ok=True, data={"hypothesis_id": hypothesis_id, "title": title, "source": "llm"})
+            return McpResult(
+                ok=True,
+                data={"hypothesis_id": hypothesis_id, "title": title, "source": "llm"},
+            )
         except Exception as exc:
             return McpResult(
                 ok=False,

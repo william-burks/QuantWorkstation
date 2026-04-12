@@ -124,7 +124,10 @@ def _parse_scalar(value: str) -> Any:
     try:
         if re.fullmatch(r"[-+]?\d+", numeric_candidate):
             return int(numeric_candidate)
-        if re.fullmatch(r"[-+]?\d*\.\d+", numeric_candidate) or re.fullmatch(r"[-+]?\d+\.\d*", numeric_candidate):
+        if (
+            re.fullmatch(r"[-+]?\d*\.\d+", numeric_candidate)
+            or re.fullmatch(r"[-+]?\d+\.\d*", numeric_candidate)
+        ):
             number = float(numeric_candidate)
             return number / 100 if text.endswith("%") else number
     except ValueError:
@@ -367,7 +370,8 @@ class CSVParser:
         instrument = _clean_instrument(row.get("instrument")) or inferred["instrument"]
         timeframe = _normalize_timeframe(row.get("timeframe")) or inferred["timeframe"]
         direction = (row.get("direction") or inferred["direction"] or "").strip().lower()
-        logic_type = (row.get("logic_type") or inferred["logic_type"] or "").strip().lower().replace("_", "-")
+        _raw_lt = (row.get("logic_type") or inferred["logic_type"] or "").strip().lower()
+        logic_type = _raw_lt.replace("_", "-")
 
         missing = [
             name
@@ -433,7 +437,9 @@ class CSVParser:
         return _parse_datetime(artifact_mtime_iso)
 
     def _read_float(self, row: dict[str, str], fieldnames: Iterable[str], field: str) -> float:
-        column = _find_column(fieldnames, CSV_REQUIRED_ALIASES.get(field, CSV_OPTIONAL_ALIASES.get(field, (field,))))
+        column = _find_column(
+            fieldnames, CSV_REQUIRED_ALIASES.get(field, CSV_OPTIONAL_ALIASES.get(field, (field,)))
+        )
         if column is None or not (row.get(column) or "").strip():
             raise ValueError(f"missing required field value: {field}")
         value = _parse_scalar(_strip_inline_commentary(row[column]))
@@ -441,7 +447,9 @@ class CSVParser:
             return float(value)
         raise ValueError(f"invalid float value for {field}: {row[column]!r}")
 
-    def _read_optional_float(self, row: dict[str, str], fieldnames: Iterable[str], field: str) -> float | None:
+    def _read_optional_float(
+        self, row: dict[str, str], fieldnames: Iterable[str], field: str
+    ) -> float | None:
         column = _find_column(fieldnames, CSV_OPTIONAL_ALIASES[field])
         if column is None or not (row.get(column) or "").strip():
             return None
@@ -465,14 +473,18 @@ class CSVParser:
             return int(value)
         raise ValueError(f"invalid integer value for {field}: {row[column]!r}")
 
-    def _read_optional_str(self, row: dict[str, str], fieldnames: Iterable[str], field: str) -> str | None:
+    def _read_optional_str(
+        self, row: dict[str, str], fieldnames: Iterable[str], field: str
+    ) -> str | None:
         column = _find_column(fieldnames, CSV_OPTIONAL_ALIASES[field])
         if column is None:
             return None
         value = (row.get(column) or "").strip()
         return value or None
 
-    def _read_required_datetime(self, row: dict[str, str], fieldnames: Iterable[str], field: str) -> datetime:
+    def _read_required_datetime(
+        self, row: dict[str, str], fieldnames: Iterable[str], field: str
+    ) -> datetime:
         """Read a required ISO-8601 datetime from a recognized required alias column."""
         column = _find_column(fieldnames, CSV_REQUIRED_ALIASES[field])
         if column is None or not (row.get(column) or "").strip():
@@ -499,7 +511,9 @@ class ChampionMarkdownParser:
         repo_root: Path | None = None,
     ):
         self.artifact_path = Path(artifact_path)
-        self.registry_path = Path(registry_path) if registry_path else _default_registry_path(self.artifact_path)
+        self.registry_path = (
+            Path(registry_path) if registry_path else _default_registry_path(self.artifact_path)
+        )
         self.explicit_pivot_from_run_id = pivot_from_run_id
         self.ingested_at = ingested_at or datetime.now(UTC)
         self.repo_root = repo_root
@@ -530,7 +544,10 @@ class ChampionMarkdownParser:
         metrics_summary = self._parse_metrics_section(sections["is_metrics"])
         fragilities = self._parse_fragilities(sections["known_fragilities"])
         strategy_obj = self._resolve_strategy(config_values)
-        pivot_from_run_id = self.explicit_pivot_from_run_id or self._extract_pivot_from_run_id(sections["oos_command"])
+        pivot_from_run_id = (
+            self.explicit_pivot_from_run_id
+            or self._extract_pivot_from_run_id(sections["oos_command"])
+        )
 
         champion_obj = Champion(
             champion_id=champion_id(strategy_obj.strategy_id, freeze_date.isoformat()),
@@ -543,7 +560,9 @@ class ChampionMarkdownParser:
             pivot_from_run_id=pivot_from_run_id,
             provenance=provenance,
         )
-        artifact = ResearchArtifact(kind="champion_md", strategy=strategy_obj, champion=champion_obj)
+        artifact = ResearchArtifact(
+            kind="champion_md", strategy=strategy_obj, champion=champion_obj
+        )
         return artifact, []
 
     def _extract_metadata(self, content: str) -> dict[str, str]:
@@ -614,7 +633,11 @@ class ChampionMarkdownParser:
     def _resolve_strategy(self, config_values: dict[str, str]) -> Strategy:
         inferred = _infer_strategy_from_artifact_name(self.artifact_path.stem)
         instrument = _clean_instrument(config_values.get("instrument")) or inferred["instrument"]
-        timeframe = _normalize_timeframe(config_values.get("sweep_timeframe") or config_values.get("timeframe")) or inferred["timeframe"]
+        timeframe = (
+            _normalize_timeframe(
+                config_values.get("sweep_timeframe") or config_values.get("timeframe")
+            ) or inferred["timeframe"]
+        )
         direction = (config_values.get("direction") or inferred["direction"] or "").strip().lower()
         logic_type = inferred["logic_type"]
         missing = [
@@ -683,13 +706,23 @@ def _normalize_timeframe(raw_value: str | None) -> str:
 def _infer_strategy_from_artifact_name(stem: str) -> dict[str, str]:
     tokens = [token for token in re.split(r"[_\-]+", stem.lower()) if token]
     instrument = tokens[0].upper() if tokens else ""
-    direction_index = next((index for index, token in enumerate(tokens) if token in {"bull", "bear", "long", "short"}), None)
-    timeframe_index = next((index for index, token in enumerate(tokens) if TIMEFRAME_TOKEN_RE.match(token)), None)
+    direction_index = next(
+        (index for index, token in enumerate(tokens) if token in {"bull", "bear", "long", "short"}),
+        None,
+    )
+    timeframe_index = next(
+        (index for index, token in enumerate(tokens) if TIMEFRAME_TOKEN_RE.match(token)),
+        None,
+    )
     direction = tokens[direction_index] if direction_index is not None else ""
     timeframe = tokens[timeframe_index].upper() if timeframe_index is not None else ""
 
     logic_tokens: list[str] = []
-    if direction_index is not None and timeframe_index is not None and direction_index < timeframe_index:
+    if (
+        direction_index is not None
+        and timeframe_index is not None
+        and direction_index < timeframe_index
+    ):
         logic_tokens = tokens[direction_index + 1:timeframe_index]
     elif direction_index is not None:
         logic_tokens = [

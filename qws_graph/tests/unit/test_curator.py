@@ -50,9 +50,14 @@ def _make_config(config_id: str) -> Config:
     return Config(config_id=config_id, params_json={}, risk_params={})
 
 
-def _make_artifact(n: int, base_sharpe: float = 0.0, base_drawdown: float = -0.05) -> ResearchArtifact:
+def _make_artifact(
+    n: int, base_sharpe: float = 0.0, base_drawdown: float = -0.05
+) -> ResearchArtifact:
     """Create a grid_csv artifact with *n* runs."""
-    runs = [_make_run(f"run-{i:04d}", base_sharpe + i * 0.01, base_drawdown - i * 0.001) for i in range(n)]
+    runs = [
+        _make_run(f"run-{i:04d}", base_sharpe + i * 0.01, base_drawdown - i * 0.001)
+        for i in range(n)
+    ]
     configs = [_make_config(f"cfg-{i:04d}") for i in range(n)]
     return ResearchArtifact(kind="grid_csv", strategy=_STRATEGY, runs=runs, configs=configs)
 
@@ -165,7 +170,9 @@ class TestApplySignificanceGate:
 class TestAllPassthrough:
     def test_all_rows_pass_through_when_top_n_exceeds_count(self) -> None:
         artifact = _make_artifact(5)
-        selected, summary = apply_significance_gate(artifact, top_n_sharpe=100, bottom_n_drawdown=100)
+        selected, summary = apply_significance_gate(
+            artifact, top_n_sharpe=100, bottom_n_drawdown=100
+        )
         assert len(selected.runs) == 5
         assert summary.selected_run_count == 5
         assert summary.rolled_up_run_count == 0

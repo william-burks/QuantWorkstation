@@ -111,8 +111,14 @@ class TestAuditNullFamilyIds:
 
     def test_returns_one_row_per_null_strategy(self) -> None:
         rows = [
-            {"strategy_id": "es-1h-bear", "logic_type": "TrendFollowing", "direction": "bear", "created_at": "2024-01-01T00:00:00"},
-            {"strategy_id": "nq-1h-bear", "logic_type": "TrendFollowing", "direction": "bear", "created_at": "2024-01-02T00:00:00"},
+            {
+                "strategy_id": "es-1h-bear", "logic_type": "TrendFollowing",
+                "direction": "bear", "created_at": "2024-01-01T00:00:00",
+            },
+            {
+                "strategy_id": "nq-1h-bear", "logic_type": "TrendFollowing",
+                "direction": "bear", "created_at": "2024-01-02T00:00:00",
+            },
         ]
         store = _store_with_driver(FakeDriver(rows=rows))
         result = store.audit_null_family_ids()
@@ -122,7 +128,10 @@ class TestAuditNullFamilyIds:
 
     def test_result_dicts_include_expected_keys(self) -> None:
         rows = [
-            {"strategy_id": "es-1h-bear", "logic_type": "Momentum", "direction": "bull", "created_at": "2024-03-01"},
+            {
+                "strategy_id": "es-1h-bear", "logic_type": "Momentum",
+                "direction": "bull", "created_at": "2024-03-01",
+            },
         ]
         store = _store_with_driver(FakeDriver(rows=rows))
         result = store.audit_null_family_ids()

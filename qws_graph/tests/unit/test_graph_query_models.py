@@ -162,7 +162,9 @@ class TestQueryFunctions:
 
         result = get_strategy_summary_v1(session, "es-1h-bear-sweep")
 
-        assert session.calls[0] == (GET_STRATEGY_SUMMARY_V1_CYPHER, {"strategy_id": "es-1h-bear-sweep"})
+        assert session.calls[0] == (
+            GET_STRATEGY_SUMMARY_V1_CYPHER, {"strategy_id": "es-1h-bear-sweep"}
+        )
         assert json.dumps(result, sort_keys=True, indent=2) == """{
   \"abort_reason\": null,
   \"champion_count\": 1,

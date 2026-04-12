@@ -117,7 +117,9 @@ def _correlation_record(
             "related_strategy_id": related_strategy_id,
             "instrument": instrument,
             "timeframe": timeframe,
-            "direction": related_strategy_id.split("-")[2] if "-" in related_strategy_id else direction,
+            "direction": (
+                related_strategy_id.split("-")[2] if "-" in related_strategy_id else direction
+            ),
             "logic_type": logic_type,
             "run_count": run_count,
             "champion_count": champion_count,
@@ -147,7 +149,10 @@ class FakeGraphQueryService:
         depth: int = 1,
         include_retired: bool = False,
     ) -> list[dict[str, Any]]:
-        self.calls.append(("get_downstream_champions_v1", {"run_id": run_id, "depth": depth, "include_retired": include_retired}))
+        self.calls.append((
+            "get_downstream_champions_v1",
+            {"run_id": run_id, "depth": depth, "include_retired": include_retired},
+        ))
         return self._downstream
 
     def get_cross_artifact_correlation_v1(
@@ -155,7 +160,10 @@ class FakeGraphQueryService:
         strategy_id: str | None = None,
         family_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        self.calls.append(("get_cross_artifact_correlation_v1", {"strategy_id": strategy_id, "family_id": family_id}))
+        self.calls.append((
+            "get_cross_artifact_correlation_v1",
+            {"strategy_id": strategy_id, "family_id": family_id},
+        ))
         return self._cross_artifact
 
     def get_strategy_lineage_v1(self, strategy_id: str, depth: int = 1) -> list[dict[str, Any]]:
@@ -177,7 +185,9 @@ class TestStrategyLineageOrderedChain:
     def test_single_champion_returns_one_row(self) -> None:
         session = FakeSession({
             GET_STRATEGY_LINEAGE_V1_CYPHER: [
-                _lineage_record("es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id="run-001"),
+                _lineage_record(
+                    "es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id="run-001"
+                ),
             ]
         })
         rows = get_strategy_lineage_v1(session, "es-1h-bear-sweep")
@@ -200,7 +210,9 @@ class TestStrategyLineageOrderedChain:
     def test_champion_without_pivot_edge_included(self) -> None:
         session = FakeSession({
             GET_STRATEGY_LINEAGE_V1_CYPHER: [
-                _lineage_record("es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id=None),
+                _lineage_record(
+                    "es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id=None
+                ),
             ]
         })
         rows = get_strategy_lineage_v1(session, "es-1h-bear-sweep")
@@ -221,7 +233,8 @@ class TestStrategyLineageOrderedChain:
         row = get_strategy_lineage_v1(session, "es-1h-bear-sweep")[0]
         expected_keys = {
             "version", "strategy_id", "champion_id", "freeze_date", "oos_status",
-            "pivot_from_run_id", "pivot_run_timestamp", "pivot_run_artifact_path", "pivot_config_id",
+            "pivot_from_run_id", "pivot_run_timestamp",
+            "pivot_run_artifact_path", "pivot_config_id",
         }
         assert set(row) == expected_keys
 
@@ -251,7 +264,9 @@ class TestDownstreamChampionsNoPivotEdge:
     def test_champions_with_pivot_returned(self) -> None:
         session = FakeSession({
             GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
-                _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"),
+                _champion_record(
+                    "champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"
+                ),
             ]
         })
         rows = get_downstream_champions_v1(session, "run-001")
@@ -262,8 +277,12 @@ class TestDownstreamChampionsNoPivotEdge:
     def test_multiple_downstream_champions_ordered(self) -> None:
         session = FakeSession({
             GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
-                _champion_record("champ-002", "nq-1h-bear-sweep", "2026-03-15", pivot_from_run_id="run-001"),
-                _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"),
+                _champion_record(
+                    "champ-002", "nq-1h-bear-sweep", "2026-03-15", pivot_from_run_id="run-001"
+                ),
+                _champion_record(
+                    "champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"
+                ),
             ]
         })
         rows = get_downstream_champions_v1(session, "run-001")
@@ -463,7 +482,11 @@ class TestDepthParameter:
 
     def test_downstream_preset_include_retired_true(self) -> None:
         service = FakeGraphQueryService(downstream_champions=[])
-        run_preset("downstream_champions", {"run_id": "run-001", "include_retired": "true"}, service=service)
+        run_preset(
+            "downstream_champions",
+            {"run_id": "run-001", "include_retired": "true"},
+            service=service,
+        )
         assert service.calls[0][1]["include_retired"] is True
 
     def test_downstream_preset_include_retired_default_false(self) -> None:
@@ -473,7 +496,9 @@ class TestDepthParameter:
 
     def test_strategy_lineage_preset_passes_depth(self) -> None:
         service = FakeGraphQueryService(strategy_lineage=[])
-        run_preset("strategy_lineage", {"strategy_id": "es-1h-bear-sweep", "depth": "2"}, service=service)
+        run_preset(
+            "strategy_lineage", {"strategy_id": "es-1h-bear-sweep", "depth": "2"}, service=service
+        )
         assert service.calls[0][1]["depth"] == 2
 
     def test_strategy_lineage_preset_default_depth_1(self) -> None:

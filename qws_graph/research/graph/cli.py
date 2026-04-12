@@ -223,7 +223,9 @@ def _parse_artifact(
     elif kind == "champion_md":
         parser = ChampionMarkdownParser(
             file_path,
-            registry_path=repo_root / "research" / "results" / "registry.json" if repo_root else None,
+            registry_path=(
+                repo_root / "research" / "results" / "registry.json" if repo_root else None
+            ),
             pivot_from_run_id=pivot_from_run_id,
             repo_root=repo_root,
         )
@@ -237,7 +239,11 @@ def _parse_artifact(
 
         content = file_path.read_text(encoding="utf-8")
         artifact_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
-        mtime_iso = datetime.fromtimestamp(file_path.stat().st_mtime, tz=UTC).isoformat().replace("+00:00", "Z")
+        mtime_iso = (
+            datetime.fromtimestamp(file_path.stat().st_mtime, tz=UTC)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
 
         from .parsers import _artifact_path_text
 
@@ -360,7 +366,11 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
 
     # Attach family_id when --source-file is provided
     raw_source_file = getattr(args, "source_file", None)
-    source_file = Path(raw_source_file) if isinstance(raw_source_file, (str, Path)) and str(raw_source_file).strip() else None
+    source_file = (
+        Path(raw_source_file)
+        if isinstance(raw_source_file, (str, Path)) and str(raw_source_file).strip()
+        else None
+    )
     if source_file is not None:
         try:
             src_bytes = source_file.read_bytes()
@@ -468,7 +478,10 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
             print(f"  [RECORDED] {outcome.run_id}{ev_str}")
     if html_abs_path:
         if persisted_run_ids:
-            print(f"  html: {html_filename} → artifact_path_html patched ({patched_count}/{len(persisted_run_ids)} nodes)")
+            print(
+                f"  html: {html_filename} → artifact_path_html patched"
+                f" ({patched_count}/{len(persisted_run_ids)} nodes)"
+            )
         else:
             print(f"  html: {html_filename} → skipped (no new runs persisted)")
     elif html_filename:
@@ -751,11 +764,17 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
             if status is not None:
                 if status not in _VALID_HYPOTHESIS_STATUSES:
                     valid = ", ".join(sorted(_VALID_HYPOTHESIS_STATUSES))
-                    print(f"ERROR: invalid status {status!r}; must be one of: {valid}", file=sys.stderr)
+                    print(
+                        f"ERROR: invalid status {status!r}; must be one of: {valid}",
+                        file=sys.stderr,
+                    )
                     return 1
                 found = store.update_hypothesis_status(hypothesis_id, status)
                 if not found:
-                    print(f"ERROR: Hypothesis {hypothesis_id!r} not found in graph", file=sys.stderr)
+                    print(
+                        f"ERROR: Hypothesis {hypothesis_id!r} not found in graph",
+                        file=sys.stderr,
+                    )
                     return 1
                 print(f"OK: Hypothesis {hypothesis_id!r} status={status!r}")
                 return 0
@@ -763,7 +782,9 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
             # Mode 3: TESTED_AS
             if tested_as is not None:
                 store.link_hypothesis_tested_as(hypothesis_id, tested_as)
-                print(f"OK: TESTED_AS edge created — hypothesis={hypothesis_id} strategy={tested_as}")
+                print(
+                    f"OK: TESTED_AS edge created — hypothesis={hypothesis_id} strategy={tested_as}"
+                )
                 return 0
 
             # Mode 4: BRANCHED_FROM
@@ -772,7 +793,10 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
                     print("ERROR: --rationale is required with --branched-from", file=sys.stderr)
                     return 1
                 store.link_hypothesis_branched_from(hypothesis_id, branched_from, rationale)
-                print(f"OK: BRANCHED_FROM edge created — hypothesis={hypothesis_id} node={branched_from}")
+                print(
+                    f"OK: BRANCHED_FROM edge created"
+                    f" — hypothesis={hypothesis_id} node={branched_from}"
+                )
                 return 0
 
         finally:
@@ -792,7 +816,7 @@ def cmd_record(args: argparse.Namespace) -> int:
     """Execute `qw record` command.
 
     Exit codes:
-        0: validation passed and persisted, or validation passed and written to pending in offline mode
+        0: validation passed and persisted, or written to pending in offline mode
         1: schema validation failure
         2: infrastructure failure (Neo4j unavailable and --offline not provided)
     """
@@ -823,7 +847,11 @@ def cmd_record(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root) if args.repo_root else Path.cwd()
     dry_run = args.dry_run
     raw_source_file = getattr(args, "source_file", None)
-    source_file = Path(raw_source_file) if isinstance(raw_source_file, (str, Path)) and str(raw_source_file).strip() else None
+    source_file = (
+        Path(raw_source_file)
+        if isinstance(raw_source_file, (str, Path)) and str(raw_source_file).strip()
+        else None
+    )
     ingest_all = getattr(args, "all", False)
     no_analyze = getattr(args, "no_analyze", False)
 
@@ -874,11 +902,16 @@ def cmd_record(args: argparse.Namespace) -> int:
                 from .analyst import AnalystFactory, AnalystUnavailableError
                 try:
                     analyst = AnalystFactory.from_env()
-                    candidates, summary = apply_significance_gate(artifact, top_n_sharpe=20, bottom_n_drawdown=0)
+                    candidates, summary = apply_significance_gate(
+                        artifact, top_n_sharpe=20, bottom_n_drawdown=0
+                    )
                     artifact = analyst.annotate(candidates)
                     artifact = _keep_approved(artifact)
                 except AnalystUnavailableError as _exc:
-                    print("WARNING: AI analyst unavailable — falling back to math tier", file=sys.stderr)
+                    print(
+                        "WARNING: AI analyst unavailable — falling back to math tier",
+                        file=sys.stderr,
+                    )
                     artifact, summary = apply_significance_gate(artifact)
             except ImportError:
                 artifact, summary = apply_significance_gate(artifact)
@@ -928,7 +961,10 @@ def cmd_record(args: argparse.Namespace) -> int:
             print(f"ERROR: Failed to write receipt: {exc}", file=sys.stderr)
             return 1
 
-        print(f"OK: {kind} persisted to pending queue (.qws/pending/{artifact_id}.json)", file=sys.stdout)
+        print(
+            f"OK: {kind} persisted to pending queue (.qws/pending/{artifact_id}.json)",
+            file=sys.stdout,
+        )
         return 0
 
     # Online mode: attempt Neo4j write
@@ -1021,7 +1057,9 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
     # Full implementation would scan .qws/pending and receipts
     # and compare against Neo4j nodes
 
-    repo_root = Path(args.repo_root) if hasattr(args, "repo_root") and args.repo_root else Path.cwd()
+    repo_root = (
+        Path(args.repo_root) if hasattr(args, "repo_root") and args.repo_root else Path.cwd()
+    )
     output_json = args.json if hasattr(args, "json") else False
     _since = args.since if hasattr(args, "since") else None  # reserved for future use
 
@@ -1347,7 +1385,10 @@ def cmd_gate(args: argparse.Namespace) -> int:
 
     candidate_count_label = "candidate" if total == 1 else "candidates"
     champion_note = "active Champions"
-    print(f"Rechecking correlation gate for {total} {candidate_count_label} against {champion_note}...")
+    print(
+        f"Rechecking correlation gate for {total} {candidate_count_label}"
+        f" against {champion_note}..."
+    )
     print()
     print(header)
     print(sep)
@@ -1437,7 +1478,10 @@ def main() -> int:
         "--oos",
         metavar="STATUS",
         default=None,
-        help="OOS validation outcome to record on a Champion node (oos_pass | oos_fail | oos_pending). Requires --champion.",
+        help=(
+            "OOS validation outcome to record on a Champion node"
+            " (oos_pass | oos_fail | oos_pending). Requires --champion."
+        ),
     )
     record_mode.add_argument(
         "--hypothesis",
@@ -1445,7 +1489,8 @@ def main() -> int:
         default=None,
         help=(
             "Hypothesis journaling. Pass a quoted title to create a new Hypothesis node. "
-            "Pass an existing hypothesis_id with --tested-as, --branched-from, or --status to modify."
+            "Pass an existing hypothesis_id with --tested-as, --branched-from,"
+            " or --status to modify."
         ),
     )
     record_parser.add_argument(
@@ -1460,13 +1505,20 @@ def main() -> int:
         default=None,
         metavar="NODE_ID",
         dest="branched_from",
-        help="Link hypothesis via BRANCHED_FROM edge to any node ID (use with --hypothesis <id> --rationale)",
+        help=(
+            "Link hypothesis via BRANCHED_FROM edge to any node ID"
+            " (use with --hypothesis <id> --rationale)"
+        ),
     )
     record_parser.add_argument(
         "--rationale",
         default=None,
         metavar="TEXT",
-        help="Rationale text. With --branched-from: rationale for BRANCHED_FROM edge (required). With --bundle or --file: promotion rationale stored on Champion node (optional; defaults to empty string).",
+        help=(
+            "Rationale text. With --branched-from: rationale for BRANCHED_FROM edge (required)."
+            " With --bundle or --file: promotion rationale stored on Champion node"
+            " (optional; defaults to empty string)."
+        ),
     )
     record_parser.add_argument(
         "--status",
@@ -1540,7 +1592,10 @@ def main() -> int:
         "--all",
         action="store_true",
         dest="all",
-        help="Bypass significance gate for grid_csv; ingest all rows (default: top-5 Sharpe + bottom-2 drawdown)",
+        help=(
+            "Bypass significance gate for grid_csv; ingest all rows"
+            " (default: top-5 Sharpe + bottom-2 drawdown)"
+        ),
     )
     record_parser.add_argument(
         "--no-analyze",

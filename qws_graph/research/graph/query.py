@@ -555,7 +555,10 @@ class QuerySession(Protocol):
 class GraphQueryService:
     """Thin Neo4j-backed wrapper around the Story 1 query functions."""
 
-    def __init__(self, uri: str, username: str, password: str, timeout_seconds: int = 3, database: str = "neo4j"):
+    def __init__(
+        self, uri: str, username: str, password: str,
+        timeout_seconds: int = 3, database: str = "neo4j",
+    ):
         self._database = database
         self._driver = GraphDatabase.driver(
             uri,
@@ -573,7 +576,10 @@ class GraphQueryService:
         password = os.getenv("QW_GRAPH_PASSWORD", "password")
         database = os.getenv("QW_GRAPH_DATABASE", "neo4j")
         uri = f"{scheme}://{host}:{port}"
-        return cls(uri=uri, username=user, password=password, timeout_seconds=timeout_seconds, database=database)
+        return cls(
+            uri=uri, username=user, password=password,
+            timeout_seconds=timeout_seconds, database=database,
+        )
 
     def close(self) -> None:
         self._driver.close()
@@ -619,7 +625,9 @@ class GraphQueryService:
         family_id: str | None = None,
     ) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
-            return get_cross_artifact_correlation_v1(session, strategy_id=strategy_id, family_id=family_id)
+            return get_cross_artifact_correlation_v1(
+                session, strategy_id=strategy_id, family_id=family_id
+            )
 
     def get_run_stats_summary_v1(self, strategy_id: str) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
@@ -855,8 +863,12 @@ def get_config_linkage_v1(session: QuerySession, run_id: str) -> dict[str, Any] 
         strategy_id=str(row["strategy_id"]),
         run_id=str(row["run_id"]),
         config_id=row.get("config_id"),
-        params_json=None if row.get("params_json") is None else _normalize_json_like(row["params_json"]),
-        risk_params=None if row.get("risk_params") is None else _normalize_json_like(row["risk_params"]),
+        params_json=(
+            None if row.get("params_json") is None else _normalize_json_like(row["params_json"])
+        ),
+        risk_params=(
+            None if row.get("risk_params") is None else _normalize_json_like(row["risk_params"])
+        ),
     )
     return model.model_dump(mode="json")
 
@@ -991,7 +1003,9 @@ def get_cross_artifact_correlation_v1(
     if family_id is not None:
         rows = _all_results(session, GET_FAMILY_CLUSTER_V1_CYPHER, family_id=family_id)
     elif strategy_id is not None:
-        rows = _all_results(session, GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER, strategy_id=strategy_id)
+        rows = _all_results(
+            session, GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER, strategy_id=strategy_id
+        )
     else:
         raise ValueError("get_cross_artifact_correlation_v1 requires strategy_id or family_id")
 

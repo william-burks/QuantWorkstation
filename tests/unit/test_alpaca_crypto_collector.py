@@ -38,7 +38,9 @@ def test_bars_to_df_shape():
     bars = [_make_mock_bar(ts), _make_mock_bar(ts + timedelta(days=1))]
     df = _bars_to_df(bars)
     assert len(df) == 2
-    assert list(df.columns) == ["open", "high", "low", "close", "volume", "market", "source", "adjusted"]
+    assert list(df.columns) == [
+        "open", "high", "low", "close", "volume", "market", "source", "adjusted",
+    ]
     assert df.index.name == "timestamp"
     assert df["market"].iloc[0] == "crypto"
     assert df["source"].iloc[0] == "alpaca"
@@ -98,7 +100,10 @@ def test_collect_init_start_is_approx_two_years_ago(mock_client, mock_get_store)
     request = client.get_crypto_bars.call_args[0][0]
     # CryptoBarsRequest stores start as tz-naive; compare without tz
     now = datetime.now(tz=UTC).replace(tzinfo=None)
-    start = request.start if isinstance(request.start, datetime) else request.start.to_pydatetime().replace(tzinfo=None)
+    start = (
+        request.start if isinstance(request.start, datetime)
+        else request.start.to_pydatetime().replace(tzinfo=None)
+    )
     age = now - start
     assert 720 <= age.days <= 732  # ~2 years
 

@@ -169,7 +169,7 @@ Stories (QWS-0802 and QWS-0803 independent — implement in parallel):
 - Objective: use system end-to-end; document research findings, workflow friction, and tooling gaps — no code deliverables
 
 Stories (execution order — 0901 first, 0902 after 0901, 0903 after both):
-1. `QWS-0901` `epic_9_strategy_development/story_1_first_research_session.md` — `READY`
+1. `QWS-0901` `epic_9_strategy_development/closed/story_1_first_research_session.md` — `CLOSED`
 2. `QWS-0902` `epic_9_strategy_development/story_2_strategy_screening_pass.md` — `READY`
 3. `QWS-0903` `epic_9_strategy_development/story_3_system_gap_audit.md` — `BLOCKED` (on QWS-0901, QWS-0902)
 

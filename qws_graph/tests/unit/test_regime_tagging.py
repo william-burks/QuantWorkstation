@@ -413,7 +413,10 @@ class TestRegimePerformancePreset:
         rows = self._make_rows()
         svc = FakeRegimePerformanceService(rows)
         result = run_preset("regime_performance", {}, service=svc)
-        required = {"strategy_id", "instrument", "family_id", "regime", "best_sharpe", "run_count", "diversity_score", "fragility_class"}
+        required = {
+            "strategy_id", "instrument", "family_id", "regime",
+            "best_sharpe", "run_count", "diversity_score", "fragility_class",
+        }
         for row in result:
             assert required.issubset(row.keys()), f"Missing fields in {row}"
 

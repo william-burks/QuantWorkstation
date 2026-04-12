@@ -65,10 +65,13 @@ class Run(BaseModel):
     tier: str | None = None
     first_trade_ts: datetime  # timestamp of first closed trade; required CSV column
     last_trade_ts: datetime   # timestamp of last closed trade; required CSV column
-    active_window_frequency: float | None = None  # total_trades / active_days (trades/day); null on zero-duration edge case
-    duty_cycle: float | None = None  # active_days / total_backtest_days; null when backtest_start/end not provided
+    # total_trades / active_days (trades/day); null on zero-duration edge case
+    active_window_frequency: float | None = None
+    # active_days / total_backtest_days; null when backtest_start/end not provided
+    duty_cycle: float | None = None
     artifact_path: str
-    artifact_path_html: str | None = None  # filesystem path to HTML report; set via patch_run_html_path
+    # filesystem path to HTML report; set via patch_run_html_path
+    artifact_path_html: str | None = None
     curator_note: str | None = None
     regime: str | None = None  # operator-supplied market regime label (e.g. "high_vol", "trend_up")
     provenance: Provenance

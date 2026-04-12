@@ -119,7 +119,9 @@ class TestCsvParserSchemaRouting:
             encoding="utf-8",
         )
 
-        artifact, warnings = CSVParser(csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+        artifact, warnings = CSVParser(
+            csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()
+        ).parse()
 
         assert warnings == [], f"unexpected warnings: {warnings}"
         assert artifact.runs[0].calmar == pytest.approx(27.312855)
@@ -140,7 +142,9 @@ class TestCsvParserSchemaRouting:
             encoding="utf-8",
         )
 
-        artifact, warnings = CSVParser(csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+        artifact, warnings = CSVParser(
+            csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()
+        ).parse()
 
         assert warnings == [], f"unexpected warnings: {warnings}"
         assert artifact.configs[0].params_json["atr_period"] == 14
@@ -162,7 +166,9 @@ class TestCsvParserSchemaRouting:
             encoding="utf-8",
         )
 
-        artifact, warnings = CSVParser(csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+        artifact, warnings = CSVParser(
+            csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()
+        ).parse()
 
         assert warnings == [], f"unexpected warnings: {warnings}"
         assert artifact.configs[0].params_json["label"] == "loss_streak_2_half"
@@ -219,7 +225,9 @@ class TestCsvParserSchemaRouting:
             encoding="utf-8",
         )
 
-        artifact, warnings = CSVParser(csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+        artifact, warnings = CSVParser(
+            csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()
+        ).parse()
 
         assert warnings == []
         run = artifact.runs[0]

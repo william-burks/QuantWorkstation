@@ -60,7 +60,8 @@ class E2ECase:
     expect_strategy_aborted: bool = False  # strategy_id has status=ABORTED
     expect_research_target: bool = False   # ResearchTarget singleton node exists in graph
     expect_query_nonempty: bool = False    # stdout does not contain "No results"
-    expect_trial_number: int = 0           # max trial_number on RunStatsSummary for strategy_id (0 = skip)
+    # max trial_number on RunStatsSummary for strategy_id (0 = skip)
+    expect_trial_number: int = 0
 
 
 CASES: list[E2ECase] = [
@@ -208,7 +209,9 @@ CASES: list[E2ECase] = [
         fixture=Path(""),
         strategy_id="es-1h-bear-baseline",
         expect_promotion=False,
-        qw_args=["abort", "--strategy", "es-1h-bear-baseline", "--reason", "e2e: data quality issue"],
+        qw_args=[
+            "abort", "--strategy", "es-1h-bear-baseline", "--reason", "e2e: data quality issue",
+        ],
         expect_ok_substr="OK: Strategy",
         expect_strategy_aborted=True,
     ),
@@ -289,7 +292,9 @@ def _connect():
     except ImportError:
         _fatal("neo4j driver not installed: pip install neo4j")
         raise SystemExit(1)  # unreachable; satisfies type checker
-    driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD), connection_timeout=3)
+    driver = GraphDatabase.driver(
+        NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD), connection_timeout=3
+    )
     try:
         driver.verify_connectivity()
     except Exception as exc:  # noqa: BLE001
@@ -329,7 +334,8 @@ def _strategy_pivot_count(driver, strategy_id: str) -> int:
     """Count PIVOTED_FROM edges on the Champion for this strategy."""
     with driver.session(database="neo4j") as s:
         result = s.run(
-            "OPTIONAL MATCH (:Strategy {strategy_id: $sid})-[:PRODUCED_CHAMPION]->(c:Champion)-[:PIVOTED_FROM]->() "
+            "OPTIONAL MATCH (:Strategy {strategy_id: $sid})"
+            "-[:PRODUCED_CHAMPION]->(c:Champion)-[:PIVOTED_FROM]->() "
             "RETURN count(c) AS c",
             sid=strategy_id,
         ).single()
@@ -425,7 +431,8 @@ def _max_trial_number(driver, strategy_id: str) -> int | None:
     """Return the highest trial_number on any RunStatsSummary for this strategy."""
     with driver.session(database="neo4j") as s:
         result = s.run(
-            "OPTIONAL MATCH (:Strategy {strategy_id: $sid})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary) "
+            "OPTIONAL MATCH (:Strategy {strategy_id: $sid})"
+            "-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary) "
             "RETURN max(rss.trial_number) AS max_trial",
             sid=strategy_id,
         ).single()
@@ -505,7 +512,9 @@ def _check(result: CaseResult, driver) -> None:
             result.failures.append(f"expected PIVOTED_FROM edge on champion for {case.strategy_id}")
     if case.expect_no_pivot:
         if _strategy_pivot_count(driver, case.strategy_id) > 0:
-            result.failures.append(f"expected no PIVOTED_FROM edge on champion for {case.strategy_id}")
+            result.failures.append(
+                f"expected no PIVOTED_FROM edge on champion for {case.strategy_id}"
+            )
 
     # BlobArtifact — query by strategy to avoid cross-strategy false positives
     if case.expect_blob:
@@ -559,7 +568,8 @@ def _check(result: CaseResult, driver) -> None:
         actual = _max_trial_number(driver, case.strategy_id)
         if actual != case.expect_trial_number:
             result.failures.append(
-                f"expected max trial_number={case.expect_trial_number} for {case.strategy_id}, got {actual!r}"
+                f"expected max trial_number={case.expect_trial_number}"
+                f" for {case.strategy_id}, got {actual!r}"
             )
 
 
@@ -622,7 +632,9 @@ def print_result(i: int, total: int, result: CaseResult) -> None:
     # Show relevant stdout lines
     relevant = [
         ln for ln in result.stdout.splitlines()
-        if any(kw in ln for kw in ("[PROMOTION", "[PROMOTED]", "[SKIPPED]", "OK:", "ERROR", "No results"))
+        if any(kw in ln for kw in (
+            "[PROMOTION", "[PROMOTED]", "[SKIPPED]", "OK:", "ERROR", "No results"
+        ))
     ]
     for ln in relevant[:8]:
         print(f"  │ {ln}")
@@ -649,8 +661,12 @@ def _cleanup_nodes(driver, eids: set[str]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="E2E test runner for qw record")
-    parser.add_argument("--no-cleanup", action="store_true", help="Ask User cleanup prompt after run")
-    parser.add_argument("--clean", action="store_true", help="Wipe graph before running (required for delta checks)")
+    parser.add_argument(
+        "--no-cleanup", action="store_true", help="Ask User cleanup prompt after run"
+    )
+    parser.add_argument(
+        "--clean", action="store_true", help="Wipe graph before running (required for delta checks)"
+    )
     args = parser.parse_args()
 
     print("=" * 60)

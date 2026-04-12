@@ -100,7 +100,14 @@ class StoreResult:
 class GraphStore:
     """Applies contract MERGE mappings in one transaction per artifact."""
 
-    def __init__(self, uri: str, username: str, password: str, timeout_seconds: int = 3, database: str = "neo4j"):
+    def __init__(
+        self,
+        uri: str,
+        username: str,
+        password: str,
+        timeout_seconds: int = 3,
+        database: str = "neo4j",
+    ):
         self._database = database
         self._driver = GraphDatabase.driver(
             uri,
@@ -118,7 +125,10 @@ class GraphStore:
         password = os.getenv("QW_GRAPH_PASSWORD", "password")
         database = os.getenv("QW_GRAPH_DATABASE", "neo4j")
         uri = f"{scheme}://{host}:{port}"
-        return cls(uri=uri, username=user, password=password, timeout_seconds=timeout_seconds, database=database)
+        return cls(
+            uri=uri, username=user, password=password,
+            timeout_seconds=timeout_seconds, database=database,
+        )
 
     def close(self) -> None:
         self._driver.close()
@@ -200,7 +210,9 @@ class GraphStore:
                     )
 
                     # Always reconcile champion — works for new peaks and retroactive gaps
-                    auto_champion_id: str | None = self._reconcile_champion(session, strategy_id, promotion_rationale=promotion_rationale)
+                    auto_champion_id: str | None = self._reconcile_champion(
+                        session, strategy_id, promotion_rationale=promotion_rationale
+                    )
 
                     for run_d in filtered_payload["runs"]:
                         run_id = run_d["run_id"]
@@ -327,7 +339,9 @@ class GraphStore:
         try:
             with self._driver.session(database=self._database) as session:
                 def _write(tx):
-                    result = tx.run(PATCH_FAMILY_ID_QUERY, strategy_id=strategy_id, family_id=family_id)
+                    result = tx.run(
+                        PATCH_FAMILY_ID_QUERY, strategy_id=strategy_id, family_id=family_id
+                    )
                     return list(result)
 
                 records = session.execute_write(_write)
@@ -513,8 +527,12 @@ class GraphStore:
         try:
             with self._driver.session(database=self._database) as session:
                 def _write(tx) -> str:
-                    tx.run(HYPOTHESIS_CREATE_QUERY, hypothesis_id=hypothesis_id, title=title).consume()
-                    tx.run(HYPOTHESIS_SUGGESTED_EDGE_QUERY, hypothesis_id=hypothesis_id, source=source).consume()
+                    tx.run(
+                        HYPOTHESIS_CREATE_QUERY, hypothesis_id=hypothesis_id, title=title
+                    ).consume()
+                    tx.run(
+                        HYPOTHESIS_SUGGESTED_EDGE_QUERY, hypothesis_id=hypothesis_id, source=source
+                    ).consume()
                     return hypothesis_id
 
                 return session.execute_write(_write)
@@ -533,7 +551,8 @@ class GraphStore:
             with self._driver.session(database=self._database) as session:
                 def _check_strategy(tx) -> bool:
                     result = tx.run(
-                        "MATCH (s:Strategy {strategy_id: $strategy_id}) RETURN s.strategy_id AS sid",
+                        "MATCH (s:Strategy {strategy_id: $strategy_id})"
+                        " RETURN s.strategy_id AS sid",
                         strategy_id=strategy_id,
                     ).single()
                     return result is not None
@@ -879,7 +898,10 @@ class GraphStore:
         from .ids import hash12 as _hash12  # noqa: PLC0415
 
         created_at = _dt.now(UTC).isoformat()
-        artifact_path = f"monitor:{former_champion_id}:{artifact_type}:{_hash12(former_champion_id, artifact_type, created_at)}"
+        artifact_path = (
+            f"monitor:{former_champion_id}:{artifact_type}"
+            f":{_hash12(former_champion_id, artifact_type, created_at)}"
+        )
 
         try:
             with self._driver.session(database=self._database) as session:
@@ -1361,7 +1383,9 @@ ORDER BY candidate_id
         session.execute_write(_write)
         return new_champ_id
 
-    def _reconcile_champion(self, session, strategy_id: str, promotion_rationale: str = "") -> str | None:
+    def _reconcile_champion(
+        self, session, strategy_id: str, promotion_rationale: str = ""
+    ) -> str | None:
         """Enforce One Strategy = One Champion, then ensure the current peak is reflected.
 
         Step 1 — Flatten: if multiple PRODUCED_CHAMPION edges exist (stale state),
@@ -1450,8 +1474,13 @@ ORDER BY candidate_id
             params_dict = config_payload.get("params_json", {})
             config_for_query = {
                 **config_payload,
-                "params_json_text": json.dumps(params_dict, sort_keys=True, separators=(",", ":"), ensure_ascii=True),
-                "risk_params_text": json.dumps(config_payload.get("risk_params", {}), sort_keys=True, separators=(",", ":"), ensure_ascii=True),
+                "params_json_text": json.dumps(
+                    params_dict, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+                ),
+                "risk_params_text": json.dumps(
+                    config_payload.get("risk_params", {}),
+                    sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+                ),
                 # First-class Config properties: unpacked by SET c += row.config.params_dict
                 "params_dict": params_dict,
             }
@@ -1475,7 +1504,8 @@ ORDER BY candidate_id
                 tx.run(REGIME_MERGE_QUERY, regime_rows=regime_rows).consume()
             if summary is not None:
                 result = tx.run(
-                    "MATCH (:Strategy {strategy_id: $sid})-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary) "
+                    "MATCH (:Strategy {strategy_id: $sid})"
+                    "-[:HAS_RUN_SUMMARY]->(rss:RunStatsSummary) "
                     "RETURN coalesce(max(rss.trial_number), 0) AS max_trial",
                     sid=summary.strategy_id,
                 ).single()

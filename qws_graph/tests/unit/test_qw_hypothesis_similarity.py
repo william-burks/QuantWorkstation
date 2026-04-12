@@ -109,7 +109,9 @@ def test_record_hypothesis_embeds_and_stores_embedding(capsys: pytest.CaptureFix
     assert call_args[0][1] == fake_embedding  # embedding passed correctly
 
 
-def test_record_hypothesis_prints_advisory_when_similar_found(capsys: pytest.CaptureFixture) -> None:
+def test_record_hypothesis_prints_advisory_when_similar_found(
+    capsys: pytest.CaptureFixture,
+) -> None:
     """When n_similar > 0, advisory message printed to stdout."""
     store = _mock_store(n_similar=2)
 
@@ -146,7 +148,9 @@ def test_record_hypothesis_no_advisory_when_no_similar(capsys: pytest.CaptureFix
     assert "similar hypotheses found" not in captured.out
 
 
-def test_record_hypothesis_embedding_import_error_is_non_fatal(capsys: pytest.CaptureFixture) -> None:
+def test_record_hypothesis_embedding_import_error_is_non_fatal(
+    capsys: pytest.CaptureFixture,
+) -> None:
     """ImportError from sentence-transformers is non-fatal: exit 0, WARNING on stderr."""
     store = _mock_store()
 
@@ -293,7 +297,9 @@ def test_similar_hypotheses_preset_delegates_to_service(capsys: pytest.CaptureFi
     """run_preset routes similar_hypotheses to service.get_similar_hypotheses_v1."""
     mock_service = MagicMock()
     mock_service.get_similar_hypotheses_v1 = MagicMock(
-        return_value=[{"hypothesis_id": "aaa111", "title": "Related", "similarity": 0.92, "status": "open"}]
+        return_value=[{
+            "hypothesis_id": "aaa111", "title": "Related", "similarity": 0.92, "status": "open",
+        }]
     )
 
     results = run_preset("similar_hypotheses", {"hypothesis_id": "bbb222"}, service=mock_service)
@@ -315,7 +321,9 @@ def test_check_redundancy_preset_routes_to_service() -> None:
             "title": "Test",
             "active_champion_matches": [],
             "aborted_strategy_matches": [],
-            "semantic_matches": [{"hypothesis_id": "ddd444", "title": "Similar", "similarity": 0.88}],
+            "semantic_matches": [
+                {"hypothesis_id": "ddd444", "title": "Similar", "similarity": 0.88},
+            ],
         }]
     )
 

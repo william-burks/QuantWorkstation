@@ -48,7 +48,9 @@ class TestDegradeChampion:
     def test_valid_degrade_returns_former_champion_id(self) -> None:
         store = _make_store()
         champion_row = MagicMock()
-        champion_row.__getitem__ = lambda self, k: "demo-strategy-alpha" if k == "strategy_id" else "champ123"
+        champion_row.__getitem__ = (
+            lambda self, k: "demo-strategy-alpha" if k == "strategy_id" else "champ123"
+        )
         champion_row.__contains__ = lambda self, k: k in ("strategy_id", "champion_id")
 
         write_row = MagicMock()

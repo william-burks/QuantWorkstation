@@ -57,7 +57,10 @@ class TestIdUtilities:
         assert config_id({"target_r": 1.5}, {"atr_mult_stop": 0.5}) == config_id(
             {"target_r": 1.5}, {"atr_mult_stop": 0.5}
         )
-        assert champion_id("es-1h-bear-sweep", "2026-04-02") == champion_id("es-1h-bear-sweep", "2026-04-02")
+        assert (
+            champion_id("es-1h-bear-sweep", "2026-04-02")
+            == champion_id("es-1h-bear-sweep", "2026-04-02")
+        )
 
 
 class TestModels:
@@ -194,12 +197,16 @@ class TestCsvParser:
     def test_unknown_columns_are_ignored_and_reported(self, tmp_path: Path):
         csv_path = tmp_path / "es_bear_baseline_extra.csv"
         csv_path.write_text(
-            "instrument,timeframe,direction,logic_type,target_r,total_trades,win_rate,profit_factor,sharpe,max_drawdown,first_trade_ts,last_trade_ts,notes\n"
-            "ES,1H,bear,baseline,1.0,88,0.38,1.12,0.88,-7.2,2024-01-02T10:00:00Z,2025-10-01T16:00:00Z,ignore me\n",
+            "instrument,timeframe,direction,logic_type,target_r,total_trades,"
+            "win_rate,profit_factor,sharpe,max_drawdown,first_trade_ts,last_trade_ts,notes\n"
+            "ES,1H,bear,baseline,1.0,88,0.38,1.12,0.88,-7.2,"
+            "2024-01-02T10:00:00Z,2025-10-01T16:00:00Z,ignore me\n",
             encoding="utf-8",
         )
 
-        artifact, warnings = CSVParser(csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+        artifact, warnings = CSVParser(
+            csv_path, "baseline_csv", ingested_at=_fixed_ingested_at()
+        ).parse()
 
         assert artifact.runs[0].total_trades == 88
         assert warnings == [f"Unknown columns in {csv_path.name}: notes"]
@@ -215,8 +222,14 @@ class TestCsvParser:
             "grid_csv",
         ).parse()
 
-        assert research_artifact_payload_hash(artifact_1) == research_artifact_payload_hash(artifact_2)
-        assert [config.config_id for config in artifact_1.configs] == [config.config_id for config in artifact_2.configs]
+        assert (
+            research_artifact_payload_hash(artifact_1)
+            == research_artifact_payload_hash(artifact_2)
+        )
+        assert (
+            [config.config_id for config in artifact_1.configs]
+            == [config.config_id for config in artifact_2.configs]
+        )
 
 
 class TestChampionMarkdownParser:
@@ -283,11 +296,21 @@ class TestChampionMarkdownParser:
             ChampionMarkdownParser(md_path, ingested_at=_fixed_ingested_at()).parse()
 
     def test_repeated_champion_parse_returns_identical_normalized_payload_hash(self):
-        artifact_1, _ = ChampionMarkdownParser(FIXTURES_DIR / "champion" / "es_bear_sweep_1h_v1.md").parse()
-        artifact_2, _ = ChampionMarkdownParser(FIXTURES_DIR / "champion" / "es_bear_sweep_1h_v1.md").parse()
+        artifact_1, _ = ChampionMarkdownParser(
+            FIXTURES_DIR / "champion" / "es_bear_sweep_1h_v1.md"
+        ).parse()
+        artifact_2, _ = ChampionMarkdownParser(
+            FIXTURES_DIR / "champion" / "es_bear_sweep_1h_v1.md"
+        ).parse()
 
-        assert research_artifact_payload_hash(artifact_1) == research_artifact_payload_hash(artifact_2)
-        assert artifact_1.champion.champion_id == artifact_2.champion.champion_id
+        assert (
+            research_artifact_payload_hash(artifact_1)
+            == research_artifact_payload_hash(artifact_2)
+        )
+        assert (
+            artifact_1.champion.champion_id  # type: ignore[union-attr]
+            == artifact_2.champion.champion_id  # type: ignore[union-attr]
+        )
 
 
 class TestParserIntegration:
@@ -302,10 +325,9 @@ class TestParserIntegration:
             ingested_at=_fixed_ingested_at(),
         ).parse()
 
-        assert (baseline.strategy.instrument, baseline.strategy.timeframe, baseline.strategy.direction) == (
-            champion.strategy.instrument,
-            champion.strategy.timeframe,
-            champion.strategy.direction,
+        b, c = baseline.strategy, champion.strategy
+        assert (b.instrument, b.timeframe, b.direction) == (
+            c.instrument, c.timeframe, c.direction,
         )
 
 
@@ -341,9 +363,14 @@ class TestArtifactPathNormalization:
 
     def test_csv_and_champion_md_paths_normalize_consistently(self, tmp_path):
         repo_root = tmp_path / "repo"
-        csv = repo_root / "research" / "results" / "futures" / "runs" / "20260101-120000" / "baseline.csv"
+        csv = (
+            repo_root / "research" / "results" / "futures" / "runs" / "20260101-120000"
+            / "baseline.csv"
+        )
         md = repo_root / "research" / "results" / "champions" / "es_bear_v1.md"
-        assert self._fn(csv, repo_root) == "research/results/futures/runs/20260101-120000/baseline.csv"
+        assert self._fn(csv, repo_root) == (
+            "research/results/futures/runs/20260101-120000/baseline.csv"
+        )
         assert self._fn(md, repo_root) == "research/results/champions/es_bear_v1.md"
 
 
@@ -363,7 +390,9 @@ class TestSignificanceGateProperties:
 
     def test_active_window_frequency_computed_correctly(self, tmp_path):
         path = self._make_csv(tmp_path)
-        artifact, warnings = CSVParser(path, "baseline_csv", ingested_at=_fixed_ingested_at()).parse()
+        artifact, warnings = CSVParser(
+            path, "baseline_csv", ingested_at=_fixed_ingested_at()
+        ).parse()
 
         run = artifact.runs[0]
         # first=2024-01-01, last=2024-07-01: 182 days (Jan31+Feb29+Mar31+Apr30+May31+Jun30=182)

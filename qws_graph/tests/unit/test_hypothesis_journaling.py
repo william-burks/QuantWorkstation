@@ -172,7 +172,9 @@ class TestStoreLinkHypothesisTestedAs:
         mock_driver.session.return_value.__enter__ = MagicMock(return_value=mock_session)
         mock_driver.session.return_value.__exit__ = MagicMock(return_value=False)
         mock_session.execute_read.return_value = True
-        mock_session.execute_write.return_value = [{"hypothesis_id": "abc123", "strategy_id": "es-1h-bear-sweep"}]
+        mock_session.execute_write.return_value = [
+            {"hypothesis_id": "abc123", "strategy_id": "es-1h-bear-sweep"},
+        ]
 
         store = GraphStore.__new__(GraphStore)
         store._database = "neo4j"
@@ -272,13 +274,22 @@ class FakeHypothesisService:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict[str, Any]]] = []
         self._hypotheses = [
-            {"hypothesis_id": "abc123def456", "title": "Test", "status": "open", "created_at": "2026-01-01T00:00:00"},
+            {
+                "hypothesis_id": "abc123def456", "title": "Test",
+                "status": "open", "created_at": "2026-01-01T00:00:00",
+            },
         ]
         self._audit = [
-            {"hypothesis_id": "abc123def456", "title": "Test", "status": "open", "strategy_id": None},
+            {
+                "hypothesis_id": "abc123def456", "title": "Test",
+                "status": "open", "strategy_id": None,
+            },
         ]
         self._redundancy = [
-            {"hypothesis_id": "abc123def456", "title": "Test", "active_champion_matches": [], "aborted_strategy_matches": []},
+            {
+                "hypothesis_id": "abc123def456", "title": "Test",
+                "active_champion_matches": [], "aborted_strategy_matches": [],
+            },
         ]
 
     def get_list_hypotheses_v1(self) -> list[dict[str, Any]]:
@@ -417,7 +428,9 @@ class TestHypothesisCLI:
              patch("research.graph.cli.GraphStore") as mock_gs:
             mock_nc.return_value.is_available.return_value = True
             mock_store = MagicMock()
-            mock_store.link_hypothesis_tested_as.side_effect = StoreError("Strategy 'nonexistent-strategy' not found in graph")
+            mock_store.link_hypothesis_tested_as.side_effect = StoreError(
+                "Strategy 'nonexistent-strategy' not found in graph"
+            )
             mock_gs.from_env.return_value = mock_store
 
             result = _cmd_hypothesis(args)
@@ -427,7 +440,9 @@ class TestHypothesisCLI:
     def test_branched_from_requires_rationale(self) -> None:
         from research.graph.cli import _cmd_hypothesis
 
-        args = self._make_args(hypothesis="abc123def456", branched_from="some-node-id", rationale=None)
+        args = self._make_args(
+            hypothesis="abc123def456", branched_from="some-node-id", rationale=None
+        )
 
         with patch("research.graph.cli.NeoConnector") as mock_nc, \
              patch("research.graph.cli.GraphStore") as mock_gs:
@@ -477,7 +492,11 @@ class TestMcpLogHypothesis:
         assert result.data["source"] == "llm"
         mock_store.create_hypothesis.assert_called_once()
         call_kwargs = mock_store.create_hypothesis.call_args
-        assert call_kwargs.kwargs.get("source") == "llm" or call_kwargs[1].get("source") == "llm" or call_kwargs[0][2] == "llm"
+        assert (
+            call_kwargs.kwargs.get("source") == "llm"
+            or call_kwargs[1].get("source") == "llm"
+            or call_kwargs[0][2] == "llm"
+        )
 
     def test_log_hypothesis_empty_title_returns_error(self) -> None:
         from research.graph.mcp_adapter import McpReadAdapter

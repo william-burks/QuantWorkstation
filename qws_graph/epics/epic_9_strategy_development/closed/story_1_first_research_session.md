@@ -4,7 +4,7 @@
 QWS-0901
 
 ## Status
-READY
+CLOSED
 
 ## Type
 research
@@ -43,14 +43,14 @@ follows the prescribed workflow:
 - Achieving a specific Sharpe target or promoting a Champion
 
 ## Acceptance Criteria
-- [ ] 3+ trials run using full stack (hypothesis → record → query)
-- [ ] Hypothesis node logged before each trial
-- [ ] `qw record --bundle` used for each trial (no manual writes)
-- [ ] `docs/research_sessions/session_0901.md` written with observation log
-- [ ] Observation log covers: workflow steps that worked, friction points, MCP gaps
+- [x] 3+ trials run using full stack (hypothesis → record → query)
+- [x] Hypothesis node logged before each trial
+- [x] `qw record --bundle` used for each trial (no manual writes)
+- [x] `docs/research_sessions/session_0901.md` written with observation log
+- [x] Observation log covers: workflow steps that worked, friction points, MCP gaps
 
 ## Definition of Done
-- [ ] 3+ Hypothesis nodes visible in graph post-session
-- [ ] session_0901.md committed to repo
-- [ ] Friction points listed (not fixed — listed)
-- [ ] Story marked CLOSED
+- [x] 3+ Hypothesis nodes visible in graph post-session
+- [x] session_0901.md committed to repo
+- [x] Friction points listed (not fixed — listed)
+- [x] Story marked CLOSED

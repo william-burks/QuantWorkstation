@@ -53,7 +53,8 @@ try:
         df = _fetch_contract_bars(ib, contract, tf, label)
         if not df.empty:
             frames.append(df)
-            print(f"  {expiry}: {len(df)} bars  ({df.index.min().date()} → {df.index.max().date()})")
+            date_range = f"{df.index.min().date()} → {df.index.max().date()}"
+            print(f"  {expiry}: {len(df)} bars  ({date_range})")
         else:
             print(f"  {expiry}: NO BARS")
 

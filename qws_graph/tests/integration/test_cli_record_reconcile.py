@@ -156,7 +156,9 @@ class TestRecordCommand:
 
     @mock.patch("research.graph.cli.GraphStore.from_env")
     @mock.patch("research.graph.cli.NeoConnector.is_available")
-    def test_record_online_calls_store_for_csv(self, mock_is_available, mock_store_factory, csv_baseline: Path, temp_repo_root: Path) -> None:
+    def test_record_online_calls_store_for_csv(
+        self, mock_is_available, mock_store_factory, csv_baseline: Path, temp_repo_root: Path
+    ) -> None:
         """Online CSV ingest calls GraphStore.persist_artifact and writes persisted receipt."""
         mock_is_available.return_value = True
         mock_store = mock.MagicMock()
@@ -186,9 +188,14 @@ class TestRecordCommand:
 
     @mock.patch("research.graph.cli.GraphStore.from_env")
     @mock.patch("research.graph.cli.NeoConnector.is_available")
-    def test_record_online_calls_store_for_champion(self, mock_is_available, mock_store_factory, temp_repo_root: Path) -> None:
+    def test_record_online_calls_store_for_champion(
+        self, mock_is_available, mock_store_factory, temp_repo_root: Path
+    ) -> None:
         """Online champion ingest calls GraphStore.persist_artifact."""
-        champion = Path("/Users/will/ClaudeProjects/QuantWorkstation/qws_graph/tests/fixtures/artifacts/champion/es_bear_sweep_1h_v1.md")
+        champion = Path(
+            "/Users/will/ClaudeProjects/QuantWorkstation/qws_graph"
+            "/tests/fixtures/artifacts/champion/es_bear_sweep_1h_v1.md"
+        )
         mock_is_available.return_value = True
         mock_store = mock.MagicMock()
         mock_store.persist_artifact.return_value = StoreResult(

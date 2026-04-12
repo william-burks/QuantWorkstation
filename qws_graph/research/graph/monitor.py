@@ -111,7 +111,9 @@ class MonitorRunner:
                 return float(targets[0]["decay_threshold"])
         except Exception:  # noqa: BLE001
             pass
-        return self._decay_threshold if self._decay_threshold is not None else _DEFAULT_DECAY_THRESHOLD
+        return (
+            self._decay_threshold if self._decay_threshold is not None else _DEFAULT_DECAY_THRESHOLD
+        )
 
     def _get_champions(
         self, store: Any, champion_id: str | None
@@ -135,7 +137,10 @@ class MonitorRunner:
         # Resolve trial script path from artifact_path
         script_path = self._resolve_script(artifact_path)
         if script_path is None:
-            msg = f"[WARN] Champion {cid}: unresolvable trial script path ({artifact_path!r}) — skipped"
+            msg = (
+                f"[WARN] Champion {cid}: unresolvable trial script path"
+                f" ({artifact_path!r}) — skipped"
+            )
             print(msg, file=sys.stderr)
             return MonitorResult(
                 champion_id=cid,
@@ -217,7 +222,10 @@ class MonitorRunner:
         print(notification)
 
         if self._dry_run:
-            msg = f"[DRY-RUN] Champion {champion_id}: drift={drift:.2f} > threshold={threshold:.2f} — would degrade"
+            msg = (
+                f"[DRY-RUN] Champion {champion_id}: drift={drift:.2f}"
+                f" > threshold={threshold:.2f} — would degrade"
+            )
             return MonitorResult(
                 champion_id=champion_id,
                 strategy_id=strategy_id,

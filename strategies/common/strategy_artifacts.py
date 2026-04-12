@@ -126,7 +126,9 @@ def build_baseline_summary_for_csv(
     return pd.DataFrame([row], columns=BASELINE_CSV_COLUMNS)
 
 
-def write_results_csv(df: pd.DataFrame, output_csv: str | Path, artifact_name: str = 'results CSV') -> Path:
+def write_results_csv(
+    df: pd.DataFrame, output_csv: str | Path, artifact_name: str = 'results CSV'
+) -> Path:
     """Write CSV artifact to requested path and verify it is non-empty."""
     output_path = Path(output_csv)
     output_path.parent.mkdir(parents=True, exist_ok=True)

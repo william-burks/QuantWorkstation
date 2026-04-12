@@ -49,7 +49,8 @@ def hash12(*parts: str) -> str:
 def strategy_id(instrument: str, timeframe: str, direction: str, logic_type: str) -> str:
     """Generate canonical strategy_id from components.
 
-    Pattern: <normalized instrument>-<normalized timeframe>-<normalized direction>-<normalized logic_type>
+    Pattern: <normalized instrument>-<normalized timeframe>-<normalized direction>
+    -<normalized logic_type>
     """
     slug = "-".join(
         [
@@ -115,7 +116,9 @@ def family_id(logic_type: str, direction: str, src_hash: str) -> str:
     return hash12(normalize_text(logic_type), normalize_text(direction), src_hash)
 
 
-def run_stats_summary_id(strategy_id_value: str, artifact_path: str, artifact_mtime_iso: str) -> str:
+def run_stats_summary_id(
+    strategy_id_value: str, artifact_path: str, artifact_mtime_iso: str
+) -> str:
     """Deterministic summary_id for a RunStatsSummary node.
 
     Merges naturally when the same CSV is re-ingested after modification

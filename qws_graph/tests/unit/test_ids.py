@@ -62,7 +62,10 @@ class TestFamilyId:
     def test_different_source_hash_gives_different_family_id(self) -> None:
         src_v1 = source_hash(b"rsi logic v1")
         src_v2 = source_hash(b"bollinger logic v2")
-        assert family_id("MeanReversion", "bear", src_v1) != family_id("MeanReversion", "bear", src_v2)
+        assert (
+            family_id("MeanReversion", "bear", src_v1)
+            != family_id("MeanReversion", "bear", src_v2)
+        )
 
     def test_independent_of_filename_or_path(self) -> None:
         content = b"def generate_signals(): return rsi_signal"

@@ -56,7 +56,9 @@ class PresetSpec:
 PRESET_CATALOG: dict[str, PresetSpec] = {
     "recent_champions": PresetSpec(
         name="recent_champions",
-        description="Return most recent champions across all strategies, ordered by freeze_date DESC.",
+        description=(
+            "Return most recent champions across all strategies, ordered by freeze_date DESC."
+        ),
         params=(
             PresetParam("limit", required=False, description="Max results returned (default 20)"),
         ),
@@ -106,7 +108,8 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         description=(
             "Return champions that pivoted from a specific run via explicit PIVOTED_FROM edges. "
             "Returns empty list when no explicit pivot edges exist for the run. "
-            "depth=1 (default) returns direct children only; depth 2-10 follows the ancestry chain. "
+            "depth=1 (default) returns direct children only; "
+            "depth 2-10 follows the ancestry chain. "
             "include_retired=true adds node_type field to each row."
         ),
         params=(
@@ -123,7 +126,9 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
             PresetParam(
                 "include_retired",
                 required=False,
-                description="Include RetiredChampion nodes and node_type field (true/false, default false)",
+                description=(
+                    "Include RetiredChampion nodes and node_type field (true/false, default false)"
+                ),
             ),
         ),
         requires_graph=True,
@@ -211,7 +216,9 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
             PresetParam(
                 "family_id",
                 required=False,
-                description="12-char family_id hash — preferred; returns all family members (Mode B)",
+                description=(
+                    "12-char family_id hash — preferred; returns all family members (Mode B)"
+                ),
             ),
             PresetParam(
                 "strategy_id",
@@ -404,7 +411,9 @@ def run_preset(
         depth = int(params.get("depth") or "1")
         include_retired = (params.get("include_retired") or "false").lower() == "true"
         assert service is not None
-        return service.get_downstream_champions_v1(run_id, depth=depth, include_retired=include_retired)
+        return service.get_downstream_champions_v1(
+            run_id, depth=depth, include_retired=include_retired
+        )
 
     if name == "portfolio_alpha":
         assert service is not None
@@ -503,7 +512,9 @@ def _run_pending_offline(repo_root: Path) -> list[dict[str, Any]]:
         try:
             raw: dict[str, Any] = json.loads(pending_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
-            items.append({"id": pending_file.stem, "kind": None, "artifact_path": None, "error": "unreadable"})
+            items.append({
+                "id": pending_file.stem, "kind": None, "artifact_path": None, "error": "unreadable",
+            })
             continue
         items.append({
             "id": pending_file.stem,

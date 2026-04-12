@@ -111,7 +111,9 @@ def evaluate(results: pd.DataFrame, bh: dict) -> pd.DataFrame:
     df = results.copy()
 
     # profit_factor may be missing if sweep was run without trade pnl (edge case)
-    pf_col = df["profit_factor"] if "profit_factor" in df.columns else pd.Series(0.0, index=df.index)
+    pf_col = (
+        df["profit_factor"] if "profit_factor" in df.columns else pd.Series(0.0, index=df.index)
+    )
 
     df["tier"] = [
         tier(row["sharpe"], pf_col.iloc[i], row["calmar"], row["max_drawdown"])
@@ -309,10 +311,14 @@ def _print_tier_assessment(results: pd.DataFrame, bh: dict) -> None:
     print(f"  Sharpe:        {best['sharpe']:.3f}   [{sharpe_flag:<13} — min {SHARPE['pass']}]")
     print(f"  Profit Factor: {pf_val:.3f}   [{pf_flag:<13} — min {PROFIT_FACTOR['pass']}]")
     print(f"  Calmar:        {best['calmar']:.3f}   [{calmar_flag:<13} — min {CALMAR['pass']}]")
-    print(f"  Max Drawdown:  {best['max_drawdown']:+.2%}  [{dd_flag:<13} — limit {MAX_DRAWDOWN_LIMIT:.0%}]")
+    print(
+        f"  Max Drawdown:  {best['max_drawdown']:+.2%}"
+        f"  [{dd_flag:<13} — limit {MAX_DRAWDOWN_LIMIT:.0%}]"
+    )
     beat = best.get("beat_bh", False)
     delta = best["sharpe"] - bh["sharpe"]
-    print(f"  Beat BH:       {'YES' if beat else 'NO'}  ({delta:+.3f} vs BH sharpe {bh['sharpe']:.3f})")
+    bh_result = "YES" if beat else "NO"
+    print(f"  Beat BH:       {bh_result}  ({delta:+.3f} vs BH sharpe {bh['sharpe']:.3f})")
     n_yr = results.get("n_trades", pd.Series()).iloc[0] if "n_trades" in results.columns else 0
     if n_yr < MIN_TRADES_PER_YEAR:
         print(f"  WARNING: {int(n_yr)} trades — below {MIN_TRADES_PER_YEAR}/yr reliability floor")

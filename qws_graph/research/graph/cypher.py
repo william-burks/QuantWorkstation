@@ -770,7 +770,7 @@ MERGE (ch1:Champion {champion_id: 'demo_champ_001'})
       ch1.tier = 'institutional',
       ch1.oos_status = 'oos_pending',
       ch1.auto_promoted = true,
-      ch1.promotion_rationale = 'Dominated all ES bear candidates; Sharpe 3.1 vs next-best 2.5 in high-vol and trend-down regimes',
+      ch1.promotion_rationale = 'Dominated ES bear candidates; Sharpe 3.1 vs next-best 2.5',
       ch1.freeze_date = date('2026-04-01'),
       ch1.updated_at = datetime(),
       ch1.is_demo = true
@@ -797,7 +797,7 @@ MERGE (ch2:Champion {champion_id: 'demo_champ_002'})
       ch2.oos_status = 'oos_pass',
       ch2.oos_date = date('2026-04-05'),
       ch2.auto_promoted = true,
-      ch2.promotion_rationale = 'Only CL strategy passing corr gate against ES portfolio; Sharpe 4.6 with OOS confirmation at 3.8',
+      ch2.promotion_rationale = 'Only CL strategy passing corr gate; Sharpe 4.6 OOS 3.8',
       ch2.freeze_date = date('2026-03-20'),
       ch2.updated_at = datetime(),
       ch2.is_demo = true
@@ -881,13 +881,15 @@ MERGE (ch2_corr)-[ec2:CORRELATED_WITH {pair_key: 'demo_champ_001|demo_champ_002'
 // Strategy-level CORRELATED_WITH mirrors champion-level
 MERGE (sa_corr:Strategy {strategy_id: 'demo-strategy-alpha'})
 MERGE (sb_corr:Strategy {strategy_id: 'demo-strategy-beta'})
-MERGE (sa_corr)-[es1:CORRELATED_WITH {pair_key: 'demo-strategy-alpha|demo-strategy-beta'}]->(sb_corr)
+MERGE (sa_corr)-[es1:CORRELATED_WITH
+  {pair_key: 'demo-strategy-alpha|demo-strategy-beta'}]->(sb_corr)
   SET es1.coefficient = 0.72,
       es1.threshold   = 0.60,
       es1.lookback    = 'full',
       es1.computed_at = datetime('2026-04-11T00:00:00'),
       es1.is_demo     = true
-MERGE (sb_corr)-[es2:CORRELATED_WITH {pair_key: 'demo-strategy-alpha|demo-strategy-beta'}]->(sa_corr)
+MERGE (sb_corr)-[es2:CORRELATED_WITH
+  {pair_key: 'demo-strategy-alpha|demo-strategy-beta'}]->(sa_corr)
   SET es2.coefficient = 0.72,
       es2.threshold   = 0.60,
       es2.lookback    = 'full',
@@ -914,10 +916,11 @@ MERGE (ch_demo)-[dg1:DEGRADED_TO]->(fc1)
 
 // ── Monitor notification BlobArtifact (QWS-0803) ───────────────────────────
 // Demo monitor notification blob attached to FormerChampion 001
-MERGE (b_monitor:BlobArtifact {artifact_path: 'monitor:demo_former_champ_001:monitor_notification:demo_blob_001'})
+MERGE (b_monitor:BlobArtifact
+  {artifact_path: 'monitor:demo_former_champ_001:monitor_notification:demo_blob_001'})
   ON CREATE SET
     b_monitor.artifact_type = 'monitor_notification',
-    b_monitor.content = 'Strategy demo-strategy-alpha hit decay threshold (drift=1.10). Moved to FormerChampion.',
+    b_monitor.content = 'Strategy demo-strategy-alpha hit decay threshold (drift=1.10).',
     b_monitor.is_demo = true,
     b_monitor.created_at = datetime()
   ON MATCH SET

@@ -150,7 +150,9 @@ class TestMaybeAutoPromoteChampion:
         store = _make_store()
         fake_session = MagicMock()
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({"champion_id": "oldchamp123", "evidence_score": 15.0, "auto_promoted": True})
+            _make_tx_with_single({
+                "champion_id": "oldchamp123", "evidence_score": 15.0, "auto_promoted": True,
+            })
         )
         fake_session.execute_write = MagicMock()
 
@@ -167,7 +169,9 @@ class TestMaybeAutoPromoteChampion:
         fake_session = MagicMock()
         # auto_promoted is absent (manually curated champion_md)
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({"champion_id": "manual_champ", "evidence_score": 15.0, "auto_promoted": None})
+            _make_tx_with_single({
+                "champion_id": "manual_champ", "evidence_score": 15.0, "auto_promoted": None,
+            })
         )
 
         result = store._maybe_auto_promote_champion(
@@ -181,7 +185,9 @@ class TestMaybeAutoPromoteChampion:
         store = _make_store()
         fake_session = MagicMock()
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({"champion_id": "champion99", "evidence_score": 25.0, "auto_promoted": True})
+            _make_tx_with_single({
+                "champion_id": "champion99", "evidence_score": 25.0, "auto_promoted": True,
+            })
         )
 
         result = store._maybe_auto_promote_champion(
@@ -221,7 +227,9 @@ class TestMaybeAutoPromoteChampion:
         store = _make_store()
         fake_session = MagicMock()
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({"champion_id": "oldchamp999", "evidence_score": 10.0, "auto_promoted": True})
+            _make_tx_with_single({
+                "champion_id": "oldchamp999", "evidence_score": 10.0, "auto_promoted": True,
+            })
         )
 
         captured_queries: list[str] = []
@@ -286,7 +294,9 @@ class TestMaybeAutoPromoteChampion:
 
         # execute_read returns the SAME champion_id that would be generated → idempotent exit.
         fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single({"champion_id": expected_champ_id, "evidence_score": 10.0, "auto_promoted": True})
+            _make_tx_with_single({
+                "champion_id": expected_champ_id, "evidence_score": 10.0, "auto_promoted": True,
+            })
         )
 
         result = store._maybe_auto_promote_champion(
@@ -426,7 +436,9 @@ class TestPersistArtifactDedup:
                         if self_tx._inner[0] == 0:
                             r.single.return_value = {"brid": None}
                         else:
-                            r.single.return_value = {"run_id": "aabbcc112233", "evidence_score": 8.2}
+                            r.single.return_value = {
+                                "run_id": "aabbcc112233", "evidence_score": 8.2,
+                            }
                         self_tx._inner[0] += 1
                         return r
                 return fn(FakeTx())
@@ -608,7 +620,9 @@ class TestEvolutionOutcome:
         assert o.champion_id is None
 
     def test_champion_id_set(self):
-        o = EvolutionOutcome(run_id="a", status="promoted", reason="", evidence_score=17.5, champion_id="xyz")
+        o = EvolutionOutcome(
+            run_id="a", status="promoted", reason="", evidence_score=17.5, champion_id="xyz"
+        )
         assert o.champion_id == "xyz"
 
     def test_skipped_has_reason(self):
@@ -629,9 +643,13 @@ class TestStoreResultEvolution:
 
     def test_evolution_populated(self):
         outcomes = [
-            EvolutionOutcome(run_id="a", status="promoted", reason="", evidence_score=12.3, champion_id="abc"),
+            EvolutionOutcome(
+                run_id="a", status="promoted", reason="", evidence_score=12.3, champion_id="abc"
+            ),
         ]
-        r = StoreResult(status="persisted", node_counts={}, relationship_counts={}, evolution=outcomes)
+        r = StoreResult(
+            status="persisted", node_counts={}, relationship_counts={}, evolution=outcomes
+        )
         assert r.evolution[0].champion_id == "abc"
 
 

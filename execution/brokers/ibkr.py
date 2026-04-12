@@ -139,7 +139,9 @@ class IBKRBroker:
             if pos.qty == 0:
                 continue
             side = "sell" if pos.qty > 0 else "buy"
-            self.submit_order(Order(symbol=pos.symbol, side=side, qty=abs(pos.qty), reason="close_all"))
+            self.submit_order(
+                Order(symbol=pos.symbol, side=side, qty=abs(pos.qty), reason="close_all")
+            )
         log.info("All positions closed")
 
     def close_position(self, symbol: str) -> None:

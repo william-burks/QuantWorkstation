@@ -50,7 +50,9 @@ class TestReadBundleManifest:
         assert "bundle.json" in str(exc_info.value)
 
     def test_raises_value_error_when_csv_missing(self, tmp_path: Path):
-        manifest = {"trial": "x", "run_ts": "20260405-000000", "files": {"csv_kind": "baseline_csv"}}
+        manifest = {
+            "trial": "x", "run_ts": "20260405-000000", "files": {"csv_kind": "baseline_csv"},
+        }
         (tmp_path / "bundle.json").write_text(json.dumps(manifest))
 
         with pytest.raises(ValueError, match="csv"):
@@ -185,7 +187,9 @@ class TestCmdBundleErrors:
             rc = _cmd_bundle(args)
 
         assert rc == 0
-        assert captured_artifact["family_id"] is not None, "family_id must be set when --source-file is provided"
+        assert captured_artifact["family_id"] is not None, (
+            "family_id must be set when --source-file is provided"
+        )
 
     def test_bundle_without_source_file_leaves_family_id_none(self, tmp_path: Path):
         """Omitting --source-file leaves family_id as None (existing behavior unchanged)."""
@@ -237,7 +241,9 @@ class TestCmdBundleErrors:
             rc = _cmd_bundle(args)
 
         assert rc == 0
-        assert captured_artifact["family_id"] is None, "family_id must remain None when --source-file is not provided"
+        assert captured_artifact["family_id"] is None, (
+            "family_id must remain None when --source-file is not provided"
+        )
 
 
 # ---------------------------------------------------------------------------

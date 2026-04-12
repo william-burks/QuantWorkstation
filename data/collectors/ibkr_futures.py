@@ -101,7 +101,7 @@ _CONTRACT_SPECS: dict[str, dict] = {
     # ── US Equity Micros ──
     "MES": {"multiplier": "5",    "exchange": "CME",   "currency": "USD"},  # Micro E-mini S&P 500
     "MNQ": {"multiplier": "2",    "exchange": "CME",   "currency": "USD"},  # Micro E-mini Nasdaq
-    "M2K": {"multiplier": "5",    "exchange": "CME",   "currency": "USD"},  # Micro E-mini Russell 2000
+    "M2K": {"multiplier": "5",    "exchange": "CME",   "currency": "USD"},  # Micro E-mini Russell2k
     # ── US Equity Full-size ──
     "ES":  {"multiplier": "50",   "exchange": "CME",   "currency": "USD"},  # E-mini S&P 500
     "NQ":  {"multiplier": "20",   "exchange": "CME",   "currency": "USD"},  # E-mini Nasdaq 100
@@ -129,7 +129,7 @@ _CONTRACT_SPECS: dict[str, dict] = {
     # ── Crypto ──
     "MBT": {"multiplier": "0.1",     "exchange": "CME",   "currency": "USD"},  # Micro Bitcoin
     # ── Global Equity ──
-    "NKD": {"multiplier": "5",   "exchange": "CME",   "currency": "USD"},  # Nikkei 225 (dollar-denominated)
+    "NKD": {"multiplier": "5",   "exchange": "CME",   "currency": "USD"},  # Nikkei 225 (dollar)
     "DAX": {"multiplier": "25",  "exchange": "EUREX",  "currency": "EUR"},  # DAX
     "Z":   {"multiplier": "10",  "exchange": "ICEEU",  "currency": "GBP"},  # FTSE 100
 }

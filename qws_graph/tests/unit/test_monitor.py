@@ -153,7 +153,10 @@ class TestEvaluateChampionAboveThreshold:
         store.attach_blob_to_former_champion.assert_called_once_with(
             former_champion_id="fc_abc",
             artifact_type="monitor_notification",
-            content=result.message if False else store.attach_blob_to_former_champion.call_args.kwargs["content"],
+            content=(
+            result.message if False
+            else store.attach_blob_to_former_champion.call_args.kwargs["content"]
+        ),
         )
 
     def test_oos_reason_format(self, tmp_path: Path) -> None:
@@ -176,7 +179,11 @@ class TestEvaluateChampionAboveThreshold:
     def test_notification_includes_strategy_id(self, tmp_path: Path) -> None:
         store = _make_store(degrade_return="fc_xyz")
         runner = MonitorRunner(repo_root=tmp_path, dry_run=False)
-        champ = _make_champion(strategy_id="my-strategy", metrics_sharpe=3.0, artifact_path="research/trials/01_test.csv")
+        champ = _make_champion(
+            strategy_id="my-strategy",
+            metrics_sharpe=3.0,
+            artifact_path="research/trials/01_test.csv",
+        )
 
         with patch.object(runner, "_resolve_script", return_value=Path("/fake/script.py")):
             with patch.object(runner, "_run_trial", return_value=1.5):
@@ -393,8 +400,11 @@ class TestCmdMonitor:
                 MockRunner.return_value.run.return_value = []
                 cmd_monitor(args)
                 _, kwargs = MockRunner.call_args
-                assert kwargs.get("dry_run") is True or MockRunner.call_args[0][1] if MockRunner.call_args[0] else False or (
-                    MockRunner.call_args.kwargs.get("dry_run") is True
+                pos_dry = MockRunner.call_args[0][1] if MockRunner.call_args[0] else False
+                assert (
+                    kwargs.get("dry_run") is True
+                    or pos_dry
+                    or MockRunner.call_args.kwargs.get("dry_run") is True
                 )
 
     def test_qw_monitor_subcommand_registered(self) -> None:
