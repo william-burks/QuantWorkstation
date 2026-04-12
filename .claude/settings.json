@@ -159,6 +159,8 @@
         "Bash(python /tmp/*)",
         "Bash(python3 - *)",
         "Bash(python - *)",
+        "Bash(python3 <<*)",
+        "Bash(python <<*)",
         "Write(/tmp/*.py)"
       ]
     },

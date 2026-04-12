@@ -77,8 +77,8 @@ def sim_bash(command: str) -> tuple[bool, str]:
                         return True, f"sed/awk/nl on {name} (unconditional — use Read+offset)"
 
     # 2a. python3/python inline script — heredoc stdin or /tmp script bypass
-    # Catches: python3 - << 'PYEOF', python3 /tmp/script.py, python -
-    if re.search(r'python3?\s+(-[^a-zA-Z0-9_]|/tmp/\S+\.py)', command):
+    # Catches: python3 - << 'PYEOF', python3 << 'PYEOF', python3 /tmp/script.py, python -
+    if re.search(r'python3?\s+(-[^a-zA-Z0-9_]|/tmp/\S+\.py|<<)', command):
         return True, "python3 inline script bypass (use Read/Edit tools directly)"
 
     # 2b. cp of source files to /tmp/ — unconditional block (snapshot bypass)
@@ -110,6 +110,12 @@ def sim_bash(command: str) -> tuple[bool, str]:
                                 return True, f"grep on {name} (already Read)"
                             else:
                                 return True, f"head/tail on {name} (already Read)"
+    # Fix 10: Block Bash read access to reference-only files
+    REFERENCE_FILES = ("data_dictionary.yaml", "graph_v1_contract.md")
+    for ref in REFERENCE_FILES:
+        if ref in command:
+            if re.search(r'(^|\s|\|)(cat|grep|rg|wc|head|tail|less)\s', command):
+                return True, f"{ref} Bash read (use Read tool)"
     return False, ""
 
 def sim_search_code() -> tuple[bool, str]:
@@ -177,6 +183,7 @@ bash_catn   = [(i, t, r) for i, t, r in blocked_bash if "cat -n" in r]
 bash_mypy   = [(i, t, r) for i, t, r in blocked_bash if "mypy" in r]
 bash_cp     = [(i, t, r) for i, t, r in blocked_bash if "cp source" in r or "snapshot bypass" in r]
 bash_py3tmp = [(i, t, r) for i, t, r in blocked_bash if "python3 /tmp" in r or "script bypass" in r]
+bash_reffile = [(i, t, r) for i, t, r in blocked_bash if "Bash read (use Read tool)" in r]
 
 # --- Summary ---
 total = len(calls)
@@ -194,7 +201,8 @@ print(f"  Bash sed/awk/nl (any):    {len(bash_sed):3d}  [agent-bash-grep-guard �
 print(f"  Bash cat -n (3rd+):       {len(bash_catn):3d}  [agent-bash-grep-guard — cat-n cap]")
 print(f"  Bash bare mypy (any):     {len(bash_mypy):3d}  [agent-bash-grep-guard — mypy block]")
 print(f"  Bash cp to /tmp/ (any):   {len(bash_cp):3d}  [agent-bash-grep-guard — snapshot bypass]")
-print(f"  Bash python3 /tmp (any):  {len(bash_py3tmp):3d}  [agent-bash-grep-guard — script bypass] (NEW)")
+print(f"  Bash python3 /tmp (any):  {len(bash_py3tmp):3d}  [agent-bash-grep-guard — script bypass]")
+print(f"  Bash ref-file reads (any):{len(bash_reffile):3d}  [agent-bash-grep-guard — reference file block]")
 print(f"  search_code over-cap:     {len(blocked_searches):3d}  [agent-discovery-guard]")
 print(f"  Total would-be blocked:   {total_blocked:3d}")
 print()

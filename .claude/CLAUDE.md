@@ -26,7 +26,7 @@ shared brain. Any model with MCP access reads the same research history.
 | Path | Purpose |
 |------|---------|
 | `data/config.py` | All env vars (pydantic-settings `Settings`) |
-| `data/store.py` | ArcticDB entry point; `read_bars()`/`write_bars()`/`write_signals()`. Libs: `crypto`(`BTC/USD_1H`), `futures`(`ES_continuous_1H`, Panama-adj), `futures_meta`(`{root}_contracts`), `signals`(`{strategy}_{symbol}_{tf}`) |
+| `data/store.py` | ArcticDB entry point; `read_bars()`/`write_bars()`/`write_signals()`. Libs: `crypto`(`BTC/USD_1H`), `futures`(`MES_1H` stitched, `MES_contfut_1D` CONTFUT), `futures_meta`(`{root}_contracts`), `signals`(`{strategy}_{symbol}_{tf}`) |
 | `data/collectors/alpaca_crypto.py` | Crypto OHLCV via REST (7 timeframes, 2yr init) |
 | `data/collectors/ibkr_futures.py` | Futures OHLCV via ib_insync; `_CONTRACT_SPECS` to add symbols |
 | `execution/oms.py` | Target notionals → Orders via RiskEngine |

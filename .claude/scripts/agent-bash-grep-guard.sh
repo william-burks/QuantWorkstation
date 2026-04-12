@@ -53,9 +53,9 @@ if echo "$COMMAND" | grep -qE '(^|\|)[^|]*(sed|awk|nl)\s'; then
 fi
 
 # Fix 9: Block python3/python inline script execution — prevents script-based file read bypass.
-# Blocks ALL inline forms: python3 -c "...", python3 - << 'PYEOF', python3 /tmp/script.py
-# Agent uses heredoc stdin (python3 - << 'PYEOF') to bypass python3 -c deny list.
-if echo "$COMMAND" | grep -qE '(^|\s|&&\s*|;\s*)python3?\s+(-[^a-zA-Z0-9_]|/tmp/\S+\.py)'; then
+# Blocks ALL inline forms: python3 -c "...", python3 - << 'PYEOF', python3 << 'PYEOF', python3 /tmp/script.py
+# Note: python3 <<'PYEOF' (no dash) is the active bypass form — caught by the << branch.
+if echo "$COMMAND" | grep -qE '(^|\s|&&\s*|;\s*)python3?\s+(-[^a-zA-Z0-9_]|/tmp/\S+\.py|<<)'; then
   echo "Blocked: python3 inline script — use Read tool with offset+limit for targeted reads (all python3 script bypass forms blocked)" >&2
   exit 2
 fi
@@ -68,6 +68,19 @@ if echo "$COMMAND" | grep -qE '(^|\s|&&\s*|;\s*)cp\s'; then
     exit 2
   fi
 fi
+
+# Fix 10: Block Bash read access to reference-only files.
+# These files are read-once in Step 3 via Read tool (tracked, 2-read cap).
+# Any subsequent Bash read (cat/grep/wc/head/tail) is waste — use Edit with strings from context.
+# Does NOT block: git add, Edit tool, Write tool (only Bash read-type commands).
+for _REF_FILE in "data_dictionary.yaml" "graph_v1_contract.md"; do
+  if echo "$COMMAND" | grep -qF "$_REF_FILE"; then
+    if echo "$COMMAND" | grep -qE '(^|\s|\|)(cat|grep|rg|wc|head|tail|less)\s'; then
+      echo "Blocked: $_REF_FILE — use Read tool (tracked, cap=2) not Bash. Edit from context; if Edit fails string match, read only the target 20-line range." >&2
+      exit 2
+    fi
+  fi
+done
 
 # Fix 1: Track cat -n on .py files (2-read cap, same as Read guard).
 # cat -n is the correct targeted-range tool — allow first 2 accesses, block 3rd+.

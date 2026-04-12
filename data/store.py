@@ -2,13 +2,17 @@
 arcticdb client wrapper.
 
 Libraries:
-  crypto   — crypto OHLCV bars (symbol per ticker, e.g. "BTC/USD")
-  futures  — futures OHLCV bars (symbol per continuous ticker, e.g. "ES_continuous")
+  crypto       — crypto OHLCV bars (symbol per ticker, e.g. "BTC/USD")
+  futures      — futures OHLCV bars:
+                   stitched intraday: "{ROOT}_{TF}"          e.g. "MES_1H"
+                   CONTFUT daily/wk:  "{ROOT}_contfut_{TF}"  e.g. "MES_contfut_1D"
+                   cash index:        "{SYMBOL}_idx_{TF}"    e.g. "VIX_idx_1D"
   futures_meta — FuturesContract metadata (symbol per root, e.g. "ES")
-  signals  — strategy signals (symbol = "<strategy>/<ticker>", e.g. "mars/ES_continuous")
+  signals      — strategy signals (symbol = "<strategy>/<ticker>")
 """
 
 import os
+import re
 from typing import TYPE_CHECKING
 
 import arcticdb as adb
@@ -19,6 +23,10 @@ if TYPE_CHECKING:
     from arcticdb.version_store.library import Library
 
 _LIBRARIES = ("crypto", "futures", "futures_meta", "signals")
+
+_FUTURES_KEY_RE = re.compile(
+    r"^[A-Z0-9]+(?:_contfut|_idx)?_(?:5min|10min|15min|30min|1H|2H|4H|8H|1D|1W|1M)$"
+)
 
 
 class Store:
@@ -37,6 +45,13 @@ class Store:
 
     def write_bars(self, library: str, symbol: str, df: pd.DataFrame) -> None:
         """Write or append bars. df must have DatetimeIndex (UTC)."""
+        if library == "futures" and not _FUTURES_KEY_RE.match(symbol):
+            raise ValueError(
+                f"Invalid futures key: {symbol!r}. "
+                "Expected '{ROOT}_{TF}' (stitched), '{ROOT}_contfut_{TF}' (CONTFUT), "
+                "or '{SYMBOL}_idx_{TF}' (cash index). "
+                "Valid TF values: 5min, 10min, 15min, 30min, 1H, 2H, 4H, 8H, 1D, 1W, 1M."
+            )
         lib = self._libs[library]
         if lib.has_symbol(symbol):
             lib.append(symbol, df, prune_previous_version=True)
@@ -56,10 +71,37 @@ class Store:
         return item.data
 
     def list_symbols(self, library: str) -> list[str]:
-        return self._libs[library].list_symbols()
+        return list(self._libs[library].list_symbols())
 
     def has_symbol(self, library: str, symbol: str) -> bool:
-        return self._libs[library].has_symbol(symbol)
+        return bool(self._libs[library].has_symbol(symbol))
+
+    def list_instruments(self, library: str) -> list[tuple[str, str]]:
+        """Return (root, timeframe) tuples for all symbols in the library.
+
+        For futures keys: "MES_1H" → ("MES", "1H"), "MES_contfut_1D" → ("MES", "1D").
+        For other libraries: (symbol, "").
+        """
+        result: list[tuple[str, str]] = []
+        for sym in self.list_symbols(library):
+            m = _FUTURES_KEY_RE.match(sym)
+            if m:
+                # Strip _contfut_ or _idx_ infix and extract TF suffix
+                tf_match = re.search(r"_(5min|10min|15min|30min|1H|2H|4H|8H|1D|1W|1M)$", sym)
+                tf = tf_match.group(1) if tf_match else ""
+                _tf_pat = r"(?:_contfut|_idx)?_(?:5min|10min|15min|30min|1H|2H|4H|8H|1D|1W|1M)$"
+                root = re.sub(_tf_pat, "", sym)
+                result.append((root, tf))
+            else:
+                result.append((sym, ""))
+        return result
+
+    def symbol_meta(self, library: str, symbol: str) -> dict[str, object]:
+        """Return {"rows": int, "last_ts": pd.Timestamp | None} for a symbol."""
+        df = self.read_bars(library, symbol)
+        rows = len(df)
+        last_ts: pd.Timestamp | None = df.index[-1] if rows > 0 else None
+        return {"rows": rows, "last_ts": last_ts}
 
     # ------------------------------------------------------------------
     # Signals

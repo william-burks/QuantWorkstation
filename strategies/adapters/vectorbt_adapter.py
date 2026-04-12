@@ -63,6 +63,9 @@ def run(
         to re-anchor to actual margin for % return calculations.
     """
     signals = strategy.generate_signals(bars)
+    # Shift by 1: signal computed at close of bar T executes at close of bar T+1.
+    # Without this, entry uses the same close that generated the signal (lookahead bias).
+    signals = signals.shift(1).fillna(0).astype(int)
     close = bars["close"]
 
     entries = (signals == 1).values

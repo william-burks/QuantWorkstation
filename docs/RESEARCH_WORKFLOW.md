@@ -15,6 +15,41 @@
 
 ---
 
+## Pre-Graph Ideation
+
+`research/ideas/` is the staging area for observations that are not yet testable as a
+Hypothesis. Park half-formed intuitions here before they qualify for `qw record --hypothesis`.
+
+### File Convention
+Filename: `YYYY-MM-DD-<slug>.md`
+Example: `research/ideas/2026-04-11-cl-eia-reversal.md`
+
+### Frontmatter Spec
+```yaml
+---
+status: raw           # raw | hypothesis_logged | rejected
+source: user          # user | llm | pivot
+related_hypothesis_id: ""   # populate after qw record --hypothesis
+---
+```
+
+### Lifecycle
+1. **Park** — create file with `status: raw` when an observation surfaces mid-session
+2. **Promote** — Will or navigator decides it is testable →
+   `qw record --hypothesis "<text>" --source user` → copy returned hypothesis ID into
+   `related_hypothesis_id` → set `status: hypothesis_logged`
+3. **Reject** — idea is superseded or dead end → set `status: rejected`, add one-line reason
+   in file body. File is preserved (not deleted) for audit trail.
+
+### What belongs here vs. the graph
+| Here (`research/ideas/`) | Graph (Hypothesis node) |
+|---|---|
+| Half-formed observation | Testable, specific hypothesis with instrument + timeframe |
+| "CL often reverses post-EIA in low vol" | "CL 1h mean-reversion within 30min of 10:30am EIA in ATR < 0.5 regime" |
+| Not yet checked for redundancy | Redundancy check run before logging |
+
+---
+
 ## [CURRENT] The Manual Loop
 
 The current workflow is functional but fragmented. Each step requires manual handoff.

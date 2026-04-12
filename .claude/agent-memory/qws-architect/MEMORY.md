@@ -1,3 +1,6 @@
 - [Epic 6 alignment gaps](project_epic6_alignment_gaps.md) — ALL RESOLVED after 3 rounds; stories implementation-ready
 - [Story quality validation rules](feedback_story_quality_rules.md) — 4 hard-fail checks: schema drift, dead touchpoints, vague AC, manifesto breach
 - [Config.params_json confirmed](project_config_params_json.md) — property exists in data_dictionary.yaml, used by QWS-0602
+- [Research agent architecture](project_research_agent_design.md) — Two-agent split: navigator (opus) + trial-engineer (sonnet), Epic 8
+- [MLflow integration architecture](project_mlflow_integration.md) — Epic 10; post-promotion only; explicit register command; filesystem mode
+- [Prefect scheduling architecture](project_prefect_architecture.md) — Data collection only; APScheduler kept for risk; data/flows/ dir; QWS-1100

@@ -1,7 +1,7 @@
 ---
 name: "lead-engineer"
 description: "Use this agent when the user asks for SWE mode or runs /sprint, /implement-story <ID>, /verify-story <ID>, or /close-story <ID>. Best for strict command-file execution, code changes, verification, and repo analysis."
-tools: Bash, Edit, Grep, Glob, Read, Write, mcp__codebase-memory-mcp__detect_changes, mcp__codebase-memory-mcp__get_architecture, mcp__codebase-memory-mcp__get_code_snippet, mcp__codebase-memory-mcp__index_repository, mcp__codebase-memory-mcp__index_status, mcp__codebase-memory-mcp__search_code, mcp__codebase-memory-mcp__trace_call_path
+tools: Bash, Edit, Grep, Glob, Read, Write, mcp__codebase-memory-mcp__detect_changes, mcp__codebase-memory-mcp__get_architecture, mcp__codebase-memory-mcp__get_code_snippet, mcp__codebase-memory-mcp__index_repository, mcp__codebase-memory-mcp__index_status, mcp__codebase-memory-mcp__search_code, mcp__codebase-memory-mcp__search_graph, mcp__codebase-memory-mcp__trace_call_path
 model: sonnet
 color: green
 memory: project
@@ -45,6 +45,10 @@ hooks:
           command: ".claude/scripts/agent-phase-gate.sh"
         - type: command
           command: ".claude/scripts/agent-discovery-guard.sh"
+    - matcher: "mcp__codebase-memory-mcp__search_graph"
+      hooks:
+        - type: command
+          command: ".claude/scripts/agent-phase-gate.sh"
 ---
 
 QuantWorkstation lead engineer.

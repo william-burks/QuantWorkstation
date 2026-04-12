@@ -7,14 +7,12 @@ rm -f /tmp/agent-discovery-tracker/* 2>/dev/null; mkdir -p /tmp/agent-discovery-
 rm -f /tmp/circuit-breaker/* 2>/dev/null; mkdir -p /tmp/circuit-breaker
 rm -f /tmp/agent-step8-committed.txt
 grep -rn 'def \|class ' qws_graph/research/graph/*.py 2>/dev/null > /tmp/symbol-index.txt
+grep -n '^nodes:\|^relationships:\|^  [A-Z][A-Za-z_]*:' qws_graph/docs/data_dictionary.yaml > /tmp/schema-index.txt
 echo "implement-story" > /tmp/agent-current-command.txt
 ```
 Read `.claude/agent-memory/lead-engineer/MEMORY.md` and all referenced files BEFORE any tool invocations.
 Use the exact commands documented there for tests, lint, and type checking.
 Do NOT attempt ruff, pytest, or mypy without checking memory for the correct invocation.
-
-**Before grepping any source file for a symbol, check `/tmp/symbol-index.txt` first.**
-Format: `filename.py:lineN:    def method_name` or `class ClassName`. Use `grep 'symbol_name' /tmp/symbol-index.txt` — one call returns file + line number. Then read only that range. Do NOT grep the source file directly.
 
 ## Step 1 — Locate story
 Story filenames do NOT contain the QWS-NNNN ID. Use content search:
@@ -36,25 +34,35 @@ Read docs directly (known locations):
 
 **PROVENANCE_ENGINE.md and BACKLOG_ALIGNMENT.md are now in context — do NOT re-read them in any later step.**
 
-For story's "Repo Touchpoints" source files, use this exact recipe:
-1. `mcp__codebase-memory-mcp__search_code(query="function_or_class_name")` → note the qualified_name from result
-2. `mcp__codebase-memory-mcp__get_code_snippet(qualified_name=...)` → read that section only
-3. Read each matched source file ONCE at the relevant range. Done — move to Step 4.
+For each symbol in "Repo Touchpoints":
+
+**Step A — search_graph (always first for functions/classes, uncapped):**
+`search_graph(project="Users-will-ClaudeProjects-QuantWorkstation", label="Function", name_pattern="symbol_name")` → note `qualified_name` + `start_line` → `get_code_snippet(project="Users-will-ClaudeProjects-QuantWorkstation", qualified_name=...)`. Two MCP calls. Returns exact line range — no guessing.
+Full file anchor map: `search_graph(..., file_pattern="*cli.py", limit=50)` → all functions in one call.
+
+**Step B — only if Step A misses** (constant, config var, or graph not yet indexed):
+```bash
+grep 'SymbolName' /tmp/symbol-index.txt
+```
+Returns `filename.py:lineN:    def method_name`. Read only that 50-line range. One Bash call.
+
+**Step C — only if both A and B miss:**
+One targeted Grep on the most relevant file. No broad patterns.
+
+Never skip A. Never search the same symbol twice (prefix/suffix variants = same symbol).
 
 **Discovery budget: max 2 search_code + 1 Grep per Repo Touchpoint file. After reading matched files, STOP discovery and start editing.**
-
-One search_code per concept. Prefix/suffix variants count as the same search (e.g. `ChampionNode` and `class ChampionNode` are the same — do NOT search both).
-If search_code returns no results (symbol doesn't exist yet), one targeted Grep on the most relevant file. No broad patterns.
 
 **GATE: After all Repo Touchpoint files are read, discovery is OVER. No more Grep/search_code calls until Step 4 edits fail (string mismatch). Any remaining questions → resolve from context or report BLOCKED.**
 
 **Large file protocol — read targeted ranges only, never full file:**
 | File | Size | How to target |
 |------|------|--------------|
-| `store.py` | ~1400L | Grep method name first → read only that 50-line range |
-| `cli.py` | ~1550L | `argparse` CLI — NOT click/typer. Grep `add_parser` for subcommand registration (~L1346+). Grep `def cmd_` for handler functions (~L312+). |
-| `cypher.py` | ~700L | Grep `DEMO_SEED_CYPHER` → offset ~465, read 200-line range |
-| `query.py` | ~540L | Grep constant name → offset ~500+, read that range |
+| `store.py` | ~1400L | `grep 'method_name' /tmp/symbol-index.txt` → read only that 50-line range |
+| `cli.py` | ~1550L | `argparse` CLI — NOT click/typer. `grep 'cmd_name' /tmp/symbol-index.txt` → line number. Or `search_graph(project="Users-will-ClaudeProjects-QuantWorkstation", label="Function", file_pattern="*cli.py", limit=50)` for full anchor map in one call. Returns qualified_name + start_line + end_line for all 18 functions. |
+| `cypher.py` | ~700L | `grep 'DEMO_SEED_CYPHER' /tmp/symbol-index.txt` → if miss, known offset ~465, read 200-line range |
+| `query.py` | ~540L | `grep 'constant_name' /tmp/symbol-index.txt` → read that range |
+| `data_dictionary.yaml` | ~1100L | `grep 'NodeOrEdgeName' /tmp/schema-index.txt` → get line N → `Read data_dictionary.yaml offset=N limit=40`. ONE Edit per node/edge block — compose the ENTIRE block (all properties) in one `new_string`. Max 2 Edit calls for this file. Never read the full file. |
 
 Never exceed 200 lines in a single Read of these files. Read once, edit from context.
 
@@ -76,10 +84,12 @@ If `/tmp/ruling_$ARGUMENTS.txt` exists → read it before reporting blocked. App
 **Files read in Step 3 are in context. Do NOT re-read them before editing. Use exact strings from context for Edit `old_string`. If an Edit fails due to string mismatch, read ONLY the 20-line range around the target — not the whole file.**
 
 Work ACs one by one. After each:
-1. `- [ ]` → `- [x]` in story file
+1. Story checkboxes — batch 2-3 consecutive `- [ ]` → `- [x]` updates into ONE Edit call. Include AC text as surrounding context to keep `old_string` unique. Do NOT edit the story file for every single AC individually. If all ACs pass cleanly in Step 7 with no failures, batch ALL remaining checkbox updates into a single Edit at that point.
 2. `git add` each changed file (never `-A` or `.`)
 3. `make test` after any Python change — fix all failures
 4. Run `make typecheck` on the project. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
+
+**data_dictionary.yaml edits:** Use `grep 'NodeOrEdgeName' /tmp/schema-index.txt` → get line N → `Read offset=N limit=40`. Compose the ENTIRE node or edge block (all properties) in ONE `new_string`. Max 2 Edit calls total for this file — one for nodes section, one for relationships section.
 
 For large files (>500 lines): grep for the target function/section first, then read only that range.
 Do NOT read whole files in sequential chunks.
@@ -140,10 +150,9 @@ Passing AC → confirm `- [x]`.
 ## Step 8 — Update status
 All ACs pass → READY → TESTING in story, INDEX.md, BACKLOG_ALIGNMENT.md.
 ```
-git add <story> qws_graph/epics/INDEX.md docs/BACKLOG_ALIGNMENT.md
-git commit -m "status($ARGUMENTS): READY → TESTING"
-echo "done" > /tmp/agent-step8-committed.txt
+make commit-story-status STORY=$ARGUMENTS
 ```
+This stages all modified tracked files, commits, and arms the phase gate in one atomic call. Do NOT run git add or echo the sentinel separately — the make target does both.
 
 ## Step 9 — Report and STOP
 

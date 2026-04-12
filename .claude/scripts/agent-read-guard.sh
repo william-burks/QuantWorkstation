@@ -3,6 +3,12 @@
 # Blocks reading out-of-scope command files and limits re-reads of source files.
 # Exit 0 = allow, Exit 2 = block (with reason on stderr).
 
+# Only enforce inside a lead-engineer run (implement-story / verify-story / close-story).
+# Main session never sets this sentinel, so guards are a no-op outside subagents.
+if [ ! -f "/tmp/agent-current-command.txt" ]; then
+  exit 0
+fi
+
 INPUT=$(cat)
 FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 

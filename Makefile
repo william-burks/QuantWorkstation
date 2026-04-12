@@ -53,7 +53,18 @@ to-master: check-clean
 	git push origin $(MASTER_BRANCH)
 	git checkout $(RELEASE_BRANCH)
 
-# 3. Optional: Delete feature branch after successful merge
+# 4. Commit story status update + arm agent phase gate (atomic — sentinel cannot be skipped)
+# Usage: make commit-story-status STORY=QWS-0801
+#        make commit-story-status STORY=QWS-0801 MSG="custom commit message"
+COMMIT_MSG ?= status($(STORY)): READY → TESTING
+commit-story-status:
+	@[ -n "$(STORY)" ] || (echo "ERROR: STORY required. Usage: make commit-story-status STORY=QWS-0801"; exit 1)
+	git add -u
+	git commit -m "$(COMMIT_MSG)"
+	@echo "done" > /tmp/agent-step8-committed.txt
+	@echo "Phase gate armed. Agent hard stop active."
+
+# 5. Optional: Delete feature branch after successful merge
 done-with-feature:
 	@read -p "Delete branch $(CURRENT_BRANCH)? (y/n): " confirm; \
 	if [ "$$confirm" = "y" ]; then \

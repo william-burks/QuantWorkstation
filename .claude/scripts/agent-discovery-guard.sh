@@ -7,6 +7,11 @@
 # Cap of 10 allows 5 touchpoints at full budget before blocking bleed.
 # Reset by implement-story.md Step 0.
 
+# Only enforce inside a lead-engineer run.
+if [ ! -f "/tmp/agent-current-command.txt" ]; then
+  exit 0
+fi
+
 TRACK_DIR="/tmp/agent-discovery-tracker"
 mkdir -p "$TRACK_DIR" 2>/dev/null || true
 

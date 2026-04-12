@@ -5,12 +5,16 @@ Usage:
     python3 util/reseed_symbol.py MGC 15min
 """
 import sys
+
+from data.collectors.ibkr_futures import _TIMEFRAMES, collect
 from data.store import get_store
-from data.collectors.ibkr_futures import collect
 
 root = sys.argv[1] if len(sys.argv) > 1 else "MGC"
 timeframe = sys.argv[2] if len(sys.argv) > 2 else "15min"
-store_key = f"{root}_continuous_{timeframe}"
+tf_cfg = _TIMEFRAMES.get(timeframe, {})
+store_key = (
+    f"{root}_contfut_{timeframe}" if tf_cfg.get("contfut") else f"{root}_{timeframe}"
+)
 
 store = get_store()
 lib = store._libs["futures"]

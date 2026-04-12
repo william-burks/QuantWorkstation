@@ -17,14 +17,21 @@ class Settings(BaseSettings):
     # arcticdb — override with ARCTIC_URI env var; store.py sets a local default if unset
     arctic_uri: str = ""
 
-    # Redis
+    # UNUSED — reserved for execution state layer (signals relay, position cache)
     redis_url: str = "redis://redis:6379/0"
 
     # Crypto symbols to collect
     crypto_symbols: list[str] = ["BTC/USD"]
 
     # Futures root symbols to collect
-    futures_symbols: list[str] = ["MES", "MNQ", "CL"]
+    futures_symbols: list[str] = [
+        "MES", "MNQ", "MGC", "CL", "ES", "NQ", "GC", "RTY", "M2K",
+        "ZN", "ZB", "6E", "6J", "6B", "NG", "SI", "ZC", "ZS", "MBT",
+        "DX", "VX", "NKD", "DAX", "Z",
+    ]
+
+    # Cash index symbols to collect (secType=IND, daily/weekly/monthly only)
+    index_symbols: list[str] = ["VIX", "VIX9D", "VIX3M", "VIX6M", "SKEW"]
 
     # Risk / evaluation
     eval_profit_target: float = 3000.0   # evaluation profit goal (USD)

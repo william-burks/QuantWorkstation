@@ -4,6 +4,11 @@
 # "Do NOT Grep a file already in context" — structural enforcement.
 # Exit 0 = allow, Exit 2 = block.
 
+# Only enforce inside a lead-engineer run.
+if [ ! -f "/tmp/agent-current-command.txt" ]; then
+  exit 0
+fi
+
 INPUT=$(cat)
 FILE=$(echo "$INPUT" | jq -r '.tool_input.path // empty')
 

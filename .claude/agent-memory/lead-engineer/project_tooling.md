@@ -62,10 +62,20 @@ Do NOT glob for the ID — it won't match filenames. Do NOT use Glob `**/*0801*`
 
 ## Codebase Discovery (codebase-memory-mcp)
 
-For finding functions, classes, or understanding file structure — use MCP tools FIRST:
-- `search_code(query="record_hypothesis")` → finds function location without reading whole file
-- `get_code_snippet(qualified_name="GraphStore.record_hypothesis")` → reads just that function
-- `trace_call_path(source="backfill_embeddings")` → shows what calls what
+MCP project name: `Users-will-ClaudeProjects-QuantWorkstation` — required for ALL MCP calls.
+
+Discovery order (stop at first hit):
+1. `grep 'symbol_name' /tmp/symbol-index.txt` — free, gives `file.py:lineN`. Always try first.
+2. `search_graph(project="Users-will-ClaudeProjects-QuantWorkstation", label="Function", name_pattern="symbol_name")` → note `qualified_name` → `get_code_snippet(project="Users-will-ClaudeProjects-QuantWorkstation", qualified_name=...)`. Use when symbol-index misses.
+3. One targeted Grep — last resort only.
+
+For cli.py full anchor map (one call): `search_graph(project="Users-will-ClaudeProjects-QuantWorkstation", label="Function", file_pattern="*cli.py", limit=50)`
+Returns qualified_name + start_line + end_line for all functions. Then `get_code_snippet(project=..., qualified_name=...)` for the specific function body.
+
+Notes:
+- `file_pattern` is glob-to-LIKE: `*` prefix mandatory (`cli.py` → 0 results, `*cli.py` → 18 results)
+- Always pass `limit` — default is 500,000 rows
+- `qn_pattern` is dotted-name regex (e.g. `.*graph.store.*`), NOT a file filter — don't confuse with `file_pattern`
 
 Only fall back to Grep/Read when:
 - Graph is not indexed (run `index_repository` first)
