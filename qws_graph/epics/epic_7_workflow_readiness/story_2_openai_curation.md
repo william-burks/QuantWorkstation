@@ -4,7 +4,7 @@
 QWS-0703
 
 ## Status
-READY
+TESTING
 
 ## Blocked On
 None
