@@ -1070,6 +1070,41 @@ Unblocked tasks:
 
 ---
 
+## AI Curation Contract (QWS-0703)
+
+### Provider
+
+`OpenAIAnalyst` — thin wrapper over `https://api.openai.com/v1/chat/completions`.
+Configured via:
+- `OPENAI_API_KEY` — required; raises `AnalystUnavailableError` if unset.
+- `QW_AI_ANALYST_MODEL` — optional; defaults to `gpt-4o-mini`.
+- `QW_AI_PROVIDER` — optional; defaults to `openai`. Only `openai` is supported.
+
+### Default behaviour
+
+Curation runs by default for `grid_csv` ingests when `OPENAI_API_KEY` is set.
+
+```zsh
+# Default — curation on
+qw record --file results/grid.csv --kind grid_csv
+
+# Disable curation
+qw record --file results/grid.csv --kind grid_csv --no-analyze
+```
+
+### Fallback
+
+If `OPENAI_API_KEY` is unset or the API is unreachable:
+- Emits `WARNING: AI analyst unavailable — falling back to math tier` on stderr.
+- Falls through to the math-tier significance gate (standard behaviour).
+
+### Removed
+
+`--analyze` flag removed (was opt-in Llama path). `LlamaAnalyst`, `LlamaUnavailableError`,
+and `QW_AI_ANALYST_ENDPOINT` env var are all removed. `llama-stack-client` dependency removed.
+
+---
+
 ## Future Decision Hooks
 
 Intentionally deferred:

@@ -821,7 +821,7 @@ def cmd_record(args: argparse.Namespace) -> int:
     raw_source_file = getattr(args, "source_file", None)
     source_file = Path(raw_source_file) if isinstance(raw_source_file, (str, Path)) and str(raw_source_file).strip() else None
     ingest_all = getattr(args, "all", False)
-    analyze = getattr(args, "analyze", False)
+    no_analyze = getattr(args, "no_analyze", False)
 
     # Parse and validate artifact
     try:
@@ -865,16 +865,16 @@ def cmd_record(args: argparse.Namespace) -> int:
     # Apply significance gate for grid_csv (unless --all is set)
     summary = None
     if kind == "grid_csv" and not ingest_all:
-        if analyze:
+        if not no_analyze:
             try:
-                from .analyst import AnalystFactory, LlamaUnavailableError
+                from .analyst import AnalystFactory, AnalystUnavailableError
                 try:
                     analyst = AnalystFactory.from_env()
                     candidates, summary = apply_significance_gate(artifact, top_n_sharpe=20, bottom_n_drawdown=0)
                     artifact = analyst.annotate(candidates)
                     artifact = _keep_approved(artifact)
-                except LlamaUnavailableError as exc:
-                    print(f"WARNING: AI analyst unavailable — {exc}", file=sys.stderr)
+                except AnalystUnavailableError as exc:
+                    print(f"WARNING: AI analyst unavailable — falling back to math tier", file=sys.stderr)
                     artifact, summary = apply_significance_gate(artifact)
             except ImportError:
                 artifact, summary = apply_significance_gate(artifact)
@@ -1444,9 +1444,10 @@ def main() -> int:
         help="Bypass significance gate for grid_csv; ingest all rows (default: top-5 Sharpe + bottom-2 drawdown)",
     )
     record_parser.add_argument(
-        "--analyze",
+        "--no-analyze",
         action="store_true",
-        help="Invoke semantic tier analysis (Llama Scout) for grid_csv; uses QW_AI_ANALYST_ENDPOINT env var",
+        dest="no_analyze",
+        help="Skip AI curation for grid_csv; run math-tier significance gate only",
     )
     record_parser.add_argument(
         "--similarity-threshold",

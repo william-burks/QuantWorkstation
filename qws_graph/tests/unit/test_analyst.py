@@ -1,4 +1,4 @@
-"""Unit tests for semantic analyst (Story: Semantic Gate)."""
+"""Unit tests for semantic analyst (Story: OpenAI Curation Switch QWS-0703)."""
 
 from __future__ import annotations
 
@@ -17,8 +17,8 @@ if str(QWS_GRAPH_ROOT) not in sys.path:
 analyst_module = import_module("research.graph.analyst")
 models_module = import_module("research.graph.models")
 
-LlamaAnalyst = analyst_module.LlamaAnalyst
-LlamaUnavailableError = analyst_module.LlamaUnavailableError
+OpenAIAnalyst = analyst_module.OpenAIAnalyst
+AnalystUnavailableError = analyst_module.AnalystUnavailableError
 AnnotationResult = analyst_module.AnnotationResult
 AnalystFactory = analyst_module.AnalystFactory
 
@@ -85,46 +85,56 @@ def _test_artifact(runs_count: int = 3) -> ResearchArtifact:
     )
 
 
-class TestLlamaAnalystInitialization:
-    def test_from_env_with_endpoint_set(self) -> None:
-        with patch.dict("os.environ", {"QW_AI_ANALYST_ENDPOINT": "http://localhost:5001"}):
-            analyst = LlamaAnalyst.from_env()
-            assert analyst._endpoint == "http://localhost:5001"
+class TestOpenAIAnalystInitialization:
+    def test_from_env_with_api_key_set(self) -> None:
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test-key"}):
+            analyst = OpenAIAnalyst.from_env()
+            assert analyst._api_key == "sk-test-key"
 
-    def test_from_env_without_endpoint_raises_unavailable(self) -> None:
+    def test_from_env_without_api_key_raises_unavailable(self) -> None:
         with patch.dict("os.environ", {}, clear=True):
-            with pytest.raises(LlamaUnavailableError, match="QW_AI_ANALYST_ENDPOINT is not set"):
-                LlamaAnalyst.from_env()
+            with pytest.raises(AnalystUnavailableError, match="OPENAI_API_KEY is not set"):
+                OpenAIAnalyst.from_env()
 
-    def test_direct_init_with_empty_endpoint_raises(self) -> None:
-        with pytest.raises(LlamaUnavailableError, match="QW_AI_ANALYST_ENDPOINT is not set"):
-            LlamaAnalyst(endpoint="")
+    def test_direct_init_with_empty_key_raises(self) -> None:
+        with pytest.raises(AnalystUnavailableError, match="OPENAI_API_KEY is not set"):
+            OpenAIAnalyst(api_key="")
+
+    def test_from_env_reads_model_env_var(self) -> None:
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test", "QW_AI_ANALYST_MODEL": "gpt-4o"}):
+            analyst = OpenAIAnalyst.from_env()
+            assert analyst._model_id == "gpt-4o"
+
+    def test_from_env_defaults_to_gpt4o_mini(self) -> None:
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test"}, clear=True):
+            analyst = OpenAIAnalyst.from_env()
+            assert analyst._model_id == "gpt-4o-mini"
 
 
 class TestAnalystFactory:
-    def test_factory_returns_llama_client_by_default(self) -> None:
-        with patch.dict("os.environ", {"QW_AI_ANALYST_ENDPOINT": "http://localhost:5001"}, clear=True):
+    def test_factory_returns_openai_client_by_default(self) -> None:
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test"}, clear=True):
             client = AnalystFactory.from_env()
-            assert isinstance(client, LlamaAnalyst)
+            assert isinstance(client, OpenAIAnalyst)
 
     def test_factory_respects_provider_env(self) -> None:
         with patch.dict(
             "os.environ",
-            {"QW_AI_PROVIDER": "llama", "QW_AI_ANALYST_ENDPOINT": "http://localhost:5001"},
+            {"QW_AI_PROVIDER": "openai", "OPENAI_API_KEY": "sk-test"},
             clear=True,
         ):
             client = AnalystFactory.from_env()
-            assert isinstance(client, LlamaAnalyst)
+            assert isinstance(client, OpenAIAnalyst)
 
     def test_factory_rejects_unknown_provider(self) -> None:
         with patch.dict("os.environ", {"QW_AI_PROVIDER": "unknown"}, clear=True):
-            with pytest.raises(LlamaUnavailableError, match="Unsupported QW_AI_PROVIDER"):
+            with pytest.raises(AnalystUnavailableError, match="Unsupported QW_AI_PROVIDER"):
                 AnalystFactory.from_env()
 
 
-class TestLlamaAnalystAnnotation:
+class TestOpenAIAnalystAnnotation:
     def test_annotate_empty_artifact_returns_unchanged(self) -> None:
-        analyst = LlamaAnalyst(endpoint="http://localhost:5001")
+        analyst = OpenAIAnalyst(api_key="sk-test")
         # Create a valid artifact first with at least one run
         artifact = _test_artifact(1)
         # Then override to empty for the test
@@ -135,9 +145,9 @@ class TestLlamaAnalystAnnotation:
     @patch("urllib.request.urlopen")
     def test_annotate_batch_with_mock_llm(self, mock_urlopen) -> None:
         artifact = _test_artifact(3)
-        analyst = LlamaAnalyst(endpoint="http://localhost:5001")
+        analyst = OpenAIAnalyst(api_key="sk-test")
 
-        # Mock LLM response — only approves first 2 of 3 runs
+        # Mock OpenAI response — only approves first 2 of 3 runs
         mock_response = MagicMock()
         mock_response.read.return_value = b"""{
             "choices": [{
@@ -161,7 +171,7 @@ class TestLlamaAnalystAnnotation:
     @patch("urllib.request.urlopen")
     def test_annotate_defensive_parser_on_malformed_json(self, mock_urlopen) -> None:
         artifact = _test_artifact(2)
-        analyst = LlamaAnalyst(endpoint="http://localhost:5001")
+        analyst = OpenAIAnalyst(api_key="sk-test")
 
         # Mock response with malformed JSON
         mock_response = MagicMock()
@@ -183,17 +193,17 @@ class TestLlamaAnalystAnnotation:
     @patch("urllib.request.urlopen")
     def test_annotate_with_endpoint_unreachable(self, mock_urlopen) -> None:
         artifact = _test_artifact(1)
-        analyst = LlamaAnalyst(endpoint="http://unreachable:9999")
+        analyst = OpenAIAnalyst(api_key="sk-test")
 
         mock_urlopen.side_effect = OSError("Connection refused")
 
-        with pytest.raises(LlamaUnavailableError, match="Failed to reach LLM endpoint"):
+        with pytest.raises(AnalystUnavailableError, match="Failed to reach OpenAI API"):
             analyst.annotate(artifact)
 
     @patch("urllib.request.urlopen")
     def test_annotate_truncates_long_curator_notes(self, mock_urlopen) -> None:
         artifact = _test_artifact(1)
-        analyst = LlamaAnalyst(endpoint="http://localhost:5001")
+        analyst = OpenAIAnalyst(api_key="sk-test")
 
         long_note = "x" * 500
         mock_response = MagicMock()
@@ -213,11 +223,27 @@ class TestLlamaAnalystAnnotation:
         assert len(result.runs[0].curator_note) == 280
         assert result.runs[0].curator_note == "x" * 280
 
+    @patch("urllib.request.urlopen")
+    def test_request_includes_authorization_header(self, mock_urlopen) -> None:
+        artifact = _test_artifact(1)
+        analyst = OpenAIAnalyst(api_key="sk-testkey123")
+
+        mock_response = MagicMock()
+        mock_response.read.return_value = b'{"choices": [{"message": {"content": "[]"}}]}'
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+
+        analyst.annotate(artifact)
+
+        call_args = mock_urlopen.call_args
+        req = call_args[0][0]
+        assert req.get_header("Authorization") == "Bearer sk-testkey123"
+
 
 class TestPromptConstruction:
     def test_build_prompt_includes_csv_rows(self) -> None:
         artifact = _test_artifact(3)
-        analyst = LlamaAnalyst(endpoint="http://localhost:5001")
+        analyst = OpenAIAnalyst(api_key="sk-test")
 
         prompt = analyst._build_prompt(artifact.strategy, artifact.runs)
 
@@ -230,7 +256,7 @@ class TestPromptConstruction:
 
     def test_prompt_token_estimate_under_2000_for_20_runs(self) -> None:
         artifact = _test_artifact(20)
-        analyst = LlamaAnalyst(endpoint="http://localhost:5001")
+        analyst = OpenAIAnalyst(api_key="sk-test")
         prompt = analyst._build_prompt(artifact.strategy, artifact.runs)
         assert analyst._estimate_prompt_tokens(prompt) < 2000
 
@@ -244,8 +270,3 @@ class TestAnnotationResult:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-
-
-
-
-

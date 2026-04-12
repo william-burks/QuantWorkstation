@@ -1,8 +1,8 @@
 """Semantic analyst for grid-sweep candidate evaluation.
 
-This module provides a thin llama-stack-client wrapper for batch evaluation of
-grid-sweep runs. It is called optionally after apply_significance_gate() when
-the --analyze flag is passed to qw record.
+This module provides a thin OpenAI client wrapper for batch evaluation of
+grid-sweep runs. Curation runs by default for all grid_csv ingests when
+OPENAI_API_KEY is set. Pass --no-analyze to qw record to skip curation.
 """
 
 from __future__ import annotations
@@ -16,8 +16,8 @@ if TYPE_CHECKING:
     from .models import ResearchArtifact, Run, Strategy
 
 
-class LlamaUnavailableError(RuntimeError):
-    """Raised when the Llama analyst endpoint is unreachable or unconfigured."""
+class AnalystUnavailableError(RuntimeError):
+    """Raised when the AI analyst is unreachable or unconfigured."""
 
 
 @dataclass(frozen=True)
@@ -36,43 +36,43 @@ class AnalystClient(Protocol):
         """Return artifact with run-level semantic annotations."""
 
 
-class LlamaAnalyst:
-    """Thin llama-stack-client wrapper for grid-sweep semantic evaluation."""
+class OpenAIAnalyst:
+    """Thin OpenAI API wrapper for grid-sweep semantic evaluation."""
 
     def __init__(
         self,
-        endpoint: str,
-        model_id: str = "Llama-4-Scout-17B-16E-Instruct",
+        api_key: str,
+        model_id: str = "gpt-4o-mini",
         temperature: float = 0.1,
     ):
-        """Initialize analyst with endpoint and model config.
+        """Initialize analyst with API key and model config.
 
         Args:
-            endpoint: Base URL for llama-stack server (e.g., http://localhost:5001).
-            model_id: Model identifier (default Llama 4 Scout).
+            api_key: OpenAI API key.
+            model_id: Model identifier (default gpt-4o-mini).
             temperature: Inference temperature for determinism (default 0.1).
 
         Raises:
-            LlamaUnavailableError: If endpoint is empty or None.
+            AnalystUnavailableError: If api_key is empty or None.
         """
-        if not endpoint:
-            raise LlamaUnavailableError("QW_AI_ANALYST_ENDPOINT is not set")
-        self._endpoint = endpoint
+        if not api_key:
+            raise AnalystUnavailableError("OPENAI_API_KEY is not set")
+        self._api_key = api_key
         self._model_id = model_id
         self._temperature = temperature
 
     @classmethod
-    def from_env(cls) -> LlamaAnalyst:
+    def from_env(cls) -> OpenAIAnalyst:
         """Create analyst from environment variables.
 
         Raises:
-            LlamaUnavailableError: If QW_AI_ANALYST_ENDPOINT is not set.
+            AnalystUnavailableError: If OPENAI_API_KEY is not set.
         """
-        endpoint = os.getenv("QW_AI_ANALYST_ENDPOINT", "")
-        model_id = os.getenv("QW_AI_ANALYST_MODEL", "Llama-4-Scout-17B-16E-Instruct")
-        if not endpoint:
-            raise LlamaUnavailableError("QW_AI_ANALYST_ENDPOINT is not set")
-        return cls(endpoint=endpoint, model_id=model_id)
+        api_key = os.getenv("OPENAI_API_KEY", "")
+        model_id = os.getenv("QW_AI_ANALYST_MODEL", "gpt-4o-mini")
+        if not api_key:
+            raise AnalystUnavailableError("OPENAI_API_KEY is not set")
+        return cls(api_key=api_key, model_id=model_id)
 
     def annotate(self, artifact: ResearchArtifact) -> ResearchArtifact:
         """Evaluate all runs in artifact and return an annotated copy.
@@ -86,7 +86,7 @@ class LlamaAnalyst:
             New artifact with curator_note set on each run.
 
         Raises:
-            LlamaUnavailableError: If the endpoint is unreachable.
+            AnalystUnavailableError: If the OpenAI API is unreachable.
         """
         if not artifact.runs:
             return artifact
@@ -123,18 +123,18 @@ class LlamaAnalyst:
             Dictionary mapping run_id to AnnotationResult.
 
         Raises:
-            LlamaUnavailableError: If the endpoint is unreachable or returns an error.
+            AnalystUnavailableError: If the OpenAI API is unreachable or returns an error.
         """
         try:
             import urllib.request
         except ImportError as exc:
-            raise LlamaUnavailableError(f"Failed to import urllib: {exc}") from exc
+            raise AnalystUnavailableError(f"Failed to import urllib: {exc}") from exc
 
         prompt = self._build_prompt(strategy, runs)
 
         try:
             request = urllib.request.Request(
-                f"{self._endpoint}/v1/chat/completions",
+                "https://api.openai.com/v1/chat/completions",
                 data=json.dumps({
                     "model": self._model_id,
                     "messages": [
@@ -143,21 +143,24 @@ class LlamaAnalyst:
                     ],
                     "temperature": self._temperature,
                 }).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self._api_key}",
+                },
                 method="POST",
             )
             with urllib.request.urlopen(request, timeout=30) as response:
                 result = json.loads(response.read().decode("utf-8"))
         except (urllib.error.URLError, json.JSONDecodeError, OSError) as exc:
-            raise LlamaUnavailableError(
-                f"Failed to reach LLM endpoint at {self._endpoint}: {exc}"
+            raise AnalystUnavailableError(
+                f"Failed to reach OpenAI API: {exc}"
             ) from exc
 
         try:
             message = result["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
-            raise LlamaUnavailableError(
-                f"Unexpected response format from LLM: {exc}"
+            raise AnalystUnavailableError(
+                f"Unexpected response format from OpenAI: {exc}"
             ) from exc
 
         return self._parse_response(message)
@@ -227,15 +230,15 @@ class AnalystFactory:
     """Provider-based factory for semantic analyst clients.
 
     Supported providers:
-    - ``llama`` (default): returns ``LlamaAnalyst``
+    - ``openai`` (default): returns ``OpenAIAnalyst``
     """
 
     @staticmethod
     def from_env() -> AnalystClient:
-        provider = os.getenv("QW_AI_PROVIDER", "llama").strip().lower()
-        if provider == "llama":
-            return LlamaAnalyst.from_env()
-        raise LlamaUnavailableError(f"Unsupported QW_AI_PROVIDER: {provider!r}")
+        provider = os.getenv("QW_AI_PROVIDER", "openai").strip().lower()
+        if provider == "openai":
+            return OpenAIAnalyst.from_env()
+        raise AnalystUnavailableError(f"Unsupported QW_AI_PROVIDER: {provider!r}")
 
 
 _SYSTEM_PROMPT = """You are a quantitative research analyst reviewing backtest results.
@@ -250,10 +253,8 @@ Be concise and analytical. Return ONLY valid JSON, no other text."""
 __all__ = [
     "AnalystClient",
     "AnalystFactory",
-    "LlamaAnalyst",
-    "LlamaUnavailableError",
+    "OpenAIAnalyst",
+    "AnalystUnavailableError",
     "AnnotationResult",
     "truncate_curator_note",
 ]
-
-

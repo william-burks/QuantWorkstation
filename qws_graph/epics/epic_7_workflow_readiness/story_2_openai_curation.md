@@ -67,19 +67,63 @@ schema changes.
 - `docs/graph_v1_contract.md`
 
 ## Acceptance Criteria
-- [ ] `qw record --kind grid_csv` (no flags) invokes AI curation via OpenAI API when
+- [x] `qw record --kind grid_csv` (no flags) invokes AI curation via OpenAI API when
   `OPENAI_API_KEY` is set
-- [ ] `qw record --kind grid_csv --no-analyze` skips AI curation and runs math-tier only
-- [ ] `qw record --kind grid_csv` when `OPENAI_API_KEY` is unset falls back to math-tier
+- [x] `qw record --kind grid_csv --no-analyze` skips AI curation and runs math-tier only
+- [x] `qw record --kind grid_csv` when `OPENAI_API_KEY` is unset falls back to math-tier
   with `WARNING: AI analyst unavailable — falling back to math tier` on stderr
-- [ ] `OpenAIAnalyst.from_env()` reads `OPENAI_API_KEY` from environment; raises
+- [x] `OpenAIAnalyst.from_env()` reads `OPENAI_API_KEY` from environment; raises
   `AnalystUnavailableError` if unset
-- [ ] `QW_AI_ANALYST_MODEL` env var controls the OpenAI model; defaults to `gpt-4o-mini`
+- [x] `QW_AI_ANALYST_MODEL` env var controls the OpenAI model; defaults to `gpt-4o-mini`
   when unset
-- [ ] `--analyze` flag no longer accepted by `qw record` (removed)
-- [ ] Existing unit tests in `test_analyst.py` pass with mock OpenAI client replacing mock
+- [x] `--analyze` flag no longer accepted by `qw record` (removed)
+- [x] Existing unit tests in `test_analyst.py` pass with mock OpenAI client replacing mock
   Llama client
-- [ ] `llama-stack-client` is removed from `pyproject.toml` dependencies
+- [x] `llama-stack-client` is removed from `pyproject.toml` dependencies
+
+## Acceptance Test Plan
+
+### AC1: Default invokes OpenAI curation when key set
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from research.graph.analyst import OpenAIAnalyst, AnalystUnavailableError; import os; os.environ['OPENAI_API_KEY']='sk-test'; a = OpenAIAnalyst.from_env(); print(a._model_id)"`
+- expect_contains: "gpt-4o-mini"
+- expect_exit: 0
+
+### AC2: --no-analyze skips curation (unit test coverage)
+- type: cli
+- cmd: `source .venv/bin/activate && pytest qws_graph/tests/unit/test_analyst.py -v 2>&1 | tail -5`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC3: Missing OPENAI_API_KEY raises AnalystUnavailableError
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from research.graph.analyst import OpenAIAnalyst, AnalystUnavailableError; import os; [os.environ.pop(k, None) for k in ['OPENAI_API_KEY']]; OpenAIAnalyst.from_env()" 2>&1`
+- expect_contains: "OPENAI_API_KEY is not set"
+- expect_exit: 1
+
+### AC4: QW_AI_ANALYST_MODEL controls model
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from research.graph.analyst import OpenAIAnalyst; import os; os.environ['OPENAI_API_KEY']='sk-x'; os.environ['QW_AI_ANALYST_MODEL']='gpt-4o'; a=OpenAIAnalyst.from_env(); print(a._model_id)"`
+- expect_contains: "gpt-4o"
+- expect_exit: 0
+
+### AC5: --analyze flag rejected
+- type: cli
+- cmd: `source .venv/bin/activate && python -m research.graph.cli record --file /dev/null --kind grid_csv --analyze 2>&1`
+- expect_contains: "error: unrecognized arguments"
+- expect_exit: 2
+
+### AC6: llama-stack-client absent from pyproject.toml
+- type: file_check
+- cmd: `grep 'llama-stack-client' qws_graph/pyproject.toml`
+- expect_contains: ""
+- expect_exit: 1
+
+### AC7: Unit tests pass
+- type: cli
+- cmd: `source .venv/bin/activate && pytest qws_graph/tests/unit/test_analyst.py -v 2>&1 | grep -E 'passed|failed|error'`
+- expect_contains: "passed"
+- expect_exit: 0
 
 ## Definition of Done
 - [ ] `OpenAIAnalyst` implemented; `LlamaAnalyst` and `LlamaUnavailableError` removed
