@@ -7,7 +7,7 @@ REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
 
-.PHONY: to-release to-master check-clean done-with-feature test lint typecheck check commit-close-story
+.PHONY: to-release to-master check-clean done-with-feature test lint typecheck check commit-close-story prime-agent feature-branch
 
 
 # --- QUALITY ---
@@ -53,14 +53,30 @@ to-master: check-clean
 	git push origin $(MASTER_BRANCH)
 	git checkout $(RELEASE_BRANCH)
 
+# 3b. Create feature branch from release branch
+# Usage: make feature-branch STORY=QWS-0804
+feature-branch:
+	@[ -n "$(STORY)" ] || (echo "ERROR: STORY required. Usage: make feature-branch STORY=QWS-0804"; exit 1)
+	git checkout $(RELEASE_BRANCH)
+	git pull origin $(RELEASE_BRANCH)
+	git checkout -b feature/$(REL_VER)/$(STORY)
+
+# 3c. Prime agent guards before spawning lead-engineer (arms sentinel + trackers from call #1)
+# Usage: make prime-agent
+prime-agent:
+	@mkdir -p /tmp/agent-read-tracker /tmp/agent-discovery-tracker /tmp/circuit-breaker
+	@echo "implement-story" > /tmp/agent-current-command.txt
+	@rm -f /tmp/agent-step8-committed.txt
+	@echo "Agent guards primed. Safe to spawn lead-engineer."
+
 # 4. Commit story status update + arm agent phase gate (atomic — sentinel cannot be skipped)
 # Usage: make commit-story-status STORY=QWS-0801
 #        make commit-story-status STORY=QWS-0801 MSG="custom commit message"
 commit-story-status:
 	@[ -n "$(STORY)" ] || (echo "ERROR: STORY required. Usage: make commit-story-status STORY=QWS-0801"; exit 1)
-	git add -u
-	git commit -m "$(if $(MSG),$(MSG),status($(STORY)): READY → TESTING)"
 	@echo "done" > /tmp/agent-step8-committed.txt
+	git add -u
+	git commit -m "$(if $(MSG),$(MSG),status($(STORY)): READY → TESTING)" || echo "WARN: nothing to commit (already committed?)"
 	@echo "Phase gate armed. Agent hard stop active."
 
 # 4b. Commit story closure

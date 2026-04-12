@@ -98,12 +98,14 @@ All dependencies must be CLOSED. If not → skip story + mark dependents skipped
 
 ### 4b — Branch
 ```
-git checkout <release branch>
-git pull origin <release branch>
-git checkout -b feature/<ver>/$STORY_ID
+make feature-branch STORY=$STORY_ID
 ```
 
 ### 4c — Spawn A: implement + verify
+**Pre-arm guards before spawning** (ensures sentinel is active from the agent's first tool call):
+```
+make prime-agent
+```
 Prompt:
 ```
 For story <STORY_ID>:
@@ -188,9 +190,7 @@ rm -f /tmp/agent-trace-lead-engineer-*.jsonl 2>/dev/null || true
 
 ### 4-audit-c — Branch + Spawn A (implement + verify)
 ```
-git checkout <release branch>
-git pull origin <release branch>
-git checkout feature/<ver>/$STORY_ID 2>/dev/null || git checkout -b feature/<ver>/$STORY_ID
+make feature-branch STORY=$STORY_ID 2>/dev/null || git checkout feature/$(REL_VER)/$STORY_ID
 ```
 Spawn lead-engineer agent (Spawn A — implement + verify only):
 ```

@@ -12,3 +12,4 @@ run_id,timestamp,epic,story_id,branch,model,total_calls,necessary,wasted,waste_p
 20260412T050956,2026-04-12T05:09:56Z,8,QWS-0801,feature/26.4.0/QWS-0801,sonnet,131,54,77,59,completed,,0,python3-flailing
 20260412T075004,2026-04-12T07:50:04Z,8,QWS-0801,feature/26.4.0/QWS-0801,sonnet,126,69,57,45,CLOSED-READY,,,post-gate-flail
 20260412T132414,2026-04-12T13:24:14Z,epic_7,QWS-0703,feature/26.4.0/QWS-0703,sonnet,41,36,5,12,completed,,,file-reread
+20260412T135905,2026-04-12T00:00:00Z,epic_7,QWS-0804,feature/26.4.0/QWS-0804,sonnet,70,34,36,51,TESTING,,,grep-storm
