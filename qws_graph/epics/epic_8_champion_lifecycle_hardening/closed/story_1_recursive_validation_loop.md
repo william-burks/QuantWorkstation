@@ -4,7 +4,7 @@
 QWS-0803
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 ~~QWS-0801 CLOSED~~ (satisfied)
@@ -135,7 +135,7 @@ and is queryable.
 - [x] Notification written to stdout and stored as BlobArtifact.
 - [x] Integration test passes with mock trial runner.
 - [x] `data_dictionary.yaml` updated.
-- [ ] Story marked CLOSED.
+- [x] Story marked CLOSED.
 - [x] All affected README files updated to reflect new capabilities.
 - [x] PROVENANCE_ENGINE.md updated — monitor_champion tool moved from `[TARGET]` to
   `[CURRENT]`; Recursive Validation Loop section updated to reflect actual implementation.

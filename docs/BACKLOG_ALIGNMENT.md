@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 8 Champion Lifecycle Hardening — Epic 7 COMPLETE. Next: QWS-0802 (SUPERSEDED_BY, READY) and QWS-0803 (Recursive Validation Loop, READY) → Epic 9 (Strategy Development, usage + gap audit) → Epic 10 (Macro Data) → Epic 11 (Production Tracking) → Epic 12 entry.
+> Current sprint: Epic 9 Strategy Development — Epic 8 COMPLETE. Next: QWS-0901 (First Research Session, READY) → QWS-0902 (Strategy Screening Pass) → QWS-0903 (System Gap Audit) → Epic 10 (Macro Data) → Epic 11 (Production Tracking) → Epic 12 entry.
 > ```
 
 ---
@@ -23,7 +23,7 @@
 | Epic 5 — Context Enrichment | **COMPLETE** | family_id, Regime tagging, cross-instrument aggregation |
 | Epic 6 — Research Analytics | **COMPLETE** | Hypothesis journaling, parameter stability, portfolio correlation, semantic dedup |
 | Epic 7 — Workflow Readiness | **COMPLETE** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
-| Epic 8 — Champion Lifecycle Hardening | **PLANNED** | SUPERSEDED_BY direct lineage edge, recursive decay detection (monitor_champion) |
+| Epic 8 — Champion Lifecycle Hardening | **COMPLETE** | SUPERSEDED_BY direct lineage edge, recursive decay detection (monitor_champion) |
 | Epic 9 — Strategy Development | **PLANNED** | Research sessions, workflow observation, system gap audit — no code deliverables |
 | Epic 10 — Macro Data | **PLANNED** | Macro + alternative data ingestion to ArcticDB (COT, FRED, EIA, Baker Hughes, NOAA, USDA, Google Trends, BDTI, economic calendar, NDVI, Prefect infra) |
 | Epic 11 — Production Tracking | **PLANNED** | MLflow Champion registration + OOS sync; split production results from research results |
@@ -76,7 +76,7 @@
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | SUPERSEDED_BY Relationship | QWS-0802 (**CLOSED**) | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
-| Recursive Validation Loop | QWS-0803 (**TESTING**) | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | ~~QWS-0801 CLOSED~~ (satisfied) |
+| Recursive Validation Loop | QWS-0803 (**CLOSED**) | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | ~~QWS-0801 CLOSED~~ (satisfied) |
 | Champion Promotion Rationale | QWS-0805 (**CLOSED**) | `promotion_rationale` property on Champion node; `--rationale` flag on `qw record`; included in `recent_champions` preset output | — |
 
 ### Epic 9 — Strategy Development
@@ -207,7 +207,7 @@ QWS-1201 (purge gap)
                     └── QWS-1206 (results interpreter)
                             └── QWS-1207 (hypothesis miner)
 
-QWS-0803 (decay monitor) — must CLOSE before ML Champion promotion allowed (Epic 8 gate for Epic 12)
+QWS-0803 (decay monitor) — CLOSED — Epic 8 gate for Epic 12 satisfied
 ```
 
 ---
