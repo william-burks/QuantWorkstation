@@ -728,5 +728,4 @@ class TestPresetCatalogStory4:
             "hypothesis_audit",
             "check_redundancy",
             "similar_hypotheses",
-            "former_champions",
         }

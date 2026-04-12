@@ -629,62 +629,17 @@ nodes:
         nullable: false
         graph_only: true
 
-  FormerChampion:
-    description: >
-      A Champion that has been manually demoted via `qw degrade`. Sits between
-      Champion and RetiredChampion in the lifecycle. Monitored but not yet archived.
-      The original Champion node is NOT deleted — FormerChampion is a separate node
-      connected via DEGRADED_TO. The "cemetery view" for LLM cause-of-death checks.
-    id_key: former_champion_id
-    id_source: "hash12(champion_id, degraded_at_iso)"
-    labels: ["FormerChampion"]
-    story: QWS-0801
-    properties:
-      former_champion_id:
-        type: str
-        nullable: false
-        description: "hash12(champion_id + degraded_at_iso)"
-      strategy_id:
-        type: str
-        nullable: false
-      champion_id:
-        type: str
-        nullable: false
-        description: ID of the source Champion node.
-      degraded_at:
-        type: datetime
-        nullable: false
-      oos_reason:
-        type: str
-        nullable: false
-        description: Mandatory cause-of-death. Cannot be empty.
-      metrics_sharpe_at_degradation:
-        type: float
-        nullable: true
-        description: Sharpe at time of demotion, if available.
-
   RetiredChampion:
     description: >
-      A Champion node that has been displaced by a newer promotion, or a FormerChampion
-      that has been fully archived via `qw retire`. Carries all the same properties as
-      Champion plus oos_reason (copied from FormerChampion at retirement) and
-      retirement_note (set at `qw retire` time). Label is swapped atomically — the node
-      is never deleted, only relabeled. Querying :Champion returns only the active set;
-      querying :RetiredChampion returns the full lineage chain.
+      A Champion node that has been displaced by a newer promotion. Carries all
+      the same properties as Champion. Label is swapped atomically — the node is
+      never deleted, only relabeled. Querying :Champion returns only the active
+      set; querying :RetiredChampion returns the full lineage chain.
     id_key: champion_id
     labels: ["RetiredChampion"]
     note: >
       Do not MERGE on :RetiredChampion — the store layer handles re-labeling.
       Bare MATCH (ch:Champion) will never return RetiredChampion nodes.
-    properties_added_qws_0801:
-      oos_reason:
-        type: str
-        nullable: true
-        description: Copied from FormerChampion at retirement time (QWS-0801).
-      retirement_note:
-        type: str
-        nullable: true
-        description: Free-text reason for final retirement, set at `qw retire` time (QWS-0801).
 
   RunStatsSummary:
     description: >

@@ -686,10 +686,6 @@ class GraphQueryService:
         with self._driver.session(database=self._database) as session:
             return get_similar_hypotheses_v1(session, hypothesis_id=hypothesis_id)
 
-    def get_former_champions_v1(self) -> list[dict[str, Any]]:
-        with self._driver.session(database=self._database) as session:
-            return get_former_champions_v1(session)
-
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
     if hasattr(record, "data") and callable(record.data):
@@ -1146,17 +1142,6 @@ def get_similar_hypotheses_v1(
     return _all_results(session, GET_SIMILAR_HYPOTHESES_V1_CYPHER, hypothesis_id=hypothesis_id)
 
 
-def get_former_champions_v1(session: QuerySession) -> list[dict[str, Any]]:
-    """Return cemetery view: all FormerChampion nodes with lifecycle status.
-
-    Columns: former_champion_id, strategy_id, instrument, degraded_at,
-             oos_reason, retirement_note, status (DEGRADED | RETIRED).
-    Ordered by degraded_at DESC.
-    """
-    from .cypher import GET_FORMER_CHAMPIONS_QUERY
-    return _all_results(session, GET_FORMER_CHAMPIONS_QUERY)
-
-
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -1181,7 +1166,6 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_hypothesis_audit_v1": get_hypothesis_audit_v1,
     "get_check_redundancy_v1": get_check_redundancy_v1,
     "get_similar_hypotheses_v1": get_similar_hypotheses_v1,
-    "get_former_champions_v1": get_former_champions_v1,
 }
 
 
@@ -1239,7 +1223,6 @@ __all__ = [
     "get_run_stats_summary_v1",
     "get_strategy_lineage_v1",
     "get_strategy_summary_v1",
-    "get_former_champions_v1",
 ]
 
 

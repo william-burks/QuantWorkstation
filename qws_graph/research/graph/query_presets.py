@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 from .query import (
     get_cross_artifact_correlation_v1,
     get_downstream_champions_v1,
-    get_former_champions_v1,
     get_fragility_report_v1,
     get_instrument_concentration_v1,
     get_list_aborted_v1,
@@ -321,17 +320,6 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         ),
         requires_graph=True,
     ),
-    "former_champions": PresetSpec(
-        name="former_champions",
-        description=(
-            "Cemetery view: all FormerChampion nodes with lifecycle status. "
-            "Columns: former_champion_id, strategy_id, instrument, degraded_at, "
-            "oos_reason, retirement_note (null if still DEGRADED), status (DEGRADED | RETIRED). "
-            "Ordered by degraded_at DESC. LLM checks this before proposing a new strategy."
-        ),
-        params=(),
-        requires_graph=True,
-    ),
 }
 
 
@@ -487,10 +475,6 @@ def run_preset(
         assert service is not None
         return service.get_similar_hypotheses_v1(hypothesis_id=hypothesis_id)
 
-    if name == "former_champions":
-        assert service is not None
-        return service.get_former_champions_v1()
-
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 
 
@@ -539,7 +523,6 @@ def _extract_artifact_path(payload: dict[str, Any]) -> str | None:
 # Convenience re-exports for callers that want to import view functions
 # by stable name from the preset layer.
 _PRESET_VIEW_FUNCTIONS = {
-    "former_champions": get_former_champions_v1,
     "recent_champions": get_recent_champions_v1,
     "strategy_lineage": get_strategy_lineage_v1,
     "run_history": get_run_history_v1,

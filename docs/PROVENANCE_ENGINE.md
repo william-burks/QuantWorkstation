@@ -3,8 +3,8 @@
 > **LLM INSTRUCTION BLOCK**
 > ```
 > CURRENT schema nodes: Strategy, Run, Config, Champion, RetiredChampion, RunStatsSummary,
-> BlobArtifact, ResearchTarget, Regime, Hypothesis (QWS-0601 CLOSED), HypothesisSource,
-> FormerChampion (QWS-0801 CLOSED).
+> BlobArtifact, ResearchTarget, Regime, Hypothesis (QWS-0601 CLOSED), HypothesisSource.
+> Do NOT use FormerChampion in Cypher until its story is marked COMPLETE in BACKLOG_ALIGNMENT.md.
 > The interface is qw CLI + MCP tools only. No FastAPI. No REST API.
 > Before proposing schema changes, check this document for the authoritative current state.
 > ```
@@ -87,11 +87,11 @@ provenance in the graph.
 **Query convention:** All MCP presets that traverse Strategy nodes filter with
 `WHERE s.status <> 'ABORTED'` by default. Aborted strategies are only surfaced via `list_aborted`.
 
-### [CURRENT — QWS-0801] — FormerChampion Lifecycle
+### [TARGET] — Not Yet Implemented
 
 | Node | Story | Role |
 |---|---|---|
-| `FormerChampion` | QWS-0801 | Decay watch: alpha slipping but still monitored; sits between Champion and RetiredChampion. Created by `qw degrade`; retired by `qw retire`. |
+| `FormerChampion` | New story needed | Decay watch: alpha slipping but still monitored; sits between Champion and RetiredChampion |
 
 ### [NEW — QWS-0502] — Regime Context
 
@@ -122,18 +122,13 @@ provenance in the graph.
 | `CORRELATED_WITH` | Champion ↔ Champion | — | same properties. QWS-0603. Symmetric. |
 | `SEMANTICALLY_RELATED` | Hypothesis ↔ Hypothesis | — | `similarity: float` (cosine), `pair_key: str`, `computed_at: datetime`. QWS-0604. Symmetric. |
 
-### [CURRENT — QWS-0801] — New Relationships
-
-| Relationship | Source | Target | Properties | Story |
-|---|---|---|---|---|
-| `DEGRADED_TO` | Champion | FormerChampion | `detected_at: datetime` | QWS-0801 |
-| `RETIRED_TO` | FormerChampion | RetiredChampion | `retired_at: datetime` | QWS-0801 |
-
 ### [TARGET] — Not Yet Implemented
 
 | Relationship | Source | Target | Properties | Story |
 |---|---|---|---|---|
 | `HAS_TRIAL` | Strategy | Trial | Alias for `HAS_RUN` at the conceptual level | — |
+| `DEGRADED_TO` | Champion | FormerChampion | `detected_at: datetime` | New story |
+| `RETIRED_TO` | FormerChampion | RetiredChampion | Replaces direct Champion→RetiredChampion in target state | New story |
 | `SUPERSEDED_BY` | Champion | Champion | Replaced by better version of same idea | New story |
 
 **Name conflict note:** `PIVOTED_FROM` already exists in the current schema (Champion → Run, meaning "this
@@ -189,24 +184,6 @@ story is marked COMPLETE in `BACKLOG_ALIGNMENT.md`.
 | `duty_cycle` | float \| null | `active_days / total_backtest_days` | Fraction of backtest period in which the target regime was present. Null when `backtest_start`/`backtest_end` not emitted by runner. Portfolio heat signal — not a promotion gate. |
 | `first_trade_ts` | datetime | Required CSV column; sourced from trade log | Timestamp of first closed trade. Required — parse fails if absent. Anchor for active-window calculation. |
 | `last_trade_ts` | datetime | Required CSV column; sourced from trade log | Timestamp of last closed trade. Required — parse fails if absent. Anchor for active-window calculation. |
-
-### FormerChampion — key properties (QWS-0801)
-
-| Property | Type | Description |
-|---|---|---|
-| `former_champion_id` | str | `hash12(champion_id + degraded_at_iso)` |
-| `strategy_id` | str | Parent strategy |
-| `champion_id` | str | Source Champion node ID |
-| `degraded_at` | datetime | Timestamp of demotion |
-| `oos_reason` | str | Cause-of-death (mandatory — cannot be empty) |
-| `metrics_sharpe_at_degradation` | float \| null | Sharpe at time of demotion |
-
-**New properties on `:RetiredChampion` (QWS-0801):**
-
-| Property | Type | Description |
-|---|---|---|
-| `oos_reason` | str | Copied from FormerChampion at retirement time |
-| `retirement_note` | str | Free-text reason for final retirement (set at `qw retire` time) |
 
 ### Champion — key query properties
 
@@ -281,7 +258,7 @@ JSON output: append `--json` to any preset. Pipe to `jq` for filtering.
 | `list_aborted` | QWS-0406 | All Strategies where `status = ABORTED`, with `abort_reason` and `aborted_at`. LLM checks this before suggesting any new strategy. |
 | `promotion_candidates` | QWS-0406 | Runs meeting `standards.py` tier thresholds not yet promoted. Dual-hurdle gate: `total_trades >= 30` AND `active_window_frequency >= 0.06 trades/day`. Output includes **Tier** (Professional / Institutional), **Active-Window Frequency**, and **Regime Diversity Score** — so the LLM can distinguish "Regime Specialist" from "Robust Performer" before recommending promotion. |
 | `regime_performance` | QWS-0503 | Performance table grouped by `--regime` property. Includes **Regime Diversity Score** (count of distinct regimes meeting Sharpe threshold). Score = 1 → "Regime Specialist" (fragility flag). |
-| `former_champions` | QWS-0801 (**IMPLEMENTED**) | The "Cemetery" view: strategies that failed OOS or were retired. Returns `former_champion_id`, `strategy_id`, `instrument`, `degraded_at`, `oos_reason`, `retirement_note` (null if still DEGRADED), `status` (DEGRADED \| RETIRED). |
+| `former_champions` | Epic 4/5 | The "Cemetery" view: strategies that failed OOS or were retired |
 | `hypothesis_audit` | QWS-0601 | Traces current state back to the original `curator_note` intent |
 
 ### [TARGET] Fragility Signal Distribution

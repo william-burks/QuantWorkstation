@@ -105,25 +105,6 @@ class Champion(BaseModel):
         return self
 
 
-class FormerChampion(BaseModel):
-    """FormerChampion node: a demoted Champion under decay watch."""
-
-    model_config = ConfigDict(extra="ignore")
-
-    former_champion_id: str
-    strategy_id: str
-    champion_id: str
-    degraded_at: datetime
-    oos_reason: str
-    metrics_sharpe_at_degradation: float | None = None
-
-    @model_validator(mode="after")
-    def validate_oos_reason(self) -> FormerChampion:
-        if not self.oos_reason.strip():
-            raise ValueError("oos_reason must be a non-empty string")
-        return self
-
-
 class RunStatsSummary(BaseModel):
     """Aggregate stats for grid-sweep runs that did not pass the significance gate.
 

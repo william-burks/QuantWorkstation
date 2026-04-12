@@ -290,33 +290,6 @@ class Champion(BaseModel):
     provenance: Provenance
 
 
-class FormerChampion(BaseModel):
-    """FormerChampion node: demoted Champion under decay watch (QWS-0801).
-
-    Created via `qw degrade <champion_id> --reason "..."`.
-    The Champion node is NOT deleted or relabeled — FormerChampion is a separate node
-    connected via DEGRADED_TO edge. Retire via `qw retire <former_champion_id>`.
-    """
-    model_config = ConfigDict(extra="ignore")
-
-    former_champion_id: str     # hash12(champion_id, degraded_at_iso)
-    strategy_id: str
-    champion_id: str            # source Champion node ID
-    degraded_at: datetime
-    oos_reason: str             # mandatory cause-of-death; cannot be empty
-    metrics_sharpe_at_degradation: float | None = None
-
-    @model_validator(mode="after")
-    def validate_oos_reason(self) -> "FormerChampion":
-        if not self.oos_reason.strip():
-            raise ValueError("oos_reason must be a non-empty string")
-        return self
-
-    # New properties added to RetiredChampion at `qw retire` time (QWS-0801):
-    # oos_reason: str | None    — copied from FormerChampion
-    # retirement_note: str | None — optional free-text archival reason
-
-
 class BlobArtifact(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
