@@ -175,7 +175,7 @@ Stories (QWS-0802 and QWS-0803 independent — implement in parallel):
 Stories (execution order — 0901 first, 0902 after 0901, 0903 after both):
 1. `QWS-0901` `epic_9_strategy_development/closed/story_1_first_research_session.md` — `CLOSED`
 2. `QWS-0902` `epic_9_strategy_development/closed/story_2_strategy_screening_pass.md` — `CLOSED`
-3. `QWS-0903` `epic_9_strategy_development/story_3_system_gap_audit.md` — `READY`
+3. `QWS-0903` `epic_9_strategy_development/closed/story_3_system_gap_audit.md` — `CLOSED`
 
 Note: this epic has no code deliverables. Done criteria = gap audit written, backlog updated.
 

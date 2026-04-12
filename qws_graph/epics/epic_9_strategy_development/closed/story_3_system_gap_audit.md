@@ -4,13 +4,13 @@
 QWS-0903
 
 ## Status
-BLOCKED
+CLOSED
 
 ## Type
 docs
 
 ## Blocked On
-QWS-0901, QWS-0902
+~~QWS-0901~~, ~~QWS-0902~~
 
 ## Summary
 After completing QWS-0901 and QWS-0902, synthesize all friction points and observations
@@ -45,13 +45,13 @@ wrong. This gap audit is the primary output of Epic 9.
 - Scoping the new stories (Will decides priority after reading the audit)
 
 ## Acceptance Criteria
-- [ ] `docs/epic_9_gap_audit.md` exists with all 6 sections populated
-- [ ] Each tooling gap has a specific description (not "CLI was slow" — specific command, specific failure)
-- [ ] Each backlog candidate has a one-line "what it delivers" description
-- [ ] BACKLOG_ALIGNMENT.md updated with new story candidates (Will reviews before adding to sprint)
+- [x] `docs/epic_9_gap_audit.md` exists with all 6 sections populated
+- [x] Each tooling gap has a specific description (not "CLI was slow" — specific command, specific failure)
+- [x] Each backlog candidate has a one-line "what it delivers" description
+- [x] BACKLOG_ALIGNMENT.md updated with new story candidates (Will reviews before adding to sprint)
 
 ## Definition of Done
-- [ ] `docs/epic_9_gap_audit.md` committed
-- [ ] BACKLOG_ALIGNMENT.md backlog candidates section updated
-- [ ] Epic 10+ scope notes written in the audit (even if speculative)
-- [ ] Story marked CLOSED
+- [x] `docs/epic_9_gap_audit.md` committed
+- [x] BACKLOG_ALIGNMENT.md backlog candidates section updated
+- [x] Epic 10+ scope notes written in the audit (even if speculative)
+- [x] Story marked CLOSED
