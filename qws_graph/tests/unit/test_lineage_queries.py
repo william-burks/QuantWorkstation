@@ -720,6 +720,7 @@ class TestPresetCatalogStory4:
             "instrument_concentration",
             "list_oos_pending",
             "list_aborted",
+            "former_champions",
             "promotion_candidates",
             "research_targets",
             "runs_by_regime",

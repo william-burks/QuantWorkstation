@@ -491,6 +491,57 @@ ORDER BY ch.best_evidence_score DESC
 """.strip()
 
 
+GET_CHAMPION_BY_ID_QUERY = """
+MATCH (ch:Champion {champion_id: $champion_id})
+RETURN ch.champion_id AS champion_id,
+       ch.strategy_id AS strategy_id,
+       ch.metrics_sharpe AS metrics_sharpe
+""".strip()
+
+
+DEGRADE_CHAMPION_QUERY = """
+MATCH (ch:Champion {champion_id: $champion_id})
+CREATE (fc:FormerChampion {
+  former_champion_id: $former_champion_id,
+  strategy_id:        ch.strategy_id,
+  champion_id:        ch.champion_id,
+  degraded_at:        $degraded_at,
+  oos_reason:         $oos_reason,
+  metrics_sharpe_at_degradation: $metrics_sharpe_at_degradation,
+  created_at:         $degraded_at
+})
+CREATE (ch)-[:DEGRADED_TO {detected_at: $degraded_at}]->(fc)
+RETURN fc.former_champion_id AS former_champion_id,
+       fc.strategy_id        AS strategy_id
+""".strip()
+
+
+GET_FORMER_CHAMPION_BY_ID_QUERY = """
+MATCH (fc:FormerChampion {former_champion_id: $former_champion_id})
+RETURN fc.former_champion_id AS former_champion_id,
+       fc.champion_id        AS champion_id,
+       fc.strategy_id        AS strategy_id,
+       fc.oos_reason         AS oos_reason,
+       fc.degraded_at        AS degraded_at
+""".strip()
+
+
+RETIRE_FORMER_CHAMPION_QUERY = """
+MATCH (fc:FormerChampion {former_champion_id: $former_champion_id})
+MERGE (rc:RetiredChampion {champion_id: fc.champion_id})
+  ON CREATE SET
+    rc.created_at    = $retired_at,
+    rc.strategy_id   = fc.strategy_id,
+    rc.oos_reason    = fc.oos_reason
+  SET
+    rc.retirement_note = $retirement_note,
+    rc.oos_reason      = fc.oos_reason,
+    rc.updated_at      = $retired_at
+CREATE (fc)-[:RETIRED_TO {retired_at: $retired_at}]->(rc)
+RETURN rc.champion_id AS retired_champion_id
+""".strip()
+
+
 # ---------------------------------------------------------------------------
 # Demo graph seed / teardown (qw seed --demo)
 #
@@ -504,6 +555,7 @@ ORDER BY ch.best_evidence_score DESC
 #   list_oos_pending            — demo_champ_001 has oos_pending
 #   promotion_candidates        — demo_run_004: dual-hurdle pass, not yet promoted
 #   list_aborted                — demo-strategy-gamma: ABORTED with abort_reason
+#   former_champions            — demo_fc_001: DEGRADED from demo_champ_001; demo_fc_002: RETIRED
 #   run_history                 — multiple runs on alpha (3 runs)
 #   instrument_concentration    — ES champion + CL champion
 #   recent_champions            — two active champions
@@ -704,6 +756,34 @@ MERGE (ch2:Champion {champion_id: 'demo_champ_002'})
       ch2.is_demo = true
 MERGE (s2)-[:PRODUCED_CHAMPION]->(ch2)
 MERGE (ch2)-[:PIVOTED_FROM]->(r3)
+
+// ── FormerChampion nodes (QWS-0801) ─────────────────────────────────────────
+
+// demo_fc_001 — DEGRADED state: demoted from demo_champ_001, not yet retired
+MERGE (fc1:FormerChampion {former_champion_id: 'demo_fc_001'})
+  ON CREATE SET fc1.created_at = datetime('2026-03-01T10:00:00')
+  SET fc1.strategy_id   = 'demo-strategy-alpha',
+      fc1.champion_id   = 'demo_champ_001',
+      fc1.degraded_at   = datetime('2026-03-01T10:00:00'),
+      fc1.oos_reason    = 'MaxDD breached -15% in Oct CPI spike; OOS fail',
+      fc1.metrics_sharpe_at_degradation = 2.9,
+      fc1.is_demo       = true
+MERGE (ch1_fc:Champion {champion_id: 'demo_champ_001'})
+MERGE (ch1_fc)-[:DEGRADED_TO {detected_at: datetime('2026-03-01T10:00:00')}]->(fc1)
+
+// demo_fc_002 — RETIRED state: fully archived via qw retire
+MERGE (fc2:FormerChampion {former_champion_id: 'demo_fc_002'})
+  ON CREATE SET fc2.created_at = datetime('2026-01-15T14:00:00')
+  SET fc2.strategy_id   = 'demo-strategy-beta',
+      fc2.champion_id   = 'demo_retired_champ_001',
+      fc2.degraded_at   = datetime('2026-01-15T14:00:00'),
+      fc2.oos_reason    = 'Regime shift; strategy logic dead-ended in high_vol',
+      fc2.metrics_sharpe_at_degradation = 1.8,
+      fc2.is_demo       = true
+MERGE (rc1_fc:RetiredChampion {champion_id: 'demo_retired_champ_001'})
+  SET rc1_fc.oos_reason      = 'Regime shift; strategy logic dead-ended in high_vol',
+      rc1_fc.retirement_note = 'No pivot hypothesis; archived after 60 days in decay watch'
+MERGE (fc2)-[:RETIRED_TO {retired_at: datetime('2026-02-14T09:00:00')}]->(rc1_fc)
 
 // ── Regime nodes + IN_REGIME edges ──────────────────────────────────────────
 
