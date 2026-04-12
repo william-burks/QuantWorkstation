@@ -64,7 +64,7 @@
 |---|---|---|---|
 | FormerChampion Lifecycle | QWS-0801 (**CLOSED**) | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
 | OpenAI Curation Switch | QWS-0703 (**CLOSED**) | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
-| Correlation Gate Re-check | QWS-0804 (**READY**) | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
+| Correlation Gate Re-check | QWS-0804 (**TESTING**) | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
 
 ### Backlog
 
