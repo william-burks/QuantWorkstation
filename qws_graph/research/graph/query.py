@@ -1159,12 +1159,12 @@ GET_FORMER_CHAMPIONS_V1_CYPHER = """
 MATCH (fc:FormerChampion)
 OPTIONAL MATCH (s:Strategy {strategy_id: fc.strategy_id})
 OPTIONAL MATCH (fc)-[:RETIRED_TO]->(rc:RetiredChampion)
-RETURN fc.former_champion_id        AS former_champion_id,
-       fc.strategy_id               AS strategy_id,
-       s.instrument                 AS instrument,
-       toString(fc.degraded_at)     AS degraded_at,
-       fc.oos_reason                AS oos_reason,
-       rc.retirement_note           AS retirement_note,
+RETURN fc.former_champion_id  AS former_champion_id,
+       fc.strategy_id         AS strategy_id,
+       s.instrument           AS instrument,
+       fc.degraded_at         AS degraded_at,
+       fc.oos_reason          AS oos_reason,
+       rc.retirement_note     AS retirement_note,
        CASE WHEN rc IS NULL THEN 'DEGRADED' ELSE 'RETIRED' END AS status
 ORDER BY fc.degraded_at DESC
 """.strip()

@@ -769,8 +769,7 @@ MERGE (fc1:FormerChampion {former_champion_id: 'demo_fc_001'})
       fc1.metrics_sharpe_at_degradation = 2.9,
       fc1.is_demo       = true
 MERGE (ch1_fc:Champion {champion_id: 'demo_champ_001'})
-MERGE (ch1_fc)-[dg1:DEGRADED_TO {detected_at: datetime('2026-03-01T10:00:00')}]->(fc1)
-  SET dg1.is_demo = true
+MERGE (ch1_fc)-[:DEGRADED_TO {detected_at: datetime('2026-03-01T10:00:00')}]->(fc1)
 
 // demo_fc_002 — RETIRED state: fully archived via qw retire
 MERGE (fc2:FormerChampion {former_champion_id: 'demo_fc_002'})
@@ -784,8 +783,7 @@ MERGE (fc2:FormerChampion {former_champion_id: 'demo_fc_002'})
 MERGE (rc1_fc:RetiredChampion {champion_id: 'demo_retired_champ_001'})
   SET rc1_fc.oos_reason      = 'Regime shift; strategy logic dead-ended in high_vol',
       rc1_fc.retirement_note = 'No pivot hypothesis; archived after 60 days in decay watch'
-MERGE (fc2)-[rt1:RETIRED_TO {retired_at: datetime('2026-02-14T09:00:00')}]->(rc1_fc)
-  SET rt1.is_demo = true
+MERGE (fc2)-[:RETIRED_TO {retired_at: datetime('2026-02-14T09:00:00')}]->(rc1_fc)
 
 // ── Regime nodes + IN_REGIME edges ──────────────────────────────────────────
 
