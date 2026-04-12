@@ -109,6 +109,7 @@ FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
 MERGE (s)-[:PRODUCED_CHAMPION]->(ch)
 FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
   CREATE (ch)-[:WAS_CHAMPION]->(prev)
+  CREATE (prev)-[:SUPERSEDED_BY]->(ch)
 )
 
 FOREACH (_ IN CASE WHEN $pivot_from_run_id IS NULL THEN [] ELSE [1] END |
@@ -740,6 +741,7 @@ MERGE (ch1:Champion {champion_id: 'demo_champ_001'})
 MERGE (s1)-[:PRODUCED_CHAMPION]->(ch1)
 MERGE (ch1)-[:PIVOTED_FROM]->(r2)
 MERGE (ch1)-[:WAS_CHAMPION]->(rc1)
+MERGE (rc1)-[:SUPERSEDED_BY]->(ch1)
 
 // ── Champion lineage — Beta ──────────────────────────────────────────────────
 

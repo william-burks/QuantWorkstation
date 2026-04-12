@@ -990,6 +990,18 @@ relationships:
       Use [:WAS_CHAMPION*] to traverse the full lineage.
       Direction is always new → old.
 
+  SUPERSEDED_BY:
+    source: Champion
+    target: Champion
+    story: QWS-0802
+    cardinality: one-to-one
+    description: >
+      Direct one-hop lineage from a displaced Champion to its successor.
+      Created atomically at promotion time alongside WAS_CHAMPION.
+      After promotion completes the source node carries the :RetiredChampion label,
+      making this edge traversable as (RetiredChampion)-[:SUPERSEDED_BY]->(Champion).
+      Not created on first promotion (no predecessor) or via the qw degrade path.
+
   PIVOTED_FROM:
     source: "Champion"
     target: Run

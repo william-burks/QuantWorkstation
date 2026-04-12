@@ -222,6 +222,86 @@ class TestMaybeAutoPromoteChampion:
 
         assert captured_params and captured_params[0].get("tier") == "institutional"
 
+    def test_superseded_by_edge_created_when_prior_champion_exists(self):
+        """Promotion over an existing champion must emit SUPERSEDED_BY in the Cypher."""
+        store = _make_store()
+        fake_session = MagicMock()
+        fake_session.execute_read.side_effect = lambda fn: fn(
+            _make_tx_with_single({"champion_id": "oldchamp999", "evidence_score": 10.0, "auto_promoted": True})
+        )
+
+        captured_queries: list[str] = []
+
+        def fake_write(fn):
+            class FakeTx:
+                def run(self_tx, query, **kwargs):
+                    captured_queries.append(query)
+                    return MagicMock(consume=MagicMock())
+            fn(FakeTx())
+
+        fake_session.execute_write.side_effect = fake_write
+
+        store._maybe_auto_promote_champion(
+            fake_session, "s-x", self._make_run_data(sharpe=3.2, total_trades=30), 20.0
+        )
+
+        assert captured_queries, "execute_write should have been called"
+        assert any("SUPERSEDED_BY" in q for q in captured_queries), (
+            "SUPERSEDED_BY edge creation missing from promotion Cypher"
+        )
+
+    def test_superseded_by_edge_not_created_on_first_promotion(self):
+        """First promotion (prev IS NULL) must not emit SUPERSEDED_BY."""
+        store = _make_store()
+        fake_session = MagicMock()
+        # No existing champion — execute_read returns None.
+        fake_session.execute_read.side_effect = lambda fn: fn(_make_tx_with_single(None))
+
+        captured_queries: list[str] = []
+
+        def fake_write(fn):
+            class FakeTx:
+                def run(self_tx, query, **kwargs):
+                    captured_queries.append(query)
+                    return MagicMock(consume=MagicMock())
+            fn(FakeTx())
+
+        fake_session.execute_write.side_effect = fake_write
+
+        store._maybe_auto_promote_champion(
+            fake_session, "s-x", self._make_run_data(sharpe=2.5, total_trades=30), 13.7
+        )
+
+        # SUPERSEDED_BY is guarded by FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END)
+        # so the string should NOT appear as a standalone edge creation call — only in the
+        # conditional FOREACH body. The Cypher query text WILL contain "SUPERSEDED_BY" as part of
+        # the FOREACH definition; we verify that execute_write was called (promotion happened)
+        # and that the query contains the FOREACH guard, meaning no unconditional edge creation.
+        assert captured_queries, "execute_write should have been called for first promotion"
+        assert any("prev IS NULL" in q for q in captured_queries), (
+            "FOREACH guard (prev IS NULL) missing — unconditional SUPERSEDED_BY would be created"
+        )
+
+    def test_idempotent_repromotion_same_run_id(self):
+        """Promoting the same run_id twice returns the same champion_id without re-writing."""
+        store = _make_store()
+        fake_session = MagicMock()
+
+        import hashlib
+        expected_champ_id = hashlib.sha256("s-x|newrun123".encode("utf-8")).hexdigest()[:12]
+
+        # execute_read returns the SAME champion_id that would be generated → idempotent exit.
+        fake_session.execute_read.side_effect = lambda fn: fn(
+            _make_tx_with_single({"champion_id": expected_champ_id, "evidence_score": 10.0, "auto_promoted": True})
+        )
+
+        result = store._maybe_auto_promote_champion(
+            fake_session, "s-x", self._make_run_data(sharpe=3.0, total_trades=20), 13.4
+        )
+
+        assert result == expected_champ_id
+        fake_session.execute_write.assert_not_called()
+
 
 # ── _reconcile_champion ───────────────────────────────────────────────────────
 

@@ -1226,6 +1226,7 @@ ORDER BY candidate_id
                 MERGE (s)-[:PRODUCED_CHAMPION]->(ch)
                 FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
                   CREATE (ch)-[:WAS_CHAMPION]->(prev)
+                  CREATE (prev)-[:SUPERSEDED_BY]->(ch)
                 )
 
                 WITH ch

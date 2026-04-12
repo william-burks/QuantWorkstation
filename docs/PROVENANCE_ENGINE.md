@@ -117,13 +117,13 @@ provenance in the graph.
 | `SEMANTICALLY_RELATED` | Hypothesis ↔ Hypothesis | — | `similarity: float` (cosine), `pair_key: str`, `computed_at: datetime`. QWS-0604. Symmetric. |
 | `DEGRADED_TO` | Champion | FormerChampion | `detected_at: datetime`. QWS-0801. |
 | `RETIRED_TO` | FormerChampion | RetiredChampion | `retired_at: datetime`. QWS-0801. |
+| `SUPERSEDED_BY` | Champion | Champion | Direct one-hop lineage from displaced Champion to successor. Created atomically alongside `WAS_CHAMPION` at promotion time. Post-promotion the source carries `:RetiredChampion`. QWS-0802. |
 
 ### [TARGET] — Not Yet Implemented
 
 | Relationship | Source | Target | Properties | Story |
 |---|---|---|---|---|
 | `HAS_TRIAL` | Strategy | Trial | Alias for `HAS_RUN` at the conceptual level | — |
-| `SUPERSEDED_BY` | Champion | Champion | Replaced by better version of same idea | New story |
 
 **Name conflict note:** `PIVOTED_FROM` already exists in the current schema (Champion → Run, meaning "this
 champion was promoted based on this run"). The new target "context bridge" relationship uses a different

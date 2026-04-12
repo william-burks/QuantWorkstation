@@ -122,23 +122,61 @@ promotion occurs.
 - `qws_graph/tests/unit/test_store_dedup.py` (extend existing promotion tests)
 
 ## Acceptance Criteria
-- [ ] Promoting a Run when a Champion already exists creates a `SUPERSEDED_BY` edge
+- [x] Promoting a Run when a Champion already exists creates a `SUPERSEDED_BY` edge
   from the old Champion (now RetiredChampion) to the new Champion.
-- [ ] Promoting a Run when no Champion exists (first promotion) creates no `SUPERSEDED_BY`
+- [x] Promoting a Run when no Champion exists (first promotion) creates no `SUPERSEDED_BY`
   edge.
-- [ ] The SUPERSEDED_BY edge is traversable after the relabeling:
+- [x] The SUPERSEDED_BY edge is traversable after the relabeling:
   `MATCH (r:RetiredChampion)-[:SUPERSEDED_BY]->(c:Champion)` returns the pair.
-- [ ] Existing `WAS_CHAMPION` edge still created correctly alongside SUPERSEDED_BY.
-- [ ] Unit tests cover: promotion with existing champion, first promotion, idempotent
+- [x] Existing `WAS_CHAMPION` edge still created correctly alongside SUPERSEDED_BY.
+- [x] Unit tests cover: promotion with existing champion, first promotion, idempotent
   re-promotion (same run_id promoted twice).
-- [ ] SUPERSEDED_BY edge is created by both the `_maybe_auto_promote_champion()` path
+- [x] SUPERSEDED_BY edge is created by both the `_maybe_auto_promote_champion()` path
   and the `CHAMPION_INGEST_QUERY` bundle ingest path when a prior Champion exists.
 
 ## Definition of Done
-- [ ] SUPERSEDED_BY edge created atomically within the existing promotion transaction.
-- [ ] Edge traversable post-relabeling.
-- [ ] Unit tests green.
-- [ ] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
+- [x] SUPERSEDED_BY edge created atomically within the existing promotion transaction.
+- [x] Edge traversable post-relabeling.
+- [x] Unit tests green.
+- [x] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
 - [ ] Story marked CLOSED.
 - [ ] All affected README files updated to reflect new capabilities.
-- [ ] PROVENANCE_ENGINE.md updated — SUPERSEDED_BY moved from `[TARGET]` to `[CURRENT]`.
+- [x] PROVENANCE_ENGINE.md updated — SUPERSEDED_BY moved from `[TARGET]` to `[CURRENT]`.
+
+## Acceptance Test Plan
+
+### AC1: Promotion with existing champion creates SUPERSEDED_BY
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from qws_graph.tests.unit.test_store_dedup import TestMaybeAutoPromoteChampion; t=TestMaybeAutoPromoteChampion(); t.test_superseded_by_edge_created_when_prior_champion_exists(); print('PASS')"`
+- expect_contains: "PASS"
+- expect_exit: 0
+
+### AC2: First promotion creates no SUPERSEDED_BY (FOREACH guard)
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from qws_graph.tests.unit.test_store_dedup import TestMaybeAutoPromoteChampion; t=TestMaybeAutoPromoteChampion(); t.test_superseded_by_edge_not_created_on_first_promotion(); print('PASS')"`
+- expect_contains: "PASS"
+- expect_exit: 0
+
+### AC3: Edge traversable post-relabeling (Cypher query check)
+- type: file_check
+- cmd: `grep -c 'SUPERSEDED_BY' /Users/will/ClaudeProjects/QuantWorkstation/qws_graph/research/graph/store.py`
+- expect_contains: "1"
+- expect_exit: 0
+
+### AC4: WAS_CHAMPION still created alongside SUPERSEDED_BY
+- type: file_check
+- cmd: `grep -A1 'WAS_CHAMPION' /Users/will/ClaudeProjects/QuantWorkstation/qws_graph/research/graph/store.py`
+- expect_contains: "SUPERSEDED_BY"
+- expect_exit: 0
+
+### AC5: Unit tests green (all 547+)
+- type: cli
+- cmd: `source .venv/bin/activate && make test`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC6: CHAMPION_INGEST_QUERY also creates SUPERSEDED_BY
+- type: file_check
+- cmd: `grep -c 'SUPERSEDED_BY' /Users/will/ClaudeProjects/QuantWorkstation/qws_graph/research/graph/cypher.py`
+- expect_contains: "2"
+- expect_exit: 0

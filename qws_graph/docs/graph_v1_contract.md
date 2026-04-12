@@ -116,6 +116,18 @@ Schema additions:
 
 New properties on RetiredChampion: `oos_reason` (copied from FormerChampion), `retirement_note` (set at retire time).
 
+### QWS-0802 — SUPERSEDED_BY Relationship
+
+At promotion time, a `SUPERSEDED_BY` edge is created from the displaced Champion to the incoming Champion, alongside the existing `WAS_CHAMPION` edge. Both edges are created atomically in the same Cypher transaction.
+
+| Relationship | Source → Target | Properties |
+|---|---|---|
+| SUPERSEDED_BY | Champion → Champion (source relabeled RetiredChampion post-promotion) | none |
+
+**Traversal note:** After the promotion transaction completes the source node carries `:RetiredChampion`, making this edge traversable as `MATCH (r:RetiredChampion)-[:SUPERSEDED_BY]->(c:Champion)`.
+
+**Not created when:** first promotion (no predecessor exists) or `qw degrade` path (not a promotion event).
+
 ### 3) Champion Markdown
 Expected examples:
 - `research/results/champions/es_bear_sweep_1h_v1.md`
