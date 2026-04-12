@@ -16,12 +16,14 @@ Navigation and execution index for `qws_graph/epics`.
 5. **Epic 5 — Context Enrichment** — `COMPLETE`
 6. **Epic 6 — Research Analytics** — `COMPLETE`
 7. **Epic 7 — Workflow Readiness** — `COMPLETE`
+8. **Epic 8 — Champion Lifecycle Hardening** — `PLANNED`
 
 ## Dependency Notes
-- Epics 1–6 COMPLETE.
-- Epic 7 QWS-0801 and QWS-0703 are independent — implement in parallel.
-- Epic 7 QWS-0804 blocked on QWS-0801 CLOSED (FormerChampion node required).
-- Backlog QWS-0803 now READY (QWS-0801 CLOSED).
+- Epics 1–7 COMPLETE.
+- Epic 8 QWS-0802 and QWS-0803 are independent — implement in parallel.
+- Epic 8 QWS-0803 blocker (QWS-0801 CLOSED) now satisfied.
+- Epic 12 entry blocked on QWS-0803 CLOSED.
+- Epic 10 (Macro Data) is independent of Epic 8.
 
 ---
 
@@ -146,6 +148,29 @@ Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
 
 ---
 
+## Epic 8 — Champion Lifecycle Hardening [PLANNED]
+- Epic README: `epic_8_champion_lifecycle_hardening/README.md`
+- Objective: SUPERSEDED_BY direct lineage edge at promotion time; automated decay detection via scheduled validation loop
+
+Stories (QWS-0802 and QWS-0803 independent — implement in parallel):
+1. `QWS-0802` `backlog/story_superseded_by_relationship.md` — `READY`
+2. `QWS-0803` `backlog/story_recursive_validation_loop.md` — `READY`
+
+---
+
+## Epic 9 — Strategy Development [PLANNED]
+- Epic README: `epic_9_strategy_development/README.md`
+- Objective: use system end-to-end; document research findings, workflow friction, and tooling gaps — no code deliverables
+
+Stories (execution order — 0901 first, 0902 after 0901, 0903 after both):
+1. `QWS-0901` `epic_9_strategy_development/story_1_first_research_session.md` — `READY`
+2. `QWS-0902` `epic_9_strategy_development/story_2_strategy_screening_pass.md` — `READY`
+3. `QWS-0903` `epic_9_strategy_development/story_3_system_gap_audit.md` — `BLOCKED` (on QWS-0901, QWS-0902)
+
+Note: this epic has no code deliverables. Done criteria = gap audit written, backlog updated.
+
+---
+
 ## Backlog [UNSCHEDULED]
 - Backlog README: `backlog/README.md`
 - Stories not yet assigned to a sprint epic. Revisit after Epic 7 complete.
@@ -153,8 +178,6 @@ Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
 Stories (no order):
 - `QWS-0701` `story_pypi_packaging.md` — `READY`
 - `QWS-0702` `story_ci_graph_integrity.md` — `READY`
-- `QWS-0802` `story_superseded_by_relationship.md` — `READY`
-- `QWS-0803` `story_recursive_validation_loop.md` — `READY` _(unblocked by QWS-0801 CLOSED)_
 - `QWS-1011` `backlog/story_ndvi_crop_health_collector.md` — `READY` _(blocked on QWS-1001)_
 
 ---
@@ -186,5 +209,5 @@ promotion).
 
 ## Current Focus
 - **Epic 7 COMPLETE** — all 3 stories CLOSED.
-- **Next:** Backlog stories (QWS-0803 Recursive Validation Loop, QWS-0802 SUPERSEDED_BY) before Epic 12 entry.
+- **Next:** Epic 8 (QWS-0802 SUPERSEDED_BY, QWS-0803 Recursive Validation Loop) → Epic 9 (Strategy Development — usage + gap audit) → Epic 10 (Macro Data) → Epic 12.
 

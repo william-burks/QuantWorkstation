@@ -7,13 +7,16 @@ REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
 
-.PHONY: to-release to-master check-clean done-with-feature test lint typecheck check commit-close-story prime-agent feature-branch
+.PHONY: to-release to-master check-clean done-with-feature test test-unit lint typecheck check commit-close-story prime-agent prime-lint-mechanic feature-branch
 
 
 # --- QUALITY ---
 
 test:
 	source .venv/bin/activate && pytest qws_graph/tests/unit/ -v
+
+test-unit:
+	source .venv/bin/activate && pytest tests/unit/ -v
 
 lint:
 	source .venv/bin/activate && ruff check .
@@ -68,6 +71,11 @@ prime-agent:
 	@echo "implement-story" > /tmp/agent-current-command.txt
 	@rm -f /tmp/agent-step8-committed.txt
 	@echo "Agent guards primed. Safe to spawn lead-engineer."
+
+prime-lint-mechanic:
+	@mkdir -p /tmp/agent-read-tracker /tmp/agent-discovery-tracker /tmp/circuit-breaker
+	@echo "lint-mechanic" > /tmp/agent-current-command.txt
+	@echo "Lint-mechanic guards primed."
 
 # 4. Commit story status update + arm agent phase gate (atomic — sentinel cannot be skipped)
 # Usage: make commit-story-status STORY=QWS-0801

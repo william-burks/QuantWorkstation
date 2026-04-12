@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 7 Workflow Readiness — QWS-0801 CLOSED; QWS-0703 (OpenAI Curation) CLOSED; QWS-0804 (Correlation Gate Re-check) CLOSED — Epic 7 COMPLETE
+> Current sprint: Epic 8 Champion Lifecycle Hardening — Epic 7 COMPLETE. Next: QWS-0802 (SUPERSEDED_BY, READY) and QWS-0803 (Recursive Validation Loop, READY) → Epic 9 (Strategy Development, usage + gap audit) → Epic 10 → Epic 12 entry.
 > ```
 
 ---
@@ -23,8 +23,10 @@
 | Epic 5 — Context Enrichment | **COMPLETE** | family_id, Regime tagging, cross-instrument aggregation |
 | Epic 6 — Research Analytics | **COMPLETE** | Hypothesis journaling, parameter stability, portfolio correlation, semantic dedup |
 | Epic 7 — Workflow Readiness | **COMPLETE** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
+| Epic 8 — Champion Lifecycle Hardening | **PLANNED** | SUPERSEDED_BY direct lineage edge, recursive decay detection (monitor_champion) |
+| Epic 9 — Strategy Development | **PLANNED** | Research sessions, workflow observation, system gap audit — no code deliverables |
 | Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
-| Backlog | **UNSCHEDULED** | QWS-0701, 0702, 0802, 0803 — deferred until post-Epic 7 research sessions |
+| Backlog | **UNSCHEDULED** | QWS-0701, 0702 — deferred until post-Epic 8 research sessions |
 
 ---
 
@@ -67,6 +69,21 @@
 | OpenAI Curation Switch | QWS-0703 (**CLOSED**) | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
 | Correlation Gate Re-check | QWS-0804 (**CLOSED**) | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
 
+### Epic 8 — Champion Lifecycle Hardening
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| SUPERSEDED_BY Relationship | QWS-0802 (**READY**) | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
+| Recursive Validation Loop | QWS-0803 (**READY**) | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | ~~QWS-0801 CLOSED~~ (satisfied) |
+
+### Epic 9 — Strategy Development
+
+| Story | ID | Deliverable | Blocked On |
+|---|---|---|---|
+| First Research Session | QWS-0901 (**READY**) | `docs/research_sessions/session_0901.md` — observation log from 3 full-stack trials | — |
+| Strategy Screening Pass | QWS-0902 (**READY**) | `docs/research_sessions/session_0902.md` — sweep results, redundancy check assessment | QWS-0901 |
+| System Gap Audit | QWS-0903 (**BLOCKED**) | `docs/epic_9_gap_audit.md` — tooling gaps, missing data, workflow friction, AI failures, backlog candidates | QWS-0901, QWS-0902 |
+
 ### Epic 12 — ML Research Layer
 
 | Story | ID | Capabilities Unlocked | Blocked On |
@@ -83,8 +100,6 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| SUPERSEDED_BY Relationship | QWS-0802 | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
-| Recursive Validation Loop | QWS-0803 (**READY**) | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | QWS-0801 CLOSED |
 | PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse | — |
 | CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push | — |
 
@@ -160,7 +175,7 @@ QWS-1201 (purge gap)
                     └── QWS-1206 (results interpreter)
                             └── QWS-1207 (hypothesis miner)
 
-QWS-0803 (decay monitor) — must CLOSE before ML Champion promotion allowed
+QWS-0803 (decay monitor) — must CLOSE before ML Champion promotion allowed (Epic 8 gate for Epic 12)
 ```
 
 ---

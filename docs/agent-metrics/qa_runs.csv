@@ -19,3 +19,5 @@ run_id,timestamp,epic,branch,agent,model,total_calls,necessary,wasted,waste_pct,
 20260411T190034,2026-04-11T19:00:34Z,6,release/26.4.0,lint-mechanic,haiku,11,4,7,64,completed,1,1,lint-rerun
 20260411T193044,2026-04-11T19:30:44Z,6,release/26.4.0,qa-engineer,sonnet,32,30,2,6,LINT_FIXLIST_WRITTEN,1,0,file-reread
 20260411T193044,2026-04-11T19:30:44Z,6,release/26.4.0,lint-mechanic,haiku,7,3,4,57,completed,1,1,lint-misuse
+20260412T144246,2026-04-12T00:00:00Z,7,release/26.4.0,qa-engineer,sonnet,53,37,16,30,ISSUES_FIXED,,,grep-storm
+20260412T144246,2026-04-12T00:00:00Z,7,release/26.4.0,lint-mechanic,sonnet,22,11,11,50,completed,,,grep-storm

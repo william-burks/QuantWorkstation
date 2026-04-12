@@ -31,7 +31,7 @@ If the Read is blocked by a hook, use `cat .claude/agent-memory/qa-engineer/MEMO
 ## Step 0 — Baseline
 ```
 qw seed --demo
-pytest tests/unit/ -v 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_baseline.txt
+make test-unit 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_baseline.txt
 ```
 Any failure here is pre-existing — not caused by this epic's stories.
 If tests fail: record the failures and continue. Do NOT debug import errors or environment issues.
@@ -152,7 +152,7 @@ Recipe — one Read, no grep:
 
 ### 2f — Cross-story regressions
 ```
-pytest tests/unit/ -v 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_current.txt
+make test-unit 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_current.txt
 diff /tmp/qa_epic_$ARGUMENTS_baseline.txt /tmp/qa_epic_$ARGUMENTS_current.txt
 ```
 Any `FAILED` line in current not present in baseline → cross-story regression. Flag with story that likely caused it.

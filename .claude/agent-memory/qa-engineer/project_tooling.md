@@ -74,4 +74,13 @@ git diff feature/26.4.0/QWS-0301..HEAD --name-only
 Use this to identify which lint errors are in-scope vs pre-existing. Do NOT use `main` — the base branch is `feature/26.4.0/QWS-0301`.
 
 ## Demo seed file
-`qws_graph/research/graph/cypher.py` is <300 lines. Read the full file in ONE call — do not grep for Hypothesis/MERGE/embedding patterns before or after. You need the full file anyway; pre-grep wastes a call and is explicitly banned in qa-epic.md Step 2e.
+`qws_graph/research/graph/cypher.py` is >300 lines (11959 tokens). Use offset+limit to read in chunks. First chunk: offset=0, limit=400 (covers all queries up to DEMO_SEED_CYPHER). Second chunk: offset=400 covers DEMO_SEED_CYPHER. Two reads total.
+
+## Epic 7 story test map (add to table above)
+| QWS-0801 | qws_graph/tests/unit/test_store_former_champion.py qws_graph/tests/unit/test_qw_degrade_retire.py |
+| QWS-0703 | qws_graph/tests/unit/test_analyst.py |
+| QWS-0804 | qws_graph/tests/unit/test_gate_recheck.py |
+
+## qws_graph tests require venv
+qws_graph tests MUST run via venv: `source .venv/bin/activate && pytest qws_graph/tests/unit/<file> -v`
+Without venv, `import qws_graph` fails with ModuleNotFoundError.

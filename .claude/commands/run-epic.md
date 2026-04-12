@@ -399,7 +399,11 @@ Check if `/tmp/qa_epic_$ARGUMENTS_fixlist.txt` exists:
 ```
 ls /tmp/qa_epic_$ARGUMENTS_fixlist.txt 2>/dev/null
 ```
-If it exists, spawn lint-mechanic agent:
+If it exists, arm guards before spawning:
+```
+make prime-lint-mechanic
+```
+Then spawn lint-mechanic agent:
 ```
 Read /tmp/qa_epic_$ARGUMENTS_fixlist.txt and fix every error listed.
 The fixlist contains file:line:col, error code, and description for every error — it is your complete diagnosis. Do NOT run make lint before fixing. Phase A (read fixlist, read files, edit) requires zero lint runs.
