@@ -42,7 +42,7 @@ Large files — grep for function/section names first, read only that range. Do 
 | `qws_graph/research/graph/cli.py` | ~1550 | `argparse` CLI — NOT click/typer. `def cmd_*` handlers start ~L312. Parser registration via `subparsers.add_parser()` starts ~L1346. To add a new subcommand: grep `add_parser` for registration section, read L1340-L1400 range. |
 | `qws_graph/research/graph/cypher.py` | ~700 | `DEMO_SEED_CYPHER` starts ~line 465, `DEMO_TEARDOWN_CYPHER` follows |
 | `qws_graph/research/graph/query.py` | ~540 | Cypher constant strings at bottom (~line 500+) |
-| `qws_graph/docs/data_dictionary.yaml` | ~1060 | `Hypothesis:` section starts ~line 840 |
+| `qws_graph/docs/data_dictionary.yaml` | ~1100 | Use schema-index.txt — never read full file. `grep 'NodeType' /tmp/schema-index.txt` → offset. Compose entire node/edge block in ONE Edit call. Max 2 edits total. |
 
 ## Demo Seed
 
@@ -64,13 +64,16 @@ Do NOT glob for the ID — it won't match filenames. Do NOT use Glob `**/*0801*`
 
 MCP project name: `Users-will-ClaudeProjects-QuantWorkstation` — required for ALL MCP calls.
 
-Discovery order (stop at first hit):
-1. `grep 'symbol_name' /tmp/symbol-index.txt` — free, gives `file.py:lineN`. Always try first.
-2. `search_graph(project="Users-will-ClaudeProjects-QuantWorkstation", label="Function", name_pattern="symbol_name")` → note `qualified_name` → `get_code_snippet(project="Users-will-ClaudeProjects-QuantWorkstation", qualified_name=...)`. Use when symbol-index misses.
+Discovery order for Python functions/classes (stop at first hit):
+1. `search_graph(project="Users-will-ClaudeProjects-QuantWorkstation", label="Function", name_pattern="symbol_name")` → note `qualified_name` + `start_line` → `get_code_snippet(project="Users-will-ClaudeProjects-QuantWorkstation", qualified_name=...)`. Uncapped. Returns exact line range.
+2. `grep 'symbol_name' /tmp/symbol-index.txt` — fallback when graph misses (constants, config vars, unindexed). Gives `file.py:lineN`, read 50-line range.
 3. One targeted Grep — last resort only.
 
 For cli.py full anchor map (one call): `search_graph(project="Users-will-ClaudeProjects-QuantWorkstation", label="Function", file_pattern="*cli.py", limit=50)`
-Returns qualified_name + start_line + end_line for all functions. Then `get_code_snippet(project=..., qualified_name=...)` for the specific function body.
+
+For data_dictionary.yaml (YAML not indexed by MCP — use schema-index):
+`grep 'NodeOrEdgeName' /tmp/schema-index.txt` → get line N → `Read data_dictionary.yaml offset=N limit=40`
+schema-index.txt is built at Step 0 alongside symbol-index.txt.
 
 Notes:
 - `file_pattern` is glob-to-LIKE: `*` prefix mandatory (`cli.py` → 0 results, `*cli.py` → 18 results)
@@ -80,6 +83,12 @@ Notes:
 Only fall back to Grep/Read when:
 - Graph is not indexed (run `index_repository` first)
 - You need to read a config/doc file at a known path (just use Read directly)
+
+## Step 8 — Atomic Status Commit
+
+Use `make commit-story-status STORY=$ID` — stages all modified tracked files, commits, and arms the phase gate in one atomic call.
+Optional custom message: `make commit-story-status STORY=$ID MSG="custom message"`.
+Do NOT run git add or echo the sentinel separately — the make target handles both.
 
 ## Integration Tests
 
