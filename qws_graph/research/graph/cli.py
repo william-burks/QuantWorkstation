@@ -401,7 +401,10 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
     try:
         store = GraphStore.from_env(timeout_seconds=timeout_seconds)
         try:
-            result = store.persist_artifact(artifact)
+            result = store.persist_artifact(
+                artifact,
+                promotion_rationale=getattr(args, "rationale", None) or "",
+            )
 
             # Phase 3: patch html path onto persisted run nodes only.
             # SKIPPED runs were never written to the graph in this ingest pass,
@@ -944,7 +947,11 @@ def cmd_record(args: argparse.Namespace) -> int:
     try:
         store = GraphStore.from_env(timeout_seconds=timeout_seconds)
         try:
-            result = store.persist_artifact(artifact, summary=summary)
+            result = store.persist_artifact(
+                artifact,
+                summary=summary,
+                promotion_rationale=getattr(args, "rationale", None) or "",
+            )
             node_counts = result.node_counts
             relationship_counts = result.relationship_counts
         finally:
@@ -1416,7 +1423,7 @@ def main() -> int:
         "--rationale",
         default=None,
         metavar="TEXT",
-        help="Rationale for BRANCHED_FROM edge (required with --branched-from)",
+        help="Rationale text. With --branched-from: rationale for BRANCHED_FROM edge (required). With --bundle or --file: promotion rationale stored on Champion node (optional; defaults to empty string).",
     )
     record_parser.add_argument(
         "--status",

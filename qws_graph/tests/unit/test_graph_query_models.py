@@ -260,6 +260,7 @@ class TestQueryFunctions:
             "artifact_path": "research/results/champions/es.md",
             "pivot_from_run_id": None,
             "metrics_summary": {"sample_size": 42, "sharpe": 1.25},
+            "promotion_rationale": "",
         }
 
     def test_config_linkage_projection_returns_empty_optionals_for_missing_edge(self) -> None:

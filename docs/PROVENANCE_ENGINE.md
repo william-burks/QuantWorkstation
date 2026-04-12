@@ -201,6 +201,7 @@ story is marked COMPLETE in `BACKLOG_ALIGNMENT.md`.
 | `metrics_oos_sharpe` | float \| null | OOS Sharpe from `--sharpe` flag; null until first `qw record --oos --sharpe` call |
 | `auto_promoted` | bool | true = auto-gate; null = manually curated (authoritative) |
 | `fragilities` | list[str] | Known failure modes |
+| `promotion_rationale` | str \| null | Free-text explanation of why this strategy was promoted. Empty string when omitted. QWS-0805. |
 | `created_at` | datetime | Timestamp of node creation |
 | `updated_at` | datetime | Timestamp of last node update |
 

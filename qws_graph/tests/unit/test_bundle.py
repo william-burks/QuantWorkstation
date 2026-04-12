@@ -162,7 +162,7 @@ class TestCmdBundleErrors:
 
         captured_artifact = {}
 
-        def fake_persist(artifact):
+        def fake_persist(artifact, **kwargs):
             captured_artifact["family_id"] = artifact.strategy.family_id
             result = MagicMock()
             result.evolution = []
@@ -216,7 +216,7 @@ class TestCmdBundleErrors:
 
         captured_artifact = {}
 
-        def fake_persist(artifact):
+        def fake_persist(artifact, **kwargs):
             captured_artifact["family_id"] = artifact.strategy.family_id
             result = MagicMock()
             result.evolution = []

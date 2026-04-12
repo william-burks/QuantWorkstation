@@ -94,6 +94,7 @@ class Champion(BaseModel):
     fragilities: list[str]
     artifact_path: str
     pivot_from_run_id: str | None = None
+    promotion_rationale: str = ""
     provenance: Provenance
 
     @model_validator(mode="after")

@@ -87,6 +87,7 @@ MERGE (ch:Champion {champion_id: $champion.champion_id})
     ch.metrics_total_trades = $champion.metrics_total_trades,
     ch.oos_status = $champion.oos_status,
     ch.fragilities = $champion.fragilities,
+    ch.promotion_rationale = $champion.promotion_rationale,
     ch.artifact_path = $champion.artifact_path,
     ch.artifact_hash = $champion.provenance.artifact_hash,
     ch.artifact_mtime_iso = $champion.provenance.artifact_mtime_iso,
@@ -735,6 +736,7 @@ MERGE (ch1:Champion {champion_id: 'demo_champ_001'})
       ch1.tier = 'institutional',
       ch1.oos_status = 'oos_pending',
       ch1.auto_promoted = true,
+      ch1.promotion_rationale = 'Dominated all ES bear candidates; Sharpe 3.1 vs next-best 2.5 in high-vol and trend-down regimes',
       ch1.freeze_date = date('2026-04-01'),
       ch1.updated_at = datetime(),
       ch1.is_demo = true
@@ -761,6 +763,7 @@ MERGE (ch2:Champion {champion_id: 'demo_champ_002'})
       ch2.oos_status = 'oos_pass',
       ch2.oos_date = date('2026-04-05'),
       ch2.auto_promoted = true,
+      ch2.promotion_rationale = 'Only CL strategy passing corr gate against ES portfolio; Sharpe 4.6 with OOS confirmation at 3.8',
       ch2.freeze_date = date('2026-03-20'),
       ch2.updated_at = datetime(),
       ch2.is_demo = true

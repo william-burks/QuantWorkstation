@@ -101,7 +101,8 @@ RETURN {
   fragilities: ch.fragilities,
   artifact_path: ch.artifact_path,
   pivot_from_run_id: r.run_id,
-  metrics_summary: ch.metrics_summary
+  metrics_summary: ch.metrics_summary,
+  promotion_rationale: coalesce(ch.promotion_rationale, '')
 } AS result
 LIMIT 1
 """.strip()
@@ -131,7 +132,8 @@ RETURN {
   fragilities: ch.fragilities,
   artifact_path: ch.artifact_path,
   pivot_from_run_id: r.run_id,
-  metrics_summary: ch.metrics_summary
+  metrics_summary: ch.metrics_summary,
+  promotion_rationale: coalesce(ch.promotion_rationale, '')
 } AS result
 ORDER BY ch.freeze_date DESC, ch.champion_id ASC
 """.strip()
@@ -837,6 +839,7 @@ def get_champion_details_v1(session: QuerySession, champion_id: str) -> dict[str
         artifact_path=str(row["artifact_path"]),
         pivot_from_run_id=row.get("pivot_from_run_id"),
         metrics_summary=_normalize_json_like(row.get("metrics_summary") or {}),
+        promotion_rationale=str(row.get("promotion_rationale") or ""),
     )
     return model.model_dump(mode="json")
 
@@ -908,6 +911,7 @@ def get_recent_champions_v1(session: QuerySession, limit: int = 20) -> list[dict
             artifact_path=str(row["artifact_path"]),
             pivot_from_run_id=row.get("pivot_from_run_id"),
             metrics_summary=_normalize_json_like(row.get("metrics_summary") or {}),
+            promotion_rationale=str(row.get("promotion_rationale") or ""),
         ).model_dump(mode="json")
         for row in rows
     ]

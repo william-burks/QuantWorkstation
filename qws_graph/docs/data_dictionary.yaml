@@ -604,6 +604,12 @@ nodes:
           true when created by _maybe_auto_promote_champion.
           null/absent when created by manual champion_md ingest.
           The auto-promote gate will not override a champion where auto_promoted is null/false.
+      promotion_rationale:
+        type: str
+        nullable: true
+        description: >
+          Free-text explanation of why this strategy was promoted at the time of promotion.
+          Set via `--rationale` flag on `qw record`. Empty string when omitted. QWS-0805.
       artifact_hash:
         type: str
         nullable: true

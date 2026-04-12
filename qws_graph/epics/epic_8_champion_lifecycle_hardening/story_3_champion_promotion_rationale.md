@@ -75,26 +75,65 @@ No new nodes, edges, or relationships.
 - `docs/BACKLOG_ALIGNMENT.md`
 
 ## Acceptance Criteria
-- [ ] `promotion_rationale` documented in `docs/PROVENANCE_ENGINE.md` Champion node property
+- [x] `promotion_rationale` documented in `docs/PROVENANCE_ENGINE.md` Champion node property
   table, marked nullable
-- [ ] `qw record --bundle results.csv --rationale "<text>"` stores rationale on the Champion node
-- [ ] When `--rationale` is omitted on any `qw record` call that triggers champion promotion,
+- [x] `qw record --bundle results.csv --rationale "<text>"` stores rationale on the Champion node
+- [x] When `--rationale` is omitted on any `qw record` call that triggers champion promotion,
   the champion is created with `promotion_rationale = ""` (not an error — nullable)
-- [ ] `qw query --name recent_champions` output includes `promotion_rationale` field
-- [ ] Demo seed Cypher (in `research/graph/cypher.py`) includes realistic `promotion_rationale`
+- [x] `qw query --name recent_champions` output includes `promotion_rationale` field
+- [x] Demo seed Cypher (in `research/graph/cypher.py`) includes realistic `promotion_rationale`
   strings on all Champion MERGE blocks
-- [ ] Existing Champion nodes without `promotion_rationale` are unaffected (field nullable;
+- [x] Existing Champion nodes without `promotion_rationale` are unaffected (field nullable;
   no migration required)
 
 ## Definition of Done
-- [ ] `promotion_rationale` added to PROVENANCE_ENGINE.md Champion properties table
-- [ ] `data_dictionary.yaml` updated
-- [ ] `--rationale` flag implemented on `qw record`; passed through on both auto and manual
+- [x] `promotion_rationale` added to PROVENANCE_ENGINE.md Champion properties table
+- [x] `data_dictionary.yaml` updated
+- [x] `--rationale` flag implemented on `qw record`; passed through on both auto and manual
   promotion paths; defaults to `""` when omitted
-- [ ] `ChampionDetailsV1` pydantic model gains `promotion_rationale` field
-- [ ] `GET_RECENT_CHAMPIONS_V1_CYPHER` returns `c.promotion_rationale`
-- [ ] Demo seed has realistic rationale strings on all Champion nodes
+- [x] `ChampionDetailsV1` pydantic model gains `promotion_rationale` field
+- [x] `GET_RECENT_CHAMPIONS_V1_CYPHER` returns `c.promotion_rationale`
+- [x] Demo seed has realistic rationale strings on all Champion nodes
 - [ ] All tests pass (`ruff check .` and `mypy --strict .` clean)
 - [ ] All affected README files updated
-- [ ] PROVENANCE_ENGINE.md updated with `promotion_rationale` property on Champion node
+- [x] PROVENANCE_ENGINE.md updated with `promotion_rationale` property on Champion node
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: promotion_rationale in PROVENANCE_ENGINE.md
+- type: file_check
+- cmd: `grep -n "promotion_rationale" docs/PROVENANCE_ENGINE.md`
+- expect_contains: "promotion_rationale"
+- expect_exit: 0
+
+### AC2: --rationale flag stored on Champion (demo seed path)
+- type: cypher
+- cmd: `qw seed && qw query --name recent_champions --json | jq '.[0].promotion_rationale'`
+- expect_contains: "corr gate"
+- expect_exit: 0
+
+### AC3: --rationale omitted defaults to ""
+- type: cypher
+- cmd: after seeding, `qw query --name recent_champions --json | jq 'map(select(.promotion_rationale == "")) | length'`
+- expect_contains: "0"
+- expect_exit: 0
+- note: demo seed provides rationale on all champions; this AC is satisfied by model default + unit tests
+
+### AC4: recent_champions output includes promotion_rationale
+- type: cli
+- cmd: `qw seed && qw query --name recent_champions --json | jq '.[0] | has("promotion_rationale")'`
+- expect_contains: "true"
+- expect_exit: 0
+
+### AC5: demo seed has realistic rationale strings
+- type: cypher
+- cmd: `qw seed && qw query --name recent_champions --json | jq '[.[] | .promotion_rationale] | map(length > 0) | all'`
+- expect_contains: "true"
+- expect_exit: 0
+
+### AC6: existing nodes without field are unaffected (nullable)
+- type: file_check
+- cmd: `grep -n "coalesce(ch.promotion_rationale" qws_graph/research/graph/query.py`
+- expect_contains: "coalesce"
+- expect_exit: 0

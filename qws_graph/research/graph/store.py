@@ -133,6 +133,7 @@ class GraphStore:
         self,
         artifact: ResearchArtifact,
         summary: RunStatsSummary | None = None,
+        promotion_rationale: str = "",
     ) -> StoreResult:
         payload = artifact.model_dump(mode="json")
 
@@ -198,7 +199,7 @@ class GraphStore:
                     )
 
                     # Always reconcile champion — works for new peaks and retroactive gaps
-                    auto_champion_id: str | None = self._reconcile_champion(session, strategy_id)
+                    auto_champion_id: str | None = self._reconcile_champion(session, strategy_id, promotion_rationale=promotion_rationale)
 
                     for run_d in filtered_payload["runs"]:
                         run_id = run_d["run_id"]
@@ -1089,6 +1090,7 @@ ORDER BY candidate_id
         strategy_id: str,
         run_data: dict,
         evidence_score: float,
+        promotion_rationale: str = "",
     ) -> str | None:
         """Auto-promote a newly-written run to Champion if it sets a new evidence peak.
 
@@ -1221,6 +1223,7 @@ ORDER BY candidate_id
                     ch.fragilities = $fragilities,
                     ch.artifact_path = $artifact_path,
                     ch.auto_promoted = true,
+                    ch.promotion_rationale = $promotion_rationale,
                     ch.updated_at = datetime()
 
                 MERGE (s)-[:PRODUCED_CHAMPION]->(ch)
@@ -1253,12 +1256,13 @@ ORDER BY candidate_id
                 ],
                 artifact_path=artifact_path,
                 run_id=run_id,
+                promotion_rationale=promotion_rationale,
             ).consume()
 
         session.execute_write(_write)
         return new_champ_id
 
-    def _reconcile_champion(self, session, strategy_id: str) -> str | None:
+    def _reconcile_champion(self, session, strategy_id: str, promotion_rationale: str = "") -> str | None:
         """Enforce One Strategy = One Champion, then ensure the current peak is reflected.
 
         Step 1 — Flatten: if multiple PRODUCED_CHAMPION edges exist (stale state),
@@ -1328,7 +1332,8 @@ ORDER BY candidate_id
             "artifact_path": best["artifact_path"] or "",
         }
         return self._maybe_auto_promote_champion(
-            session, strategy_id, run_data, float(best["evidence_score"] or 0.0)
+            session, strategy_id, run_data, float(best["evidence_score"] or 0.0),
+            promotion_rationale=promotion_rationale,
         )
 
     def _persist_csv(self, session, payload: dict, summary: RunStatsSummary | None = None) -> None:

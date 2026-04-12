@@ -76,6 +76,7 @@ class ChampionDetailsV1(QueryModelV1):
     artifact_path: str
     pivot_from_run_id: str | None = None
     metrics_summary: dict[str, Any] = Field(default_factory=dict)
+    promotion_rationale: str = ""
 
 
 class ConfigLinkageV1(QueryModelV1):
