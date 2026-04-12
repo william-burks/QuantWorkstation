@@ -184,11 +184,11 @@ PROVENANCE_ENGINE.md is explicit: without cause-of-death, the cemetery view is u
 - expect_exit: 0
 
 ## Definition of Done
-- [ ] FormerChampion node, DEGRADED_TO, RETIRED_TO edges implemented and tested.
-- [ ] `qw degrade` and `qw retire` CLI commands operational.
-- [ ] `former_champions` preset returns cemetery view.
-- [ ] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
-- [ ] Story marked CLOSED — unblocks QWS-0803.
-- [ ] All affected README files updated to reflect new capabilities.
+- [x] FormerChampion node, DEGRADED_TO, RETIRED_TO edges implemented and tested.
+- [x] `qw degrade` and `qw retire` CLI commands operational.
+- [x] `former_champions` preset returns cemetery view.
+- [x] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
+- [ ] Story marked CLOSED — unblocks QWS-0803. (pending close-story)
+- [ ] All affected README files updated to reflect new capabilities. (manual — epic README update)
 - [ ] PROVENANCE_ENGINE.md updated — FormerChampion, DEGRADED_TO, RETIRED_TO, oos_reason,
-  retirement_note moved from `[TARGET]` to `[CURRENT]`; former_champions tool updated.
+  retirement_note moved from `[TARGET]` to `[CURRENT]`; former_champions tool updated. (pending close-story)
