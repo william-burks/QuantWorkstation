@@ -12,17 +12,37 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
+          command: ".claude/scripts/agent-phase-gate.sh"
+        - type: command
           command: ".claude/scripts/agent-guard.sh"
     - matcher: "Read"
       hooks:
         - type: command
+          command: ".claude/scripts/agent-phase-gate.sh"
+        - type: command
           command: ".claude/scripts/agent-read-guard.sh"
+    - matcher: "Edit"
+      hooks:
+        - type: command
+          command: ".claude/scripts/agent-phase-gate.sh"
+    - matcher: "Write"
+      hooks:
+        - type: command
+          command: ".claude/scripts/agent-phase-gate.sh"
     - matcher: "Grep"
       hooks:
         - type: command
+          command: ".claude/scripts/agent-phase-gate.sh"
+        - type: command
           command: ".claude/scripts/agent-grep-guard.sh"
+    - matcher: "Glob"
+      hooks:
+        - type: command
+          command: ".claude/scripts/agent-phase-gate.sh"
     - matcher: "mcp__codebase-memory-mcp__search_code"
       hooks:
+        - type: command
+          command: ".claude/scripts/agent-phase-gate.sh"
         - type: command
           command: ".claude/scripts/agent-discovery-guard.sh"
 ---

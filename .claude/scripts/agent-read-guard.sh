@@ -8,11 +8,42 @@ FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
 [ -z "$FILE" ] && exit 0
 
-# Block reading other command files (verify-story, close-story)
-# Catches scope-overreach pattern where agent reads wrong command file after Step 9.
+# Fix 8B: /tmp/*.py reads count against original source file's tracker (cp/snapshot bypass).
+# e.g., /tmp/store_snapshot.py → check tracker for store.py
+if echo "$FILE" | grep -qE '^/tmp/.*\.(py|yaml|yml|md)$'; then
+  TMP_BASENAME=$(basename "$FILE")
+  TRACK_DIR_EARLY="/tmp/agent-read-tracker"
+  if [ -d "$TRACK_DIR_EARLY" ]; then
+    ORIG=$(echo "$TMP_BASENAME" | sed -E 's/_(snapshot|backup|copy|orig|tmp)[0-9]*\.[^.]+$//' | sed -E 's/_(snapshot|backup|copy|orig|tmp)[0-9]*$//' | sed -E 's/\.[^.]+$//')
+    ORIG_PY="${ORIG}.py"
+    ORIG_YML="${ORIG}.yaml"
+    for ORIG_NAME in "$ORIG_PY" "$ORIG_YML" "$TMP_BASENAME"; do
+      if [ -f "$TRACK_DIR_EARLY/$ORIG_NAME" ]; then
+        COUNT=$(cat "$TRACK_DIR_EARLY/$ORIG_NAME")
+        if [ "$COUNT" -ge 2 ]; then
+          echo "Blocked: $TMP_BASENAME appears to be a /tmp/ snapshot of $ORIG_NAME (already read ${COUNT}x) — use context" >&2
+          exit 2
+        fi
+        NEWCOUNT=$((COUNT + 1))
+        echo "$NEWCOUNT" > "$TRACK_DIR_EARLY/$ORIG_NAME"
+        exit 0
+      fi
+    done
+  fi
+  exit 0
+fi
+
+# Block reading out-of-scope command files during implement-story.
 if echo "$FILE" | grep -qE '\.claude/commands/close-story\.md$'; then
   echo "Blocked: lead-engineer cannot read close-story.md — orchestrator spawns close as a separate agent" >&2
   exit 2
+fi
+# Fix 6: Block verify-story.md pre-read during implement-story (breadcrumb set in Step 0).
+if echo "$FILE" | grep -qE '\.claude/commands/verify-story\.md$'; then
+  if [ -f "/tmp/agent-current-command.txt" ] && grep -q "implement-story" /tmp/agent-current-command.txt 2>/dev/null; then
+    echo "Blocked: do not pre-read verify-story.md during implement-story — orchestrator invokes it separately after implementation" >&2
+    exit 2
+  fi
 fi
 
 # Track and limit re-reads of source files.
@@ -23,10 +54,26 @@ mkdir -p "$TRACK_DIR" 2>/dev/null || true
 # Normalize to basename for tracking (unique basenames in this project).
 BASENAME=$(basename "$FILE")
 
-# Skip tracking for: memory files, story files, test files, docs, command files.
-# Only track implementation source files likely to be re-read wastefully.
-if echo "$BASENAME" | grep -qE '\.(md|yaml|yml|json|toml|cfg|txt)$'; then
+# Skip tracking for: memory files, test files, docs, command files.
+# Track story files (story_*.md) to catch mid-run re-reads.
+# Only track implementation source files and story files likely to be re-read wastefully.
+# Skip small config files — not re-read wastefully
+# Fix 2A: Track .yaml/.yml (data_dictionary.yaml re-read 4x in R8)
+if echo "$BASENAME" | grep -qE '\.(json|toml|cfg|txt)$'; then
   exit 0
+fi
+# For .md files: track those inside qws_graph/ (implementation docs like graph_v1_contract.md
+# that shouldn't change mid-run). Exempt .md outside qws_graph/ (command files, project docs).
+if echo "$BASENAME" | grep -qE '\.md$'; then
+  # Always track story_*.md (mid-run re-reads)
+  if echo "$BASENAME" | grep -qE '^story_'; then
+    : # fall through to tracking
+  # Track qws_graph/ .md files (e.g. graph_v1_contract.md, data_dictionary content)
+  elif echo "$FILE" | grep -qE 'qws_graph/'; then
+    : # fall through to tracking
+  else
+    exit 0
+  fi
 fi
 if echo "$BASENAME" | grep -qE '^(test_|conftest)'; then
   exit 0

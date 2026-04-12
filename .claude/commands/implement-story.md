@@ -4,15 +4,26 @@ Implement the QuantWorkstation story identified by: $ARGUMENTS
 ```bash
 rm -f /tmp/agent-read-tracker/* 2>/dev/null; mkdir -p /tmp/agent-read-tracker
 rm -f /tmp/agent-discovery-tracker/* 2>/dev/null; mkdir -p /tmp/agent-discovery-tracker
+rm -f /tmp/circuit-breaker/* 2>/dev/null; mkdir -p /tmp/circuit-breaker
+rm -f /tmp/agent-step8-committed.txt
+grep -rn 'def \|class ' qws_graph/research/graph/*.py 2>/dev/null > /tmp/symbol-index.txt
+echo "implement-story" > /tmp/agent-current-command.txt
 ```
 Read `.claude/agent-memory/lead-engineer/MEMORY.md` and all referenced files BEFORE any tool invocations.
 Use the exact commands documented there for tests, lint, and type checking.
 Do NOT attempt ruff, pytest, or mypy without checking memory for the correct invocation.
 
+**Before grepping any source file for a symbol, check `/tmp/symbol-index.txt` first.**
+Format: `filename.py:lineN:    def method_name` or `class ClassName`. Use `grep 'symbol_name' /tmp/symbol-index.txt` — one call returns file + line number. Then read only that range. Do NOT grep the source file directly.
+
 ## Step 1 — Locate story
-Search `qws_graph/epics/` for story `$ARGUMENTS`. Read full file.
-Stop if Status ≠ `ready`.
-**One glob only — story path = first match. Do NOT glob again to confirm.**
+Story filenames do NOT contain the QWS-NNNN ID. Use content search:
+```bash
+grep -rl '$ARGUMENTS' qws_graph/epics/
+```
+If no match: `grep -rl '$ARGUMENTS' qws_graph/` (broader). If still no match → report BLOCKED.
+**Max 2 commands to locate story. Do NOT glob for the ID — it won't match filenames.**
+Read the file. Stop if Status ≠ `READY`.
 **Story file is now in context — do NOT re-read it during Steps 4 or 7.**
 
 ## Step 2 — Verify unblocked
@@ -72,6 +83,8 @@ Work ACs one by one. After each:
 
 For large files (>500 lines): grep for the target function/section first, then read only that range.
 Do NOT read whole files in sequential chunks.
+**`cat -n` targeted reads count toward the file re-read limit.** One range per section — do NOT read sequential adjacent ranges. If you need 100 lines, read 100 lines in one call, not 2×50.
+**Edit = verified. Do NOT grep a file after editing it to confirm the change — the Edit tool confirms success.**
 
 **Lint is handled at QA phase — do NOT run ruff during implementation.**
 `ruff`, `make lint`, and `make check` are structurally blocked by agent-guard.sh. Type check only: `make typecheck`.
@@ -129,9 +142,12 @@ All ACs pass → READY → TESTING in story, INDEX.md, BACKLOG_ALIGNMENT.md.
 ```
 git add <story> qws_graph/epics/INDEX.md docs/BACKLOG_ALIGNMENT.md
 git commit -m "status($ARGUMENTS): READY → TESTING"
+echo "done" > /tmp/agent-step8-committed.txt
 ```
 
 ## Step 9 — Report and STOP
+
+**All tool calls are structurally blocked after Step 8 commit (agent-phase-gate.sh fires on every tool). Output report text only:**
 
 ```
 ## $ARGUMENTS — Implemented and Self-Tested

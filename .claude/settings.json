@@ -151,10 +151,24 @@
         "Bash(python -c *)",
         "Bash(ruff *)",
         "Bash(python -m ruff *)",
-        "Bash(python3 -m ruff *)"
+        "Bash(python3 -m ruff *)",
+        "Bash(cp *.py *)",
+        "Bash(cp */*.py *)",
+        "Bash(cp */**/*.py *)"
       ]
     },
     "hooks": {
+      "PostToolUse": [
+        {
+          "matcher": "Bash",
+          "hooks": [
+            {
+              "type": "command",
+              "command": ".claude/scripts/agent-circuit-breaker.sh"
+            }
+          ]
+        }
+      ],
       "PreToolUse": [
         {
           "matcher": "Read",

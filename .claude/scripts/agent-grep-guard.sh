@@ -17,8 +17,9 @@ if ! echo "$BASENAME" | grep -q '\.'; then
   exit 0
 fi
 
-# Skip config/doc/test files (same exclusions as read guard — not tracked)
-if echo "$BASENAME" | grep -qE '\.(md|yaml|yml|json|toml|cfg|txt)$'; then
+# Fix 2C: Skip only files that read-guard never tracks (json/toml/cfg/txt + test files)
+# .yaml/.yml and qws_graph .md are now tracked by read-guard — check them here too
+if echo "$BASENAME" | grep -qE '\.(json|toml|cfg|txt)$'; then
   exit 0
 fi
 if echo "$BASENAME" | grep -qE '^(test_|conftest)'; then

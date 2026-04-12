@@ -13,6 +13,9 @@ type: project
 | 20260411T215414 | QWS-0801 | 166 | 86 | 80 | 48% | scope-archaeology | structural lint fix (lint-loop eliminated) |
 | 20260411T223754 | QWS-0801 | 152 | 67 | 85 | 56% | doc-overreach | read-guard + discovery gate + STOP gate |
 | 20260411T231923 | QWS-0801 | 148 | 86 | 62 | 42% | file-reread | spawn-split + grep/search guards |
+| 20260412T010023 | QWS-0801 | 154 | 117 | 37 | 24% | grep-storm | sed/mypy blocks, story tracking, symbol index |
+| 20260412T015108 | QWS-0801 | 150 | 97 | 53 | 35% | file-reread | .md tracking, circuit breaker, cat-n cap, yaml tracking, verify-story breadcrumb |
+| 20260412T023551 | QWS-0801 | 119 | 68 | 51 | 43% | post-commit-violation | cp block, phase-gate sentinel, /tmp snapshot tracking, settings deny |
 
 ## Confirmed Waste Patterns
 
@@ -77,3 +80,17 @@ Only structural enforcement works: hooks, guards, removing the tool/command.
 | graph_v1_contract.md added to no-reread STOP list | .claude/commands/implement-story.md | Applied Run 5→6 |
 | PROVENANCE_ENGINE prohibition conditional on DoD scope | .claude/commands/implement-story.md | Applied Run 5→6 |
 | verify-story Step 7b: AT re-run (was no-op checkbox check) | .claude/commands/verify-story.md | Applied Run 5→6 |
+| sed/awk/head/tail block on tracked .py files | .claude/scripts/agent-bash-grep-guard.sh | Applied Run 6→7 — closes Bash file-chunking bypass |
+| Individual-file mypy block | .claude/scripts/agent-bash-grep-guard.sh | Applied Run 6→7 — eliminates mypy storm (7 calls) |
+| story_*.md tracking in read guard | .claude/scripts/agent-read-guard.sh | Applied Run 6→7 — catches story re-reads |
+| Symbol index at Step 0 | .claude/commands/implement-story.md | Applied Run 7→8 — grep /tmp/symbol-index.txt before source files |
+| .md tracking extended to qws_graph/ scope | .claude/scripts/agent-read-guard.sh | Applied Run 7→8 — blocks graph_v1_contract.md/data_dictionary.yaml re-reads |
+| Circuit breaker (PostToolUse) | .claude/scripts/agent-circuit-breaker.sh + settings.json | Applied Run 7→8 — blocks 3rd identical Bash failure |
+| cat-n cap (2-read, same as Read guard) | .claude/scripts/agent-bash-grep-guard.sh | Applied Run 8→9 |
+| .yaml/.yml tracking extended | .claude/scripts/agent-read-guard.sh | Applied Run 8→9 — data_dictionary.yaml was re-read 4x |
+| verify-story breadcrumb block | .claude/scripts/agent-read-guard.sh | Applied Run 8→9 — zero pre-reads in R9 |
+| grep-rl story lookup in Step 1 | .claude/commands/implement-story.md | Applied Run 8→9 — story found in 1 call vs 4 |
+| Phase-gate sentinel (all tools, all matchers) | .claude/scripts/agent-phase-gate.sh + lead-engineer.md | Applied Run 9→10 — blocks ALL tools after Step 8 commit |
+| cp source→/tmp/ block | .claude/scripts/agent-bash-grep-guard.sh + settings.json | Applied Run 9→10 — closes snapshot bypass |
+| /tmp snapshot read tracking | .claude/scripts/agent-read-guard.sh | Applied Run 9→10 — defense-in-depth against snapshot reads |
+| Step 9 replaced with structural reference | .claude/commands/implement-story.md | Applied Run 9→10 — prose HARD STOP replaced by hook description |
