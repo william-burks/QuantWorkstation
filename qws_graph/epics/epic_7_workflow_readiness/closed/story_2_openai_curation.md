@@ -4,7 +4,7 @@
 QWS-0703
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 None
@@ -126,10 +126,10 @@ schema changes.
 - expect_exit: 0
 
 ## Definition of Done
-- [ ] `OpenAIAnalyst` implemented; `LlamaAnalyst` and `LlamaUnavailableError` removed
-- [ ] CLI default flipped: curation on by default, `--no-analyze` disables
-- [ ] All tests pass (`ruff check .` and `mypy --strict .` clean)
-- [ ] `docs/graph_v1_contract.md` updated
-- [ ] All affected README files updated
-- [ ] PROVENANCE_ENGINE.md updated if new nodes/edges/properties introduced (none expected)
-- [ ] Story marked CLOSED
+- [x] `OpenAIAnalyst` implemented; `LlamaAnalyst` and `LlamaUnavailableError` removed
+- [x] CLI default flipped: curation on by default, `--no-analyze` disables
+- [x] All tests pass (`ruff check .` and `mypy --strict .` clean)
+- [x] `docs/graph_v1_contract.md` updated
+- [x] All affected README files updated
+- [x] PROVENANCE_ENGINE.md updated if new nodes/edges/properties introduced (none expected)
+- [x] Story marked CLOSED

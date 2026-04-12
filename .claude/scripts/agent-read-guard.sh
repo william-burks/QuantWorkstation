@@ -65,7 +65,7 @@ BASENAME=$(basename "$FILE")
 # Only track implementation source files and story files likely to be re-read wastefully.
 # Skip small config files — not re-read wastefully
 # Fix 2A: Track .yaml/.yml (data_dictionary.yaml re-read 4x in R8)
-if echo "$BASENAME" | grep -qE '\.(json|toml|cfg|txt)$'; then
+if echo "$BASENAME" | grep -qE '\.(json|cfg|txt)$'; then
   exit 0
 fi
 # For .md files: track those inside qws_graph/ (implementation docs like graph_v1_contract.md

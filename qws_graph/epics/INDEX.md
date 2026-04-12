@@ -141,7 +141,7 @@ Dependency notes: QWS-0602 and QWS-0603 are independent — start parallel. QWS-
 
 Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
 1. `QWS-0801` `closed/story_1_former_champion_lifecycle.md` — `CLOSED`
-2. `QWS-0703` `story_2_openai_curation.md` — `READY`
+2. `QWS-0703` `closed/story_2_openai_curation.md` — `CLOSED`
 3. `QWS-0804` `story_3_correlation_gate_recheck.md` — `READY` _(unblocked by QWS-0801 CLOSED)_
 
 ---
@@ -161,7 +161,7 @@ Stories (no order):
 ## Current Focus
 - **Epic 6 COMPLETE** — all 4 stories CLOSED.
 - **Current sprint: Epic 7 Workflow Readiness**
-  - QWS-0801 (FormerChampion Lifecycle) — TESTING
-  - QWS-0703 (OpenAI Curation Switch) — READY, parallel with QWS-0801
-  - QWS-0804 (Correlation Gate Re-check) — BLOCKED on QWS-0801
+  - QWS-0801 (FormerChampion Lifecycle) — CLOSED
+  - QWS-0703 (OpenAI Curation Switch) — CLOSED
+  - QWS-0804 (Correlation Gate Re-check) — READY
 

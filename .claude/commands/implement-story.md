@@ -49,7 +49,7 @@ Returns `filename.py:lineN:    def method_name`. Read only that 50-line range. O
 **Step C — only if both A and B miss:**
 One targeted Grep on the most relevant file. No broad patterns.
 
-Never skip A. Never search the same symbol twice (prefix/suffix variants = same symbol).
+Never skip A. Never search the same symbol twice (prefix/suffix variants = same symbol). Never search the same keyword twice — if a Grep includes term X, no subsequent Grep may include X. Combine into one pattern.
 
 **Discovery budget: max 2 search_code + 1 Grep per Repo Touchpoint file. After reading matched files, STOP discovery and start editing.**
 
@@ -82,12 +82,13 @@ If `/tmp/ruling_$ARGUMENTS.txt` exists → read it before reporting blocked. App
 
 ## Step 4 — Implement
 **Files read in Step 3 are in context. Do NOT re-read them before editing. Use exact strings from context for Edit `old_string`. If an Edit fails due to string mismatch, read ONLY the 20-line range around the target — not the whole file.**
+**graph_v1_contract.md, data_dictionary.yaml, PROVENANCE_ENGINE.md:** read in Step 3, edit from context in Step 4. Do NOT re-read before editing — compose `old_string` from what is already in context.
 
 Work ACs one by one. After each:
-1. Story checkboxes — batch 2-3 consecutive `- [ ]` → `- [x]` updates into ONE Edit call. Include AC text as surrounding context to keep `old_string` unique. Do NOT edit the story file for every single AC individually. If all ACs pass cleanly in Step 7 with no failures, batch ALL remaining checkbox updates into a single Edit at that point.
+1. Story checkboxes — do NOT edit story file during Step 4. Wait until Step 5 (test plan) and batch ALL checkbox updates + test plan into ONE Edit call. If Step 7 finds failures, that's the 2nd allowed edit. **Max 2 Edit calls to story file total.**
 2. `git add` each changed file (never `-A` or `.`)
 3. `make test` after any Python change — fix all failures
-4. Run `make typecheck` on the project. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
+4. Run `make typecheck` on the project. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles. **If errors appear in files you did NOT edit: they are pre-existing — ignore them. Do NOT run git stash, git diff, or any other command to isolate pre-existing errors. Only fix errors in files you modified.**
 
 **data_dictionary.yaml edits:** Use `grep 'NodeOrEdgeName' /tmp/schema-index.txt` → get line N → `Read offset=N limit=40`. Compose the ENTIRE node or edge block (all properties) in ONE `new_string`. Max 2 Edit calls total for this file — one for nodes section, one for relationships section.
 
@@ -106,6 +107,7 @@ New node types → add MERGE block (`is_demo=true`, deterministic IDs, realistic
 Modified properties → update existing SET blocks. This is part of implementation, not verification.
 
 ## Step 5 — Write Acceptance Test Plan
+**This is your first (and ideally only) Edit to the story file — include ALL checkbox updates from Step 4 in the same Edit call.**
 Add `## Acceptance Test Plan` section to story file after ACs.
 
 ```markdown

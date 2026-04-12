@@ -24,7 +24,7 @@ fi
 
 # Fix 2C: Skip only files that read-guard never tracks (json/toml/cfg/txt + test files)
 # .yaml/.yml and qws_graph .md are now tracked by read-guard — check them here too
-if echo "$BASENAME" | grep -qE '\.(json|toml|cfg|txt)$'; then
+if echo "$BASENAME" | grep -qE '\.(json|cfg|txt)$'; then
   exit 0
 fi
 if echo "$BASENAME" | grep -qE '^(test_|conftest)'; then

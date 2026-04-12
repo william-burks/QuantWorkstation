@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 7 Workflow Readiness — QWS-0801 CLOSED; QWS-0703 (OpenAI Curation) READY; QWS-0804 (Correlation Gate Re-check) now unblocked
+> Current sprint: Epic 7 Workflow Readiness — QWS-0801 CLOSED; QWS-0703 (OpenAI Curation) CLOSED; QWS-0804 (Correlation Gate Re-check) READY
 > ```
 
 ---
@@ -63,7 +63,7 @@
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | FormerChampion Lifecycle | QWS-0801 (**CLOSED**) | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
-| OpenAI Curation Switch | QWS-0703 | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
+| OpenAI Curation Switch | QWS-0703 (**CLOSED**) | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
 | Correlation Gate Re-check | QWS-0804 (**READY**) | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
 
 ### Backlog
