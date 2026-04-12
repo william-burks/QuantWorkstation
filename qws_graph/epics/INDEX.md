@@ -15,7 +15,7 @@ Navigation and execution index for `qws_graph/epics`.
 4. **Epic 4 — Workflow Utility** — `COMPLETE`
 5. **Epic 5 — Context Enrichment** — `COMPLETE`
 6. **Epic 6 — Research Analytics** — `COMPLETE`
-7. **Epic 7 — Workflow Readiness** — `PLANNED` ← current sprint
+7. **Epic 7 — Workflow Readiness** — `COMPLETE`
 
 ## Dependency Notes
 - Epics 1–6 COMPLETE.
@@ -135,14 +135,14 @@ Dependency notes: QWS-0602 and QWS-0603 are independent — start parallel. QWS-
 
 ---
 
-## Epic 7 — Workflow Readiness [PLANNED] ← current sprint
-- Epic README: `epic_7_workflow_readiness/README.md`
+## Epic 7 — Workflow Readiness [COMPLETE]
+- Epic README: `epic_7_workflow_readiness[COMPLETE]/README.md`
 - Objective: close gaps blocking real end-to-end research sessions
 
 Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
-1. `QWS-0801` `closed/story_1_former_champion_lifecycle.md` — `CLOSED`
-2. `QWS-0703` `closed/story_2_openai_curation.md` — `CLOSED`
-3. `QWS-0804` `closed/story_3_correlation_gate_recheck.md` — `CLOSED`
+1. `QWS-0801` `epic_7_workflow_readiness[COMPLETE]/closed/story_1_former_champion_lifecycle.md` — `CLOSED`
+2. `QWS-0703` `epic_7_workflow_readiness[COMPLETE]/closed/story_2_openai_curation.md` — `CLOSED`
+3. `QWS-0804` `epic_7_workflow_readiness[COMPLETE]/closed/story_3_correlation_gate_recheck.md` — `CLOSED`
 
 ---
 
@@ -185,9 +185,6 @@ promotion).
 ---
 
 ## Current Focus
-- **Epic 6 COMPLETE** — all 4 stories CLOSED.
-- **Current sprint: Epic 7 Workflow Readiness**
-  - QWS-0801 (FormerChampion Lifecycle) — CLOSED
-  - QWS-0703 (OpenAI Curation Switch) — CLOSED
-  - QWS-0804 (Correlation Gate Re-check) — CLOSED
+- **Epic 7 COMPLETE** — all 3 stories CLOSED.
+- **Next:** Backlog stories (QWS-0803 Recursive Validation Loop, QWS-0802 SUPERSEDED_BY) before Epic 12 entry.
 

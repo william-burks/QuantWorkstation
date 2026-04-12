@@ -17,7 +17,7 @@ shared brain. Any model with MCP access reads the same research history.
 - Interface is `qw` CLI + MCP only — no FastAPI
 - Before suggesting a strategy: `qw query --name recent_champions` + `qw query --name list_aborted`
 - Do NOT use nodes/tools marked `[TARGET]` in `PROVENANCE_ENGINE.md` until their story is COMPLETE in `BACKLOG_ALIGNMENT.md`
-- **Current sprint:** Epic 7 Workflow Readiness — QWS-0801 CLOSED; QWS-0703 (OpenAI Curation) READY; QWS-0804 (Correlation Gate Re-check) READY (unblocked by QWS-0801)
+- **Epic 7 COMPLETE** — all stories CLOSED (QWS-0801, QWS-0703, QWS-0804). Next: backlog stories QWS-0803 (Recursive Validation Loop, READY) and QWS-0802 (SUPERSEDED_BY, READY) before Epic 12 entry.
 
 ---
 

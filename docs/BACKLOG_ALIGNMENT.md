@@ -22,7 +22,7 @@
 | Epic 4 — Workflow Utility | **COMPLETE** | OOS tracking, promotion alerts, query interface |
 | Epic 5 — Context Enrichment | **COMPLETE** | family_id, Regime tagging, cross-instrument aggregation |
 | Epic 6 — Research Analytics | **COMPLETE** | Hypothesis journaling, parameter stability, portfolio correlation, semantic dedup |
-| Epic 7 — Workflow Readiness | **PLANNED ← current** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
+| Epic 7 — Workflow Readiness | **COMPLETE** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
 | Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
 | Backlog | **UNSCHEDULED** | QWS-0701, 0702, 0802, 0803 — deferred until post-Epic 7 research sessions |
 
