@@ -23,6 +23,7 @@
 | Epic 5 — Context Enrichment | **COMPLETE** | family_id, Regime tagging, cross-instrument aggregation |
 | Epic 6 — Research Analytics | **COMPLETE** | Hypothesis journaling, parameter stability, portfolio correlation, semantic dedup |
 | Epic 7 — Workflow Readiness | **PLANNED ← current** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
+| Epic 10 — Production Tracking | **PLANNED** | Post-promotion Champion tracking in MLflow — registration, artifact storage, OOS monitoring |
 | Backlog | **UNSCHEDULED** | QWS-0701, 0702, 0802, 0803 — deferred until post-Epic 7 research sessions |
 
 ---
@@ -66,14 +67,32 @@
 | OpenAI Curation Switch | QWS-0703 | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
 | Correlation Gate Re-check | QWS-0804 | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
 
+### Epic 10 — Production Tracking
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| MLflow Champion Registration | QWS-1101 | `qw mlflow register`; MLflow experiment + run per Champion; IS params/metrics/artifacts logged; `mlflow_run_id` + `mlflow_experiment_id` on Champion node; `mlruns/` local backend | QWS-0801 CLOSED |
+| MLflow OOS Sync | QWS-1102 | `qw mlflow sync`; OOS metrics as stepped MLflow series; `oos_status` + `oos_date` tags updated on run; idempotent | QWS-1101 CLOSED |
+
 ### Backlog
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
+| Prefect Data Collection Infrastructure | QWS-1100 | `data/flows/` directory; crypto, futures, parquet Prefect flows; `execution/risk_scheduler.py` (risk-only APScheduler); launchd daemon; soft prerequisite for Epic 10 collectors | — |
 | SUPERSEDED_BY Relationship | QWS-0802 | `SUPERSEDED_BY` edge created at promotion time; direct one-hop lineage from displaced Champion to successor | — |
 | Recursive Validation Loop | QWS-0803 | `qw monitor` CLI; `monitor_champion` skill; auto-creates `DEGRADED_TO` on decay threshold breach; BlobArtifact notification | QWS-0801 CLOSED |
 | PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse | — |
 | CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push | — |
+| COT Collector | QWS-1001 | `cot` ArcticDB library; weekly CFTC positioning series per symbol; feeds Regime tagging | — |
+| FRED Macro Collector | QWS-1002 | `macro` ArcticDB library; daily yield curve, VIX, HY spread series; feeds macro regime context | — |
+| EIA Crude Oil Inventory Collector | QWS-1003 | `macro` ArcticDB library; weekly EIA petroleum stock series + surprise column; CL regime context + release-window avoidance | QWS-1001 |
+| Baker Hughes Rig Count Collector | QWS-1004 | `macro` ArcticDB library; weekly US + Canada rig count series; supply signal for CL and NG strategies | QWS-1001 |
+| NOAA Degree Day Collector | QWS-1005 | `macro` ArcticDB library; weekly HDD/CDD for US national + Northeast + Midwest; weather demand signal for NG strategies | QWS-1001 |
+| USDA Crop Progress Collector | QWS-1006 | `macro` ArcticDB library; weekly corn + soybean planting/development stage pct for NATL + top-5 states; seasonal signal for ZC and ZS strategies | QWS-1001 |
+| Google Trends Collector | QWS-1007 | `macro` ArcticDB library; weekly retail interest scores for gold/macro search terms; sentiment leading indicator for GC, MGC, BTC/USD | QWS-1001 |
+| Baltic Dirty Tanker Index Collector | QWS-1008 | `macro` ArcticDB library; daily BDTI index value; crude demand leading indicator for CL strategies | QWS-1001 |
+| Economic Calendar Collector | QWS-1009 | `calendar` ArcticDB library; `ECON_CALENDAR` symbol; daily FMP pull; `is_blackout` flag for high-impact events; advisory context for research sessions | QWS-1001 |
+| Data Quality Validation | QWS-1010 | `data/validation.py`; `validate_bars(df, freq)` — P1 raises on OHLCV violations / NaN / duplicates / non-UTC; P2/P3 warn on gaps / undercount; retrofit into existing collectors | — |
 
 ---
 
