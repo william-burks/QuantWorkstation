@@ -129,7 +129,7 @@ PROVENANCE_ENGINE.md is explicit: without cause-of-death, the cemetery view is u
 - [x] `former_champions` preset returns cemetery view.
 - [x] `data_dictionary.yaml` and `graph_v1_contract.md` updated.
 - [ ] Story marked CLOSED — unblocks QWS-0803.
-- [ ] All affected README files updated to reflect new capabilities.
+- [x] All affected README files updated to reflect new capabilities.
 - [x] PROVENANCE_ENGINE.md updated — FormerChampion, DEGRADED_TO, RETIRED_TO, oos_reason,
   retirement_note moved from `[TARGET]` to `[CURRENT]`; former_champions tool updated.
 
