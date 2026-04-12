@@ -97,6 +97,25 @@ V1 treatment:
 - Same as baseline CSV ingestion.
 - Additional lineage edge support for champion promotion if champion refers to grid source.
 
+### QWS-0801 — FormerChampion Lifecycle
+
+New node type `FormerChampion` sits between Champion and RetiredChampion:
+- `qw degrade <champion_id> --reason "..."` → Champion → DEGRADED_TO → FormerChampion
+- `qw retire <former_champion_id> [--note "..."]` → FormerChampion → RETIRED_TO → RetiredChampion
+- `qw query --name former_champions` → cemetery view
+
+Schema additions:
+| Node | ID Key | Key Properties |
+|---|---|---|
+| FormerChampion | former_champion_id | strategy_id, champion_id, degraded_at, oos_reason (mandatory), metrics_sharpe_at_degradation |
+
+| Relationship | Source → Target | Properties |
+|---|---|---|
+| DEGRADED_TO | Champion → FormerChampion | detected_at |
+| RETIRED_TO | FormerChampion → RetiredChampion | retired_at |
+
+New properties on RetiredChampion: `oos_reason` (copied from FormerChampion), `retirement_note` (set at retire time).
+
 ### 3) Champion Markdown
 Expected examples:
 - `research/results/champions/es_bear_sweep_1h_v1.md`

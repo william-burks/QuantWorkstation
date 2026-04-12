@@ -304,6 +304,16 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         ),
         requires_graph=True,
     ),
+    "former_champions": PresetSpec(
+        name="former_champions",
+        description=(
+            "Cemetery view: all FormerChampion nodes with strategy_id, instrument, "
+            "degraded_at, oos_reason, retirement_note (null if not yet retired), "
+            "and status (DEGRADED | RETIRED)."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
     "similar_hypotheses": PresetSpec(
         name="similar_hypotheses",
         description=(
@@ -474,6 +484,10 @@ def run_preset(
         hypothesis_id = params["hypothesis_id"]
         assert service is not None
         return service.get_similar_hypotheses_v1(hypothesis_id=hypothesis_id)
+
+    if name == "former_champions":
+        assert service is not None
+        return service.get_former_champions_v1()
 
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 

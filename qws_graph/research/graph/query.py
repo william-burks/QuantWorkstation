@@ -16,6 +16,7 @@ from typing import Any, Protocol
 
 from neo4j import GraphDatabase
 
+from .cypher import GET_FORMER_CHAMPIONS_V1_CYPHER
 from .query_models import (
     ChampionDetailsV1,
     ConfigLinkageV1,
@@ -686,6 +687,10 @@ class GraphQueryService:
         with self._driver.session(database=self._database) as session:
             return get_similar_hypotheses_v1(session, hypothesis_id=hypothesis_id)
 
+    def get_former_champions_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_former_champions_v1(session)
+
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
     if hasattr(record, "data") and callable(record.data):
@@ -1140,6 +1145,11 @@ def get_similar_hypotheses_v1(
 ) -> list[dict[str, Any]]:
     """Return hypotheses with SEMANTICALLY_RELATED edges, ordered by similarity descending."""
     return _all_results(session, GET_SIMILAR_HYPOTHESES_V1_CYPHER, hypothesis_id=hypothesis_id)
+
+
+def get_former_champions_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return all FormerChampion nodes with cemetery view fields."""
+    return _all_results(session, GET_FORMER_CHAMPIONS_V1_CYPHER)
 
 
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {

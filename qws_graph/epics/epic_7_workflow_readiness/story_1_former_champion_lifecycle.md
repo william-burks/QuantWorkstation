@@ -106,22 +106,82 @@ PROVENANCE_ENGINE.md is explicit: without cause-of-death, the cemetery view is u
 - `qws_graph/tests/unit/test_qw_degrade_retire.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw degrade <champion_id> --reason "..."` creates a FormerChampion node,
+- [x] `qw degrade <champion_id> --reason "..."` creates a FormerChampion node,
   creates a `DEGRADED_TO` edge from the Champion, and exits `0`.
-- [ ] `qw degrade <champion_id>` without `--reason` exits non-zero with a clear error.
-- [ ] `qw degrade <champion_id> --reason ""` (empty string) exits non-zero.
-- [ ] `qw degrade <non_existent_id> --reason "..."` exits non-zero with a clear error.
-- [ ] `qw retire <former_champion_id> --note "..."` creates a new RetiredChampion node (if
+- [x] `qw degrade <champion_id>` without `--reason` exits non-zero with a clear error.
+- [x] `qw degrade <champion_id> --reason ""` (empty string) exits non-zero.
+- [x] `qw degrade <non_existent_id> --reason "..."` exits non-zero with a clear error.
+- [x] `qw retire <former_champion_id> --note "..."` creates a new RetiredChampion node (if
   one does not already exist) and creates a `RETIRED_TO` edge from the FormerChampion to it.
-- [ ] `qw retire <former_champion_id> --note "..."` stores `retirement_note` on the
+- [x] `qw retire <former_champion_id> --note "..."` stores `retirement_note` on the
   RetiredChampion node.
-- [ ] `qw retire <former_champion_id>` without `--note` succeeds (note is optional for retirement).
-- [ ] `qw query --name former_champions` returns one row per FormerChampion with
+- [x] `qw retire <former_champion_id>` without `--note` succeeds (note is optional for retirement).
+- [x] `qw query --name former_champions` returns one row per FormerChampion with
   `strategy_id`, `instrument`, `degraded_at`, `oos_reason`, `retirement_note` (null if
   not yet retired), `status` (`DEGRADED` or `RETIRED`).
-- [ ] The Champion node remains readable after demotion (not deleted).
-- [ ] Unit tests cover: valid degrade, missing reason, empty reason, non-existent id,
+- [x] The Champion node remains readable after demotion (not deleted).
+- [x] Unit tests cover: valid degrade, missing reason, empty reason, non-existent id,
   valid retire, retire without note, cemetery view query.
+
+## Acceptance Test Plan
+
+### AC1: valid degrade
+- type: cli
+- cmd: `qw degrade <champion_id> --reason "MaxDD breached -15% in Oct CPI spike; OOS fail"`
+- expect_contains: "degraded:"
+- expect_exit: 0
+
+### AC2: degrade without --reason
+- type: cli
+- cmd: `qw degrade <champion_id>` (argparse requires --reason; pass intentional bad args)
+- expect_contains: "error"
+- expect_exit: non-zero
+
+### AC3: degrade with empty --reason
+- type: cli
+- cmd: `qw degrade <champion_id> --reason ""`
+- expect_contains: "error"
+- expect_exit: non-zero
+
+### AC4: degrade with non-existent champion
+- type: cli
+- cmd: `qw degrade non_existent_id_xyz --reason "test"`
+- expect_contains: "error"
+- expect_exit: non-zero
+
+### AC5: valid retire with note
+- type: cli
+- cmd: `qw retire <former_champion_id> --note "No pivot hypothesis; logic dead-ended"`
+- expect_contains: "retired:"
+- expect_exit: 0
+
+### AC6: retire stores retirement_note
+- type: cypher
+- cmd: `MATCH (rc:RetiredChampion {champion_id: $retired_id}) RETURN rc.retirement_note`
+- expect_contains: "No pivot hypothesis"
+
+### AC7: retire without note
+- type: cli
+- cmd: `qw retire <former_champion_id>`
+- expect_contains: "retired:"
+- expect_exit: 0
+
+### AC8: cemetery view
+- type: cli
+- cmd: `qw query --name former_champions`
+- expect_contains: "strategy_id"
+- expect_exit: 0
+
+### AC9: Champion readable after demotion
+- type: cypher
+- cmd: `MATCH (c:Champion {champion_id: $champion_id}) RETURN c.champion_id`
+- expect_contains: champion_id value
+
+### AC10: unit tests
+- type: regression
+- cmd: `pytest qws_graph/tests/unit/test_store_former_champion.py qws_graph/tests/unit/test_qw_degrade_retire.py -v`
+- expect_contains: "passed"
+- expect_exit: 0
 
 ## Definition of Done
 - [ ] FormerChampion node, DEGRADED_TO, RETIRED_TO edges implemented and tested.

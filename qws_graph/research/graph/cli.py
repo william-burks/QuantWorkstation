@@ -1245,6 +1245,69 @@ def cmd_backfill(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_degrade(args: argparse.Namespace) -> int:
+    """Demote a Champion to FormerChampion: qw degrade <champion_id> --reason "..."."""
+    champion_id: str = args.champion_id
+    reason: str | None = args.reason
+
+    if not reason:
+        print("error: --reason is required for qw degrade", file=sys.stderr)
+        return 1
+    if not reason.strip():
+        print("error: --reason must be non-empty", file=sys.stderr)
+        return 1
+
+    connector = NeoConnector(timeout_seconds=args.timeout_seconds)
+    if not connector.is_available():
+        print("error: Neo4j is unavailable", file=sys.stderr)
+        return 1
+
+    from qws_graph.research.graph.store import GraphStore, StoreError, StoreInfraError
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=args.timeout_seconds)
+        former_champion_id = store.degrade_champion(
+            champion_id=champion_id,
+            oos_reason=reason,
+        )
+        print(f"degraded: {champion_id} → FormerChampion {former_champion_id}")
+        return 0
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except (StoreError, StoreInfraError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+
+def cmd_retire(args: argparse.Namespace) -> int:
+    """Retire a FormerChampion: qw retire <former_champion_id> [--note "..."]."""
+    former_champion_id: str = args.former_champion_id
+    note: str | None = args.note
+
+    connector = NeoConnector(timeout_seconds=args.timeout_seconds)
+    if not connector.is_available():
+        print("error: Neo4j is unavailable", file=sys.stderr)
+        return 1
+
+    from qws_graph.research.graph.store import GraphStore, StoreError, StoreInfraError
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=args.timeout_seconds)
+        retired_champion_id = store.retire_former_champion(
+            former_champion_id=former_champion_id,
+            retirement_note=note,
+        )
+        print(f"retired: {former_champion_id} → RetiredChampion {retired_champion_id}")
+        return 0
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except (StoreError, StoreInfraError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+
 def main() -> int:
     """Main entry point for `qw` CLI."""
     parser = argparse.ArgumentParser(
@@ -1569,6 +1632,54 @@ def main() -> int:
         help="Neo4j connection timeout in seconds (default 3)",
     )
     backfill_parser.set_defaults(func=cmd_backfill)
+
+    # `qw degrade` subcommand
+    degrade_parser = subparsers.add_parser(
+        "degrade",
+        help="Demote a Champion to FormerChampion with mandatory cause-of-death",
+    )
+    degrade_parser.add_argument(
+        "champion_id",
+        metavar="CHAMPION_ID",
+        help="Champion node ID to demote",
+    )
+    degrade_parser.add_argument(
+        "--reason",
+        required=True,
+        metavar="REASON",
+        help="Mandatory cause-of-death (must be non-empty)",
+    )
+    degrade_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    degrade_parser.set_defaults(func=cmd_degrade)
+
+    # `qw retire` subcommand
+    retire_parser = subparsers.add_parser(
+        "retire",
+        help="Retire a FormerChampion to a final RetiredChampion node",
+    )
+    retire_parser.add_argument(
+        "former_champion_id",
+        metavar="FORMER_CHAMPION_ID",
+        help="FormerChampion node ID to retire",
+    )
+    retire_parser.add_argument(
+        "--note",
+        default=None,
+        metavar="NOTE",
+        help="Optional retirement note (free-text reason for final retirement)",
+    )
+    retire_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    retire_parser.set_defaults(func=cmd_retire)
 
     # Parse arguments
     args = parser.parse_args()
