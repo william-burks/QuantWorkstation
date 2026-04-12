@@ -347,6 +347,21 @@ RETURN {
 ORDER BY s.aborted_at DESC
 """.strip()
 
+GET_FORMER_CHAMPIONS_V1_CYPHER = """
+MATCH (fc:FormerChampion)
+OPTIONAL MATCH (fc)-[:RETIRED_TO]->(rc:RetiredChampion)
+RETURN {
+  former_champion_id: fc.former_champion_id,
+  strategy_id:        fc.strategy_id,
+  champion_id:        fc.champion_id,
+  degraded_at:        toString(fc.degraded_at),
+  oos_reason:         fc.oos_reason,
+  retirement_note:    rc.retirement_note,
+  status:             CASE WHEN rc IS NULL THEN 'DEGRADED' ELSE 'RETIRED' END
+} AS result
+ORDER BY fc.degraded_at DESC
+""".strip()
+
 GET_PROMOTION_CANDIDATES_V1_CYPHER = """
 MATCH (s:Strategy)-[:HAS_RUN]->(r:Run)
 WHERE coalesce(s.status, '') <> 'ABORTED'
@@ -645,6 +660,10 @@ class GraphQueryService:
     def get_list_aborted_v1(self) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_list_aborted_v1(session)
+
+    def get_former_champions_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_former_champions_v1(session)
 
     def get_promotion_candidates_v1(
         self,
@@ -1061,6 +1080,11 @@ def get_list_aborted_v1(session: QuerySession) -> list[dict[str, Any]]:
     return _all_results(session, GET_LIST_ABORTED_V1_CYPHER)
 
 
+def get_former_champions_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return all FormerChampion nodes with cemetery view (DEGRADED or RETIRED status)."""
+    return _all_results(session, GET_FORMER_CHAMPIONS_V1_CYPHER)
+
+
 def get_promotion_candidates_v1(
     session: QuerySession,
     min_sharpe: float = 2.0,
@@ -1166,6 +1190,7 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_hypothesis_audit_v1": get_hypothesis_audit_v1,
     "get_check_redundancy_v1": get_check_redundancy_v1,
     "get_similar_hypotheses_v1": get_similar_hypotheses_v1,
+    "get_former_champions_v1": get_former_champions_v1,
 }
 
 
@@ -1208,6 +1233,8 @@ __all__ = [
     "get_fragility_report_v1",
     "get_instrument_concentration_v1",
     "get_list_aborted_v1",
+    "get_former_champions_v1",
+    "GET_FORMER_CHAMPIONS_V1_CYPHER",
     "get_list_oos_pending_v1",
     "get_portfolio_alpha_v1",
     "get_promotion_candidates_v1",

@@ -105,6 +105,26 @@ class Champion(BaseModel):
         return self
 
 
+class FormerChampionNode(BaseModel):
+    """FormerChampion node: decay-watch state between Champion and RetiredChampion."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    former_champion_id: str  # hash12(champion_id + degraded_at_iso)
+    strategy_id: str
+    champion_id: str
+    degraded_at: datetime
+    oos_reason: str
+    metrics_sharpe_at_degradation: float | None = None
+
+    @field_validator("oos_reason")
+    @classmethod
+    def oos_reason_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("oos_reason cannot be empty")
+        return v
+
+
 class RunStatsSummary(BaseModel):
     """Aggregate stats for grid-sweep runs that did not pass the significance gate.
 

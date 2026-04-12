@@ -765,6 +765,47 @@ These are `SET` operations — no data is deleted. `get_strategy_summary_v1` ret
 
 ---
 
+### FormerChampion Lifecycle Contract (QWS-0801)
+
+`qw degrade <champion_id> --reason "<oos_reason>"` creates a `:FormerChampion` node and a
+`DEGRADED_TO` edge from the Champion. The Champion node is NOT deleted.
+
+Node properties set at demotion:
+```
+FormerChampion.former_champion_id  = hash12(champion_id + degraded_at_iso)
+FormerChampion.strategy_id         = <from Champion>
+FormerChampion.champion_id         = <champion_id>
+FormerChampion.degraded_at         = datetime()
+FormerChampion.oos_reason          = <reason>  -- mandatory, non-empty
+FormerChampion.metrics_sharpe_at_degradation = <sharpe>  -- optional
+```
+
+Edge properties:
+```
+DEGRADED_TO.detected_at = datetime()
+```
+
+`qw retire <former_champion_id> [--note "<note>"]` creates a `:RetiredChampion` node and a
+`RETIRED_TO` edge from the FormerChampion. Copies `oos_reason` from FormerChampion.
+
+Node properties set at retirement:
+```
+RetiredChampion.retired_champion_id = hash12(former_champion_id + retired_at_iso)
+RetiredChampion.champion_id         = <from FormerChampion>
+RetiredChampion.oos_reason          = <copied from FormerChampion>
+RetiredChampion.retirement_note     = <note>  -- optional, may be null
+RetiredChampion.retired_at          = datetime()
+```
+
+Edge properties:
+```
+RETIRED_TO.retired_at = datetime()
+```
+
+`--reason` is mandatory for `qw degrade` and must be non-empty. `--note` is optional for `qw retire`.
+
+---
+
 ## Phase Boundaries for "Graph as Truth"
 
 ### Phase 1 (Sidecar)
@@ -915,6 +956,45 @@ Options:
 Exit codes:
 - `0`: success
 - `1`: validation error
+- `2`: infra error
+
+### `qw degrade`
+Purpose:
+- Demote a Champion to FormerChampion with a mandatory cause-of-death reason.
+
+Usage:
+```text
+qw degrade <champion_id> --reason "<oos_reason>" [--sharpe <float>] [--timeout-seconds <int>]
+```
+
+Options:
+- `<champion_id>`: positional — ID of the Champion node (required)
+- `--reason <str>`: mandatory cause-of-death; must be non-empty
+- `--sharpe <float>`: Sharpe at time of demotion (optional)
+- `--timeout-seconds <int>`: Neo4j timeout (default 3)
+
+Exit codes:
+- `0`: FormerChampion created
+- `1`: validation error (empty reason) or champion not found
+- `2`: infra error
+
+### `qw retire`
+Purpose:
+- Retire a FormerChampion to RetiredChampion with an optional note.
+
+Usage:
+```text
+qw retire <former_champion_id> [--note "<note>"] [--timeout-seconds <int>]
+```
+
+Options:
+- `<former_champion_id>`: positional — ID of the FormerChampion node (required)
+- `--note <str>`: optional retirement note
+- `--timeout-seconds <int>`: Neo4j timeout (default 3)
+
+Exit codes:
+- `0`: RetiredChampion created
+- `1`: FormerChampion not found
 - `2`: infra error
 
 ### `qw reconcile`
