@@ -4,7 +4,7 @@
 QWS-0801
 
 ## Status
-TESTING
+READY
 
 ## Blocked On
 None (QWS-0402 was the prerequisite — now CLOSED)
