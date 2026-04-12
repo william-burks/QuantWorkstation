@@ -5,8 +5,6 @@ from __future__ import annotations
 import argparse
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from qws_graph.research.graph.cli import cmd_degrade, cmd_retire
 
 

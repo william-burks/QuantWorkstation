@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from qws_graph.research.graph.store import GraphStore, StoreError
+from qws_graph.research.graph.store import GraphStore
 
 
 # ---------------------------------------------------------------------------
@@ -97,7 +96,7 @@ class TestDegradeChampion:
 
         # Verify no DELETE was directly executed (write call uses DEGRADE_CHAMPION_QUERY)
         for call in session_mock.execute_write.call_args_list:
-            fn = call[0][0]
+            _fn = call[0][0]
             # The lambda wraps tx.run — we can't inspect the cypher directly here,
             # but confirming execute_write was called exactly once (no extra DELETE call).
         assert session_mock.execute_write.call_count == 1
