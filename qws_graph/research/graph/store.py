@@ -20,11 +20,13 @@ from .cypher import (
     CORRELATED_WITH_CHAMPION_QUERY,
     CORRELATED_WITH_STRATEGY_QUERY,
     CSV_INGEST_QUERY,
+    DEGRADE_CHAMPION_QUERY,
     DEMO_SEED_CYPHER,
     DEMO_TEARDOWN_CYPHER,
     ENSURE_RESEARCH_TARGET_QUERY,
     GET_ALL_HYPOTHESIS_EMBEDDINGS_QUERY,
     GET_CHAMPION_OOS_STATUS_QUERY,
+    GET_FORMER_CHAMPIONS_QUERY,
     GET_HYPOTHESES_WITHOUT_EMBEDDINGS_QUERY,
     GET_HYPOTHESIS_BY_ID_QUERY,
     GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,
@@ -38,6 +40,7 @@ from .cypher import (
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
     REGIME_MERGE_QUERY,
+    RETIRE_FORMER_CHAMPION_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
     RUN_STATS_SUMMARY_QUERY,
     SEMANTICALLY_RELATED_MERGE_QUERY,
@@ -417,6 +420,170 @@ class GraphStore:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001
             raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def degrade_champion(
+        self,
+        champion_id: str,
+        oos_reason: str,
+        metrics_sharpe_at_degradation: float | None = None,
+    ) -> str:
+        """Demote a Champion to FormerChampion state.
+
+        Creates a FormerChampion node and a DEGRADED_TO edge from the Champion.
+        The Champion node is NOT deleted or relabeled — it remains readable.
+
+        Args:
+            champion_id: The Champion node ID to demote.
+            oos_reason: Mandatory cause-of-death (non-empty).
+            metrics_sharpe_at_degradation: Sharpe at demotion time (optional).
+
+        Returns the new ``former_champion_id``.
+
+        Raises:
+            StoreError: When champion_id not found or oos_reason is empty.
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        if not oos_reason.strip():
+            raise StoreError("oos_reason must be a non-empty string")
+
+        degraded_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        former_champion_id = _ids.hash12(champion_id, degraded_at)
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx) -> list[object]:  # type: ignore[no-untyped-def]
+                    result = tx.run(
+                        DEGRADE_CHAMPION_QUERY,
+                        champion_id=champion_id,
+                        former_champion_id=former_champion_id,
+                        strategy_id=self._get_champion_strategy_id(session, champion_id),
+                        degraded_at=degraded_at,
+                        oos_reason=oos_reason,
+                        metrics_sharpe_at_degradation=metrics_sharpe_at_degradation,
+                    )
+                    return list(result)
+
+                # Resolve strategy_id first — fails if champion not found
+                strategy_id = self._get_champion_strategy_id(session, champion_id)
+                if strategy_id is None:
+                    raise StoreError(f"Champion {champion_id!r} not found in graph")
+
+                def _write_tx(tx) -> list[object]:  # type: ignore[no-untyped-def]
+                    return list(tx.run(
+                        DEGRADE_CHAMPION_QUERY,
+                        champion_id=champion_id,
+                        former_champion_id=former_champion_id,
+                        strategy_id=strategy_id,
+                        degraded_at=degraded_at,
+                        oos_reason=oos_reason,
+                        metrics_sharpe_at_degradation=metrics_sharpe_at_degradation,
+                    ))
+
+                records = session.execute_write(_write_tx)
+                if not records:
+                    raise StoreError(f"Champion {champion_id!r} not found in graph")
+                return former_champion_id
+
+        except StoreError:
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def retire_former_champion(
+        self,
+        former_champion_id: str,
+        retirement_note: str | None = None,
+    ) -> str:
+        """Retire a FormerChampion to RetiredChampion state.
+
+        Creates a new RetiredChampion node (if not already present) and a
+        RETIRED_TO edge from the FormerChampion. Copies oos_reason from
+        FormerChampion to the RetiredChampion node.
+
+        Args:
+            former_champion_id: The FormerChampion node ID to retire.
+            retirement_note: Optional free-text retirement reason.
+
+        Returns the new ``retired_champion_id``.
+
+        Raises:
+            StoreError: When former_champion_id not found.
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                # Verify FormerChampion exists and get champion_id
+                def _read_fc(tx) -> dict[str, object] | None:  # type: ignore[no-untyped-def]
+                    result = tx.run(
+                        "MATCH (fc:FormerChampion {former_champion_id: $fid}) "
+                        "RETURN fc.champion_id AS champion_id",
+                        fid=former_champion_id,
+                    ).single()
+                    return dict(result) if result is not None else None
+
+                row = session.execute_read(_read_fc)
+                if row is None:
+                    raise StoreError(f"FormerChampion {former_champion_id!r} not found in graph")
+
+                champion_id = str(row["champion_id"])
+                # retired_champion_id = the original champion_id (stable reference)
+                retired_champion_id = champion_id
+
+                def _write_tx(tx) -> list[object]:  # type: ignore[no-untyped-def]
+                    return list(tx.run(
+                        RETIRE_FORMER_CHAMPION_QUERY,
+                        former_champion_id=former_champion_id,
+                        retired_champion_id=retired_champion_id,
+                        retirement_note=retirement_note or "",
+                    ))
+
+                session.execute_write(_write_tx)
+                return retired_champion_id
+
+        except StoreError:
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def get_former_champions(self) -> list[dict[str, object]]:
+        """Return cemetery view: all FormerChampion nodes with lifecycle status.
+
+        Returns a list of dicts with keys:
+            former_champion_id, strategy_id, instrument, degraded_at,
+            oos_reason, retirement_note, status (DEGRADED | RETIRED).
+
+        Raises StoreInfraError on Neo4j connectivity or execution failure.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _read(tx) -> list[dict[str, object]]:  # type: ignore[no-untyped-def]
+                    return [dict(r["result"]) for r in tx.run(GET_FORMER_CHAMPIONS_QUERY)]
+
+                return session.execute_read(_read)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def _get_champion_strategy_id(self, session: object, champion_id: str) -> str | None:
+        """Read strategy_id from a Champion node; returns None if not found."""
+        def _read(tx) -> dict[str, object] | None:  # type: ignore[no-untyped-def]
+            result = tx.run(
+                "MATCH (ch:Champion {champion_id: $cid}) RETURN ch.strategy_id AS sid",
+                cid=champion_id,
+            ).single()
+            return dict(result) if result is not None else None
+
+        row = session.execute_read(  # type: ignore[attr-defined]
+            _read
+        )
+        if row is None:
+            return None
+        return str(row["sid"])
 
     def ensure_research_target(
         self,
