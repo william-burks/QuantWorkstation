@@ -58,15 +58,50 @@ if hypothesis_id and not dry_run and ingest_ok:
 - [ ] E2E test case added: bundle with `hypothesis_id` → TESTED_AS edge present in graph
 
 ## Repo Touchpoints
-- `qws_graph/research/graph/cli.py` — `_cmd_bundle`: read `hypothesis_id` from manifest, call `store.link_hypothesis_tested_as` after ingest
-- `qws_graph/tests/integration/test_cli_record_reconcile.py` — add E2E test: bundle with `hypothesis_id` → TESTED_AS edge present
+- `qws_graph/research/graph/cli.py` — `_cmd_bundle`: read `hypothesis_id` from manifest, call `store.link_hypothesis_tested_as` after ingest; `_cmd_hypothesis`: create Hypothesis node before BRANCHED_FROM edge when `--hypothesis` is a title string
+- `qws_graph/tests/integration/test_cli_record_reconcile.py` — add E2E test: bundle with `hypothesis_id` → TESTED_AS edge present; add E2E test: single-call `--hypothesis <title> --branched-from <id>` creates both node and edge
 
 ## Out of Scope
 
 - Validating hypothesis_id format at bundle write time
 - Backfilling existing ingested bundles
+- Validating that `--branched-from` parent ID exists before node creation
+
+---
+
+## Fix 2 — GAP-010: `_cmd_hypothesis` missing node creation on combined `--hypothesis` + `--branched-from`
+
+### Problem
+
+`_cmd_hypothesis` in `cli.py` creates the BRANCHED_FROM edge but NOT the Hypothesis node when called as:
+
+```bash
+qw record --hypothesis "new hypothesis title" --branched-from <parent_id>
+```
+
+`--hypothesis` is interpreted as a title string (not a 12-char ID) but the node-creation step is skipped — only the edge write is attempted. The edge write silently fails or targets a non-existent node.
+
+### Fix
+
+In `_cmd_hypothesis`, when `--hypothesis` value is a title string (len != 12 or not hex) and `--branched-from` is provided, create the Hypothesis node first in the same transaction, then create the BRANCHED_FROM edge using the new node's ID.
+
+```python
+# Pseudocode for combined path
+if branched_from and not _looks_like_id(hypothesis_arg):
+    node_id = store.create_hypothesis(title=hypothesis_arg)
+    store.create_branched_from_edge(child=node_id, parent=branched_from)
+    print(f"OK: Hypothesis created — id={node_id}")
+    print(f"OK: BRANCHED_FROM edge — {node_id} → {branched_from}")
+```
+
+### Acceptance Criteria (Fix 2)
+
+- [ ] `qw record --hypothesis "new title" --branched-from <parent_id>` creates the Hypothesis node AND the BRANCHED_FROM edge in a single call
+- [ ] If `--hypothesis` is a 12-char hex ID (existing node), behavior is unchanged — only the edge is created
+- [ ] If `--branched-from` parent does not exist, command exits with non-zero and prints an error
+- [ ] E2E test: single call with title + `--branched-from` → both node and edge present in graph
 
 ## Definition of Done
-- [ ] All ACs passing
+- [ ] All ACs passing (Fix 1 + Fix 2)
 - [ ] Tests green
 - [ ] Story marked CLOSED

@@ -17,18 +17,22 @@ Navigation and execution index for `qws_graph/epics`.
 6. **Epic 6 — Research Analytics** — `COMPLETE`
 7. **Epic 7 — Workflow Readiness** — `COMPLETE`
 8. **Epic 8 — Champion Lifecycle Hardening** — `COMPLETE`
-9. **Epic 9 — Strategy Development** — `PLANNED`
-10. **Epic 10 — Macro Data** — `PLANNED`
-11. **Epic 11 — Production Tracking** — `PLANNED`
-12. **Epic 12 — ML Research Layer** — `PLANNED`
+9. **Epic 9 — Strategy Development** — `IN PROGRESS` (QWS-0903 READY)
+10. **Epic 9HF — Bugs & Hotfixes** — `READY` (implement now, parallel with 10)
+11. **Epic 9.5 — Workflow Hardening** — `READY` (implement after 9HF)
+12. **Epic 10 — Macro Data** — `PLANNED` (QWS-1012 must close before any collector closes)
+13. **Epic 11 — Production Tracking** — `PLANNED`
+14. **Epic 13 — Agent Design** — `PLANNED` (QWS-1301 READY; 1302-1304 blocked on gap fixes)
+15. **Epic 12 — ML Research Layer** — `PLANNED`
 
 ## Dependency Notes
-- Epics 1–7 COMPLETE.
-- Epic 8 QWS-0802 and QWS-0803 are independent — implement in parallel.
-- Epic 8 QWS-0803 blocker (QWS-0801 CLOSED) now satisfied.
-- Epic 12 entry blocked on QWS-0803 CLOSED.
-- Epic 10 (Macro Data) is independent of Epic 8.
-- Hotfix stories live in `qws_graph/epics/hotfix_stories/` — implement independently of epic sequencing via run-epic or lead-engineer.
+- Epics 1–8 COMPLETE. Epic 9 in progress — QWS-0903 READY.
+- Epic 9HF: QWS-HF-001 and QWS-0904 are independent — implement in parallel.
+- Epic 9.5: all 4 stories READY, no mutual deps — implement in parallel.
+- Epic 10: QWS-1012 (strategy class taxonomy) must CLOSE before any collector story closes.
+- Epic 12 entry blocked on QWS-0803 CLOSED (satisfied). QWS-0907 (trial_metadata) must land before QWS-1204.
+- Epic 13: QWS-1301 READY; QWS-1302/1303/1304 blocked on gap fixes landing first.
+- Hotfix stories live in `qws_graph/epics/hotfix_stories/` — implement independently via run-epic or lead-engineer.
 
 ---
 
@@ -177,6 +181,26 @@ Note: this epic has no code deliverables. Done criteria = gap audit written, bac
 
 ---
 
+## Epic 9HF — Bugs & Hotfixes [READY]
+- Path: `hotfix_stories/`
+- Objective: fix silent data integrity bugs discovered during Epic 9 research sessions — provenance chain breaks, phantom IDs, CLI ordering bugs
+
+Stories (independent — implement in parallel):
+- `QWS-HF-001` `hotfix_stories/QWS-HF-001_bundle_hypothesis_autolink.md` — `READY`
+- `QWS-0904` `hotfix_stories/QWS-0904_phantom_champion_id_fix.md` — `READY`
+
+---
+
+## Epic 9.5 — Workflow Hardening [READY]
+- Path: `epic_9_5_workflow_hardening/`
+- Objective: fix researcher friction gaps discovered during Epic 9 — hypothesis lookup, ad-hoc queries, trial metadata, CL data window
+
+Stories (independent — implement in parallel):
+- `QWS-0905` `epic_9_5_workflow_hardening/story_QWS-0905_hypothesis_lookup_and_findings.md` — `READY`
+- `QWS-0906` `epic_9_5_workflow_hardening/story_QWS-0906_adhoc_cypher_and_patch.md` — `READY`
+- `QWS-0907` `epic_9_5_workflow_hardening/story_QWS-0907_trial_metadata_json_blob.md` — `READY`
+- `QWS-0908` `epic_9_5_workflow_hardening/story_QWS-0908_cl_historical_data_extension.md` — `READY`
+
 ---
 
 ## Epic 10 — Macro Data [PLANNED]
@@ -196,6 +220,7 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 - `QWS-1009` `epic_10_macro_data/story_economic_calendar_collector.md` — `blocked` (QWS-1000)
 - `QWS-1010` `epic_10_macro_data/story_data_quality_validation.md` — `ready`
 - `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `blocked` (QWS-1000)
+- `QWS-1012` `epic_10_macro_data/story_QWS-1012_strategy_class_taxonomy.md` — `READY` ⚠️ must close before any collector story closes
 - `QWS-1100a` `epic_10_macro_data/story_prefect_1100a_scheduler_isolation.md` — `ready`
 - `QWS-1100b` `epic_10_macro_data/story_prefect_1100b_flows.md` — `blocked` (QWS-1100a)
 
@@ -213,25 +238,26 @@ Stories (QWS-1101 first, QWS-1102 after):
 
 ---
 
-## Hotfix Stories
+## Epic 13 — Agent Design [PLANNED]
+- Path: `epic_agent_design/`
+- Objective: build research navigator, trial engineer, and research ideas layer; rewrite research-session command to orchestrate both agents
+- Build order: QWS-1301 → QWS-1302 → QWS-1303 → run one manual session → QWS-1304
 
-Small, targeted fixes discovered during research sessions or UAT. Not part of any epic sprint. Implement immediately via run-epic or lead-engineer.
-
-- `QWS-HF-001` `hotfix_stories/QWS-HF-001_bundle_hypothesis_autolink.md` — `READY`
+Stories:
+- `QWS-1301` `epic_agent_design/story_QWS-1301_research_ideas_layer.md` — `READY`
+- `QWS-1302` `epic_agent_design/story_QWS-1302_research_navigator_agent.md` — `BLOCKED` (QWS-1301, QWS-0905, QWS-0906)
+- `QWS-1303` `epic_agent_design/story_QWS-1303_trial_engineer_agent.md` — `BLOCKED` (QWS-1302, QWS-0907)
+- `QWS-1304` `epic_agent_design/story_QWS-1304_research_session_command_rewrite.md` — `BLOCKED` (QWS-1302, QWS-1303)
 
 ---
 
 ## Backlog [UNSCHEDULED]
 - Backlog README: `backlog/README.md`
-- Stories not yet assigned to a sprint epic. Revisit after Epic 7 complete.
+- Stories not yet assigned to a sprint epic.
 
 Stories (no order):
 - `QWS-0701` `backlog/story_pypi_packaging.md` — `READY`
 - `QWS-0702` `backlog/story_ci_graph_integrity.md` — `READY`
-- `QWS-1301` `backlog/story_research_ideas_layer.md` — `DRAFT`
-- `QWS-1302` `backlog/story_research_navigator_agent.md` — `DRAFT`
-- `QWS-1303` `backlog/story_trial_engineer_agent.md` — `DRAFT`
-- `QWS-1304` `backlog/story_research_session_command_rewrite.md` — `DRAFT`
 
 ---
 
@@ -261,6 +287,9 @@ promotion).
 ---
 
 ## Current Focus
-- **Epic 7 COMPLETE** — all 3 stories CLOSED.
-- **Next:** Epic 9 (Strategy Development — QWS-0901 First Research Session, READY) → Epic 10 (Macro Data) → Epic 11 (Production Tracking) → Epic 12.
+- **Epic 8 COMPLETE** — all 3 stories CLOSED.
+- **Epic 9 in progress** — QWS-0901 CLOSED, QWS-0902 CLOSED, QWS-0903 READY.
+- **Immediate:** Epic 9HF (QWS-HF-001 + QWS-0904) — fix data integrity bugs before next research session.
+- **Next parallel tracks:** Epic 9.5 (workflow hardening) + Epic 10 (macro data, start with QWS-1000).
+- **After gaps land:** Epic 13 (agent design, QWS-1301 READY) → Epic 12 (ML research).
 

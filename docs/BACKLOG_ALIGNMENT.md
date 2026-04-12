@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 9 Strategy Development — Epic 8 COMPLETE. Next: QWS-0901 (First Research Session, READY) → QWS-0902 (Strategy Screening Pass) → QWS-0903 (System Gap Audit) → Epic 10 (Macro Data) → Epic 11 (Production Tracking) → Epic 12 entry.
+> Current sprint: Epic 9 in progress (QWS-0903 READY). Immediate: Epic 9HF bugs (QWS-HF-001 + QWS-0904) before next research session. Parallel: Epic 9.5 Workflow Hardening + Epic 10 Macro Data (QWS-1012 must close before any collector closes). After gaps: Epic 13 Agent Design (QWS-1301 READY) → Epic 12 ML Research.
 > ```
 
 ---
@@ -24,11 +24,14 @@
 | Epic 6 — Research Analytics | **COMPLETE** | Hypothesis journaling, parameter stability, portfolio correlation, semantic dedup |
 | Epic 7 — Workflow Readiness | **COMPLETE** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
 | Epic 8 — Champion Lifecycle Hardening | **COMPLETE** | SUPERSEDED_BY direct lineage edge, recursive decay detection (monitor_champion) |
-| Epic 9 — Strategy Development | **PLANNED** | Research sessions, workflow observation, system gap audit — no code deliverables |
-| Epic 10 — Macro Data | **PLANNED** | Macro + alternative data ingestion to ArcticDB (COT, FRED, EIA, Baker Hughes, NOAA, USDA, Google Trends, BDTI, economic calendar, NDVI, Prefect infra) |
+| Epic 9 — Strategy Development | **IN PROGRESS** | Research sessions, workflow observation, system gap audit — no code deliverables |
+| Epic 9HF — Bugs & Hotfixes | **READY** | Fix silent data integrity bugs from Epic 9 sessions (phantom champion ID, TESTED_AS edge, branched-from node creation) |
+| Epic 9.5 — Workflow Hardening | **READY** | Hypothesis lookup/findings, ad-hoc Cypher, trial metadata, CL data extension |
+| Epic 10 — Macro Data | **PLANNED** | Macro + alternative data ingestion to ArcticDB — QWS-1012 must close before any collector closes |
 | Epic 11 — Production Tracking | **PLANNED** | MLflow Champion registration + OOS sync; split production results from research results |
 | Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
-| Backlog | **UNSCHEDULED** | QWS-0701, 0702 — deferred until post-Epic 8 research sessions |
+| Epic 13 — Agent Design | **PLANNED** | Research Navigator, Trial Engineer, Research Ideas Layer, Session Command Rewrite |
+| Backlog | **UNSCHEDULED** | QWS-0701, 0702 |
 
 ---
 
@@ -87,6 +90,31 @@
 | Strategy Screening Pass | QWS-0902 (**CLOSED**) | `docs/research_sessions/session_0902.md` — sweep results, redundancy check assessment | ~~QWS-0901~~ |
 | System Gap Audit | QWS-0903 (**READY**) | `docs/epic_9_gap_audit.md` — tooling gaps, missing data, workflow friction, AI failures, backlog candidates | ~~QWS-0901~~, ~~QWS-0902~~ |
 
+### Epic 9HF — Bugs & Hotfixes
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| Bundle Hypothesis Autolink + branched-from fix | QWS-HF-001 (**READY**) | `hypothesis_id` in bundle.json → auto TESTED_AS edge; single-call `--hypothesis + --branched-from` creates node + edge atomically | — |
+| Phantom Champion ID Fix | QWS-0904 (**READY**) | Auto-promotion prints verified persisted ID (not pre-write hash); researcher can trust CLI output | — |
+
+### Epic 9.5 — Workflow Hardening
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| Hypothesis Lookup + Findings | QWS-0905 (**READY**) | `findings` property on Hypothesis; `hypotheses_by_status` + `hypothesis_search` presets; `--findings` flag on `qw record --hypothesis` | — |
+| Ad-hoc Cypher + `qw patch` | QWS-0906 (**READY**) | `qw query --cypher` read-only passthrough; `qw patch --run` for surgical property corrections | — |
+| Trial Metadata JSON Blob | QWS-0907 (**READY**) | `trial_metadata` map property on Run node; regime columns survive bundle ingest | — |
+| CL Historical Data Extension | QWS-0908 (**READY**) | CL 1H data extended to ≥ 2020 via IBKR audit or FirstRate CSV ingest | — |
+
+### Epic 13 — Agent Design
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| Research Ideas Layer | QWS-1301 (**READY**) | `queued` flag on Hypothesis; `queued_hypotheses` preset; lightweight mid-session idea intake; `BRANCHED_FROM` to Run | QWS-HF-001, QWS-0905 |
+| Research Navigator Agent | QWS-1302 (**BLOCKED**) | `research-navigator` agent; ranked next-direction synthesis; Phase 3 mid-session pivot; proactive redundancy check | QWS-1301, QWS-0905, QWS-0906 |
+| Trial Engineer Agent | QWS-1303 (**BLOCKED**) | `trial-engineer` agent; generates trial script + bundle.json from hypothesis context; stops before run | QWS-1302, QWS-0907 |
+| Research Session Command Rewrite | QWS-1304 (**BLOCKED**) | `/research-session` orchestrates navigator + trial-engineer; handoff contract defined | QWS-1302, QWS-1303 |
+
 ### Epic 12 — ML Research Layer
 
 | Story | ID | Capabilities Unlocked | Blocked On |
@@ -115,6 +143,7 @@
 | Economic Calendar Collector | QWS-1009 (**BLOCKED**) | Economic event calendar data in ArcticDB | QWS-1000 |
 | Data Quality Validation | QWS-1010 (**READY**) | Validation gate — alerts on missing bars, stale feeds, schema drift | — |
 | NDVI Crop Health Collector | QWS-1011 (**BLOCKED**) | NDVI crop health index in ArcticDB | QWS-1000 |
+| Strategy Class Taxonomy | QWS-1012 (**READY**) ⚠️ | `strategy_class` free-form string on Strategy; `portfolio_by_class` preset; `qw backfill --strategy-class`; `bundle.json` reads `strategy_class` | — |
 | Scheduler Isolation | QWS-1100a (**READY**) | `execution/risk_scheduler.py` with risk jobs only; `prefect` in pyproject.toml | — |
 | Prefect Flows | QWS-1100b (**BLOCKED**) | Scheduled collection via Prefect flows; launchd daemon | QWS-1100a |
 
@@ -131,10 +160,10 @@
 |---|---|---|---|
 | PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse | — |
 | CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push | — |
-| Research Ideas Layer | QWS-1301 (**DRAFT**) | Structured idea intake layer for research session seeding | DRAFT, deferred until Epic 9 gap audit |
-| Research Navigator Agent | QWS-1302 (**DRAFT**) | Agent-guided research session navigation | DRAFT, deferred until Epic 9 gap audit |
-| Trial Engineer Agent | QWS-1303 (**DRAFT**) | Agent that drafts and runs trial scripts | DRAFT, deferred until Epic 9 gap audit |
-| Research Session Command Rewrite | QWS-1304 (**DRAFT**) | Rewrite `/research-session` command based on observed friction | DRAFT, deferred until Epic 9 gap audit |
+| Research Ideas Layer | QWS-1301 (**READY**) | Structured idea intake layer — see Epic 13 | Epic 13 |
+| Research Navigator Agent | QWS-1302 (**BLOCKED**) | Agent-guided research session navigation — see Epic 13 | Epic 13 |
+| Trial Engineer Agent | QWS-1303 (**BLOCKED**) | Agent that drafts and runs trial scripts — see Epic 13 | Epic 13 |
+| Research Session Command Rewrite | QWS-1304 (**BLOCKED**) | Rewrite `/research-session` command — see Epic 13 | Epic 13 |
 
 ---
 
