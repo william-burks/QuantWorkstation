@@ -17,7 +17,7 @@ Navigation and execution index for `qws_graph/epics`.
 6. **Epic 6 — Research Analytics** — `COMPLETE`
 7. **Epic 7 — Workflow Readiness** — `COMPLETE`
 8. **Epic 8 — Champion Lifecycle Hardening** — `COMPLETE`
-9. **Epic 9 — Strategy Development** — `IN PROGRESS` (QWS-0903 READY)
+9. **Epic 9 — Strategy Development** — `COMPLETE`
 10. **Epic 9HF — Bugs & Hotfixes** — `READY` (implement now, parallel with 10)
 11. **Epic 9.5 — Workflow Hardening** — `READY` (implement after 9HF)
 12. **Epic 10 — Macro Data** — `PLANNED` (QWS-1012 must close before any collector closes)
@@ -168,14 +168,14 @@ Stories (QWS-0802 and QWS-0803 independent — implement in parallel):
 
 ---
 
-## Epic 9 — Strategy Development [PLANNED]
-- Epic README: `epic_9_strategy_development/README.md`
+## Epic 9 — Strategy Development [COMPLETE]
+- Epic README: `epic_9_strategy_development[COMPLETE]/README.md`
 - Objective: use system end-to-end; document research findings, workflow friction, and tooling gaps — no code deliverables
 
 Stories (execution order — 0901 first, 0902 after 0901, 0903 after both):
-1. `QWS-0901` `epic_9_strategy_development/closed/story_1_first_research_session.md` — `CLOSED`
-2. `QWS-0902` `epic_9_strategy_development/closed/story_2_strategy_screening_pass.md` — `CLOSED`
-3. `QWS-0903` `epic_9_strategy_development/closed/story_3_system_gap_audit.md` — `CLOSED`
+1. `QWS-0901` `epic_9_strategy_development[COMPLETE]/closed/story_1_first_research_session.md` — `CLOSED`
+2. `QWS-0902` `epic_9_strategy_development[COMPLETE]/closed/story_2_strategy_screening_pass.md` — `CLOSED`
+3. `QWS-0903` `epic_9_strategy_development[COMPLETE]/closed/story_3_system_gap_audit.md` — `CLOSED`
 
 Note: this epic has no code deliverables. Done criteria = gap audit written, backlog updated.
 
@@ -288,7 +288,7 @@ promotion).
 
 ## Current Focus
 - **Epic 8 COMPLETE** — all 3 stories CLOSED.
-- **Epic 9 in progress** — QWS-0901 CLOSED, QWS-0902 CLOSED, QWS-0903 READY.
+- **Epic 9 COMPLETE** — all 3 stories CLOSED.
 - **Immediate:** Epic 9HF (QWS-HF-001 + QWS-0904) — fix data integrity bugs before next research session.
 - **Next parallel tracks:** Epic 9.5 (workflow hardening) + Epic 10 (macro data, start with QWS-1000).
 - **After gaps land:** Epic 13 (agent design, QWS-1301 READY) → Epic 12 (ML research).

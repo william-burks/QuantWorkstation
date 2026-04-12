@@ -24,7 +24,7 @@
 | Epic 6 — Research Analytics | **COMPLETE** | Hypothesis journaling, parameter stability, portfolio correlation, semantic dedup |
 | Epic 7 — Workflow Readiness | **COMPLETE** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
 | Epic 8 — Champion Lifecycle Hardening | **COMPLETE** | SUPERSEDED_BY direct lineage edge, recursive decay detection (monitor_champion) |
-| Epic 9 — Strategy Development | **IN PROGRESS** | Research sessions, workflow observation, system gap audit — no code deliverables |
+| Epic 9 — Strategy Development | **COMPLETE** | Research sessions, workflow observation, system gap audit — no code deliverables |
 | Epic 9HF — Bugs & Hotfixes | **READY** | Fix silent data integrity bugs from Epic 9 sessions (phantom champion ID, TESTED_AS edge, branched-from node creation) |
 | Epic 9.5 — Workflow Hardening | **READY** | Hypothesis lookup/findings, ad-hoc Cypher, trial metadata, CL data extension |
 | Epic 10 — Macro Data | **PLANNED** | Macro + alternative data ingestion to ArcticDB — QWS-1012 must close before any collector closes |
