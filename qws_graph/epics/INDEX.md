@@ -16,6 +16,7 @@ Navigation and execution index for `qws_graph/epics`.
 5. **Epic 5 — Context Enrichment** — `COMPLETE`
 6. **Epic 6 — Research Analytics** — `COMPLETE`
 7. **Epic 7 — Workflow Readiness** — `PLANNED` ← current sprint
+10. **Epic 10 — Production Tracking** — `PLANNED`
 
 ## Dependency Notes
 - Epics 1–6 COMPLETE.
@@ -140,9 +141,20 @@ Dependency notes: QWS-0602 and QWS-0603 are independent — start parallel. QWS-
 - Objective: close gaps blocking real end-to-end research sessions
 
 Stories (execution order — 0801 and 0703 parallel, 0804 after 0801):
-1. `QWS-0801` `story_1_former_champion_lifecycle.md` — `READY`
+1. `QWS-0801` `story_1_former_champion_lifecycle.md` — `TESTING`
 2. `QWS-0703` `story_2_openai_curation.md` — `READY`
 3. `QWS-0804` `story_3_correlation_gate_recheck.md` — `BLOCKED` _(blocked on QWS-0801 CLOSED)_
+
+---
+
+## Epic 10 — Production Tracking [PLANNED]
+- Epic folder: `epic_10_production_tracking/`
+- Entry criteria: QWS-0801 CLOSED
+- Exit criteria: Promoted Champions browsable in MLflow UI; OOS metrics tracked as stepped series; `mlflow_run_id` on Champion node
+
+Stories:
+1. `QWS-1101` `story_1_mlflow_champion_registration.md` — `READY` _(blocked on QWS-0801 CLOSED)_
+2. `QWS-1102` `story_2_mlflow_oos_sync.md` — `READY` _(blocked on QWS-1101 CLOSED)_
 
 ---
 
@@ -155,13 +167,27 @@ Stories (no order):
 - `QWS-0702` `story_ci_graph_integrity.md` — `READY`
 - `QWS-0802` `story_superseded_by_relationship.md` — `READY`
 - `QWS-0803` `story_recursive_validation_loop.md` — `BLOCKED` _(blocked on QWS-0801 CLOSED)_
+- `QWS-1100` `story_prefect_data_collection_infra.md` — `READY`
+- `QWS-1001` `story_cot_collector.md` — `READY`
+- `QWS-1002` `story_fred_macro_collector.md` — `READY`
+- `QWS-1003` `story_eia_crude_collector.md` — `READY` _(blocked on QWS-1001 CLOSED)_
+- `QWS-1004` `story_baker_hughes_rig_count.md` — `READY` _(blocked on QWS-1001 CLOSED)_
+- `QWS-1005` `story_noaa_degree_days.md` — `READY` _(blocked on QWS-1001 CLOSED)_
+- `QWS-1006` `story_usda_crop_progress.md` — `READY` _(blocked on QWS-1001 CLOSED)_
+- `QWS-1007` `story_google_trends.md` — `READY` _(blocked on QWS-1001 CLOSED)_
+- `QWS-1008` `story_bdti_tanker_index.md` — `READY` _(blocked on QWS-1001 CLOSED)_
+- `QWS-1009` `story_economic_calendar_collector.md` — `READY` _(blocked on QWS-1001 CLOSED)_
+- `QWS-1010` `story_data_quality_validation.md` — `READY`
 
 ---
 
 ## Current Focus
 - **Epic 6 COMPLETE** — all 4 stories CLOSED.
 - **Current sprint: Epic 7 Workflow Readiness**
-  - QWS-0801 (FormerChampion Lifecycle) — READY, start now
+  - QWS-0801 (FormerChampion Lifecycle) — TESTING
   - QWS-0703 (OpenAI Curation Switch) — READY, parallel with QWS-0801
   - QWS-0804 (Correlation Gate Re-check) — BLOCKED on QWS-0801
+- **Planned: Epic 10 Production Tracking**
+  - QWS-1101 (MLflow Champion Registration) — READY after QWS-0801 CLOSED
+  - QWS-1102 (MLflow OOS Sync) — READY after QWS-1101 CLOSED
 

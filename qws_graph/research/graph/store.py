@@ -42,6 +42,8 @@ from .cypher import (
     RUN_STATS_SUMMARY_QUERY,
     SEMANTICALLY_RELATED_MERGE_QUERY,
     UPDATE_CHAMPION_OOS_STATUS_QUERY,
+    DEGRADE_CHAMPION_QUERY,
+    RETIRE_FORMER_CHAMPION_QUERY,
 )
 from .models import ResearchArtifact, RunStatsSummary
 
@@ -1358,3 +1360,88 @@ RETURN {
         return len(pairs)
 
 
+    def degrade_champion(
+        self,
+        champion_id: str,
+        oos_reason: str,
+        metrics_sharpe_at_degradation: float | None = None,
+    ) -> str:
+        """Demote a Champion to FormerChampion with a mandatory cause-of-death.
+
+        Creates a :FormerChampion node and a DEGRADED_TO edge from the Champion.
+        The Champion node is NOT deleted — it remains readable.
+
+        Returns the ``former_champion_id`` of the created FormerChampion.
+        Raises ``StoreError`` when ``champion_id`` is not found.
+        Raises ``StoreInfraError`` on Neo4j connectivity or execution failure.
+        """
+        if not oos_reason or not oos_reason.strip():
+            raise StoreError("oos_reason must be a non-empty string")
+
+        import datetime as _dt
+
+        degraded_at = _dt.datetime.now(_dt.UTC).isoformat()
+        former_champion_id = _ids.hash12(champion_id, degraded_at)
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx):
+                    result = tx.run(
+                        DEGRADE_CHAMPION_QUERY,
+                        champion_id=champion_id,
+                        former_champion_id=former_champion_id,
+                        degraded_at=degraded_at,
+                        oos_reason=oos_reason.strip(),
+                        metrics_sharpe_at_degradation=metrics_sharpe_at_degradation,
+                    )
+                    return list(result)
+
+                records = session.execute_write(_write)
+                if not records:
+                    raise StoreError(f"Champion {champion_id!r} not found in graph")
+                return former_champion_id
+        except StoreError:
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def retire_former_champion(
+        self,
+        former_champion_id: str,
+        retirement_note: str | None = None,
+    ) -> str:
+        """Retire a FormerChampion to RetiredChampion.
+
+        Creates a :RetiredChampion node (if not already existing) and a RETIRED_TO
+        edge from the FormerChampion. Copies ``oos_reason`` from FormerChampion to
+        RetiredChampion. ``retirement_note`` is optional.
+
+        Returns the ``retired_champion_id`` of the created/merged RetiredChampion.
+        Raises ``StoreError`` when ``former_champion_id`` is not found.
+        Raises ``StoreInfraError`` on Neo4j connectivity or execution failure.
+        """
+        retired_champion_id = _ids.hash12(former_champion_id, "retired")
+
+        try:
+            with self._driver.session(database=self._database) as session:
+                def _write(tx):
+                    result = tx.run(
+                        RETIRE_FORMER_CHAMPION_QUERY,
+                        former_champion_id=former_champion_id,
+                        retired_champion_id=retired_champion_id,
+                        retirement_note=retirement_note or "",
+                    )
+                    return list(result)
+
+                records = session.execute_write(_write)
+                if not records:
+                    raise StoreError(f"FormerChampion {former_champion_id!r} not found in graph")
+                return retired_champion_id
+        except StoreError:
+            raise
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc

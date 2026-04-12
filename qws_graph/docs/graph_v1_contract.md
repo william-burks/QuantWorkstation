@@ -1060,3 +1060,71 @@ Intentionally deferred:
 - HUD/CodeLens productization.
 
 
+
+
+---
+
+## FormerChampion Lifecycle (QWS-0801)
+
+### Node Types Added
+
+| Node | ID Key | Story |
+|---|---|---|
+| `FormerChampion` | `former_champion_id = hash12(champion_id, degraded_at_iso)` | QWS-0801 |
+
+### Relationship Types Added
+
+| Relationship | Source | Target | Properties |
+|---|---|---|---|
+| `DEGRADED_TO` | Champion | FormerChampion | `detected_at: datetime` |
+| `RETIRED_TO` | FormerChampion | RetiredChampion | `retired_at: datetime` |
+
+### New Properties on RetiredChampion
+
+| Property | Type | Set At |
+|---|---|---|
+| `oos_reason` | str | Copied from FormerChampion at `qw retire` time |
+| `retirement_note` | str | Set at `qw retire --note "..."` time |
+
+### CLI Commands
+
+```zsh
+# Demote a Champion → FormerChampion (--reason mandatory, non-empty)
+qw degrade <champion_id> --reason "MaxDD breached -15% in Oct CPI spike; OOS fail"
+
+# Retire a FormerChampion → RetiredChampion (--note optional)
+qw retire <former_champion_id> --note "No pivot hypothesis; logic dead-ended"
+
+# Cemetery view
+qw query --name former_champions
+```
+
+### Exit Codes — `qw degrade`
+
+| Code | Meaning |
+|---|---|
+| 0 | Champion found and degraded |
+| 1 | Validation error (empty reason) or Champion not found |
+| 2 | Infrastructure failure (Neo4j unavailable) |
+
+### Exit Codes — `qw retire`
+
+| Code | Meaning |
+|---|---|
+| 0 | FormerChampion found and retired |
+| 1 | FormerChampion not found |
+| 2 | Infrastructure failure (Neo4j unavailable) |
+
+### Cemetery View — `former_champions` Preset
+
+Returns one row per FormerChampion:
+
+| Column | Type | Notes |
+|---|---|---|
+| `former_champion_id` | str | Node ID |
+| `strategy_id` | str | Parent strategy |
+| `instrument` | str | From Strategy node |
+| `degraded_at` | datetime | When demotion occurred |
+| `oos_reason` | str | Cause-of-death (mandatory) |
+| `retirement_note` | str \| null | Set at retirement; null if still DEGRADED |
+| `status` | str | `DEGRADED` or `RETIRED` |

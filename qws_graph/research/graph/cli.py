@@ -1095,6 +1095,94 @@ def cmd_abort(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def cmd_degrade(args: argparse.Namespace) -> int:
+    """Execute `qw degrade` command.
+
+    Demotes a Champion to FormerChampion with a mandatory cause-of-death reason.
+
+    Exit codes:
+        0: champion found and degraded successfully
+        1: validation error (empty reason) or champion not found in graph
+        2: infrastructure failure (Neo4j unavailable)
+    """
+    champion_id = args.champion
+    reason = args.reason.strip()
+    timeout_seconds = getattr(args, "timeout_seconds", 3)
+
+    if not reason:
+        print("ERROR: --reason must be a non-empty string", file=sys.stderr)
+        return 1
+
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(
+            f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            former_champion_id = store.degrade_champion(champion_id, reason)
+        finally:
+            store.close()
+    except StoreInfraError as exc:
+        print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
+        return 2
+    except StoreError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    print(
+        f"OK: Champion {champion_id!r} degraded → FormerChampion {former_champion_id!r}",
+        file=sys.stdout,
+    )
+    return 0
+
+
+def cmd_retire(args: argparse.Namespace) -> int:
+    """Execute `qw retire` command.
+
+    Retires a FormerChampion to RetiredChampion with an optional retirement note.
+
+    Exit codes:
+        0: former champion found and retired successfully
+        1: former champion not found in graph
+        2: infrastructure failure (Neo4j unavailable)
+    """
+    former_champion_id = args.former_champion
+    note: str | None = args.note.strip() if args.note else None
+    timeout_seconds = getattr(args, "timeout_seconds", 3)
+
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(
+            f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            retired_id = store.retire_former_champion(former_champion_id, note)
+        finally:
+            store.close()
+    except StoreInfraError as exc:
+        print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
+        return 2
+    except StoreError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    print(
+        f"OK: FormerChampion {former_champion_id!r} retired → RetiredChampion {retired_id!r}",
+        file=sys.stdout,
+    )
+    return 0
+
 def cmd_query(args: argparse.Namespace) -> int:
     """Execute `qw query` command.
 
@@ -1465,6 +1553,56 @@ def main() -> int:
         help="Neo4j connection timeout in seconds (default 3)",
     )
     abort_parser.set_defaults(func=cmd_abort)
+
+    # `qw degrade` subcommand
+    degrade_parser = subparsers.add_parser(
+        "degrade",
+        help="Demote a Champion to FormerChampion with a mandatory cause-of-death",
+    )
+    degrade_parser.add_argument(
+        "--champion",
+        required=True,
+        metavar="CHAMPION_ID",
+        help="champion_id of the Champion to demote",
+    )
+    degrade_parser.add_argument(
+        "--reason",
+        required=True,
+        metavar="REASON",
+        help="Mandatory cause-of-death reason (must be non-empty)",
+    )
+    degrade_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    degrade_parser.set_defaults(func=cmd_degrade)
+
+    # `qw retire` subcommand
+    retire_parser = subparsers.add_parser(
+        "retire",
+        help="Retire a FormerChampion to RetiredChampion with an optional note",
+    )
+    retire_parser.add_argument(
+        "--former-champion",
+        required=True,
+        metavar="FORMER_CHAMPION_ID",
+        help="former_champion_id of the FormerChampion to retire",
+    )
+    retire_parser.add_argument(
+        "--note",
+        default=None,
+        metavar="NOTE",
+        help="Optional retirement note (free-text reason for final archival)",
+    )
+    retire_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    retire_parser.set_defaults(func=cmd_retire)
 
     # `qw reconcile` subcommand
     reconcile_parser = subparsers.add_parser(
