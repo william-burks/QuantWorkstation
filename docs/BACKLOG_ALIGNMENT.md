@@ -62,7 +62,7 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| FormerChampion Lifecycle | QWS-0801 | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
+| FormerChampion Lifecycle | QWS-0801 (**TESTING**) | `FormerChampion` node; `DEGRADED_TO` + `RETIRED_TO` edges; `oos_reason` / `retirement_note` properties; `qw degrade` / `qw retire` CLI; `former_champions` preset | QWS-0402 CLOSED |
 | OpenAI Curation Switch | QWS-0703 | AI curation on by default; `--no-analyze` flag to disable; OpenAI replaces Llama; no local server required | — |
 | Correlation Gate Re-check | QWS-0804 | `qw gate --recheck` CLI; re-evaluates corr < 0.30 gate for all promotion candidates against current champion portfolio without re-running trials | QWS-0801 CLOSED |
 
@@ -85,29 +85,25 @@ the linked story is marked COMPLETE above.
 ### Nodes
 | Node | Story |
 |---|---|
-| `FormerChampion` | QWS-0801 |
+| _(none — FormerChampion implemented QWS-0801)_ | — |
 
 ### Relationships
 | Relationship | Story |
 |---|---|
-| `DEGRADED_TO` | QWS-0801 |
 | `SUPERSEDED_BY` | QWS-0802 |
-| `RETIRED_TO` (FormerChampion→RetiredChampion) | QWS-0801 |
 | `CORRELATED_WITH` | QWS-0603 (**IMPLEMENTED**) |
 | `SEMANTICALLY_RELATED` | QWS-0604 (**IMPLEMENTED**) |
 
 ### Properties
 | Property | Node | Story |
 |---|---|---|
-| `oos_reason` | FormerChampion / RetiredChampion | QWS-0801 |
-| `retirement_note` | FormerChampion / RetiredChampion | QWS-0801 |
 | `embedding` | Hypothesis | QWS-0604 (**IMPLEMENTED**) |
 | `status = ARCHIVED` | Strategy | QWS-0406 amendment (ABORTED exists; ARCHIVED is new) |
 
 ### MCP Tools
 | Tool | Story |
 |---|---|
-| `former_champions` | QWS-0801 |
+| `former_champions` | QWS-0801 (**IMPLEMENTED**) |
 | `monitor_champion` | QWS-0803 |
 | `similar_hypotheses` | QWS-0604 (**IMPLEMENTED**) |
 
