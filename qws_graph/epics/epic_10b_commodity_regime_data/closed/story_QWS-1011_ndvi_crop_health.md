@@ -4,7 +4,7 @@
 QWS-1011
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -129,9 +129,9 @@ Regions and source:
 - expect_exit: 0
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
-- [ ] Story marked CLOSED
+- [x] All ACs passing
+- [x] Tests green
+- [x] Story marked CLOSED
 
 ## Dependencies
 - Requires NASA Earthdata free account (https://urs.earthdata.nasa.gov/)

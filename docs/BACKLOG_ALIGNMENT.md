@@ -134,7 +134,7 @@
 |---|---|---|---|
 | NOAA Degree Days | QWS-1005 (**CLOSED**) | HDD/CDD data in ArcticDB `macro` lib; NG regime conditioning | — |
 | USDA Crop Progress | QWS-1006 (**CLOSED**) | Weekly crop progress data; ZC/ZS regime conditioning | — |
-| NDVI Crop Health | QWS-1011 (**TESTING**) | NASA AppEEARS NDVI anomaly; ZC/ZS crop health regime signal | — |
+| NDVI Crop Health | QWS-1011 (**CLOSED**) | NASA AppEEARS NDVI anomaly; ZC/ZS crop health regime signal | — |
 | Macro Collection Prefect Flow | QWS-1013 (**CLOSED**) | Scheduled macro data collection; `data/flows/macro.py` deployment | — |
 
 ### Epic 10 — Macro Data
