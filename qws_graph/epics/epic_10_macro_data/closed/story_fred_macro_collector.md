@@ -4,7 +4,7 @@
 QWS-1002
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -108,9 +108,9 @@ Series to collect (initial set):
 - expect_exit: 0
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
-- [ ] Story marked CLOSED
+- [x] All ACs passing
+- [x] Tests green
+- [x] Story marked CLOSED
 
 ## Dependencies
 - Requires FRED API key (free registration at https://fred.stlouisfed.org/docs/api/api_key.html)
