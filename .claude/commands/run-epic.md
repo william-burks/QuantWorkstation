@@ -88,7 +88,7 @@ started: <timestamp>
 2. Identify latest release branch: `git branch | grep release/ | sort -V | tail -1`
 3. `git checkout <release branch> && git pull origin <release branch>`
 4. `qw seed --demo`
-5. `make test` — confirm clean baseline
+5. `make test-all` — confirm clean baseline (see `docs/BASELINE_PROTOCOL.md`)
 
 ## Step 4 — Per-story execution
 For each ready story in dependency order:

@@ -14,7 +14,7 @@ If the Read is blocked by a hook, use `cat .claude/agent-memory/qa-engineer/MEMO
 
 ### Critical rules (duplicated from memory — because memory reads get skipped)
 - Lint: `make lint` only. Do NOT run `ruff check` or `python -m ruff` directly.
-- Tests: `pytest tests/unit/ -v` and `pytest qws_graph/tests/unit/ -v`
+- Tests: `make test-all` (runs both suites). Single file: `source .venv/bin/activate && pytest <file> -v`
 - Seed: `qw seed --demo` and `qw seed --demo --teardown`
 - Never retry the same command more than once.
 - Never debug environment failures (pandas import, Neo4j connection). Record and move on.
@@ -31,7 +31,7 @@ If the Read is blocked by a hook, use `cat .claude/agent-memory/qa-engineer/MEMO
 ## Step 0 — Baseline
 ```
 qw seed --demo
-make test-unit 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_baseline.txt
+make test-all 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_baseline.txt
 ```
 Any failure here is pre-existing — not caused by this epic's stories.
 If tests fail: record the failures and continue. Do NOT debug import errors or environment issues.
@@ -152,7 +152,7 @@ Recipe — one Read, no grep:
 
 ### 2f — Cross-story regressions
 ```
-make test-unit 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_current.txt
+make test-all 2>&1 | tee /tmp/qa_epic_$ARGUMENTS_current.txt
 diff /tmp/qa_epic_$ARGUMENTS_baseline.txt /tmp/qa_epic_$ARGUMENTS_current.txt
 ```
 Any `FAILED` line in current not present in baseline → cross-story regression. Flag with story that likely caused it.
@@ -165,8 +165,7 @@ Lint errors are handled by lint-mechanic — do NOT fix them here.
 If fixture/seed fixes were made:
 ```
 git add <fixed files>
-git commit -m "qa(epic-$ARGUMENTS): post-epic QA fixes — fixtures/seed"
-git push origin <release branch>
+make commit-push-qa EPIC=$ARGUMENTS
 ```
 If no fixture/seed issues and no lint fixlist → skip commit, report clean.
 If only lint fixlist exists → skip commit (lint-mechanic will commit after fixing).

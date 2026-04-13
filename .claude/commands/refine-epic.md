@@ -6,13 +6,15 @@ Two-agent flow: **qws-architect (Opus)** evaluates alignment + quality, **produc
 
 ## Phase 1 — Load context
 
+**Fast-path:** Read items 4–6 first. If INDEX.md shows no draft stories in epic $ARGUMENTS, go directly to Phase 1b — skip items 1–3 (MANIFESTO, PROVENANCE_ENGINE, RESEARCH_WORKFLOW). Those docs are only needed if Phase 2 runs.
+
 Read before analysis:
-1. `docs/MANIFESTO.md` — hard constraints, optimization targets
-2. `docs/PROVENANCE_ENGINE.md` — schema. Split: **(a) current** (exists), **(b) target** (`[TARGET]`, not built)
-3. `docs/RESEARCH_WORKFLOW.md` — research loop, interaction rules
+1. `docs/MANIFESTO.md` — hard constraints, optimization targets *(skip on fast-path)*
+2. `docs/PROVENANCE_ENGINE.md` — schema. Split: **(a) current** (exists), **(b) target** (`[TARGET]`, not built) *(skip on fast-path)*
+3. `docs/RESEARCH_WORKFLOW.md` — research loop, interaction rules *(skip on fast-path)*
 4. `docs/BACKLOG_ALIGNMENT.md` — epic status, capability map, not-yet-implemented index
 5. `qws_graph/epics/INDEX.md` — story list, dependencies
-6. All story files in epic $ARGUMENTS folder (focus on `draft` status)
+6. Story files in epic $ARGUMENTS: find the `## Epic $ARGUMENTS` section in INDEX.md (case-insensitive match). Read each story file at the **exact paths listed in that section**. Do NOT enumerate the folder or search the filesystem — the listed paths are sufficient. Do NOT use Glob, ls, or Search with path patterns. Focus on `draft` status.
 
 ## Phase 1b — Template compliance gate
 
@@ -34,11 +36,13 @@ For each story missing any required field:
 
 After demotion, continue to Phase 2 with the updated draft list.
 
-No draft stories (including newly demoted) → report empty, stop.
+**STOP GATE: No draft stories (including newly demoted) → output "Epic $ARGUMENTS: no draft stories. Nothing to refine." and stop. Do NOT proceed to Phase 2. Do NOT read architect memory or templates.**
 
 ---
 
 ## Phase 2 — Strategic + structural evaluation (qws-architect, Opus)
+
+**Do NOT read `.claude/agent-memory/qws-architect/` or `.claude/templates/architect-evaluation.md` before spawning — the architect agent reads these itself. Pre-loading duplicates tokens across both context windows.**
 
 Spawn qws-architect agent with all loaded context:
 ```
@@ -72,7 +76,9 @@ Strategic checks:
 5. Execution order optimal for capability unlock?
 6. Scope creep — any story doing work that belongs in a later epic?
 
-Output five sections:
+Output format: follow `.claude/templates/architect-evaluation.md` for section names and verdict tokens.
+Required sections: Overall Verdict, Per-Item Assessment (as Story Readiness table), Schema Impact, Open Questions.
+Additional sections for this command:
 
 **Epic Verdict**
 PROCEED | WRONG EPIC | RESEQUENCE — is this epic still the right thing to build next given

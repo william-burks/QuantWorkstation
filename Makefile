@@ -7,7 +7,7 @@ REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
 
-.PHONY: to-release to-master check-clean done-with-feature test test-unit lint typecheck check verify commit-close-story prime-agent prime-lint-mechanic feature-branch
+.PHONY: to-release to-master check-clean done-with-feature test test-unit test-integration test-all lint typecheck check verify commit-impl commit-test commit-push-qa commit-close-story prime-agent prime-lint-mechanic feature-branch
 
 
 # --- QUALITY ---
@@ -18,15 +18,20 @@ test:
 test-unit:
 	source .venv/bin/activate && pytest tests/unit/ -v
 
+test-integration:
+	source .venv/bin/activate && pytest qws_graph/tests/integration/ -v
+
+test-all: test test-unit
+
 lint:
 	source .venv/bin/activate && ruff check . --fix && ruff format
 
 typecheck:
 	source .venv/bin/activate && mypy --strict .
 
-check: lint typecheck test
+check: lint typecheck test-all
 
-verify: lint typecheck test
+verify: lint typecheck test-all
 
 # --- GIT WORKFLOW ---
 
@@ -89,7 +94,26 @@ commit-story-status:
 	git commit -m "$(if $(MSG),$(MSG),status($(STORY)): READY → TESTING)" || echo "WARN: nothing to commit (already committed?)"
 	@echo "Phase gate armed. Agent hard stop active."
 
-# 4b. Commit story closure
+# 4b. Commit implementation (agent stages files first with git add <files>)
+# Usage: make commit-impl STORY=QWS-0801 MSG="add signal normalization"
+commit-impl:
+	@[ -n "$(STORY)" ] || (echo "ERROR: STORY required. Usage: make commit-impl STORY=QWS-0801 MSG='summary'"; exit 1)
+	git commit -m "$(if $(MSG),$(MSG),impl($(STORY)): implementation)"
+
+# 4c. Commit verification sweep (agent stages files first with git add <files>)
+# Usage: make commit-test STORY=QWS-0801
+commit-test:
+	@[ -n "$(STORY)" ] || (echo "ERROR: STORY required. Usage: make commit-test STORY=QWS-0801"; exit 1)
+	git commit -m "$(if $(MSG),$(MSG),test($(STORY)): verification sweep — fixtures, demo seed, DoD)"
+
+# 4d. Commit post-epic QA fixes + push to release branch (agent stages files first)
+# Usage: make commit-push-qa EPIC=6
+commit-push-qa:
+	@[ -n "$(EPIC)" ] || (echo "ERROR: EPIC required. Usage: make commit-push-qa EPIC=6"; exit 1)
+	git commit -m "$(if $(MSG),$(MSG),qa(epic-$(EPIC)): post-epic QA fixes — fixtures/seed)"
+	git push origin $(RELEASE_BRANCH)
+
+# 4e. Commit story closure
 # Usage: make commit-close-story STORY=QWS-0801
 commit-close-story:
 	@[ -n "$(STORY)" ] || (echo "ERROR: STORY required. Usage: make commit-close-story STORY=QWS-0801"; exit 1)

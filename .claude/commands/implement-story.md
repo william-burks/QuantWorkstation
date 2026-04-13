@@ -2,26 +2,18 @@ Implement the QuantWorkstation story identified by: $ARGUMENTS
 
 ## Step 0 — Read memory (MANDATORY FIRST)
 ```bash
-rm -f /tmp/agent-read-tracker/* 2>/dev/null; mkdir -p /tmp/agent-read-tracker
-rm -f /tmp/agent-discovery-tracker/* 2>/dev/null; mkdir -p /tmp/agent-discovery-tracker
-rm -f /tmp/circuit-breaker/* 2>/dev/null; mkdir -p /tmp/circuit-breaker
-rm -f /tmp/agent-step8-committed.txt
-grep -rn 'def \|class ' qws_graph/research/graph/*.py 2>/dev/null > /tmp/symbol-index.txt
-grep -n '^nodes:\|^relationships:\|^  [A-Z][A-Za-z_]*:' qws_graph/docs/data_dictionary.yaml > /tmp/schema-index.txt
-echo "implement-story" > /tmp/agent-current-command.txt
+bash .claude/scripts/agent-init-state.sh implement-story
 ```
 Read `.claude/agent-memory/lead-engineer/MEMORY.md` and all referenced files BEFORE any tool invocations.
 Use the exact commands documented there for tests, lint, and type checking.
 Do NOT attempt ruff, pytest, or mypy without checking memory for the correct invocation.
 
 ## Step 1 — Locate story
-Story filenames do NOT contain the QWS-NNNN ID. Use content search:
 ```bash
-grep -rl '$ARGUMENTS' qws_graph/epics/
+STORY_FILE=$(.claude/scripts/locate-story.sh $ARGUMENTS)
 ```
-If no match: `grep -rl '$ARGUMENTS' qws_graph/` (broader). If still no match → report BLOCKED.
-**Max 2 commands to locate story. Do NOT glob for the ID — it won't match filenames.**
-Read the file. Stop if Status ≠ `READY`.
+If exit 1 → report BLOCKED (story not found).
+Read the file at `$STORY_FILE`. Stop if Status ≠ `READY`.
 **Story file is now in context — do NOT re-read it during Steps 4 or 7.**
 
 ## Step 2 — Verify unblocked
@@ -81,6 +73,8 @@ Report: `BLOCKED | assumption | <exact question>` and stop.
 If `/tmp/ruling_$ARGUMENTS.txt` exists → read it before reporting blocked. Apply ruling and continue.
 
 ## Step 4 — Implement
+**SCOPE-LOCK (hard constraint):** Only edit files explicitly listed in the story's Repo Touchpoints. If a file is not listed, do NOT edit it — even if it looks related. No inferred-in-scope edits.
+
 **Files read in Step 3 are in context. Do NOT re-read them before editing. Use exact strings from context for Edit `old_string`. If an Edit fails due to string mismatch, read ONLY the 20-line range around the target — not the whole file.**
 **graph_v1_contract.md, data_dictionary.yaml, PROVENANCE_ENGINE.md:** read in Step 3, edit from context in Step 4. Do NOT re-read before editing — compose `old_string` from what is already in context.
 
@@ -125,7 +119,7 @@ Rules: demo seed IDs only. Never real data. Generate fixtures/scripts as needed.
 ## Step 6 — Commit implementation
 ```
 git add <files by name>
-git commit -m "impl($ARGUMENTS): <summary>"
+make commit-impl STORY=$ARGUMENTS MSG="<summary>"
 ```
 
 ## Step 7 — Execute acceptance tests (fail/fix cycle)
@@ -150,11 +144,15 @@ Passing AC → confirm `- [x]`.
    Report: `BLOCKED | <reason>` and stop.
 
 ## Step 8 — Update status
-All ACs pass → READY → TESTING in story, INDEX.md, BACKLOG_ALIGNMENT.md.
+All ACs pass → update story file, INDEX.md, and BACKLOG_ALIGNMENT.md in one call:
+```bash
+.claude/scripts/set-story-status.sh $ARGUMENTS TESTING
+```
+Then commit atomically (stages all modified tracked files + arms phase gate):
 ```
 make commit-story-status STORY=$ARGUMENTS
 ```
-This stages all modified tracked files, commits, and arms the phase gate in one atomic call. Do NOT run git add or echo the sentinel separately — the make target does both.
+Do NOT run git add or echo the sentinel separately — the make target does both.
 
 ## Step 9 — Report and STOP
 

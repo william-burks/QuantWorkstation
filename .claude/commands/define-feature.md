@@ -16,6 +16,10 @@ Load: docs/MANIFESTO.md, docs/PROVENANCE_ENGINE.md, docs/RESEARCH_WORKFLOW.md,
 
 Analyze feature: $ARGUMENTS
 
+Hard-block rules (override all other verdicts — see `.claude/templates/architect-evaluation.md`):
+1. SCHEMA DRIFT: property/node/edge not in PROVENANCE_ENGINE.md current section → flag in Schema Impact, verdict = NEEDS_WORK
+2. TARGET REFERENCE: AC or Design references `[TARGET]` node/edge whose implementing story is not CLOSED → verdict = BLOCKED
+
 Answer:
 1. Already covered? Check CLOSED stories and current capabilities — if yes, say so and stop.
 2. Which epic absorbs this? Own epic only if operationally distinct.
@@ -25,28 +29,11 @@ Answer:
 6. How many stories? Could be one or several — size correctly.
 7. Execution order and dependencies — what must be CLOSED first?
 
-Output:
+Output format: follow `.claude/templates/architect-evaluation.md`.
+Required sections: Overall Verdict, Per-Item Assessment, Schema Impact, Open Questions.
+Additional sections for this command: Fit (table), Story Breakdown.
 
-**Fit**
-| Field | Value |
-|---|---|
-| Epic | N — name |
-| Research loop step | |
-| Manifesto alignment | |
-| Blocked on | story IDs or none |
-
-**Schema impact**
-[nodes/edges/properties added, or "none"]
-
-**Story breakdown**
-| # | Summary | Key ACs (3-5 falsifiable) | Repo touchpoints |
-|---|---|---|---|
-
-**Open questions**
-[only if answer materially changes what gets built — prefer decisions]
-
-**Verdict**
-READY TO WRITE | NEEDS DECISION (list questions) | NOT WORTH BUILDING (reason)
+Overall Verdict tokens for this command: `READY TO WRITE` | `NEEDS DECISION` | `NOT WORTH BUILDING`
 
 If verdict = READY TO WRITE: write a principle-level memory entry to
 .claude/agent-memory/qws-architect/ capturing what made this feature a good fit —

@@ -10,8 +10,11 @@ You may ONLY edit these files during close-story:
 **CLAUDE.md is NOT in scope.** Do not edit `.claude/CLAUDE.md`.
 
 ## Step 1 — Locate story
-Find story `$ARGUMENTS` in `qws_graph/epics/`. Read full file.
-Stop if Status ≠ `TESTING`.
+```bash
+STORY_FILE=$(.claude/scripts/locate-story.sh $ARGUMENTS)
+```
+If exit 1 → report BLOCKED (story not found).
+Read the file at `$STORY_FILE`. Stop if Status ≠ `TESTING`.
 
 ## Step 2 — Verify all ACs checked
 Scan Acceptance Criteria. Any `- [ ]` or `- [FAILED]` → stop, report which are unmet.
@@ -22,21 +25,27 @@ All must be `- [x]` to proceed.
 Scan Definition of Done. Any `- [ ]` → stop, report incomplete items.
 
 ## Step 4 — Update story file
-1. `## Status` → `CLOSED`
-2. Any remaining `- [ ]` in DoD → `- [x]`
+1. Set story status to `CLOSED` in story file, INDEX.md, and BACKLOG_ALIGNMENT.md in one call.
+```bash
+.claude/scripts/set-story-status.sh $ARGUMENTS CLOSED
+```
+2. Any remaining `- [ ]` in DoD → `- [x]` (Edit story file directly for DoD checkboxes)
+
+**After this step: also check BACKLOG_ALIGNMENT.md for other stories listing `$ARGUMENTS` in "Blocked On" — add strikethrough `~~$ARGUMENTS~~` to those rows manually.**
 
 ## Step 5 — Move to closed/
 ```
 git mv <current_path> <epic_dir>/closed/<filename>
 ```
 
-## Step 6 — Update INDEX.md
-In `qws_graph/epics/INDEX.md`: status → `CLOSED`, path → `closed/<filename>`.
+## Step 6 — Update INDEX.md path
+Status was already set in Step 4. Only the path needs updating:
+In `qws_graph/epics/INDEX.md`: update path → `closed/<filename>`.
 
-## Step 7 — Update BACKLOG_ALIGNMENT.md
-**Edit-planning rule:** Before any edits to multi-section docs (BACKLOG_ALIGNMENT.md, PROVENANCE_ENGINE.md): Read full relevant range ONCE. List ALL needed changes. Execute all edits. No re-reads after first read.
-
-In `docs/BACKLOG_ALIGNMENT.md`: mark CLOSED. Check if other stories list `$ARGUMENTS` in "Blocked On" — update those rows.
+## Step 7 — Update BACKLOG_ALIGNMENT.md blocked-on rows
+Status was already set in Step 4. Only the "Blocked On" strikethrough remains:
+**Edit-planning rule:** Read full relevant range ONCE. List ALL changes. Execute. No re-reads.
+Check if other stories list `$ARGUMENTS` in "Blocked On" — add `~~$ARGUMENTS~~` to those rows.
 
 ## Step 8 — Stage and commit
 **This commit is explicitly requested by the close-story command. The CLAUDE.md "No auto-commit" rule does not apply here.**

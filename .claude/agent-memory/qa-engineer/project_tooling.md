@@ -8,13 +8,16 @@ type: project
 ```
 make lint
 ```
-Do NOT use `ruff check` or `python -m ruff` directly. `make lint` runs the full pipeline (ruff + mypy).
+Do NOT use `ruff check` or `python -m ruff` directly. `make lint` runs ruff check + format. `make verify` runs lint + typecheck + test-all.
 
 ## Tests
 ```
-pytest tests/unit/ -v
-pytest qws_graph/tests/unit/ -v
+make test          # qws_graph/tests/unit/
+make test-unit     # tests/unit/
+make test-all      # both suites
+make test-integration  # qws_graph/tests/integration/
 ```
+All make targets handle venv activation — never invoke pytest directly.
 
 ## Demo seed
 ```
@@ -87,5 +90,4 @@ Use this to identify which lint errors are in-scope vs pre-existing. Do NOT use 
 | QWS-0805 | qws_graph/tests/unit/test_graph_query_models.py |
 
 ## qws_graph tests require venv
-qws_graph tests MUST run via venv: `source .venv/bin/activate && pytest qws_graph/tests/unit/<file> -v`
-Without venv, `import qws_graph` fails with ModuleNotFoundError.
+Use `make test` or `make test-all` — both handle venv. If running a single file: `source .venv/bin/activate && pytest qws_graph/tests/unit/<file> -v`

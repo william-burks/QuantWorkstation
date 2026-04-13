@@ -32,7 +32,7 @@ Navigation and execution index for `qws_graph/epics`.
 - Epic 10: QWS-1012 (strategy class taxonomy) must CLOSE before any collector story closes.
 - Epic 12 entry blocked on QWS-0803 CLOSED (satisfied). QWS-0907 (trial_metadata) must land before QWS-1204.
 - Epic 13: QWS-1301 READY; QWS-1302/1303/1304 blocked on gap fixes landing first.
-- Hotfix stories live in `qws_graph/epics/hotfix_stories/` — implement independently via run-epic or lead-engineer.
+- Epic 9HF stories live in `qws_graph/epics/epic_9hf_bugs_and_hotfixes/`. Future one-off hotfixes go in `qws_graph/epics/hotfix/` (currently empty).
 
 ---
 
@@ -182,17 +182,17 @@ Note: this epic has no code deliverables. Done criteria = gap audit written, bac
 ---
 
 ## Epic 9HF — Bugs & Hotfixes [READY]
-- Path: `hotfix_stories/`
+- Epic README: `epic_9hf_bugs_and_hotfixes/README.md`
 - Objective: fix silent data integrity bugs discovered during Epic 9 research sessions — provenance chain breaks, phantom IDs, CLI ordering bugs
 
 Stories (independent — implement in parallel):
-- `QWS-HF-001` `hotfix_stories/QWS-HF-001_bundle_hypothesis_autolink.md` — `READY`
-- `QWS-0904` `hotfix_stories/QWS-0904_phantom_champion_id_fix.md` — `READY`
+- `QWS-HF-001` `epic_9hf_bugs_and_hotfixes/QWS-HF-001_bundle_hypothesis_autolink.md` — `READY`
+- `QWS-0904` `epic_9hf_bugs_and_hotfixes/QWS-0904_phantom_champion_id_fix.md` — `READY`
 
 ---
 
 ## Epic 9.5 — Workflow Hardening [READY]
-- Path: `epic_9_5_workflow_hardening/`
+- Epic README: `epic_9_5_workflow_hardening/README.md`
 - Objective: fix researcher friction gaps discovered during Epic 9 — hypothesis lookup, ad-hoc queries, trial metadata, CL data window
 
 Stories (independent — implement in parallel):
@@ -210,7 +210,7 @@ Stories (independent — implement in parallel):
 Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-1010 parallel from start) → QWS-1100b after QWS-1100a
 - `QWS-1000` `epic_10_macro_data/story_0_store_series_methods.md` — `ready`
 - `QWS-1001` `epic_10_macro_data/story_cot_collector.md` — `blocked` (QWS-1000)
-- `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `blocked` (QWS-1000)
+- `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `BLOCKED` (QWS-1000)
 - `QWS-1003` `epic_10_macro_data/story_eia_crude_collector.md` — `blocked` (QWS-1000)
 - `QWS-1004` `epic_10_macro_data/story_baker_hughes_rig_count.md` — `blocked` (QWS-1000)
 - `QWS-1005` `epic_10_macro_data/story_noaa_degree_days.md` — `blocked` (QWS-1000)

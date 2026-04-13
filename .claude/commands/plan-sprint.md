@@ -31,6 +31,10 @@ Evaluate these sprint candidates against the QuantWorkstation target state.
 
 Candidates: [list from New Story Candidates]
 
+Hard-block rules (override all other verdicts — see `.claude/templates/architect-evaluation.md`):
+1. SCHEMA DRIFT: property/node/edge not in PROVENANCE_ENGINE.md current section → verdict = NEEDS_WORK
+2. TARGET REFERENCE: AC or Design references `[TARGET]` node/edge whose implementing story is not CLOSED → verdict = BLOCKED
+
 For each candidate:
 1. Epic fit — which existing epic absorbs it? Own epic only if operationally distinct.
 2. Manifesto alignment — advances alpha, reduces friction, or enforces constraints? Flag if none.
@@ -45,7 +49,9 @@ Also check:
 - Dependency chains circular or missing?
 - Sprint sequence optimal for capability unlock?
 
-Output: proposal table + verdicts + questions (only if answer materially changes what gets built).
+Output format: follow `.claude/templates/architect-evaluation.md`.
+Required sections: Overall Verdict, Per-Item Assessment, Schema Impact, Open Questions.
+Additional sections for this command: Dependency Audit, Sequence Check.
 
 For each candidate you verdict APPROVED (no MISALIGNED flag): write a principle-level memory
 entry to .claude/agent-memory/qws-architect/ capturing what made it a good fit — epic alignment

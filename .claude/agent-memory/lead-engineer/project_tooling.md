@@ -9,12 +9,14 @@ type: project
 All commands require venv activation: `source .venv/bin/activate`
 ALWAYS run from project root `/Users/will/ClaudeProjects/QuantWorkstation` — NOT from `qws_graph/`.
 
-- **Unit tests:** `make test` or `source .venv/bin/activate && pytest qws_graph/tests/unit/ -v`
-- **Type check:** `make typecheck` (bare mypy is blocked)
+- **qws_graph unit tests:** `make test`
+- **main unit tests:** `make test-unit`
+- **both suites:** `make test-all`
+- **integration tests:** `make test-integration`
+- **type check:** `make typecheck` (bare mypy is blocked)
 - **Neo4j status:** `make -C qws_graph neo4j-status`
 
-Do NOT use `cd qws_graph && ruff check research/...` — breaks import resolution.
-Do NOT use `python -m ruff` — use `ruff` directly after venv activation.
+All make targets handle venv activation — never invoke pytest or ruff directly.
 
 ## Mypy Fix Protocol
 

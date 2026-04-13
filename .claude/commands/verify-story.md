@@ -1,12 +1,16 @@
 Verify test sweep for QuantWorkstation story: $ARGUMENTS
 
 ## Step 1 — Locate story
-Find story `$ARGUMENTS` in `qws_graph/epics/`. Read full file.
-Stop if Status ≠ `TESTING`.
+```bash
+bash .claude/scripts/agent-init-state.sh verify-story
+STORY_FILE=$(.claude/scripts/locate-story.sh $ARGUMENTS)
+```
+If exit 1 → report BLOCKED (story not found).
+Read the file at `$STORY_FILE`. Stop if Status ≠ `TESTING`.
 
 ## Step 2 — Unit tests
 ```
-pytest tests/unit/ -v 2>&1
+make test-all 2>&1
 ```
 Record pass/fail/error/skip. On failure: diagnose (test bug vs code bug), fix, re-run until clean.
 
@@ -28,7 +32,7 @@ If demo seed is missing or inconsistent → fix it, but note this as a gap in im
 ## Step 5 — Integration tests
 If tests in `qws_graph/tests/integration/` cover this story's code paths:
 ```
-pytest qws_graph/tests/integration/ -v -k "<relevant>" 2>&1
+make test-integration 2>&1 | grep -E "<relevant>"
 ```
 Neo4j unreachable → note "skipped", continue.
 
@@ -57,7 +61,7 @@ Check off verified items. Leave unchecked only items requiring manual verificati
 ## Step 9 — Stage and commit
 ```
 git add <test files> <fixtures> <cypher.py if changed> <story file>
-git commit -m "test($ARGUMENTS): verification sweep — fixtures, demo seed, DoD"
+make commit-test STORY=$ARGUMENTS
 ```
 Never `git add -A` or `git add .`.
 
