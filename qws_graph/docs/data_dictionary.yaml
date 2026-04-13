@@ -878,7 +878,7 @@ nodes:
       status:
         type: str
         nullable: false
-        enum: [open, confirmed, refuted, abandoned]
+        enum: [open, confirmed, rejected]
         default: open
         description: >
           Current state of the hypothesis. Updated via

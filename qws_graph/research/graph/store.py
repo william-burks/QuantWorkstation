@@ -652,7 +652,7 @@ class GraphStore:
         Returns True when found and updated, False when not found.
         Raises ValueError for invalid status values.
         """
-        _VALID_HYPOTHESIS_STATUSES = frozenset({"open", "confirmed", "refuted", "abandoned"})
+        _VALID_HYPOTHESIS_STATUSES = frozenset({"open", "confirmed", "rejected"})
         if status not in _VALID_HYPOTHESIS_STATUSES:
             raise ValueError(
                 f"invalid hypothesis status {status!r}; must be one of: "

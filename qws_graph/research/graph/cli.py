@@ -22,7 +22,7 @@ from .query import GraphQueryService
 from .query_presets import PRESET_CATALOG, resolve_preset, run_preset, validate_params
 from .store import RESEARCH_TARGET_ALLOWED_KEYS, GraphStore, StoreError, StoreInfraError
 
-_VALID_HYPOTHESIS_STATUSES = frozenset({"open", "confirmed", "refuted", "abandoned"})
+_VALID_HYPOTHESIS_STATUSES = frozenset({"open", "confirmed", "rejected"})
 
 _DEFAULT_SIMILARITY_THRESHOLD = 0.85
 _EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"

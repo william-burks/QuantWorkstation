@@ -127,13 +127,9 @@ class TestStoreUpdateHypothesisStatus:
         store = self._make_store(found=True)
         assert store.update_hypothesis_status("abc123def456", "confirmed") is True
 
-    def test_valid_status_refuted(self) -> None:
+    def test_valid_status_rejected(self) -> None:
         store = self._make_store(found=True)
-        assert store.update_hypothesis_status("abc123def456", "refuted") is True
-
-    def test_valid_status_abandoned(self) -> None:
-        store = self._make_store(found=True)
-        assert store.update_hypothesis_status("abc123def456", "abandoned") is True
+        assert store.update_hypothesis_status("abc123def456", "rejected") is True
 
     def test_valid_status_open(self) -> None:
         store = self._make_store(found=True)

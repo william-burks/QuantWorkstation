@@ -31,7 +31,7 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 ## In Scope
 - `findings` nullable text property on `Hypothesis` node
 - `--findings "<text>"` flag on `qw record --hypothesis <id>` — updates `findings` on existing node, does not create new node
-- Preset `hypotheses_by_status`: lists all hypotheses grouped by status (`raw`, `confirmed`, `refuted`, `abandoned`); columns: `hypothesis_id`, `title`, `findings` (truncated 80 chars), `created_at`
+- Preset `hypotheses_by_status`: lists all hypotheses grouped by status (`open`, `confirmed`, `rejected`); columns: `hypothesis_id`, `title`, `findings` (truncated 80 chars), `created_at`
 - Preset `hypothesis_search`: accepts `title_fragment` parameter; returns matching hypotheses with `hypothesis_id`, `title`, `status`, `findings`
 - `data_dictionary.yaml` updated with `findings` property
 - Tests for both presets and `--findings` flag
@@ -46,7 +46,8 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - `qws_graph/docs/data_dictionary.yaml` — add `findings` to Hypothesis entry
 - `qws_graph/research/graph/store.py` — `update_hypothesis_findings()` method
 - `qws_graph/research/graph/cli.py` — `--findings` flag on `record --hypothesis`
-- `qws_graph/research/graph/presets/` — add `hypotheses_by_status.cypher`, `hypothesis_search.cypher`
+- `qws_graph/research/graph/query_presets.py` — register `hypotheses_by_status` + `hypothesis_search` in `PRESET_CATALOG`
+- `qws_graph/research/graph/query.py` — implement preset view functions
 - `qws_graph/tests/unit/test_hypothesis_presets.py` — new
 
 ## Acceptance Criteria
