@@ -19,7 +19,7 @@ Navigation and execution index for `qws_graph/epics`.
 8. **Epic 8 — Champion Lifecycle Hardening** — `COMPLETE`
 9. **Epic 9 — Strategy Development** — `COMPLETE`
 10. **Epic 9HF — Bugs & Hotfixes** — `READY` (implement now, parallel with 10)
-11. **Epic 9.5 — Workflow Hardening** — `READY` (implement after 9HF)
+11. **Epic 9.5 — Workflow Hardening** — `COMPLETE`
 12. **Epic 10 — Macro Data** — `PLANNED` (QWS-1012 must close before any collector closes)
 13. **Epic 11 — Production Tracking** — `PLANNED`
 14. **Epic 13 — Agent Design** — `PLANNED` (QWS-1301 READY; 1302-1304 blocked on gap fixes)
@@ -191,15 +191,15 @@ Stories (independent — implement in parallel):
 
 ---
 
-## Epic 9.5 — Workflow Hardening [READY]
-- Epic README: `epic_9_5_workflow_hardening/README.md`
+## Epic 9.5 — Workflow Hardening [COMPLETE]
+- Epic README: `epic_9_5_workflow_hardening[COMPLETE]/README.md`
 - Objective: fix researcher friction gaps discovered during Epic 9 — hypothesis lookup, ad-hoc queries, trial metadata, CL data window
 
 Stories (independent — implement in parallel):
-- `QWS-0905` `epic_9_5_workflow_hardening/closed/story_QWS-0905_hypothesis_lookup_and_findings.md` — `CLOSED`
-- `QWS-0906` `epic_9_5_workflow_hardening/closed/story_QWS-0906_adhoc_cypher_and_patch.md` — `CLOSED`
-- `QWS-0907` `epic_9_5_workflow_hardening/closed/story_QWS-0907_trial_metadata_json_blob.md` — `CLOSED`
-- `QWS-0908` `epic_9_5_workflow_hardening/closed/story_QWS-0908_cl_historical_data_extension.md` — `CLOSED`
+- `QWS-0905` `epic_9_5_workflow_hardening[COMPLETE]/closed/story_QWS-0905_hypothesis_lookup_and_findings.md` — `CLOSED`
+- `QWS-0906` `epic_9_5_workflow_hardening[COMPLETE]/closed/story_QWS-0906_adhoc_cypher_and_patch.md` — `CLOSED`
+- `QWS-0907` `epic_9_5_workflow_hardening[COMPLETE]/closed/story_QWS-0907_trial_metadata_json_blob.md` — `CLOSED`
+- `QWS-0908` `epic_9_5_workflow_hardening[COMPLETE]/closed/story_QWS-0908_cl_historical_data_extension.md` — `CLOSED`
 
 ---
 
@@ -290,7 +290,7 @@ promotion).
 ## Current Focus
 - **Epic 8 COMPLETE** — all 3 stories CLOSED.
 - **Epic 9 COMPLETE** — all 3 stories CLOSED.
-- **Immediate:** Epic 9HF (QWS-HF-001 + QWS-0904) — fix data integrity bugs before next research session.
-- **Next parallel tracks:** Epic 9.5 (workflow hardening) + Epic 10 (macro data, start with QWS-1000).
-- **After gaps land:** Epic 13 (agent design, QWS-1301 READY) → Epic 12 (ML research).
+- **Epic 9.5 COMPLETE** — all 4 stories CLOSED.
+- **Immediate:** Epic 13 Agent Design (QWS-1301 READY, unblocked) + Epic 10 Macro Data (start QWS-1000).
+- **After 1301:** QWS-1302 → QWS-1303 → QWS-1304 → Epic 12 (ML research).
 

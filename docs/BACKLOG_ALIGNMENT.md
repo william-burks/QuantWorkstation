@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 9.5 Workflow Hardening (QWS-0905, 0906, 0907, 0908 all READY — independent, run in parallel). Parallel: Epic 10 Macro Data (QWS-1012 must close before any collector closes). After gaps: Epic 13 Agent Design (QWS-1301 READY, unblocked after QWS-0905) → Epic 12 ML Research.
+> Current sprint: Epic 13 Agent Design (QWS-1301 READY — start now; QWS-1302/1303/1304 unblocked by Epic 9.5 COMPLETE). Parallel: Epic 10 Macro Data (QWS-1000 READY; QWS-1012 must close before any collector closes). After Epic 13: Epic 12 ML Research.
 > ```
 
 ---
@@ -26,7 +26,7 @@
 | Epic 8 — Champion Lifecycle Hardening | **COMPLETE** | SUPERSEDED_BY direct lineage edge, recursive decay detection (monitor_champion) |
 | Epic 9 — Strategy Development | **COMPLETE** | Research sessions, workflow observation, system gap audit — no code deliverables |
 | Epic 9HF — Bugs & Hotfixes | **COMPLETE** | Fix silent data integrity bugs from Epic 9 sessions (phantom champion ID, TESTED_AS edge, branched-from node creation) |
-| Epic 9.5 — Workflow Hardening | **READY** | Hypothesis lookup/findings, ad-hoc Cypher, trial metadata, CL data extension |
+| Epic 9.5 — Workflow Hardening | **COMPLETE** | Hypothesis lookup/findings, ad-hoc Cypher, trial metadata, CL data extension |
 | Epic 10 — Macro Data | **PLANNED** | Macro + alternative data ingestion to ArcticDB — QWS-1012 must close before any collector closes |
 | Epic 11 — Production Tracking | **PLANNED** | MLflow Champion registration + OOS sync; split production results from research results |
 | Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
@@ -111,8 +111,8 @@
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | Research Ideas Layer | QWS-1301 (**READY**) | `queued` flag on Hypothesis; `queued_hypotheses` preset; lightweight mid-session idea intake; `BRANCHED_FROM` to Run | ~~QWS-HF-001~~, ~~QWS-0905~~ |
-| Research Navigator Agent | QWS-1302 (**BLOCKED**) | `research-navigator` agent; ranked next-direction synthesis; Phase 3 mid-session pivot; proactive redundancy check | QWS-1301, ~~QWS-0905~~, ~~QWS-0906~~ |
-| Trial Engineer Agent | QWS-1303 (**BLOCKED**) | `trial-engineer` agent; generates trial script + bundle.json from hypothesis context; stops before run | QWS-1302, ~~QWS-0907~~ |
+| Research Navigator Agent | QWS-1302 (**BLOCKED**) | `research-navigator` agent; ranked next-direction synthesis; Phase 3 mid-session pivot; proactive redundancy check | QWS-1301 |
+| Trial Engineer Agent | QWS-1303 (**BLOCKED**) | `trial-engineer` agent; generates trial script + bundle.json from hypothesis context; stops before run | QWS-1302 |
 | Research Session Command Rewrite | QWS-1304 (**BLOCKED**) | `/research-session` orchestrates navigator + trial-engineer; handoff contract defined | QWS-1302, QWS-1303 |
 
 ### Epic 12 — ML Research Layer
