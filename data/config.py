@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     # Cash index symbols to collect (secType=IND, daily/weekly/monthly only)
     index_symbols: list[str] = ["VIX", "VIX9D", "VIX3M", "VIX6M", "SKEW"]
 
+    # COT symbols to collect (must be keys in CFTC_SYMBOL_MAP in data/collectors/cot.py)
+    cot_symbols: list[str] = ["GC", "MGC", "CL", "ES", "NQ", "ZN", "ZB", "6E"]
+
     # Risk / evaluation
     eval_profit_target: float = 3000.0  # evaluation profit goal (USD)
     risk_per_trade_pct: float = 0.01  # 1% of balance per trade (range: 0.005–0.01)

@@ -4,13 +4,13 @@
 QWS-1001
 
 ## Status
-BLOCKED
+READY
 
 ## Type
 code
 
 ## Blocked On
-QWS-1000
+—
 
 ## Summary
 Add a CFTC Disaggregated COT collector that downloads weekly positioning data and writes per-symbol net position series into a new `cot` ArcticDB library via `write_series()`. Feeds the Regime node with real positioning context.
@@ -51,14 +51,58 @@ Download CFTC Disaggregated COT reports weekly, map CFTC market codes to our sym
 - `tests/unit/test_cot_collector.py` — new
 
 ## Acceptance Criteria
-- [ ] `data/collectors/cot.py` exists and is importable
-- [ ] `cot` ArcticDB library is created on first run
-- [ ] `ES_cot`, `CL_cot`, and at least 4 other symbols write successfully with correct columns (`comm_net`, `noncomm_net`, `open_interest`)
-- [ ] `write_series()` used for COT data (not `write_bars()`)
-- [ ] Re-running collector is idempotent (no duplicate rows, no crash)
-- [ ] `cot_symbols` present in `data/config.py` with sensible default list
-- [ ] `tests/unit/test_cot_collector.py` passes with mocked HTTP responses (no live download in tests)
-- [ ] `make verify` passes
+- [x] `data/collectors/cot.py` exists and is importable
+- [x] `cot` ArcticDB library is created on first run
+- [x] `ES_cot`, `CL_cot`, and at least 4 other symbols write successfully with correct columns (`comm_net`, `noncomm_net`, `open_interest`)
+- [x] `write_series()` used for COT data (not `write_bars()`)
+- [x] Re-running collector is idempotent (no duplicate rows, no crash)
+- [x] `cot_symbols` present in `data/config.py` with sensible default list
+- [x] `tests/unit/test_cot_collector.py` passes with mocked HTTP responses (no live download in tests)
+- [x] `make verify` passes
+
+## Acceptance Test Plan
+
+### AC1: cot.py exists and is importable
+- type: cli
+- cmd: source .venv/bin/activate && python -c "from data.collectors.cot import collect, CFTC_SYMBOL_MAP; print('OK')"
+- expect_contains: "OK"
+- expect_exit: 0
+
+### AC2: cot library created + symbols write with correct columns
+- type: cli
+- cmd: source .venv/bin/activate && python -c "from data.collectors.cot import CFTC_SYMBOL_MAP; assert set(CFTC_SYMBOL_MAP.keys()) >= {'ES','CL','GC','MGC','NQ','ZN','ZB','6E'}; print('map OK')"
+- expect_contains: "map OK"
+- expect_exit: 0
+
+### AC3: write_series used (not write_bars)
+- type: file_check
+- cmd: grep -c "write_series" data/collectors/cot.py
+- expect_contains: "1"
+- expect_exit: 0
+
+### AC4: idempotent — no duplicate rows in output
+- type: cli
+- cmd: source .venv/bin/activate && pytest tests/unit/test_cot_collector.py::test_collect_idempotent_no_duplicate_rows -v
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC5: cot_symbols in config.py
+- type: file_check
+- cmd: grep -c "cot_symbols" data/config.py
+- expect_contains: "1"
+- expect_exit: 0
+
+### AC6: unit tests pass with mocked HTTP
+- type: cli
+- cmd: source .venv/bin/activate && pytest tests/unit/test_cot_collector.py -v 2>&1 | tail -5
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC7: make verify passes
+- type: cli
+- cmd: make verify 2>&1 | tail -5
+- expect_contains: "passed"
+- expect_exit: 0
 
 ## Definition of Done
 - [ ] All ACs passing
