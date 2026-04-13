@@ -4,7 +4,7 @@
 QWS-1005
 
 ## Status
-READY
+TESTING
 
 ## Type
 code
@@ -66,7 +66,7 @@ Series to collect (initial set):
 - [x] Re-running collector is idempotent (appends only new dates; no duplicates)
 - [x] `noaa_api_key` and `noaa_series` present in `data/config.py`
 - [x] `tests/unit/test_noaa_collector.py` passes with mocked `requests.get` (no live API calls in tests)
-- [ ] `make verify` passes
+- [x] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing
