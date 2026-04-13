@@ -4,7 +4,7 @@
 QWS-1010
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -152,9 +152,9 @@ Catch bad data at the write boundary — not in backtest, not in research review
 - expect_exit: 0
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
-- [ ] Story marked CLOSED
+- [x] All ACs passing
+- [x] Tests green
+- [x] Story marked CLOSED
 
 ## Dependencies
 - No hard blockers
