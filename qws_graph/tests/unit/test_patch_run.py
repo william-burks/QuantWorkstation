@@ -24,9 +24,7 @@ def _make_store(found: bool = True) -> GraphStore:
     # execute_read → run exists check
     mock_session.execute_read.return_value = found
     # execute_write → returns records list
-    mock_session.execute_write.return_value = (
-        [{"run_id": "test_run_001"}] if found else []
-    )
+    mock_session.execute_write.return_value = [{"run_id": "test_run_001"}] if found else []
 
     store = GraphStore.__new__(GraphStore)
     store._database = "neo4j"

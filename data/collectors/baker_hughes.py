@@ -71,9 +71,7 @@ def _download_excel(url: str) -> bytes:
         requests.HTTPError: On non-2xx response.
     """
     headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (compatible; QuantWorkstation/1.0; +https://github.com/)"
-        )
+        "User-Agent": ("Mozilla/5.0 (compatible; QuantWorkstation/1.0; +https://github.com/)")
     }
     response = requests.get(url, headers=headers, timeout=60)
     response.raise_for_status()

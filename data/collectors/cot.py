@@ -40,43 +40,43 @@ _FIN_URL = "https://www.cftc.gov/files/dea/history/fut_fin_txt_{year}.zip"
 
 
 class _SymbolSpec(NamedTuple):
-    cftc_code: str          # CFTC_Contract_Market_Code value (stripped)
-    report_type: str        # "disagg" or "fin"
+    cftc_code: str  # CFTC_Contract_Market_Code value (stripped)
+    report_type: str  # "disagg" or "fin"
 
 
 # Symbol → (CFTC contract code, report type)
 # Disaggregated: commercial = Prod_Merc, non-commercial = M_Money
 # Financial:     commercial = Dealer,    non-commercial = Lev_Money
 CFTC_SYMBOL_MAP: dict[str, _SymbolSpec] = {
-    "GC":  _SymbolSpec("088691", "disagg"),   # Gold - COMEX
-    "MGC": _SymbolSpec("088695", "disagg"),   # Micro Gold - COMEX
-    "CL":  _SymbolSpec("067651", "disagg"),   # WTI Crude - NYMEX
-    "ES":  _SymbolSpec("13874+", "fin"),      # S&P 500 Consolidated - CME
-    "NQ":  _SymbolSpec("20974+", "fin"),      # NASDAQ-100 Consolidated - CME
-    "ZN":  _SymbolSpec("043602", "fin"),      # UST 10Y Note - CBOT
-    "ZB":  _SymbolSpec("020601", "fin"),      # UST Bond - CBOT
-    "6E":  _SymbolSpec("099741", "fin"),      # Euro FX - CME
+    "GC": _SymbolSpec("088691", "disagg"),  # Gold - COMEX
+    "MGC": _SymbolSpec("088695", "disagg"),  # Micro Gold - COMEX
+    "CL": _SymbolSpec("067651", "disagg"),  # WTI Crude - NYMEX
+    "ES": _SymbolSpec("13874+", "fin"),  # S&P 500 Consolidated - CME
+    "NQ": _SymbolSpec("20974+", "fin"),  # NASDAQ-100 Consolidated - CME
+    "ZN": _SymbolSpec("043602", "fin"),  # UST 10Y Note - CBOT
+    "ZB": _SymbolSpec("020601", "fin"),  # UST Bond - CBOT
+    "6E": _SymbolSpec("099741", "fin"),  # Euro FX - CME
 }
 
 # Columns to extract per report type
 _DISAGG_COLS = {
     "date": "Report_Date_as_YYYY-MM-DD",
     "code": "CFTC_Contract_Market_Code",
-    "oi":   "Open_Interest_All",
-    "comm_long":    "Prod_Merc_Positions_Long_All",
-    "comm_short":   "Prod_Merc_Positions_Short_All",
+    "oi": "Open_Interest_All",
+    "comm_long": "Prod_Merc_Positions_Long_All",
+    "comm_short": "Prod_Merc_Positions_Short_All",
     "noncomm_long": "M_Money_Positions_Long_All",
-    "noncomm_short":"M_Money_Positions_Short_All",
+    "noncomm_short": "M_Money_Positions_Short_All",
 }
 
 _FIN_COLS = {
     "date": "Report_Date_as_YYYY-MM-DD",
     "code": "CFTC_Contract_Market_Code",
-    "oi":   "Open_Interest_All",
-    "comm_long":    "Dealer_Positions_Long_All",
-    "comm_short":   "Dealer_Positions_Short_All",
+    "oi": "Open_Interest_All",
+    "comm_long": "Dealer_Positions_Long_All",
+    "comm_short": "Dealer_Positions_Short_All",
     "noncomm_long": "Lev_Money_Positions_Long_All",
-    "noncomm_short":"Lev_Money_Positions_Short_All",
+    "noncomm_short": "Lev_Money_Positions_Short_All",
 }
 
 _COL_MAP = {"disagg": _DISAGG_COLS, "fin": _FIN_COLS}
@@ -126,15 +126,28 @@ def _parse_df(raw: pd.DataFrame, report_type: str) -> pd.DataFrame:
     Returns a tidy DataFrame indexed by UTC DatetimeIndex.
     """
     cols = _COL_MAP[report_type]
-    needed = [cols["date"], cols["code"], cols["oi"],
-              cols["comm_long"], cols["comm_short"],
-              cols["noncomm_long"], cols["noncomm_short"]]
+    needed = [
+        cols["date"],
+        cols["code"],
+        cols["oi"],
+        cols["comm_long"],
+        cols["comm_short"],
+        cols["noncomm_long"],
+        cols["noncomm_short"],
+    ]
 
     # Strip whitespace from column names
     raw.columns = raw.columns.str.strip()
     sub = raw[needed].copy()
-    sub.columns = ["date", "code", "open_interest",
-                   "comm_long", "comm_short", "noncomm_long", "noncomm_short"]
+    sub.columns = [
+        "date",
+        "code",
+        "open_interest",
+        "comm_long",
+        "comm_short",
+        "noncomm_long",
+        "noncomm_short",
+    ]
 
     # Strip whitespace from code column (may be numeric dtype if inferred by pandas)
     sub["code"] = sub["code"].astype(str).str.strip()
@@ -207,7 +220,9 @@ def _collect_report(
             frames.append(parsed)
         except requests.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 404:
-                log.warning("COT file not yet available for year %d (%s): %s", year, report_type, url)
+                log.warning(
+                    "COT file not yet available for year %d (%s): %s", year, report_type, url
+                )
             else:
                 raise
 

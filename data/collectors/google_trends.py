@@ -112,7 +112,9 @@ def _fetch_term(term: str) -> pd.DataFrame:
     except ResponseError as exc:
         log.warning(
             "Google Trends ResponseError for %r: %s — retrying in %ss",
-            term, exc, _RETRY_SLEEP,
+            term,
+            exc,
+            _RETRY_SLEEP,
         )
         time.sleep(_RETRY_SLEEP)
         try:
@@ -122,7 +124,9 @@ def _fetch_term(term: str) -> pd.DataFrame:
             return pd.DataFrame(columns=["interest"])
     except Exception as exc:
         log.error(
-            "Unexpected error fetching Google Trends for %r: %s — skipping", term, exc,
+            "Unexpected error fetching Google Trends for %r: %s — skipping",
+            term,
+            exc,
         )
         return pd.DataFrame(columns=["interest"])
 

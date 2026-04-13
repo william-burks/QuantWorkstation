@@ -76,9 +76,7 @@ class TestHypothesisSearchPreset:
                 "findings": None,
             }
         ]
-        result = run_preset(
-            "hypothesis_search", {"title_fragment": "sweep"}, service=service
-        )
+        result = run_preset("hypothesis_search", {"title_fragment": "sweep"}, service=service)
         service.get_hypothesis_search_v1.assert_called_once_with(title_fragment="sweep")
         assert len(result) == 1
         assert result[0]["title"] == "MES sweep strategy"
@@ -91,9 +89,7 @@ class TestHypothesisSearchPreset:
     def test_run_preset_returns_empty_when_no_match(self) -> None:
         service = MagicMock()
         service.get_hypothesis_search_v1.return_value = []
-        result = run_preset(
-            "hypothesis_search", {"title_fragment": "xyznotfound"}, service=service
-        )
+        result = run_preset("hypothesis_search", {"title_fragment": "xyznotfound"}, service=service)
         assert result == []
 
 

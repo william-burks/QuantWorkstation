@@ -85,14 +85,14 @@ def validate_bars(df: pd.DataFrame, freq: str) -> None:
         raise ValueError(f"NaN prices in {bad_cols} at {_fmt_ts(bad_idx)}")
 
     # ── P1: No zero prices ───────────────────────────────────────────────
-    zero_mask = (df[_REQUIRED_COLS] == 0)
+    zero_mask = df[_REQUIRED_COLS] == 0
     if zero_mask.any().any():
         bad_cols = [c for c in _REQUIRED_COLS if zero_mask[c].any()]
         bad_idx = df.index[zero_mask[bad_cols].any(axis=1)]
         raise ValueError(f"Zero prices in {bad_cols} at {_fmt_ts(bad_idx)}")
 
     # ── P1: No negative prices ───────────────────────────────────────────
-    neg_mask = (df[_REQUIRED_COLS] < 0)
+    neg_mask = df[_REQUIRED_COLS] < 0
     if neg_mask.any().any():
         bad_cols = [c for c in _REQUIRED_COLS if neg_mask[c].any()]
         bad_idx = df.index[neg_mask[bad_cols].any(axis=1)]
@@ -106,16 +106,12 @@ def validate_bars(df: pd.DataFrame, freq: str) -> None:
     # ── P1: close in [low, high] ─────────────────────────────────────────
     close_bad = df.index[(df["close"] < df["low"]) | (df["close"] > df["high"])]
     if not close_bad.empty:
-        raise ValueError(
-            f"OHLCV violation: close out of [low, high] at {_fmt_ts(close_bad)}"
-        )
+        raise ValueError(f"OHLCV violation: close out of [low, high] at {_fmt_ts(close_bad)}")
 
     # ── P1: open in [low, high] ──────────────────────────────────────────
     open_bad = df.index[(df["open"] < df["low"]) | (df["open"] > df["high"])]
     if not open_bad.empty:
-        raise ValueError(
-            f"OHLCV violation: open out of [low, high] at {_fmt_ts(open_bad)}"
-        )
+        raise ValueError(f"OHLCV violation: open out of [low, high] at {_fmt_ts(open_bad)}")
 
     # ── P2: Gap detection ────────────────────────────────────────────────
     expected = _expected_delta(freq)

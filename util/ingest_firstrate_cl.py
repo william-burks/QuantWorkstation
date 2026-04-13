@@ -111,9 +111,7 @@ def _ingest_csv(csv_path: Path, utc: bool = False) -> int:
     df.columns = [c.strip().lower() for c in df.columns]
 
     # Detect datetime column
-    dt_col = next(
-        (c for c in df.columns if c in ("datetime", "date", "timestamp", "time")), None
-    )
+    dt_col = next((c for c in df.columns if c in ("datetime", "date", "timestamp", "time")), None)
     if dt_col is None:
         print(f"ERROR: no datetime column found. Columns: {list(df.columns)}", file=sys.stderr)
         return 1
@@ -124,7 +122,9 @@ def _ingest_csv(csv_path: Path, utc: bool = False) -> int:
         df[dt_col] = df[dt_col].dt.tz_localize("UTC")
     else:
         # Assume US/Eastern (CL pit hours) — convert to UTC
-        df[dt_col] = df[dt_col].dt.tz_localize("America/New_York", ambiguous="infer").dt.tz_convert("UTC")
+        df[dt_col] = (
+            df[dt_col].dt.tz_localize("America/New_York", ambiguous="infer").dt.tz_convert("UTC")
+        )
 
     df = df.set_index(dt_col).sort_index()
 
@@ -154,10 +154,7 @@ def _merge_and_write(store: Store, new_df: pd.DataFrame, source: str) -> int:
         existing = store.read_bars(STORE_LIB, STORE_KEY)
         existing_start = str(existing.index.min().date())
         existing_end = str(existing.index.max().date())
-        print(
-            f"Existing {STORE_KEY}: {len(existing)} bars "
-            f"({existing_start} → {existing_end})"
-        )
+        print(f"Existing {STORE_KEY}: {len(existing)} bars ({existing_start} → {existing_end})")
         # Merge — drop duplicates, keep new data for overlapping timestamps
         combined = pd.concat([new_df, existing])
         combined = combined[~combined.index.duplicated(keep="last")]

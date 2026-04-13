@@ -102,7 +102,11 @@ def test_fetch_csv_parses_zip():
 
 
 def test_parse_df_disagg_computes_net():
-    csv = _DISAGG_HEADER + "\n" + _make_disagg_row("088691", "2024-01-02", 100000, 30000, 10000, 50000, 20000)
+    csv = (
+        _DISAGG_HEADER
+        + "\n"
+        + _make_disagg_row("088691", "2024-01-02", 100000, 30000, 10000, 50000, 20000)
+    )
     raw = pd.read_csv(io.StringIO(csv))
     result = _parse_df(raw, "disagg")
 
@@ -116,7 +120,11 @@ def test_parse_df_disagg_computes_net():
 
 
 def test_parse_df_disagg_index_is_datetime():
-    csv = _DISAGG_HEADER + "\n" + _make_disagg_row("088691", "2024-03-05", 50000, 10000, 5000, 20000, 8000)
+    csv = (
+        _DISAGG_HEADER
+        + "\n"
+        + _make_disagg_row("088691", "2024-03-05", 50000, 10000, 5000, 20000, 8000)
+    )
     raw = pd.read_csv(io.StringIO(csv))
     result = _parse_df(raw, "disagg")
     assert pd.api.types.is_datetime64_any_dtype(result["date"])
@@ -128,7 +136,11 @@ def test_parse_df_disagg_index_is_datetime():
 
 
 def test_parse_df_fin_computes_net():
-    csv = _FIN_HEADER + "\n" + _make_fin_row("13874+", "2024-06-11", 2000000, 80000, 40000, 150000, 60000)
+    csv = (
+        _FIN_HEADER
+        + "\n"
+        + _make_fin_row("13874+", "2024-06-11", 2000000, 80000, 40000, 150000, 60000)
+    )
     raw = pd.read_csv(io.StringIO(csv))
     result = _parse_df(raw, "fin")
 
@@ -184,8 +196,9 @@ def test_collect_calls_write_series():
 
     mock_store = MagicMock()
 
-    with patch("requests.get", side_effect=fake_get), patch(
-        "data.collectors.cot.get_store", return_value=mock_store
+    with (
+        patch("requests.get", side_effect=fake_get),
+        patch("data.collectors.cot.get_store", return_value=mock_store),
     ):
         collect(symbols=["GC", "CL", "ES", "ZN"])
 
@@ -221,8 +234,9 @@ def test_collect_write_series_df_columns():
     mock_store = MagicMock()
     mock_store.write_series.side_effect = capture_write
 
-    with patch("requests.get", side_effect=fake_get), patch(
-        "data.collectors.cot.get_store", return_value=mock_store
+    with (
+        patch("requests.get", side_effect=fake_get),
+        patch("data.collectors.cot.get_store", return_value=mock_store),
     ):
         collect(symbols=["GC", "ES"])
 
@@ -256,8 +270,9 @@ def test_collect_idempotent_no_duplicate_rows():
     mock_store = MagicMock()
     mock_store.write_series.side_effect = capture
 
-    with patch("requests.get", side_effect=fake_get), patch(
-        "data.collectors.cot.get_store", return_value=mock_store
+    with (
+        patch("requests.get", side_effect=fake_get),
+        patch("data.collectors.cot.get_store", return_value=mock_store),
     ):
         collect(symbols=["GC"])
 

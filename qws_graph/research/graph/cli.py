@@ -818,7 +818,12 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
             hypothesis_id = hypothesis_arg
 
             # Mode 5: update findings
-            if findings is not None and tested_as is None and branched_from is None and status is None:
+            if (
+                findings is not None
+                and tested_as is None
+                and branched_from is None
+                and status is None
+            ):
                 found = store.update_hypothesis_findings(hypothesis_id, findings)
                 if not found:
                     print(
@@ -1368,9 +1373,7 @@ def _cmd_backfill_strategy_class(args: argparse.Namespace) -> int:
         print(f"Found {len(strategies)} unclassified strategies.\n")
         patched = 0
         for s in strategies:
-            label = (
-                f"{s['instrument']}/{s['timeframe']}/{s['direction']}/{s['logic_type']}"
-            )
+            label = f"{s['instrument']}/{s['timeframe']}/{s['direction']}/{s['logic_type']}"
             print(f"Strategy: {s['strategy_id']} ({label})")
             value = input("  strategy_class (blank to skip): ").strip().lower()
             if not value:
@@ -1495,8 +1498,7 @@ def cmd_patch(args: argparse.Namespace) -> int:
     _patch_blocked = frozenset({"run_id", "strategy_id", "created_at"})
     if key in _patch_blocked or key not in _patch_whitelist:
         print(
-            f"ERROR: key not patchable: {key!r} — "
-            f"allowed keys: {sorted(_patch_whitelist)}",
+            f"ERROR: key not patchable: {key!r} — allowed keys: {sorted(_patch_whitelist)}",
             file=sys.stderr,
         )
         return 1

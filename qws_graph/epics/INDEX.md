@@ -223,7 +223,7 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 - `QWS-1012` `epic_10_macro_data/closed/story_QWS-1012_strategy_class_taxonomy.md` — `CLOSED`
 - `QWS-1100a` `epic_10_macro_data/closed/story_prefect_1100a_scheduler_isolation.md` — `CLOSED`
 - `QWS-1100b` `epic_10_macro_data/closed/story_prefect_1100b_flows.md` — `CLOSED` (~~QWS-1100a~~)
-- `QWS-1100c` `epic_10_macro_data/story_prefect_1100c_daemon.md` — `CLOSED` (QWS-1100b)
+- `QWS-1100c` `epic_10_macro_data/closed/story_prefect_1100c_daemon.md` — `CLOSED` (~~QWS-1100b~~)
 
 ---
 

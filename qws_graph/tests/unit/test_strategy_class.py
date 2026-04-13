@@ -6,6 +6,7 @@ Tests cover:
 - query preset catalog registration
 - store method signatures (no live Neo4j needed)
 """
+
 from __future__ import annotations
 
 from qws_graph.research.graph.models import Strategy
@@ -14,6 +15,7 @@ from qws_graph.research.graph.query_presets import PRESET_CATALOG, PresetSpec
 # ---------------------------------------------------------------------------
 # Strategy model
 # ---------------------------------------------------------------------------
+
 
 def test_strategy_model_accepts_null_strategy_class() -> None:
     """strategy_class is optional — Strategy without it must not raise."""
@@ -72,6 +74,7 @@ def test_strategy_model_dump_null_strategy_class() -> None:
 # Preset catalog
 # ---------------------------------------------------------------------------
 
+
 def test_portfolio_by_class_preset_registered() -> None:
     """portfolio_by_class preset appears in PRESET_CATALOG."""
     assert "portfolio_by_class" in PRESET_CATALOG
@@ -97,6 +100,7 @@ def test_portfolio_by_class_no_required_params() -> None:
 # ---------------------------------------------------------------------------
 # Cypher constants
 # ---------------------------------------------------------------------------
+
 
 def test_portfolio_by_class_cypher_constant() -> None:
     """PORTFOLIO_BY_CLASS_CYPHER is importable and non-empty."""
@@ -126,6 +130,7 @@ def test_get_unclassified_strategies_cypher_constant() -> None:
 # CSV_INGEST_QUERY includes strategy_class
 # ---------------------------------------------------------------------------
 
+
 def test_csv_ingest_query_sets_strategy_class() -> None:
     """CSV_INGEST_QUERY sets strategy_class from strategy payload."""
     from qws_graph.research.graph.cypher import CSV_INGEST_QUERY
@@ -136,6 +141,7 @@ def test_csv_ingest_query_sets_strategy_class() -> None:
 # ---------------------------------------------------------------------------
 # store method signatures
 # ---------------------------------------------------------------------------
+
 
 def test_store_has_patch_strategy_class_method() -> None:
     """GraphStore exposes patch_strategy_class method."""
@@ -156,6 +162,7 @@ def test_store_has_get_unclassified_strategies_method() -> None:
 # ---------------------------------------------------------------------------
 # data_dictionary.yaml
 # ---------------------------------------------------------------------------
+
 
 def test_data_dictionary_contains_strategy_class() -> None:
     """data_dictionary.yaml registers strategy_class under Strategy.properties."""

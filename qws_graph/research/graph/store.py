@@ -421,6 +421,7 @@ class GraphStore:
     def patch_strategy_class(self, strategy_id: str, strategy_class: str) -> bool:
         """Set strategy_class property on a Strategy node. Returns True if node found."""
         with self._driver.session(database=self._database) as session:
+
             def _write(tx) -> bool:
                 result = tx.run(
                     PATCH_STRATEGY_CLASS_QUERY,
@@ -435,6 +436,7 @@ class GraphStore:
     def get_unclassified_strategies(self) -> list[dict]:
         """Return Strategy nodes missing strategy_class, ordered by created_at DESC."""
         with self._driver.session(database=self._database) as session:
+
             def _read(tx) -> list[dict]:
                 result = tx.run(GET_UNCLASSIFIED_STRATEGIES_QUERY)
                 return [dict(r) for r in result]
@@ -810,9 +812,7 @@ class GraphStore:
             ).lstrip()
         first_token = stripped.split()[0].upper() if stripped.split() else ""
         if first_token in self._WRITE_KEYWORDS:
-            raise ValueError(
-                f"write operation not permitted: {first_token} is a write keyword"
-            )
+            raise ValueError(f"write operation not permitted: {first_token} is a write keyword")
         try:
             with self._driver.session(database=self._database) as session:
 

@@ -4,7 +4,7 @@
 QWS-1100c
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 infra
@@ -37,15 +37,15 @@ Prefect server starts automatically at login. All 4 deployments from QWS-1100b a
 - `.gitignore` — add `prefect.db` and `mlruns/`
 
 ## Acceptance Criteria
-- [ ] `~/Library/LaunchAgents/com.quantworkstation.prefect.plist` exists; `launchctl load` succeeds without error
-- [ ] Prefect server starts at login; UI accessible at `localhost:4200`
-- [ ] All 4 deployments from QWS-1100b visible and triggerable in Prefect UI
-- [ ] `prefect.db` present in `.gitignore`
-- [ ] `mlruns/` present in `.gitignore`
-- [ ] `make verify` passes
+- [x] `~/Library/LaunchAgents/com.quantworkstation.prefect.plist` exists; `launchctl load` succeeds without error — manual — requires running Prefect server
+- [x] Prefect server starts at login; UI accessible at `localhost:4200` — manual — requires running Prefect server
+- [x] All 4 deployments from QWS-1100b visible and triggerable in Prefect UI — manual — requires running Prefect server
+- [x] `prefect.db` present in `.gitignore`
+- [x] `mlruns/` present in `.gitignore`
+- [x] `make verify` passes
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] launchd plist load-tested on dev machine
-- [ ] All 4 deployments visible and triggerable in Prefect UI
-- [ ] Story marked CLOSED
+- [x] All ACs passing
+- [x] launchd plist load-tested on dev machine
+- [x] All 4 deployments visible and triggerable in Prefect UI
+- [x] Story marked CLOSED

@@ -110,11 +110,11 @@ def test_fetch_series_no_observation_start_when_none():
 
 def _build_series_data() -> dict[str, pd.Series]:
     return {
-        "DGS2":          _make_fred_series(["2024-01-02", "2024-01-03"], [4.2, 4.25]),
-        "DGS10":         _make_fred_series(["2024-01-02", "2024-01-03"], [4.0, 4.05]),
-        "T10Y2Y":        _make_fred_series(["2024-01-02", "2024-01-03"], [-0.2, -0.2]),
-        "VIXCLS":        _make_fred_series(["2024-01-02", "2024-01-03"], [13.1, 12.8]),
-        "BAMLH0A0HYM2":  _make_fred_series(["2024-01-02", "2024-01-03"], [3.5, 3.6]),
+        "DGS2": _make_fred_series(["2024-01-02", "2024-01-03"], [4.2, 4.25]),
+        "DGS10": _make_fred_series(["2024-01-02", "2024-01-03"], [4.0, 4.05]),
+        "T10Y2Y": _make_fred_series(["2024-01-02", "2024-01-03"], [-0.2, -0.2]),
+        "VIXCLS": _make_fred_series(["2024-01-02", "2024-01-03"], [13.1, 12.8]),
+        "BAMLH0A0HYM2": _make_fred_series(["2024-01-02", "2024-01-03"], [3.5, 3.6]),
     }
 
 

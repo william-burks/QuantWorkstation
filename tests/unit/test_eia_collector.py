@@ -246,6 +246,7 @@ def test_collect_incremental_passes_start_date():
 
 def test_collect_skips_empty_response():
     """If EIA returns empty data, write_series is not called."""
+
     def mock_get(url, params=None, timeout=None):
         return _make_eia_response("WCRSTUS1", [])
 
