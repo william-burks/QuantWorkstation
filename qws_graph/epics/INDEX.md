@@ -237,7 +237,7 @@ Stories (independent — implement in parallel):
 - `QWS-1005` `epic_10b_commodity_regime_data/story_QWS-1005_noaa_degree_days.md` — `READY`
 - `QWS-1006` `epic_10b_commodity_regime_data/story_QWS-1006_usda_crop_progress.md` — `READY`
 - `QWS-1011` `epic_10b_commodity_regime_data/story_QWS-1011_ndvi_crop_health.md` — `READY`
-- `QWS-1013` `epic_10b_commodity_regime_data/story_QWS-1013_macro_prefect_flow.md` — `READY`
+- `QWS-1013` `epic_10b_commodity_regime_data/story_QWS-1013_macro_prefect_flow.md` — `TESTING`
 
 ---
 
