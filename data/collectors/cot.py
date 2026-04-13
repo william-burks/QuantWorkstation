@@ -103,7 +103,8 @@ def _fetch_csv(url: str, timeout: int = 60) -> pd.DataFrame:
         if not csv_names:
             raise ValueError(f"No CSV/TXT file found in zip from {url}: {names}")
         with zf.open(csv_names[0]) as f:
-            return pd.read_csv(f, low_memory=False)
+            # Force CFTC_Contract_Market_Code as str to preserve leading zeros
+            return pd.read_csv(f, low_memory=False, dtype={"CFTC_Contract_Market_Code": str})
 
 
 def _years_to_fetch() -> list[int]:
@@ -135,8 +136,8 @@ def _parse_df(raw: pd.DataFrame, report_type: str) -> pd.DataFrame:
     sub.columns = ["date", "code", "open_interest",
                    "comm_long", "comm_short", "noncomm_long", "noncomm_short"]
 
-    # Strip whitespace from code column
-    sub["code"] = sub["code"].str.strip()
+    # Strip whitespace from code column (may be numeric dtype if inferred by pandas)
+    sub["code"] = sub["code"].astype(str).str.strip()
 
     # Parse date — CFTC format: "YYYY-MM-DD"
     sub["date"] = pd.to_datetime(sub["date"], format="%Y-%m-%d", utc=True)
