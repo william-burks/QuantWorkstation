@@ -141,7 +141,7 @@
 | Google Trends | QWS-1007 (**BLOCKED**) | Google Trends signals in ArcticDB | ~~QWS-1000~~ |
 | BDTI Tanker Index | QWS-1008 (**BLOCKED**) | Baltic Dirty Tanker Index data in ArcticDB | ~~QWS-1000~~ |
 | Economic Calendar Collector | QWS-1009 (**BLOCKED**) | Economic event calendar data in ArcticDB | ~~QWS-1000~~ |
-| Data Quality Validation | QWS-1010 (**READY**) | Validation gate — alerts on missing bars, stale feeds, schema drift | — |
+| Data Quality Validation | QWS-1010 (**TESTING**) | Validation gate — alerts on missing bars, stale feeds, schema drift | — |
 | NDVI Crop Health Collector | QWS-1011 (**BLOCKED**) | NDVI crop health index in ArcticDB | ~~QWS-1000~~ |
 | Strategy Class Taxonomy | QWS-1012 (**CLOSED**) ⚠️ | `strategy_class` free-form string on Strategy; `portfolio_by_class` preset; `qw backfill --strategy-class`; `bundle.json` reads `strategy_class` | — |
 | Scheduler Isolation | QWS-1100a (**CLOSED**) | `execution/risk_scheduler.py` with risk jobs only; `prefect` in pyproject.toml | — |

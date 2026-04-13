@@ -4,7 +4,7 @@
 QWS-1010
 
 ## Status
-READY
+TESTING
 
 ## Type
 code
@@ -82,18 +82,74 @@ Catch bad data at the write boundary — not in backtest, not in research review
 - `tests/unit/test_validation.py` — new
 
 ## Acceptance Criteria
-- [ ] `data/validation.py` exists, is importable, exports `validate_bars`
-- [ ] P1: `ValueError` raised with descriptive message for each of the 8 P1 conditions
-- [ ] P1: clean DataFrame with valid `freq` passes without error or warning
-- [ ] P2: `warnings.warn` issued when index gap > 2× expected spacing; no raise
-- [ ] P2: `warnings.warn` issued when most recent bar is > 3× expected spacing from now (stale feed check); no raise
-- [ ] P2: `warnings.warn` issued when required OHLCV columns are missing (schema drift check); no raise
-- [ ] P3: `warnings.warn` issued when row count < 95% of expected; no raise
-- [ ] `alpaca_crypto.py` calls `validate_bars` before `write_bars`
-- [ ] `ibkr_futures.py` calls `validate_bars` before `write_bars`
-- [ ] Unit tests in `tests/unit/test_validation.py` cover all P1 conditions, both P2 gap triggers, stale feed trigger, schema drift trigger, P3 undercount trigger, and clean-pass case
-- [ ] No new pip dependencies introduced
-- [ ] `make verify` passes
+- [x] `data/validation.py` exists, is importable, exports `validate_bars`
+- [x] P1: `ValueError` raised with descriptive message for each of the 8 P1 conditions
+- [x] P1: clean DataFrame with valid `freq` passes without error or warning
+- [x] P2: `warnings.warn` issued when index gap > 2× expected spacing; no raise
+- [x] P2: `warnings.warn` issued when most recent bar is > 3× expected spacing from now (stale feed check); no raise
+- [x] P2: `warnings.warn` issued when required OHLCV columns are missing (schema drift check); no raise
+- [x] P3: `warnings.warn` issued when row count < 95% of expected; no raise
+- [x] `alpaca_crypto.py` calls `validate_bars` before `write_bars`
+- [x] `ibkr_futures.py` calls `validate_bars` before `write_bars`
+- [x] Unit tests in `tests/unit/test_validation.py` cover all P1 conditions, both P2 gap triggers, stale feed trigger, schema drift trigger, P3 undercount trigger, and clean-pass case
+- [x] No new pip dependencies introduced
+- [x] `make verify` passes
+
+## Acceptance Test Plan
+
+### AC1: validate_bars importable and exports correct symbol
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from data.validation import validate_bars; print('ok')"`
+- expect_contains: "ok"
+- expect_exit: 0
+
+### AC2: P1 UTC timezone raises
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "import pandas as pd; from data.validation import validate_bars; df = pd.DataFrame({'open':[100],'high':[101],'low':[99],'close':[100]}, index=pd.DatetimeIndex(['2024-01-01'])); validate_bars(df,'1H')" 2>&1`
+- expect_contains: "timezone must be UTC"
+- expect_exit: 1
+
+### AC3: P1 high < low raises
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "import pandas as pd; from data.validation import validate_bars; idx=pd.DatetimeIndex(['2024-01-01'],tz='UTC'); df=pd.DataFrame({'open':[100],'high':[99],'low':[101],'close':[100]},index=idx); validate_bars(df,'1H')" 2>&1`
+- expect_contains: "high < low"
+- expect_exit: 1
+
+### AC4: P2 gap warns no raise
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "import pandas as pd, warnings; from data.validation import validate_bars; idx=pd.date_range('2024-01-01',periods=5,freq='h',tz='UTC'); df=pd.DataFrame({'open':100,'high':101,'low':99,'close':100},index=idx); lst=list(idx); lst[2]=lst[1]+pd.Timedelta(hours=5); df.index=pd.DatetimeIndex(lst,tz='UTC'); warnings.filterwarnings('error','Stale feed'); warnings.filterwarnings('error','Row count'); validate_bars(df,'h'); print('no_raise')" 2>&1`
+- expect_contains: "Gap detected"
+- expect_exit: 0
+
+### AC5: alpaca_crypto.py imports validate_bars
+- type: file_check
+- cmd: `grep -c 'from data.validation import validate_bars' data/collectors/alpaca_crypto.py`
+- expect_contains: "1"
+- expect_exit: 0
+
+### AC6: ibkr_futures.py imports validate_bars
+- type: file_check
+- cmd: `grep -c 'from data.validation import validate_bars' data/collectors/ibkr_futures.py`
+- expect_contains: "1"
+- expect_exit: 0
+
+### AC7: unit tests pass
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_validation.py -q 2>&1 | tail -3`
+- expect_contains: "23 passed"
+- expect_exit: 0
+
+### AC8: no new pip dependencies
+- type: file_check
+- cmd: `grep -c 'great_expectations\|pandera\|cerberus' data/validation.py || echo "0"`
+- expect_contains: "0"
+- expect_exit: 0
+
+### AC9: typecheck passes
+- type: cli
+- cmd: `make typecheck 2>&1 | tail -3`
+- expect_contains: "Success"
+- expect_exit: 0
 
 ## Definition of Done
 - [ ] All ACs passing
