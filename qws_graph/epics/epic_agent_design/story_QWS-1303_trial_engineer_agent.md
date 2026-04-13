@@ -36,8 +36,8 @@ After this story:
 
 ## In Scope
 - `research/trials/trial_base.py` — extracted boilerplate; existing trial scripts updated to import from it
-- `.claude/agents/trial-engineer.md` — agent definition: input contract, output contract, STOP gate, tool list
-- `.claude/scripts/agent-trial-guard.sh` — create or update if file exists
+- `.claude/agents/trial-engineer.md` — update existing agent file: input contract, output contract, STOP gate, tool list
+- `.claude/scripts/agent-trial-guard.sh` — update existing file
 - Guardrail: bundle.json must include `hypothesis_id` before guard permits `qw record --bundle`
 
 ## Out of Scope
@@ -49,13 +49,13 @@ After this story:
 ## Repo Touchpoints
 - `research/trials/trial_base.py` — new file
 - `research/trials/<existing scripts>` — import updates only
-- `.claude/agents/trial-engineer.md` — new file
-- `.claude/scripts/agent-trial-guard.sh` — new or updated file
+- `.claude/agents/trial-engineer.md` — update existing file
+- `.claude/scripts/agent-trial-guard.sh` — update existing file
 
 ## Acceptance Criteria
 - [ ] `research/trials/trial_base.py` exists and exports `prepare_data`, `compute_metrics`, `write_html`, `make_bundle`
 - [ ] At least 3 existing trial scripts updated to import from `trial_base.py`; behavior unchanged (same output)
-- [ ] `.claude/agents/trial-engineer.md` exists with input contract, output contract, and explicit STOP gate documented
+- [ ] `.claude/agents/trial-engineer.md` updated with input contract, output contract, and explicit STOP gate documented
 - [ ] Agent generates valid trial script at correct path with correct NN (max+1)
 - [ ] Agent generates bundle.json template in same dir as script
 - [ ] Agent prints path and stop message after write; does not execute without explicit "run it"

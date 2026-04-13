@@ -31,11 +31,11 @@ After this story, a `research-navigator` agent:
 - 4 explicit phases: Start / Direction-chosen / Mid-session-pivot / Session-wrap
 - Phase 1 output format: numbered shortlist (1. best direction, 2. second, 3. third) with one-line rationale each — not raw query output
 - Phase 3 trigger: researcher pastes trial result path or metrics; navigator reads bundle.json, compares against hypothesis target, recommends branch/abandon/continue
-- Guard: `.claude/scripts/agent-navigator-guard.sh`
+- Guard: `.claude/scripts/agent-research-guard.sh`
 
 ## In Scope
-- `.claude/agents/research-navigator.md` — agent definition with 4 phases, tool list, output format contracts
-- `.claude/scripts/agent-navigator-guard.sh` — blocks listed below
+- `.claude/agents/research-navigator.md` — update existing agent file: add 4 phases, tool list, output format contracts
+- `.claude/scripts/agent-research-guard.sh` — blocks listed below
 - Integration test: navigator Phase 1 against current graph produces session brief with ≥ 1 next-direction recommendation
 
 ## Out of Scope
@@ -45,17 +45,17 @@ After this story, a `research-navigator` agent:
 - Auto-selecting direction without researcher approval
 
 ## Repo Touchpoints
-- `.claude/agents/research-navigator.md` — new file
-- `.claude/scripts/agent-navigator-guard.sh` — new file
+- `.claude/agents/research-navigator.md` — update existing file
+- `.claude/scripts/agent-research-guard.sh` — existing file (already at this path)
 
 ## Acceptance Criteria
-- [ ] `.claude/agents/research-navigator.md` exists with all 4 phases documented
+- [ ] `.claude/agents/research-navigator.md` updated with all 4 phases documented
 - [ ] Phase 1 output is ranked 2-3 direction shortlist with rationale — not raw table output
 - [ ] Phase 2 redundancy check runs silently before hypothesis commit and surfaces matches if found
 - [ ] Phase 3 reads bundle.json from provided path and produces branch/abandon/continue recommendation
 - [ ] Phase 4 updates `findings` on active hypothesis and writes session wrap structure
 - [ ] Agent reads project memory at session start (`.claude/agent-memory/` relevant files)
-- [ ] `agent-navigator-guard.sh` blocks: `qw degrade`, `qw retire`, `qw monitor`, `qw record --bundle`, git operations, writes outside `research/ideas/`
+- [ ] `agent-research-guard.sh` blocks: `qw degrade`, `qw retire`, `qw monitor`, `qw record --bundle`, git operations, writes outside `research/ideas/`
 - [ ] Integration test: run navigator Phase 1 against current graph; output contains session brief section and ≥ 1 ranked direction
 - [ ] Tool list in agent file: Read, Glob, Bash (scoped to `qw query` and `qw record --hypothesis` only), Write (scoped to `research/ideas/` only)
 

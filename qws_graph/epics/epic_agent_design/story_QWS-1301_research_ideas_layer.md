@@ -29,7 +29,7 @@ After this story, a researcher can:
 - `queued` is a boolean property on `Hypothesis` node — additive, nullable, defaults false
 - `--queue` flag added to `qw record --hypothesis` — sets `queued=true`
 - `--branched-from <run_id or hypothesis_id>` already planned under QWS-HF-001; this story depends on that being merged
-- `queued_hypotheses` preset: `MATCH (h:Hypothesis {queued: true}) OPTIONAL MATCH (h)<-[:BRANCHED_FROM]-(src) RETURN h.id, h.title, h.findings, src.id, h.created_at ORDER BY h.created_at DESC`
+- `queued_hypotheses` preset: `MATCH (h:Hypothesis {queued: true}) OPTIONAL MATCH (h)<-[:BRANCHED_FROM]-(src) RETURN h.hypothesis_id, h.title, h.findings, src.hypothesis_id, h.created_at ORDER BY h.created_at DESC`
 
 ## In Scope
 - `queued` property on `Hypothesis` node
@@ -58,9 +58,11 @@ After this story, a researcher can:
 - [ ] `qw record --hypothesis <existing_id> --queue` sets `queued=true` on existing node without creating duplicate
 - [ ] `qw query --name queued_hypotheses` returns all `queued=true` hypotheses; result includes id, title, findings (truncated to 200 chars), branched-from id if present, created_at
 - [ ] `qw query --name queued_hypotheses` returns empty result (not error) when queue is empty
-- [ ] `qw record --hypothesis <id> --status raw` clears hypothesis from practical queue (status change unsets intent to queue — document this in workflow, do not add separate `--dequeue` flag)
+- [ ] Setting `--status` on a queued hypothesis also sets `queued=false`. Dequeue by running `qw record --hypothesis --id <id> --status raw` which sets `queued=false`. No separate `--dequeue` flag.
 - [ ] `data_dictionary.yaml` reflects `queued` property with type and default
 - [ ] `RESEARCH_WORKFLOW.md` parking sequence updated
+- [ ] `docs/PROVENANCE_ENGINE.md` Hypothesis Key Properties table updated with `queued: bool — true if hypothesis is parked for future research session`
+- [ ] `docs/PROVENANCE_ENGINE.md` [TARGET] tools section updated with `queued_hypotheses` preset entry
 
 ## Definition of Done
 - [ ] All ACs passing

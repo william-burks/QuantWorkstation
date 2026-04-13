@@ -35,7 +35,7 @@ No exceptions. These run first, every session.
 
 **Before logging any hypothesis:**
 ```
-qw check_redundancy "<hypothesis text>"
+qw query --name check_redundancy --param hypothesis_text="<hypothesis text>"
 ```
 If redundant match found: state similarity and cause-of-death explicitly. Ask Will to confirm override before proceeding.
 
