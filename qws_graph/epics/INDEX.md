@@ -20,7 +20,7 @@ Navigation and execution index for `qws_graph/epics`.
 9. **Epic 9 — Strategy Development** — `COMPLETE`
 10. **Epic 9HF — Bugs & Hotfixes** — `READY` (implement now, parallel with 10)
 11. **Epic 9.5 — Workflow Hardening** — `COMPLETE`
-12. **Epic 10 — Macro Data** — `CLOSED` (QWS-1012 must close before any collector closes)
+12. **Epic 10 — Macro Data** — `COMPLETE`
 13. **Epic 11 — Production Tracking** — `PLANNED`
 14. **Epic 13 — Agent Design** — `PLANNED` (QWS-1301 READY; 1302-1304 blocked on gap fixes)
 15. **Epic 12 — ML Research Layer** — `PLANNED`
@@ -29,7 +29,7 @@ Navigation and execution index for `qws_graph/epics`.
 - Epics 1–8 COMPLETE. Epic 9 in progress — QWS-0903 READY.
 - Epic 9HF: QWS-HF-001 and QWS-0904 are independent — implement in parallel.
 - Epic 9.5: all 4 stories READY, no mutual deps — implement in parallel.
-- Epic 10: QWS-1012 (strategy class taxonomy) must CLOSE before any collector story closes.
+- Epic 10: COMPLETE. QWS-1005, QWS-1006, QWS-1011 SKIPPED (out-of-scope instruments, never attempted).
 - Epic 12 entry blocked on QWS-0803 CLOSED (satisfied). QWS-0907 (trial_metadata) must land before QWS-1204.
 - Epic 13: QWS-1301 READY; QWS-1302/1303/1304 blocked on gap fixes landing first.
 - Epic 9HF stories live in `qws_graph/epics/epic_9hf_bugs_and_hotfixes/`. Future one-off hotfixes go in `qws_graph/epics/hotfix/` (currently empty).
@@ -203,27 +203,27 @@ Stories (independent — implement in parallel):
 
 ---
 
-## Epic 10 — Macro Data [PLANNED]
-- Epic README: `epic_10_macro_data/README.md`
+## Epic 10 — Macro Data [COMPLETE]
+- Epic README: `epic_10_macro_data[COMPLETE]/README.md`
 - Objective: wire macro and alternative data sources as inputs for regime signal generation
 
 Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-1010 parallel from start) → QWS-1100b after QWS-1100a → QWS-1100c after QWS-1100b
-- `QWS-1000` `epic_10_macro_data/closed/story_0_store_series_methods.md` — `CLOSED`
-- `QWS-1001` `epic_10_macro_data/closed/story_cot_collector.md` — `CLOSED` (QWS-1000)
-- `QWS-1002` `epic_10_macro_data/closed/story_fred_macro_collector.md` — `CLOSED` (QWS-1000)
-- `QWS-1003` `epic_10_macro_data/closed/story_eia_crude_collector.md` — `CLOSED` (QWS-1000)
-- `QWS-1004` `epic_10_macro_data/closed/story_baker_hughes_rig_count.md` — `CLOSED` (QWS-1000)
-- `QWS-1005` `epic_10_macro_data/story_noaa_degree_days.md` — `CLOSED` (QWS-1000)
-- `QWS-1006` `epic_10_macro_data/story_usda_crop_progress.md` — `CLOSED` (QWS-1000)
-- `QWS-1007` `epic_10_macro_data/closed/story_google_trends.md` — `CLOSED` (QWS-1000)
-- `QWS-1008` `epic_10_macro_data/closed/story_bdti_tanker_index.md` — `CLOSED` (QWS-1000)
-- `QWS-1009` `epic_10_macro_data/closed/story_economic_calendar_collector.md` — `CLOSED` (QWS-1000)
-- `QWS-1010` `epic_10_macro_data/closed/story_data_quality_validation.md` — `CLOSED`
-- `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `CLOSED` (QWS-1000)
-- `QWS-1012` `epic_10_macro_data/closed/story_QWS-1012_strategy_class_taxonomy.md` — `CLOSED`
-- `QWS-1100a` `epic_10_macro_data/closed/story_prefect_1100a_scheduler_isolation.md` — `CLOSED`
-- `QWS-1100b` `epic_10_macro_data/closed/story_prefect_1100b_flows.md` — `CLOSED` (~~QWS-1100a~~)
-- `QWS-1100c` `epic_10_macro_data/closed/story_prefect_1100c_daemon.md` — `CLOSED` (~~QWS-1100b~~)
+- `QWS-1000` `epic_10_macro_data[COMPLETE]/closed/story_0_store_series_methods.md` — `CLOSED`
+- `QWS-1001` `epic_10_macro_data[COMPLETE]/closed/story_cot_collector.md` — `CLOSED` (QWS-1000)
+- `QWS-1002` `epic_10_macro_data[COMPLETE]/closed/story_fred_macro_collector.md` — `CLOSED` (QWS-1000)
+- `QWS-1003` `epic_10_macro_data[COMPLETE]/closed/story_eia_crude_collector.md` — `CLOSED` (QWS-1000)
+- `QWS-1004` `epic_10_macro_data[COMPLETE]/closed/story_baker_hughes_rig_count.md` — `CLOSED` (QWS-1000)
+- `QWS-1005` `epic_10_macro_data[COMPLETE]/story_noaa_degree_days.md` — `SKIPPED` (out-of-scope instrument, never attempted)
+- `QWS-1006` `epic_10_macro_data[COMPLETE]/story_usda_crop_progress.md` — `SKIPPED` (out-of-scope instrument, never attempted)
+- `QWS-1007` `epic_10_macro_data[COMPLETE]/closed/story_google_trends.md` — `CLOSED` (QWS-1000)
+- `QWS-1008` `epic_10_macro_data[COMPLETE]/closed/story_bdti_tanker_index.md` — `CLOSED` (QWS-1000)
+- `QWS-1009` `epic_10_macro_data[COMPLETE]/closed/story_economic_calendar_collector.md` — `CLOSED` (QWS-1000)
+- `QWS-1010` `epic_10_macro_data[COMPLETE]/closed/story_data_quality_validation.md` — `CLOSED`
+- `QWS-1011` `epic_10_macro_data[COMPLETE]/story_ndvi_crop_health_collector.md` — `SKIPPED` (out-of-scope instrument, never attempted)
+- `QWS-1012` `epic_10_macro_data[COMPLETE]/closed/story_QWS-1012_strategy_class_taxonomy.md` — `CLOSED`
+- `QWS-1100a` `epic_10_macro_data[COMPLETE]/closed/story_prefect_1100a_scheduler_isolation.md` — `CLOSED`
+- `QWS-1100b` `epic_10_macro_data[COMPLETE]/closed/story_prefect_1100b_flows.md` — `CLOSED` (~~QWS-1100a~~)
+- `QWS-1100c` `epic_10_macro_data[COMPLETE]/closed/story_prefect_1100c_daemon.md` — `CLOSED` (~~QWS-1100b~~)
 
 ---
 
@@ -291,6 +291,7 @@ promotion).
 - **Epic 8 COMPLETE** — all 3 stories CLOSED.
 - **Epic 9 COMPLETE** — all 3 stories CLOSED.
 - **Epic 9.5 COMPLETE** — all 4 stories CLOSED.
-- **Immediate:** Epic 13 Agent Design (QWS-1301 READY, unblocked) + Epic 10 Macro Data (start QWS-1000).
+- **Epic 10 COMPLETE** — all stories CLOSED (QWS-1005, QWS-1006, QWS-1011 SKIPPED).
+- **Immediate:** Epic 13 Agent Design (QWS-1301 READY, unblocked).
 - **After 1301:** QWS-1302 → QWS-1303 → QWS-1304 → Epic 12 (ML research).
 
