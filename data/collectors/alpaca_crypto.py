@@ -16,6 +16,7 @@ from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 
 from data.config import get_settings
 from data.store import get_store
+from data.validation import validate_bars
 
 log = logging.getLogger(__name__)
 
@@ -93,6 +94,7 @@ def collect(symbol: str, timeframe: str = "daily") -> None:
         return
 
     df = _bars_to_df(bars)
+    validate_bars(df, freq=timeframe)
     store.write_bars(lib, store_key, df)
     log.info("Stored %d bars for %s %s", len(df), symbol, timeframe)
 

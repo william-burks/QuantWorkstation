@@ -36,6 +36,7 @@ from ib_insync import IB, Contract
 
 from data.config import get_settings
 from data.store import get_store
+from data.validation import validate_bars
 
 log = logging.getLogger(__name__)
 
@@ -607,6 +608,7 @@ def collect_index(symbol: str) -> None:
                 print(f"  [{label}] No new bars", flush=True)
                 continue
 
+            validate_bars(df, freq=tf_key)
             store.write_bars("futures", store_key, df)
             date_range = f"{df.index.min().date()} → {df.index.max().date()}"
             print(f"  [{label}] Stored {len(df)} bars  ({date_range})", flush=True)
@@ -670,6 +672,7 @@ def collect(root: str, timeframe: str = "1D") -> None:
         print(f"  [{label}] No new bars", flush=True)
         return
 
+    validate_bars(df, freq=timeframe)
     store.write_bars("futures", store_key, df)
     date_range = f"{df.index.min().date()} → {df.index.max().date()}"
     print(f"  [{label}] Stored {len(df)} bars  ({date_range})", flush=True)
