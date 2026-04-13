@@ -4,7 +4,7 @@
 QWS-0905
 
 ## Status
-READY
+TESTING
 
 ## Type
 schema
@@ -52,14 +52,52 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - `qws_graph/tests/unit/test_hypothesis_presets.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw record --hypothesis <id> --findings "text"` writes `findings` property; re-run updates value
-- [ ] `qw query --name hypotheses_by_status` returns all hypotheses sorted by status; `findings` truncated at 80 chars
-- [ ] `qw query --name hypothesis_search --param title_fragment=sweep` returns hypotheses with "sweep" in title
-- [ ] `data_dictionary.yaml` has `findings` entry under `Hypothesis`
-- [ ] `PROVENANCE_ENGINE.md` Hypothesis Key Properties table includes `findings`
-- [ ] `--findings` on unknown `hypothesis_id` returns error, exits non-zero
+- [x] `qw record --hypothesis <id> --findings "text"` writes `findings` property; re-run updates value
+- [x] `qw query --name hypotheses_by_status` returns all hypotheses sorted by status; `findings` truncated at 80 chars
+- [x] `qw query --name hypothesis_search --param title_fragment=sweep` returns hypotheses with "sweep" in title
+- [x] `data_dictionary.yaml` has `findings` entry under `Hypothesis`
+- [x] `PROVENANCE_ENGINE.md` Hypothesis Key Properties table includes `findings`
+- [x] `--findings` on unknown `hypothesis_id` returns error, exits non-zero
 
 ## Definition of Done
-- [ ] data_dictionary.yaml updated
-- [ ] Tests green
+- [x] data_dictionary.yaml updated
+- [x] Tests green
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: `--findings` writes and updates
+- type: cli
+- cmd: `qw record --hypothesis demo_hyp_001 --findings "Test findings text"`
+- expect_contains: "OK: Hypothesis 'demo_hyp_001' findings updated"
+- expect_exit: 0
+
+### AC2: `hypotheses_by_status` returns findings truncated at 80 chars
+- type: cli
+- cmd: `qw query --name hypotheses_by_status`
+- expect_contains: "demo_hyp_001"
+- expect_exit: 0
+
+### AC3: `hypothesis_search` returns match on title fragment
+- type: cli
+- cmd: `qw query --name hypothesis_search --param title_fragment=bear`
+- expect_contains: "demo_hyp_001"
+- expect_exit: 0
+
+### AC4: data_dictionary.yaml has findings entry
+- type: file_check
+- cmd: `grep -A3 'findings:' qws_graph/docs/data_dictionary.yaml`
+- expect_contains: "nullable: true"
+- expect_exit: 0
+
+### AC5: PROVENANCE_ENGINE.md has findings in table
+- type: file_check
+- cmd: `grep 'findings' docs/PROVENANCE_ENGINE.md`
+- expect_contains: "findings"
+- expect_exit: 0
+
+### AC6: unknown hypothesis_id returns error + exit 1
+- type: cli
+- cmd: `qw record --hypothesis 000000000000 --findings "text"`
+- expect_contains: "not found"
+- expect_exit: 1
