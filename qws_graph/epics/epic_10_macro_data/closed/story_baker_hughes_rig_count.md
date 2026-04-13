@@ -4,7 +4,7 @@
 QWS-1004
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -67,7 +67,7 @@ Series to collect (weekly):
 ## Definition of Done
 - [x] All ACs passing
 - [x] Tests green
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
