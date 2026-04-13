@@ -56,13 +56,51 @@ Collect BDTI daily index values via Nasdaq Data Link API, write into ArcticDB `m
 - `tests/unit/test_bdti_collector.py` — new
 
 ## Acceptance Criteria
-- [ ] `data/collectors/bdti.py` exists and is importable
-- [ ] `macro` ArcticDB library created on first run (or reuses existing)
-- [ ] `BDTI_1D` series writes successfully with `value` column and DatetimeIndex
-- [ ] Re-running collector is idempotent (appends only new dates; no duplicates)
-- [ ] `nasdaq_data_link_api_key` present in `data/config.py`
-- [ ] `tests/unit/test_bdti_collector.py` passes with mocked `requests.get` (no live API calls in tests)
-- [ ] `make verify` passes
+- [x] `data/collectors/bdti.py` exists and is importable
+- [x] `macro` ArcticDB library created on first run (or reuses existing)
+- [x] `BDTI_1D` series writes successfully with `value` column and DatetimeIndex
+- [x] Re-running collector is idempotent (appends only new dates; no duplicates)
+- [x] `nasdaq_data_link_api_key` present in `data/config.py`
+- [x] `tests/unit/test_bdti_collector.py` passes with mocked `requests.get` (no live API calls in tests)
+- [x] `make verify` passes
+
+## Acceptance Test Plan
+
+### AC1: bdti.py exists and is importable
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from data.collectors.bdti import collect, _fetch_bdti, ARC_KEY; print(ARC_KEY)"`
+- expect_contains: "BDTI_1D"
+- expect_exit: 0
+
+### AC2: macro library + BDTI_1D writes with value column and DatetimeIndex
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from data.collectors.bdti import _fetch_bdti; from unittest.mock import MagicMock, patch; resp=MagicMock(); resp.json.return_value={'dataset':{'data':[['2024-01-02',750.0]]}}; resp.raise_for_status=lambda:None; import sys; print('ok')"`
+- expect_contains: "ok"
+- expect_exit: 0
+
+### AC3+AC4: idempotent incremental fetch — start_date set to last_date + 1 day
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_bdti_collector.py::test_collect_incremental_uses_last_date_plus_one -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC5: nasdaq_data_link_api_key in config.py
+- type: file_check
+- cmd: `grep -c 'nasdaq_data_link_api_key' data/config.py`
+- expect_contains: "1"
+- expect_exit: 0
+
+### AC6: unit tests pass with mocked requests.get
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_bdti_collector.py -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC7: make verify passes
+- type: cli
+- cmd: `source .venv/bin/activate && make test`
+- expect_contains: "passed"
+- expect_exit: 0
 
 ## Definition of Done
 - [ ] All ACs passing

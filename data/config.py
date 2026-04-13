@@ -77,6 +77,10 @@ class Settings(BaseSettings):
         "WDISTUS1",
     ]
 
+    # Nasdaq Data Link (Quandl) API key — free at https://data.nasdaq.com
+    # Loaded from NASDAQ_DATA_LINK_API_KEY env var; stored as export in ~/.zshrc
+    nasdaq_data_link_api_key: str = ""
+
     # Google Trends search terms to collect (see data/collectors/google_trends.py)
     gtrends_terms: list[str] = [
         "buy gold",
