@@ -186,7 +186,7 @@ Note: this epic has no code deliverables. Done criteria = gap audit written, bac
 - Objective: fix silent data integrity bugs discovered during Epic 9 research sessions — provenance chain breaks, phantom IDs, CLI ordering bugs
 
 Stories (independent — implement in parallel):
-- `QWS-HF-001` `epic_9hf_bugs_and_hotfixes/QWS-HF-001_bundle_hypothesis_autolink.md` — `READY`
+- `QWS-HF-001` `epic_9hf_bugs_and_hotfixes/QWS-HF-001_bundle_hypothesis_autolink.md` — `TESTING`
 - `QWS-0904` `epic_9hf_bugs_and_hotfixes/QWS-0904_phantom_champion_id_fix.md` — `READY`
 
 ---
