@@ -76,6 +76,50 @@ class Store:
     def has_symbol(self, library: str, symbol: str) -> bool:
         return bool(self._libs[library].has_symbol(symbol))
 
+    def _get_lib(self, library: str) -> "Library":
+        """Return library handle, creating it if it does not exist."""
+        if library not in self._libs:
+            self._libs[library] = self._ac.get_library(library, create_if_missing=True)
+        return self._libs[library]
+
+    # ------------------------------------------------------------------
+    # Series (non-OHLCV)
+    # ------------------------------------------------------------------
+
+    def write_series(self, lib: str, symbol: str, df: pd.DataFrame) -> None:
+        """Write or append a non-OHLCV time series.
+
+        df must have a DatetimeIndex.  Idempotent: overlapping rows are
+        deduplicated by index before writing so no duplicate entries accumulate.
+        """
+        library = self._get_lib(lib)
+        if library.has_symbol(symbol):
+            existing = library.read(symbol).data
+            combined = pd.concat([existing, df])
+            combined = combined[~combined.index.duplicated(keep="last")]
+            combined = combined.sort_index()
+            library.write(symbol, combined)
+        else:
+            library.write(symbol, df)
+
+    def read_series(
+        self,
+        lib: str,
+        symbol: str,
+        *,
+        start: str | None = None,
+        end: str | None = None,
+    ) -> pd.DataFrame:
+        """Read a non-OHLCV time series.
+
+        start/end are optional ISO date strings (e.g. "2024-01-01").
+        """
+        library = self._get_lib(lib)
+        ts_start = pd.Timestamp(start) if start else None
+        ts_end = pd.Timestamp(end) if end else None
+        date_range = (ts_start, ts_end) if (ts_start is not None or ts_end is not None) else None
+        return library.read(symbol, date_range=date_range).data
+
     def list_instruments(self, library: str) -> list[tuple[str, str]]:
         """Return (root, timeframe) tuples for all symbols in the library.
 

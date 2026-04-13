@@ -41,14 +41,50 @@ Collectors that store macro data have a correct, tested store interface. `write_
 - `tests/unit/test_store_series.py` — new
 
 ## Acceptance Criteria
-- [ ] `write_series` exists in `data/store.py` and is importable
-- [ ] `read_series` exists in `data/store.py` and is importable
-- [ ] `write_series` followed by `read_series` on same symbol returns identical DataFrame
-- [ ] Calling `write_series` twice with overlapping date ranges does not create duplicate index entries
-- [ ] `read_series` with `start`/`end` returns only rows within specified range
-- [ ] `make verify` passes
+- [x] `write_series` exists in `data/store.py` and is importable
+- [x] `read_series` exists in `data/store.py` and is importable
+- [x] `write_series` followed by `read_series` on same symbol returns identical DataFrame
+- [x] Calling `write_series` twice with overlapping date ranges does not create duplicate index entries
+- [x] `read_series` with `start`/`end` returns only rows within specified range
+- [x] `make verify` passes
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
+- [x] All ACs passing
+- [x] Tests green
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: write_series importable
+- type: file_check
+- cmd: `source .venv/bin/activate && python -c "from data.store import Store; assert callable(Store.write_series)"`
+- expect_exit: 0
+
+### AC2: read_series importable
+- type: file_check
+- cmd: `source .venv/bin/activate && python -c "from data.store import Store; assert callable(Store.read_series)"`
+- expect_exit: 0
+
+### AC3: write then read roundtrip
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_store_series.py::test_write_read_roundtrip -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC4: no duplicate index entries on overlapping write
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_store_series.py::test_idempotent_no_duplicates -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC5: date-range filtering
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_store_series.py::test_date_range_filter tests/unit/test_store_series.py::test_date_range_start_only tests/unit/test_store_series.py::test_date_range_end_only -v`
+- expect_contains: "3 passed"
+- expect_exit: 0
+
+### AC6: make verify passes
+- type: cli
+- cmd: `make verify`
+- expect_contains: "passed"
+- expect_exit: 0
