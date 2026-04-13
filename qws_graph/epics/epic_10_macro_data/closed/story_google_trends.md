@@ -4,7 +4,7 @@
 QWS-1007
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -127,9 +127,9 @@ Initial term list:
 - expect_exit: 0
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
-- [ ] Story marked CLOSED
+- [x] All ACs passing
+- [x] Tests green
+- [x] Story marked CLOSED
 
 ## Dependencies
 - No API key required; `pytrends` library required in `pyproject.toml`
