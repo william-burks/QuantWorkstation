@@ -323,8 +323,6 @@ class TestBundleHypothesisAutolink:
         bundle_dir = self._make_bundle_dir(tmp_path, hypothesis_id="a0e7380e58e8")
 
         args = mock.MagicMock()
-        args.hypothesis = None  # prevent routing to _cmd_hypothesis
-        args.oos = None
         args.bundle = str(bundle_dir)
         args.dry_run = False
         args.offline = False
@@ -354,8 +352,6 @@ class TestBundleHypothesisAutolink:
         bundle_dir = self._make_bundle_dir(tmp_path, hypothesis_id=None)
 
         args = mock.MagicMock()
-        args.hypothesis = None
-        args.oos = None
         args.bundle = str(bundle_dir)
         args.dry_run = False
         args.offline = False
@@ -382,8 +378,6 @@ class TestBundleHypothesisAutolink:
         bundle_dir = self._make_bundle_dir(tmp_path, hypothesis_id="a0e7380e58e8")
 
         args = mock.MagicMock()
-        args.hypothesis = None
-        args.oos = None
         args.bundle = str(bundle_dir)
         args.dry_run = True
         args.offline = False
@@ -414,8 +408,6 @@ class TestBundleHypothesisAutolink:
         bundle_dir = self._make_bundle_dir(tmp_path, hypothesis_id="nonexistent00")
 
         args = mock.MagicMock()
-        args.hypothesis = None
-        args.oos = None
         args.bundle = str(bundle_dir)
         args.dry_run = False
         args.offline = False
