@@ -4,7 +4,7 @@
 QWS-1007
 
 ## Status
-READY
+TESTING
 
 ## Type
 code

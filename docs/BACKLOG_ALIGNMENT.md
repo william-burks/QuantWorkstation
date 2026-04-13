@@ -138,7 +138,7 @@
 | Baker Hughes Rig Count | QWS-1004 (**CLOSED**) | Weekly rig count data in ArcticDB | ~~QWS-1000~~ |
 | NOAA Degree Days | QWS-1005 (**BLOCKED**) | Heating/cooling degree days in ArcticDB | ~~QWS-1000~~ |
 | USDA Crop Progress | QWS-1006 (**BLOCKED**) | USDA weekly crop progress data in ArcticDB | ~~QWS-1000~~ |
-| Google Trends | QWS-1007 (**BLOCKED**) | Google Trends signals in ArcticDB | ~~QWS-1000~~ |
+| Google Trends | QWS-1007 (**TESTING**) | Google Trends signals in ArcticDB | ~~QWS-1000~~ |
 | BDTI Tanker Index | QWS-1008 (**BLOCKED**) | Baltic Dirty Tanker Index data in ArcticDB | ~~QWS-1000~~ |
 | Economic Calendar Collector | QWS-1009 (**BLOCKED**) | Economic event calendar data in ArcticDB | ~~QWS-1000~~ |
 | Data Quality Validation | QWS-1010 (**CLOSED**) | Validation gate — alerts on missing bars, stale feeds, schema drift | — |
