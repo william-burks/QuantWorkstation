@@ -51,7 +51,7 @@ Never skip A. Never search the same symbol twice (prefix/suffix variants = same 
 | File | Size | How to target |
 |------|------|--------------|
 | `store.py` | ~1400L | `grep 'method_name' /tmp/symbol-index.txt` → read only that 50-line range |
-| `cli.py` | ~1550L | `argparse` CLI — NOT click/typer. `grep 'cmd_name' /tmp/symbol-index.txt` → line number. Or `search_graph(project="Users-will-ClaudeProjects-QuantWorkstation", label="Function", file_pattern="*cli.py", limit=50)` for full anchor map in one call. Returns qualified_name + start_line + end_line for all 18 functions. |
+| `cli.py` | ~1550L | `argparse` CLI — NOT click/typer. For **multiple touchpoints in cli.py**, grep all names in ONE pattern: `grep -E 'cmd_bundle\|cmd_hypothesis\|other_name' /tmp/symbol-index.txt`. Or `search_graph(project="Users-will-ClaudeProjects-QuantWorkstation", label="Function", file_pattern="*cli.py", limit=50)` for full anchor map in one call. Returns qualified_name + start_line + end_line for all 18 functions. Never grep cli.py functions one at a time. |
 | `cypher.py` | ~700L | `grep 'DEMO_SEED_CYPHER' /tmp/symbol-index.txt` → if miss, known offset ~465, read 200-line range |
 | `query.py` | ~540L | `grep 'constant_name' /tmp/symbol-index.txt` → read that range |
 | `data_dictionary.yaml` | ~1100L | `grep 'NodeOrEdgeName' /tmp/schema-index.txt` → get line N → `Read data_dictionary.yaml offset=N limit=40`. ONE Edit per node/edge block — compose the ENTIRE block (all properties) in one `new_string`. Max 2 Edit calls for this file. Never read the full file. |
@@ -81,8 +81,9 @@ If `/tmp/ruling_$ARGUMENTS.txt` exists → read it before reporting blocked. App
 Work ACs one by one. After each:
 1. Story checkboxes — do NOT edit story file during Step 4. Wait until Step 5 (test plan) and batch ALL checkbox updates + test plan into ONE Edit call. If Step 7 finds failures, that's the 2nd allowed edit. **Max 2 Edit calls to story file total.**
 2. `git add` each changed file (never `-A` or `.`)
-3. `make test 2>&1 | tee /tmp/test-output.txt | tail -60` after any Python change — if failures need detail, `cat /tmp/test-output.txt`. Do NOT re-run pytest separately.
+3. `make test 2>&1 | tee /tmp/test-output.txt | tail -60` after any **source** Python change — if failures need detail, `cat /tmp/test-output.txt`. Do NOT re-run pytest separately.
    - `make test` runs ONLY `qws_graph/tests/unit/`. Integration tests are EXCLUDED — this is expected, not a bug.
+   - If you **only edited integration test files** (no source .py changes), **skip `make test`** — it will show 0 new tests and that is correct. Run integration tests at Step 7 only.
    - If you wrote integration tests, they will NOT appear in `make test` output. Run them at Step 7 via direct pytest. Do NOT search for pytest config to explain missing tests — the Makefile hardcodes the path.
 4. Run `make typecheck` on the project. Baseline is **0 errors** — any failure = you introduced it. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
 

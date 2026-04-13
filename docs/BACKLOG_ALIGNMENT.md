@@ -94,7 +94,7 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| Bundle Hypothesis Autolink + branched-from fix | QWS-HF-001 (**TESTING**) | `hypothesis_id` in bundle.json → auto TESTED_AS edge; single-call `--hypothesis + --branched-from` creates node + edge atomically | — |
+| Bundle Hypothesis Autolink + branched-from fix | QWS-HF-001 (**CLOSED**) | `hypothesis_id` in bundle.json → auto TESTED_AS edge; single-call `--hypothesis + --branched-from` creates node + edge atomically | — |
 | Phantom Champion ID Fix | QWS-0904 (**READY**) | Auto-promotion prints verified persisted ID (not pre-write hash); researcher can trust CLI output | — |
 
 ### Epic 9.5 — Workflow Hardening
@@ -110,7 +110,7 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| Research Ideas Layer | QWS-1301 (**READY**) | `queued` flag on Hypothesis; `queued_hypotheses` preset; lightweight mid-session idea intake; `BRANCHED_FROM` to Run | QWS-HF-001, QWS-0905 |
+| Research Ideas Layer | QWS-1301 (**READY**) | `queued` flag on Hypothesis; `queued_hypotheses` preset; lightweight mid-session idea intake; `BRANCHED_FROM` to Run | ~~QWS-HF-001~~, QWS-0905 |
 | Research Navigator Agent | QWS-1302 (**BLOCKED**) | `research-navigator` agent; ranked next-direction synthesis; Phase 3 mid-session pivot; proactive redundancy check | QWS-1301, QWS-0905, QWS-0906 |
 | Trial Engineer Agent | QWS-1303 (**BLOCKED**) | `trial-engineer` agent; generates trial script + bundle.json from hypothesis context; stops before run | QWS-1302, QWS-0907 |
 | Research Session Command Rewrite | QWS-1304 (**BLOCKED**) | `/research-session` orchestrates navigator + trial-engineer; handoff contract defined | QWS-1302, QWS-1303 |

@@ -1,7 +1,7 @@
 # QWS-HF-001 — Auto-link hypothesis from bundle manifest on ingest
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -136,4 +136,4 @@ if branched_from and not _looks_like_id(hypothesis_arg):
 ## Definition of Done
 - [x] All ACs passing (Fix 1 + Fix 2)
 - [x] Tests green
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
