@@ -199,7 +199,7 @@ Stories (independent — implement in parallel):
 - `QWS-0905` `epic_9_5_workflow_hardening/closed/story_QWS-0905_hypothesis_lookup_and_findings.md` — `CLOSED`
 - `QWS-0906` `epic_9_5_workflow_hardening/closed/story_QWS-0906_adhoc_cypher_and_patch.md` — `CLOSED`
 - `QWS-0907` `epic_9_5_workflow_hardening/closed/story_QWS-0907_trial_metadata_json_blob.md` — `CLOSED`
-- `QWS-0908` `epic_9_5_workflow_hardening/story_QWS-0908_cl_historical_data_extension.md` — `READY`
+- `QWS-0908` `epic_9_5_workflow_hardening/story_QWS-0908_cl_historical_data_extension.md` — `TESTING`
 
 ---
 

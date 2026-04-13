@@ -4,7 +4,7 @@
 QWS-0908
 
 ## Status
-READY
+TESTING
 
 ## Type
 infra
