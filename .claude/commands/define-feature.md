@@ -6,6 +6,8 @@ Two-agent flow: **qws-architect (Opus)** reasons, **product-owner (Sonnet)** wri
 
 ## Phase 1 — Feature analysis (qws-architect, Opus)
 
+**Do NOT read `.claude/agent-memory/qws-architect/` or `.claude/templates/architect-evaluation.md` before spawning — the architect agent reads these itself. Pre-loading duplicates tokens across both context windows.**
+
 Spawn qws-architect agent:
 ```
 Before analyzing: read your memory at .claude/agent-memory/qws-architect/ — apply any

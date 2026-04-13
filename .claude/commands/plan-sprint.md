@@ -6,21 +6,25 @@ Two-agent flow: **qws-architect (Opus)** evaluates, **product-owner (Sonnet)** w
 
 ## Phase 1 — Load context
 
-Read before analysis:
+**Fast-path:** Read item 1 first. If New Story Candidates is empty after cleanup, stop before loading items 2–6 — those docs are only needed if Phase 2 runs.
+
 1. `docs/BACKLOG_ALIGNMENT.md` — find **New Story Candidates** section (inputs)
+
+**Housekeeping:** If any candidate in New Story Candidates was already shipped (marked "shipped inline" or has matching CLOSED story), remove it from the table. Clean before analyzing.
+
+**STOP GATE: No candidates after cleanup → output "No sprint candidates. Nothing to plan." and stop. Do NOT proceed to Phase 2. Do NOT load items 2–6.**
+
 2. `docs/MANIFESTO.md` — hard constraints (Sharpe >= 2.0, <= 4h holding, alpha focus)
 3. `docs/PROVENANCE_ENGINE.md` — authoritative schema. Build two lists: **(a) current** (exists today), **(b) target** (marked `[TARGET]`, not yet built). Keep distinct.
 4. `docs/RESEARCH_WORKFLOW.md` — research loop; every story must advance or support a step
 5. `qws_graph/epics/INDEX.md` — existing epics, story IDs, status
 6. README.md for each PLANNED epic — scope boundaries
 
-**Housekeeping:** If any candidate in New Story Candidates was already shipped (marked "shipped inline" or has matching CLOSED story), remove it from the table. Clean before analyzing.
-
-No candidates after cleanup → report empty, stop.
-
 ---
 
 ## Phase 2 — Strategic evaluation (qws-architect, Opus)
+
+**Do NOT read `.claude/agent-memory/qws-architect/` or `.claude/templates/architect-evaluation.md` before spawning — the architect agent reads these itself. Pre-loading duplicates tokens across both context windows.**
 
 Spawn qws-architect agent with all loaded context:
 ```
