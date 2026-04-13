@@ -1221,6 +1221,32 @@ def cmd_query(args: argparse.Namespace) -> int:
         1: invalid preset name or params
         2: graph connection required but unavailable
     """
+    # Ad-hoc Cypher passthrough path (QWS-0906)
+    cypher_query: str | None = getattr(args, "cypher", None)
+    if cypher_query:
+        timeout_seconds = getattr(args, "timeout_seconds", 3)
+        connector = NeoConnector(timeout_seconds=timeout_seconds)
+        if not connector.is_available():
+            print(
+                f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)",
+                file=sys.stderr,
+            )
+            return 2
+        store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+        try:
+            results = store.run_adhoc_cypher(cypher_query)
+        except ValueError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        except (StoreError, StoreInfraError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        finally:
+            store.close()
+        for record in results:
+            print(json.dumps(record))
+        return 0
+
     name = "run_history" if getattr(args, "run_history", False) else args.name
     if not name:
         print("ERROR: specify --name <preset> or --run-history", file=sys.stderr)
@@ -1360,6 +1386,81 @@ def cmd_backfill(args: argparse.Namespace) -> int:
         print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
         return 2
 
+    return 0
+
+
+def cmd_patch(args: argparse.Namespace) -> int:
+    """Execute `qw patch` command — surgically update one property on a Run node.
+
+    Exit codes:
+        0: property updated
+        1: validation error (bad key, parse error, run not found)
+        2: graph connection required but unavailable
+    """
+    run_id: str = args.run_id
+    set_arg: str = args.set
+    dry_run: bool = getattr(args, "dry_run", False)
+    timeout_seconds = getattr(args, "timeout_seconds", 3)
+
+    # Parse key=value
+    if "=" not in set_arg:
+        print(f"ERROR: --set must be key=value, got: {set_arg!r}", file=sys.stderr)
+        return 1
+    key, _, value = set_arg.partition("=")
+    key = key.strip()
+    value = value.strip()
+
+    # Validate key whitelist before connecting
+    _patch_whitelist = frozenset(
+        {"profit_factor", "sharpe", "win_rate", "total_trades", "max_drawdown_r"}
+    )
+    _patch_blocked = frozenset({"run_id", "strategy_id", "created_at"})
+    if key in _patch_blocked or key not in _patch_whitelist:
+        print(
+            f"ERROR: key not patchable: {key!r} — "
+            f"allowed keys: {sorted(_patch_whitelist)}",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Coerce value
+    try:
+        coerced: float | str = float(value)
+    except (ValueError, TypeError):
+        coerced = value
+
+    if dry_run:
+        print(
+            f"DRY-RUN: MATCH (r:Run {{run_id: {run_id!r}}}) "
+            f"SET r[{key!r}] = {coerced!r}, r.updated_at = datetime()"
+        )
+        return 0
+
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(
+            f"ERROR: Neo4j unavailable (timeout after {timeout_seconds}s)",
+            file=sys.stderr,
+        )
+        return 2
+
+    store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+    try:
+        found = store.patch_run(run_id=run_id, key=key, value=value)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    except (StoreError, StoreInfraError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        store.close()
+
+    if not found:
+        print(f"ERROR: run not found: {run_id!r}", file=sys.stderr)
+        return 1
+
+    print(f"OK: patched Run {run_id!r} — set {key}={coerced!r}")
     return 0
 
 
@@ -1834,6 +1935,16 @@ def main() -> int:
         default=None,
         help="Repository root directory (auto-detected if not provided)",
     )
+    query_parser.add_argument(
+        "--cypher",
+        default=None,
+        metavar="QUERY",
+        help=(
+            "Ad-hoc read-only Cypher query. "
+            "Write keywords (CREATE, MERGE, SET, DELETE, REMOVE, DROP, CALL, LOAD) are blocked. "
+            "Output: JSON lines (one record per line)."
+        ),
+    )
     query_parser.set_defaults(func=cmd_query)
 
     # `qw backfill` subcommand
@@ -1967,6 +2078,41 @@ def main() -> int:
         help="Neo4j connection timeout in seconds (default 3)",
     )
     monitor_parser.set_defaults(func=cmd_monitor)
+
+    # `qw patch` subcommand (QWS-0906)
+    _patch_whitelist_display = sorted(
+        {"profit_factor", "sharpe", "win_rate", "total_trades", "max_drawdown_r"}
+    )
+    patch_parser = subparsers.add_parser(
+        "patch",
+        help="Surgically update one property on a Run node",
+    )
+    patch_parser.add_argument(
+        "--run",
+        required=True,
+        metavar="RUN_ID",
+        dest="run_id",
+        help="Run node ID to update",
+    )
+    patch_parser.add_argument(
+        "--set",
+        required=True,
+        metavar="KEY=VALUE",
+        help=f"Property and value to set. Allowed keys: {_patch_whitelist_display}",
+    )
+    patch_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        dest="dry_run",
+        help="Print the Cypher that would execute without writing to DB",
+    )
+    patch_parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=3,
+        help="Neo4j connection timeout in seconds (default 3)",
+    )
+    patch_parser.set_defaults(func=cmd_patch)
 
     # Parse arguments
     args = parser.parse_args()

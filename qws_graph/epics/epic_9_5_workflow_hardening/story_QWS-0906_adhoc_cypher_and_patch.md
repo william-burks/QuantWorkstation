@@ -45,15 +45,59 @@ Researcher runs `qw query --cypher "MATCH (s:Strategy) RETURN s LIMIT 10"` for a
 - `qws_graph/tests/unit/test_patch_run.py` — new
 
 ## Acceptance Criteria
-- [ ] `qw query --cypher "MATCH (r:Run) RETURN r.run_id LIMIT 5"` returns JSON lines
-- [ ] `qw query --cypher "SET r.sharpe = 1"` exits non-zero with "write operation not permitted" message
-- [ ] `qw query --cypher "MERGE (x:X)"` exits non-zero
-- [ ] `qw patch --run <id> --set sharpe=2.5` updates `sharpe` on correct Run node
-- [ ] `qw patch --run <id> --set run_id=bad` exits non-zero with "key not patchable" message
-- [ ] `qw patch --run <id> --set sharpe=2.5 --dry-run` prints Cypher, makes no DB change
-- [ ] `qw patch --run nonexistent --set sharpe=1.0` exits non-zero with "run not found"
+- [x] `qw query --cypher "MATCH (r:Run) RETURN r.run_id LIMIT 5"` returns JSON lines
+- [x] `qw query --cypher "SET r.sharpe = 1"` exits non-zero with "write operation not permitted" message
+- [x] `qw query --cypher "MERGE (x:X)"` exits non-zero
+- [x] `qw patch --run <id> --set sharpe=2.5` updates `sharpe` on correct Run node
+- [x] `qw patch --run <id> --set run_id=bad` exits non-zero with "key not patchable" message
+- [x] `qw patch --run <id> --set sharpe=2.5 --dry-run` prints Cypher, makes no DB change
+- [x] `qw patch --run nonexistent --set sharpe=1.0` exits non-zero with "run not found"
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
+- [x] All ACs passing
+- [x] Tests green
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: qw query --cypher returns JSON lines
+- type: cli
+- cmd: `source .venv/bin/activate && python -m research.graph.cli query --cypher "MATCH (r:Run) WHERE r.is_demo = true RETURN r.run_id LIMIT 5"`
+- expect_contains: `"run_id"`
+- expect_exit: 0
+
+### AC2: qw query --cypher blocks SET
+- type: cli
+- cmd: `source .venv/bin/activate && python -m research.graph.cli query --cypher "SET r.sharpe = 1"; echo "exit:$?"`
+- expect_contains: `write operation not permitted`
+- expect_exit: 1
+
+### AC3: qw query --cypher blocks MERGE
+- type: cli
+- cmd: `source .venv/bin/activate && python -m research.graph.cli query --cypher "MERGE (x:X)"; echo "exit:$?"`
+- expect_contains: `write operation not permitted`
+- expect_exit: 1
+
+### AC4: qw patch updates sharpe on Run node
+- type: regression
+- cmd: `source .venv/bin/activate && python -m research.graph.cli patch --run demo_run_001 --set sharpe=9.9`
+- expect_contains: `OK`
+- expect_exit: 0
+
+### AC5: qw patch rejects run_id key
+- type: cli
+- cmd: `source .venv/bin/activate && python -m research.graph.cli patch --run demo_run_001 --set run_id=bad; echo "exit:$?"`
+- expect_contains: `key not patchable`
+- expect_exit: 1
+
+### AC6: qw patch --dry-run prints Cypher without writing
+- type: cli
+- cmd: `source .venv/bin/activate && python -m research.graph.cli patch --run demo_run_001 --set sharpe=2.5 --dry-run`
+- expect_contains: `DRY-RUN`
+- expect_exit: 0
+
+### AC7: qw patch nonexistent run_id exits 1 with run not found
+- type: cli
+- cmd: `source .venv/bin/activate && python -m research.graph.cli patch --run nonexistent_run_abc --set sharpe=1.0; echo "exit:$?"`
+- expect_contains: `run not found`
+- expect_exit: 1

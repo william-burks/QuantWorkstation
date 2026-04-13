@@ -624,6 +624,23 @@ MERGE (fc)-[e:RETIRED_TO]->(rc)
 RETURN rc.champion_id AS retired_champion_id
 """
 
+# ---------------------------------------------------------------------------
+# Ad-hoc Cypher passthrough + qw patch (QWS-0906)
+# ---------------------------------------------------------------------------
+
+RUN_ADHOC_CYPHER_QUERY = "{cypher}"  # sentinel — caller substitutes at runtime
+
+GET_RUN_BY_ID_QUERY = """
+MATCH (r:Run {run_id: $run_id})
+RETURN r.run_id AS run_id
+""".strip()
+
+PATCH_RUN_QUERY = """
+MATCH (r:Run {run_id: $run_id})
+SET r[$key] = $value, r.updated_at = datetime()
+RETURN r.run_id AS run_id
+""".strip()
+
 GET_FORMER_CHAMPIONS_V1_CYPHER = """
 MATCH (fc:FormerChampion)
 OPTIONAL MATCH (fc)-[:RETIRED_TO]->(rc:RetiredChampion)

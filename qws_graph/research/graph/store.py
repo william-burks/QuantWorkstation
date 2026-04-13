@@ -39,9 +39,11 @@ from .cypher import (
     HYPOTHESIS_TESTED_AS_QUERY,
     HYPOTHESIS_UPDATE_FINDINGS_QUERY,
     HYPOTHESIS_UPDATE_STATUS_QUERY,
+    GET_RUN_BY_ID_QUERY,
     PATCH_FAMILY_ID_QUERY,
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
+    PATCH_RUN_QUERY,
     REGIME_MERGE_QUERY,
     RETIRE_FORMER_CHAMPION_QUERY,
     RUN_REDUNDANCY_CHECK_CYPHER,
@@ -715,6 +717,106 @@ class GraphStore:
                     return result is not None
 
                 return session.execute_read(_read)
+
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    # ---------------------------------------------------------------------------
+    # Ad-hoc Cypher passthrough + patch (QWS-0906)
+    # ---------------------------------------------------------------------------
+
+    _WRITE_KEYWORDS: frozenset[str] = frozenset(
+        {"CREATE", "MERGE", "SET", "DELETE", "REMOVE", "DROP", "CALL", "LOAD"}
+    )
+
+    _PATCH_RUN_WHITELIST: frozenset[str] = frozenset(
+        {"profit_factor", "sharpe", "win_rate", "total_trades", "max_drawdown_r"}
+    )
+
+    def run_adhoc_cypher(self, cypher: str) -> list[dict]:
+        """Execute a read-only Cypher query and return results as a list of dicts.
+
+        Args:
+            cypher: Cypher query string. Must not start with a write keyword.
+
+        Returns:
+            List of result records as plain dicts.
+
+        Raises:
+            ValueError: When the query starts with a write keyword.
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        stripped = cypher.lstrip()
+        # strip single-line comments before checking keyword
+        if stripped.startswith("//"):
+            # drop first comment line, check rest
+            stripped = "\n".join(
+                line for line in stripped.splitlines() if not line.strip().startswith("//")
+            ).lstrip()
+        first_token = stripped.split()[0].upper() if stripped.split() else ""
+        if first_token in self._WRITE_KEYWORDS:
+            raise ValueError(
+                f"write operation not permitted: {first_token} is a write keyword"
+            )
+        try:
+            with self._driver.session(database=self._database) as session:
+
+                def _read(tx) -> list[dict]:
+                    result = tx.run(cypher)
+                    return [dict(record) for record in result]
+
+                return session.execute_read(_read)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def patch_run(self, run_id: str, key: str, value: str) -> bool:
+        """Surgically update one whitelisted property on a Run node.
+
+        Args:
+            run_id: Target Run node ID.
+            key: Property name — must be in the whitelist.
+            value: String value; coerced to float when parseable, else stored as str.
+
+        Returns:
+            True when found and updated, False when run_id not found.
+
+        Raises:
+            ValueError: When key is not in the whitelist or run_id is empty.
+            StoreInfraError: On Neo4j connectivity or execution failure.
+        """
+        if not run_id or not run_id.strip():
+            raise ValueError("run_id must be non-empty")
+        if key not in self._PATCH_RUN_WHITELIST:
+            raise ValueError(
+                f"key not patchable: {key!r} — allowed keys: {sorted(self._PATCH_RUN_WHITELIST)}"
+            )
+        # Type-coerce value string
+        try:
+            coerced: float | str = float(value)
+        except (ValueError, TypeError):
+            coerced = value
+
+        try:
+            with self._driver.session(database=self._database) as session:
+
+                def _check(tx) -> bool:
+                    result = tx.run(GET_RUN_BY_ID_QUERY, run_id=run_id).single()
+                    return result is not None
+
+                found = session.execute_read(_check)
+                if not found:
+                    return False
+
+                def _write(tx) -> list:
+                    result = tx.run(PATCH_RUN_QUERY, run_id=run_id, key=key, value=coerced)
+                    return list(result)
+
+                records = session.execute_write(_write)
+                return len(records) > 0
 
         except Neo4jError as exc:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
