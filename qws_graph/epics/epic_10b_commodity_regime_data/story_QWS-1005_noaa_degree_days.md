@@ -60,18 +60,56 @@ Series to collect (initial set):
 - `tests/unit/test_noaa_collector.py` — new
 
 ## Acceptance Criteria
-- [ ] `data/collectors/noaa.py` exists and is importable
-- [ ] `macro` ArcticDB library created on first run (or reuses existing)
-- [ ] All 4 series write successfully with `value` column and DatetimeIndex
-- [ ] Re-running collector is idempotent (appends only new dates; no duplicates)
-- [ ] `noaa_api_key` and `noaa_series` present in `data/config.py`
-- [ ] `tests/unit/test_noaa_collector.py` passes with mocked `requests.get` (no live API calls in tests)
+- [x] `data/collectors/noaa.py` exists and is importable
+- [x] `macro` ArcticDB library created on first run (or reuses existing)
+- [x] All 4 series write successfully with `value` column and DatetimeIndex
+- [x] Re-running collector is idempotent (appends only new dates; no duplicates)
+- [x] `noaa_api_key` and `noaa_series` present in `data/config.py`
+- [x] `tests/unit/test_noaa_collector.py` passes with mocked `requests.get` (no live API calls in tests)
 - [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing
 - [ ] Tests green
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: noaa.py exists and is importable
+- type: cli
+- cmd: `python -c "from data.collectors.noaa import collect, DEFAULT_SERIES, _SERIES_MAP; print(len(DEFAULT_SERIES))"`
+- expect_contains: "4"
+- expect_exit: 0
+
+### AC2: macro library used (write_series called with lib="macro")
+- type: regression
+- cmd: `python -m pytest tests/unit/test_noaa_collector.py::test_collect_writes_all_four_series -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC3: All 4 series write with value column and DatetimeIndex
+- type: cli
+- cmd: `python -m pytest tests/unit/test_noaa_collector.py::test_collect_written_df_has_value_column_and_datetime_index -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC4: Idempotent — incremental fetch passes start_date
+- type: cli
+- cmd: `python -m pytest tests/unit/test_noaa_collector.py::test_collect_incremental_passes_start_date -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC5: noaa_api_key and noaa_series in config.py
+- type: file_check
+- cmd: `python -c "from data.config import Settings; s = Settings.model_fields; print('noaa_api_key' in s and 'noaa_series' in s)"`
+- expect_contains: "True"
+- expect_exit: 0
+
+### AC6: Unit tests pass with mocked requests.get
+- type: cli
+- cmd: `python -m pytest tests/unit/test_noaa_collector.py -v`
+- expect_contains: "passed"
+- expect_exit: 0
 
 ## Dependencies
 - Requires NOAA API key (free registration at https://www.ncdc.noaa.gov/cdo-web/webservices/v2)

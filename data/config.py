@@ -85,6 +85,16 @@ class Settings(BaseSettings):
     # Loaded from FMP_API_KEY env var
     fmp_api_key: str = ""
 
+    # NOAA Climate Data Online API key — free from https://www.ncdc.noaa.gov/cdo-web/token
+    # Loaded from NOAA_API_KEY env var; stored as export in ~/.zshrc per security rules
+    noaa_api_key: str = ""
+    noaa_series: list[str] = [
+        "NOAA_HDD_NATIONAL",
+        "NOAA_CDD_NATIONAL",
+        "NOAA_HDD_NORTHEAST",
+        "NOAA_HDD_MIDWEST",
+    ]
+
     # Google Trends search terms to collect (see data/collectors/google_trends.py)
     gtrends_terms: list[str] = [
         "buy gold",
