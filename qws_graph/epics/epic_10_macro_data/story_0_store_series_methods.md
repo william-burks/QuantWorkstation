@@ -4,7 +4,7 @@
 QWS-1000
 
 ## Status
-READY
+TESTING
 
 ## Type
 code
