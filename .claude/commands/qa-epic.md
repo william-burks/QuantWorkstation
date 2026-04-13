@@ -46,6 +46,18 @@ Do not `ls` the epics directory — INDEX.md is the source of truth for story pa
 ## Step 2 — Per-story review
 For each CLOSED story, write all results to `/tmp/qa_epic_$ARGUMENTS_<STORY_ID>.txt` as they complete.
 
+### 2-scope — Read scope boundary (FIRST action per story, before any test or grep)
+Read the story file. Extract the `## In Scope` and `## Out of Scope` sections.
+These define your review boundary for this story — you are DONE reading the story file after this step.
+Do NOT grep for scope sections. Do NOT re-read the story file later in the review.
+Write the scope boundary to the story tmp file as the first entry:
+```
+# Scope boundary
+In scope: <list from story file>
+Out of scope: <list from story file>
+```
+Only verify ACs, run tests, and check lint for items that appear in `## In Scope`. Skip anything in `## Out of Scope` without investigation.
+
 ### 2a — Re-run Acceptance Test Plan
 Execute every test step in `## Acceptance Test Plan`. Append results to story tmp file.
 **Skip any test step that runs research scripts (`python -m research.*`, `python -m analytics.*`) or requires a live Neo4j query** — these are validated by unit tests in Step 2b.

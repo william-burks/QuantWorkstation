@@ -123,7 +123,7 @@ Full detail lives in git commits. Do not return test output or diffs.
 ```
 
 ### 4c-result — Route Spawn A outcome
-- **TESTING** → proceed to Spawn B (close)
+- **TESTING** → proceed to 4c-audit, then Spawn B (close)
 - **BLOCKED | assumption | \<question\>** → check `.claude/agent-memory/lead-engineer/` for an existing ruling on this question first. If found, write to `/tmp/ruling_<STORY_ID>.txt` and re-spawn Spawn A directly — skip architect entirely.
   If not found → spawn qws-architect (Opus):
   ```
@@ -143,6 +143,50 @@ Full detail lives in git commits. Do not return test output or diffs.
   ```
   Max 1 assumption resolution per story → second BLOCKED | assumption → needs-attention
 - **BLOCKED/FAILED** → add to needs-attention list, mark dependent stories skipped
+
+### 4c-audit — Capture lead-engineer trace (runs after every TESTING outcome)
+1. Find trace:
+```
+ls /tmp/agent-trace-lead-engineer-*.jsonl 2>/dev/null
+```
+If not found → skip to 4c-close (no trace to audit — Bash or hook may not have written it).
+If found:
+2. Generate audit run_id:
+```
+date -u +%Y%m%dT%H%M%S
+```
+3. Move to story-keyed name:
+```
+mv /tmp/agent-trace-lead-engineer-*.jsonl /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl
+```
+4. Ensure CSV exists:
+```
+mkdir -p docs/agent-metrics
+```
+If `docs/agent-metrics/lead_engineer_runs.csv` does not exist, write header:
+```
+echo "run_id,timestamp,epic,story_id,branch,model,total_calls,necessary,wasted,waste_pct,verdict,acs_passed,assumption_count,top_waste_pattern" > docs/agent-metrics/lead_engineer_runs.csv
+```
+5. Spawn qa-auditor (quiet):
+```
+Audit the agent trace at /tmp/agent-trace-lead-engineer-<STORY_ID>.jsonl
+(use the actual story-keyed filename from above).
+Expected steps are in .claude/commands/implement-story.md.
+Story: <STORY_ID>. Epic: <N>. Agent: lead-engineer. Model: sonnet. Run ID: <RUN_ID from step 2>.
+Verdict for this story: TESTING.
+Mode: quiet — categorize each call, return summary only.
+Return exactly two lines:
+  AUDIT: <total> calls, <necessary> necessary, <wasted> wasted, <waste_pct>% waste | top: <pattern>
+  CSV: <run_id>,<timestamp>,<epic>,<story_id>,<branch>,sonnet,<total>,<necessary>,<wasted>,<waste_pct>,TESTING,,,<top_pattern>
+```
+6. Extract the CSV line (line starting with `CSV:`). Append to CSV:
+```
+echo "<CSV line without the CSV: prefix>" >> docs/agent-metrics/lead_engineer_runs.csv
+```
+7. Clean up trace:
+```
+rm -f /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl 2>/dev/null || true
+```
 
 ### 4c-close — Spawn B: close only (product-owner agent)
 Prompt:
