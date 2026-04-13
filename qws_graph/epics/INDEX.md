@@ -216,7 +216,7 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 - `QWS-1003` `epic_10_macro_data[COMPLETE]/closed/story_eia_crude_collector.md` — `CLOSED` (QWS-1000)
 - `QWS-1004` `epic_10_macro_data[COMPLETE]/closed/story_baker_hughes_rig_count.md` — `CLOSED` (QWS-1000)
 - `QWS-1005` `epic_10_macro_data[COMPLETE]/story_noaa_degree_days.md` — `CLOSED` (out-of-scope instrument, never attempted)
-- `QWS-1006` `epic_10_macro_data[COMPLETE]/story_usda_crop_progress.md` — `TESTING` (out-of-scope instrument, never attempted)
+- `QWS-1006` `epic_10_macro_data[COMPLETE]/story_usda_crop_progress.md` — `CLOSED` (out-of-scope instrument, never attempted)
 - `QWS-1007` `epic_10_macro_data[COMPLETE]/closed/story_google_trends.md` — `CLOSED` (QWS-1000)
 - `QWS-1008` `epic_10_macro_data[COMPLETE]/closed/story_bdti_tanker_index.md` — `CLOSED` (QWS-1000)
 - `QWS-1009` `epic_10_macro_data[COMPLETE]/closed/story_economic_calendar_collector.md` — `CLOSED` (QWS-1000)
@@ -235,7 +235,7 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 
 Stories (independent — implement in parallel):
 - `QWS-1005` `epic_10b_commodity_regime_data/closed/story_QWS-1005_noaa_degree_days.md` — `CLOSED`
-- `QWS-1006` `epic_10b_commodity_regime_data/story_QWS-1006_usda_crop_progress.md` — `TESTING`
+- `QWS-1006` `epic_10b_commodity_regime_data/closed/story_QWS-1006_usda_crop_progress.md` — `CLOSED`
 - `QWS-1011` `epic_10b_commodity_regime_data/story_QWS-1011_ndvi_crop_health.md` — `READY`
 - `QWS-1013` `epic_10b_commodity_regime_data/closed/story_QWS-1013_macro_prefect_flow.md` — `CLOSED`
 

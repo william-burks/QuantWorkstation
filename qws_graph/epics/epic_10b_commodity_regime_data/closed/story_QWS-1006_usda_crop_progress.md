@@ -4,7 +4,7 @@
 QWS-1006
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
