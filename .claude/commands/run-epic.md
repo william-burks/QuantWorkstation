@@ -113,6 +113,8 @@ make prime-agent
 ```
 Prompt:
 ```
+CURRENT STORY: <STORY_ID>. All prior stories are CLOSED. Do not reference them.
+
 For story <STORY_ID>:
 1. Read and execute .claude/commands/implement-story.md for <STORY_ID>
 2. Read and execute .claude/commands/verify-story.md for <STORY_ID>
