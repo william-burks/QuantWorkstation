@@ -17,21 +17,32 @@ fi
 REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 EPICS_DIR="$REPO_ROOT/qws_graph/epics"
 
+# Primary: story ID in filename (most reliable — avoids README/INDEX false matches)
 if [[ "$CLOSED" == "--closed" ]]; then
-    RESULT=$(grep -rl "^${STORY_ID}$" "$EPICS_DIR" 2>/dev/null | head -1)
+    RESULT=$(find "$EPICS_DIR" -name "${STORY_ID}*.md" 2>/dev/null | head -1)
 else
-    # Exclude closed/ subdirectories by default
-    RESULT=$(grep -rl "^${STORY_ID}$" "$EPICS_DIR" 2>/dev/null \
+    RESULT=$(find "$EPICS_DIR" -name "${STORY_ID}*.md" 2>/dev/null \
         | grep -v '/closed/' | head -1)
 fi
 
+# Secondary: standalone ID on its own line in file content
 if [[ -z "$RESULT" ]]; then
-    # Fallback: match ID line as standalone value under ## ID heading
     if [[ "$CLOSED" == "--closed" ]]; then
-        RESULT=$(grep -rl "$STORY_ID" "$EPICS_DIR" 2>/dev/null | head -1)
+        RESULT=$(grep -rl "^${STORY_ID}$" "$EPICS_DIR" 2>/dev/null | head -1)
+    else
+        RESULT=$(grep -rl "^${STORY_ID}$" "$EPICS_DIR" 2>/dev/null \
+            | grep -v '/closed/' | head -1)
+    fi
+fi
+
+# Tertiary: ID anywhere in file (README/INDEX excluded by name to avoid false matches)
+if [[ -z "$RESULT" ]]; then
+    if [[ "$CLOSED" == "--closed" ]]; then
+        RESULT=$(grep -rl "$STORY_ID" "$EPICS_DIR" 2>/dev/null \
+            | grep -v '/README\.md\|/INDEX\.md' | head -1)
     else
         RESULT=$(grep -rl "$STORY_ID" "$EPICS_DIR" 2>/dev/null \
-            | grep -v '/closed/' | head -1)
+            | grep -v '/closed/' | grep -v '/README\.md\|/INDEX\.md' | head -1)
     fi
 fi
 
