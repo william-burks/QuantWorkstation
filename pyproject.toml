@@ -17,6 +17,7 @@ dependencies = [
     "ib_insync>=0.9",
     # Scheduling
     "APScheduler>=3.10",
+    "prefect>=3.0",
     # Research engines
     "vectorbt>=0.26",
     "backtrader>=1.9",
