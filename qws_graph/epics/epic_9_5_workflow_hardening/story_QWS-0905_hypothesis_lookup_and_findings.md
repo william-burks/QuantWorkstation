@@ -34,6 +34,7 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - Preset `hypotheses_by_status`: lists all hypotheses grouped by status (`open`, `confirmed`, `rejected`); columns: `hypothesis_id`, `title`, `findings` (truncated 80 chars), `created_at`
 - Preset `hypothesis_search`: accepts `title_fragment` parameter; returns matching hypotheses with `hypothesis_id`, `title`, `status`, `findings`
 - `data_dictionary.yaml` updated with `findings` property
+- `PROVENANCE_ENGINE.md` Hypothesis Key Properties table updated with `findings` entry
 - Tests for both presets and `--findings` flag
 
 ## Out of Scope
@@ -46,8 +47,8 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - `qws_graph/docs/data_dictionary.yaml` — add `findings` to Hypothesis entry
 - `qws_graph/research/graph/store.py` — `update_hypothesis_findings()` method
 - `qws_graph/research/graph/cli.py` — `--findings` flag on `record --hypothesis`
-- `qws_graph/research/graph/query_presets.py` — register `hypotheses_by_status` + `hypothesis_search` in `PRESET_CATALOG`
-- `qws_graph/research/graph/query.py` — implement preset view functions
+- `qws_graph/research/graph/query_presets.py` + `query.py` — register + implement `hypotheses_by_status`, `hypothesis_search`
+- `docs/PROVENANCE_ENGINE.md` — add `findings` to Hypothesis Key Properties table
 - `qws_graph/tests/unit/test_hypothesis_presets.py` — new
 
 ## Acceptance Criteria
@@ -55,6 +56,7 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - [ ] `qw query --name hypotheses_by_status` returns all hypotheses sorted by status; `findings` truncated at 80 chars
 - [ ] `qw query --name hypothesis_search --param title_fragment=sweep` returns hypotheses with "sweep" in title
 - [ ] `data_dictionary.yaml` has `findings` entry under `Hypothesis`
+- [ ] `PROVENANCE_ENGINE.md` Hypothesis Key Properties table includes `findings`
 - [ ] `--findings` on unknown `hypothesis_id` returns error, exits non-zero
 
 ## Definition of Done

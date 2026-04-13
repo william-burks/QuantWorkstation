@@ -37,6 +37,7 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - 10KB size guard at ingest: if `json.dumps(trial_metadata)` exceeds 10240 bytes, print WARNING and skip `trial_metadata` write; ingest continues and succeeds
 - Unknown CSV columns continue to emit WARNING (no change)
 - `data_dictionary.yaml` updated with `trial_metadata` entry
+- `PROVENANCE_ENGINE.md` Run Key Properties table updated with `trial_metadata` entry
 
 ## Out of Scope
 - No `trial_metadata` on non-Run nodes
@@ -49,6 +50,7 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - `qws_graph/docs/data_dictionary.yaml` — add `trial_metadata` to Run entry
 - `qws_graph/research/graph/store.py` — write `trial_metadata` map on `record_run()`
 - `qws_graph/research/graph/cli.py` — pass `trial_metadata` from parsed manifest to store
+- `docs/PROVENANCE_ENGINE.md` — add `trial_metadata` to Run Key Properties table
 - `qws_graph/tests/unit/test_bundle_metadata.py` — new
 
 ## Acceptance Criteria
@@ -57,6 +59,7 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - [ ] Bundle with `trial_metadata` > 10KB → WARNING printed, ingest succeeds, `trial_metadata` absent on node
 - [ ] Unknown CSV columns still emit WARNING (behavior unchanged)
 - [ ] `data_dictionary.yaml` has `trial_metadata` entry under `Run`
+- [ ] `PROVENANCE_ENGINE.md` Run Key Properties table includes `trial_metadata`
 
 ## Definition of Done
 - [ ] data_dictionary.yaml updated
