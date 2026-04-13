@@ -140,7 +140,7 @@
 | USDA Crop Progress | QWS-1006 (**BLOCKED**) | USDA weekly crop progress data in ArcticDB | ~~QWS-1000~~ |
 | Google Trends | QWS-1007 (**CLOSED**) | Google Trends signals in ArcticDB | ~~QWS-1000~~ |
 | BDTI Tanker Index | QWS-1008 (**CLOSED**) | Baltic Dirty Tanker Index data in ArcticDB | ~~QWS-1000~~ |
-| Economic Calendar Collector | QWS-1009 (**BLOCKED**) | Economic event calendar data in ArcticDB | ~~QWS-1000~~ |
+| Economic Calendar Collector | QWS-1009 (**TESTING**) | Economic event calendar data in ArcticDB | ~~QWS-1000~~ |
 | Data Quality Validation | QWS-1010 (**CLOSED**) | Validation gate — alerts on missing bars, stale feeds, schema drift | — |
 | NDVI Crop Health Collector | QWS-1011 (**BLOCKED**) | NDVI crop health index in ArcticDB | ~~QWS-1000~~ |
 | Strategy Class Taxonomy | QWS-1012 (**CLOSED**) ⚠️ | `strategy_class` free-form string on Strategy; `portfolio_by_class` preset; `qw backfill --strategy-class`; `bundle.json` reads `strategy_class` | — |
