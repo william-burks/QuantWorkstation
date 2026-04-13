@@ -66,6 +66,11 @@ except ImportError:  # standards.py not on path in some test environments
 _PROMOTION_MIN_TRADES: int = 30
 
 
+def _looks_like_id(s: str) -> bool:
+    """Return True if *s* looks like a 12-char hex hypothesis ID."""
+    return len(s) == 12 and all(c in "0123456789abcdef" for c in s.lower())
+
+
 def _evaluate_promotion_candidates(
     runs: list[Run],
     persisted_run_ids: set[str],
@@ -461,6 +466,31 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
                             )
                     except Exception:  # noqa: BLE001
                         pass  # correlation check is advisory; never block ingest
+
+            # Fix QWS-HF-001: auto-link hypothesis when bundle.json contains hypothesis_id
+            hypothesis_id_manifest = manifest.get("hypothesis_id")
+            ingest_ok = any(o.status != "skipped" for o in result.evolution)
+            if hypothesis_id_manifest and ingest_ok:
+                strategy_id = artifact.strategy.strategy_id
+                try:
+                    linked = store.link_hypothesis_tested_as(hypothesis_id_manifest, strategy_id)
+                    if linked:
+                        print(
+                            f"OK: TESTED_AS edge — hypothesis={hypothesis_id_manifest}"
+                            f" strategy={strategy_id}"
+                        )
+                    else:
+                        print(
+                            f"WARNING: hypothesis {hypothesis_id_manifest!r} not found"
+                            f" — TESTED_AS edge skipped",
+                            file=sys.stderr,
+                        )
+                except StoreError:
+                    print(
+                        f"WARNING: hypothesis {hypothesis_id_manifest!r} not found"
+                        f" — TESTED_AS edge skipped",
+                        file=sys.stderr,
+                    )
         finally:
             store.close()
     except StoreInfraError as exc:
@@ -794,6 +824,27 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
                 if not rationale:
                     print("ERROR: --rationale is required with --branched-from", file=sys.stderr)
                     return 1
+
+                # Fix QWS-HF-001 (GAP-010): title string + --branched-from → create node first
+                if not _looks_like_id(hypothesis_arg):
+                    title = hypothesis_arg
+                    if not title:
+                        print(
+                            "ERROR: --hypothesis requires a non-empty title or ID",
+                            file=sys.stderr,
+                        )
+                        return 1
+                    if len(title) > 200:
+                        print(
+                            "ERROR: hypothesis title must be ≤ 200 characters",
+                            file=sys.stderr,
+                        )
+                        return 1
+                    created_at_iso = datetime.now(UTC).isoformat()
+                    hypothesis_id = _ids.hash12(title, created_at_iso)
+                    store.create_hypothesis(hypothesis_id=hypothesis_id, title=title, source="user")
+                    print(f"OK: Hypothesis created — id={hypothesis_id}")
+
                 store.link_hypothesis_branched_from(hypothesis_id, branched_from, rationale)
                 print(
                     f"OK: BRANCHED_FROM edge created"
