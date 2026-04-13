@@ -4,7 +4,7 @@
 QWS-1100a
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 infra
@@ -49,8 +49,8 @@ Data collection jobs and latency-sensitive risk jobs share `execution/scheduler.
 - [x] `make verify` passes
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Story marked CLOSED
+- [x] All ACs passing
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
