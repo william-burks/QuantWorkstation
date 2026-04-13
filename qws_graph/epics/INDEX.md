@@ -217,7 +217,7 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 - `QWS-1006` `epic_10_macro_data/story_usda_crop_progress.md` — `CLOSED` (QWS-1000)
 - `QWS-1007` `epic_10_macro_data/closed/story_google_trends.md` — `CLOSED` (QWS-1000)
 - `QWS-1008` `epic_10_macro_data/closed/story_bdti_tanker_index.md` — `CLOSED` (QWS-1000)
-- `QWS-1009` `epic_10_macro_data/story_economic_calendar_collector.md` — `TESTING` (QWS-1000)
+- `QWS-1009` `epic_10_macro_data/closed/story_economic_calendar_collector.md` — `CLOSED` (QWS-1000)
 - `QWS-1010` `epic_10_macro_data/closed/story_data_quality_validation.md` — `CLOSED`
 - `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `CLOSED` (QWS-1000)
 - `QWS-1012` `epic_10_macro_data/closed/story_QWS-1012_strategy_class_taxonomy.md` — `CLOSED`

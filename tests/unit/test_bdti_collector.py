@@ -4,14 +4,13 @@ Unit tests for the BDTI (Baltic Dirty Tanker Index) collector.
 All requests.get calls and store writes are mocked — no live API calls in tests.
 """
 
-from datetime import timezone
-from unittest.mock import MagicMock, call, patch
+from datetime import UTC
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
 from data.collectors.bdti import ARC_KEY, NDQL_DATASET, _fetch_bdti, collect
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -72,7 +71,7 @@ def test_fetch_bdti_index_is_utc_datetime():
         df = _fetch_bdti("test-key", None)
 
     assert pd.api.types.is_datetime64_any_dtype(df.index)
-    assert df.index.tz == timezone.utc
+    assert df.index.tz == UTC
 
 
 def test_fetch_bdti_sorted_ascending():

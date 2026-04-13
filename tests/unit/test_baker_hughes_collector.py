@@ -4,7 +4,7 @@ Unit tests for the Baker Hughes North America rig count collector.
 All requests.get calls and store writes are mocked — no live HTTP calls.
 """
 
-from datetime import timezone
+from datetime import UTC
 from io import BytesIO
 from unittest.mock import MagicMock, patch
 
@@ -19,7 +19,6 @@ from data.collectors.baker_hughes import (
     _parse_na_rig_count,
     collect,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixture helpers
@@ -126,7 +125,7 @@ def test_parse_index_is_utc_datetime():
 
     for key, df in result.items():
         assert pd.api.types.is_datetime64_any_dtype(df.index), f"{key} index not datetime"
-        assert df.index.tz == timezone.utc, f"{key} index not UTC"
+        assert df.index.tz == UTC, f"{key} index not UTC"
 
 
 def test_parse_correct_row_count():
@@ -243,7 +242,7 @@ def test_collect_written_df_has_count_column_and_datetime_index():
         df = written[key]
         assert "count" in df.columns
         assert pd.api.types.is_datetime64_any_dtype(df.index)
-        assert df.index.tz == timezone.utc
+        assert df.index.tz == UTC
 
 
 def test_collect_incremental_appends_only_new_rows():

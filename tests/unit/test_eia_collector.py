@@ -4,8 +4,7 @@ Unit tests for the EIA crude oil inventory collector.
 All requests.get calls and store writes are mocked — no live API calls in tests.
 """
 
-import json
-from datetime import timezone
+from datetime import UTC
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -17,7 +16,6 @@ from data.collectors.eia import (
     _fetch_series,
     collect,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -89,7 +87,7 @@ def test_fetch_series_index_is_utc_datetime():
         df = _fetch_series("fake-key", "WCRSTUS1", None)
 
     assert pd.api.types.is_datetime64_any_dtype(df.index)
-    assert df.index.tz == timezone.utc
+    assert df.index.tz == UTC
 
 
 def test_fetch_series_empty_response_returns_empty_df():

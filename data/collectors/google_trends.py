@@ -37,8 +37,8 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 try:
-    from pytrends.request import TrendReq
     from pytrends.exceptions import ResponseError
+    from pytrends.request import TrendReq
 
     _PYTRENDS_AVAILABLE = True
 except ImportError:

@@ -4,7 +4,7 @@ Unit tests for the FRED macro collector.
 All fredapi calls and store writes are mocked — no live API calls in tests.
 """
 
-from datetime import timezone
+from datetime import UTC
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -16,7 +16,6 @@ from data.collectors.fred import (
     _fetch_series,
     collect,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -69,7 +68,7 @@ def test_fetch_series_index_is_utc_datetime():
     df = _fetch_series(mock_fred, "DGS10", None)
 
     assert pd.api.types.is_datetime64_any_dtype(df.index)
-    assert df.index.tz == timezone.utc
+    assert df.index.tz == UTC
 
 
 def test_fetch_series_drops_nan_rows():

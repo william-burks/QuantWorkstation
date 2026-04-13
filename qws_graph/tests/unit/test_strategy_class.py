@@ -8,11 +8,8 @@ Tests cover:
 """
 from __future__ import annotations
 
-import pytest
-
 from qws_graph.research.graph.models import Strategy
 from qws_graph.research.graph.query_presets import PRESET_CATALOG, PresetSpec
-
 
 # ---------------------------------------------------------------------------
 # Strategy model

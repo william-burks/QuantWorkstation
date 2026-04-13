@@ -23,7 +23,7 @@ Run via: ``python -m data.collectors.bdti``
 """
 
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 import pandas as pd
 import requests  # type: ignore[import-untyped]

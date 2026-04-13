@@ -4,10 +4,9 @@ Unit tests for the Google Trends collector.
 All pytrends.TrendReq calls and store writes are mocked — no live requests.
 """
 
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
-import pytest
 
 from data.collectors.google_trends import (
     DEFAULT_TERMS,
@@ -15,7 +14,6 @@ from data.collectors.google_trends import (
     _fetch_term,
     collect,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -10,7 +10,6 @@ import pytest
 
 from data.validation import validate_bars
 
-
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 

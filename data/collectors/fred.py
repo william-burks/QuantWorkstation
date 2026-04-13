@@ -23,10 +23,10 @@ Run via: ``python -m data.collectors.fred``
 """
 
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
+from typing import Any
 
 import pandas as pd
-from typing import Any
 
 from data.config import get_settings
 from data.store import get_store

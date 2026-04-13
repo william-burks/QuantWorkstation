@@ -4,7 +4,7 @@ Unit tests for the FMP economic calendar collector.
 All requests.get calls and store writes are mocked — no live API calls in tests.
 """
 
-from datetime import timezone
+from datetime import UTC
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -14,11 +14,10 @@ from data.collectors.economic_calendar import (
     ARC_LIB,
     ARC_SYMBOL,
     FMP_BASE_URL,
-    _fetch_calendar,
     _empty_df,
+    _fetch_calendar,
     collect,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -98,7 +97,7 @@ def test_empty_df_is_empty():
 
 def test_empty_df_has_utc_index():
     df = _empty_df()
-    assert df.index.tz == timezone.utc
+    assert df.index.tz == UTC
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +120,7 @@ def test_fetch_index_is_utc_datetime():
         df = _fetch_calendar("test-key", "2024-01-01", "2024-02-28")
 
     assert pd.api.types.is_datetime64_any_dtype(df.index)
-    assert df.index.tz == timezone.utc
+    assert df.index.tz == UTC
 
 
 def test_fetch_sorted_ascending():
@@ -267,7 +266,7 @@ def test_collect_written_df_has_correct_columns_and_utc_index():
     assert "event_name" in df.columns
     assert "is_blackout" in df.columns
     assert pd.api.types.is_datetime64_any_dtype(df.index)
-    assert df.index.tz == timezone.utc
+    assert df.index.tz == UTC
 
 
 def test_collect_skips_write_when_no_events():
