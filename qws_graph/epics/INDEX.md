@@ -21,7 +21,8 @@ Navigation and execution index for `qws_graph/epics`.
 10. **Epic 9HF — Bugs & Hotfixes** — `READY` (implement now, parallel with 10)
 11. **Epic 9.5 — Workflow Hardening** — `COMPLETE`
 12. **Epic 10 — Macro Data** — `COMPLETE`
-13. **Epic 11 — Production Tracking** — `PLANNED`
+13. **Epic 10b — Commodity Regime Data** — `READY`
+14. **Epic 11 — Production Tracking** — `PLANNED`
 14. **Epic 13 — Agent Design** — `PLANNED` (QWS-1301 READY; 1302-1304 blocked on gap fixes)
 15. **Epic 12 — ML Research Layer** — `PLANNED`
 
@@ -29,7 +30,8 @@ Navigation and execution index for `qws_graph/epics`.
 - Epics 1–8 COMPLETE. Epic 9 in progress — QWS-0903 READY.
 - Epic 9HF: QWS-HF-001 and QWS-0904 are independent — implement in parallel.
 - Epic 9.5: all 4 stories READY, no mutual deps — implement in parallel.
-- Epic 10: COMPLETE. QWS-1005, QWS-1006, QWS-1011 SKIPPED (out-of-scope instruments, never attempted).
+- Epic 10: COMPLETE. QWS-1005, QWS-1006, QWS-1011 moved to Epic 10b (NG/ZC/ZS now in scope).
+- Epic 10b: all 4 stories READY, no mutual deps — implement in parallel.
 - Epic 12 entry blocked on QWS-0803 CLOSED (satisfied). QWS-0907 (trial_metadata) must land before QWS-1204.
 - Epic 13: QWS-1301 READY; QWS-1302/1303/1304 blocked on gap fixes landing first.
 - Epic 9HF stories live in `qws_graph/epics/epic_9hf_bugs_and_hotfixes/`. Future one-off hotfixes go in `qws_graph/epics/hotfix/` (currently empty).
@@ -227,6 +229,18 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 
 ---
 
+## Epic 10b — Commodity Regime Data [READY]
+- Epic README: `epic_10b_commodity_regime_data/README.md`
+- Objective: weather + crop alternative data for NG/ZC/ZS regime conditioning
+
+Stories (independent — implement in parallel):
+- `QWS-1005` `epic_10b_commodity_regime_data/story_QWS-1005_noaa_degree_days.md` — `READY`
+- `QWS-1006` `epic_10b_commodity_regime_data/story_QWS-1006_usda_crop_progress.md` — `READY`
+- `QWS-1011` `epic_10b_commodity_regime_data/story_QWS-1011_ndvi_crop_health.md` — `READY`
+- `QWS-1013` `epic_10b_commodity_regime_data/story_QWS-1013_macro_prefect_flow.md` — `READY`
+
+---
+
 ## Epic 11 — Production Tracking [PLANNED]
 - Epic README: `epic_11_production_tracking/README.md`
 - Objective: track Champion performance in production via MLflow; split production results from research results
@@ -291,7 +305,8 @@ promotion).
 - **Epic 8 COMPLETE** — all 3 stories CLOSED.
 - **Epic 9 COMPLETE** — all 3 stories CLOSED.
 - **Epic 9.5 COMPLETE** — all 4 stories CLOSED.
-- **Epic 10 COMPLETE** — all stories CLOSED (QWS-1005, QWS-1006, QWS-1011 SKIPPED).
-- **Immediate:** Epic 13 Agent Design (QWS-1301 READY, unblocked).
+- **Epic 10 COMPLETE** — all stories CLOSED (QWS-1005, QWS-1006, QWS-1011 moved to Epic 10b).
+- **Epic 10b READY** — 4 stories (QWS-1005, QWS-1006, QWS-1011, QWS-1013), all independent.
+- **Immediate:** Epic 13 Agent Design (QWS-1301 READY, unblocked) + Epic 10b in parallel.
 - **After 1301:** QWS-1302 → QWS-1303 → QWS-1304 → Epic 12 (ML research).
 

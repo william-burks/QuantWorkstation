@@ -4,13 +4,13 @@
 QWS-1006
 
 ## Status
-BLOCKED
+READY
 
 ## Type
 code
 
 ## Blocked On
-QWS-1000
+None
 
 ## Summary
 Add a USDA NASS crop progress collector that pulls weekly planting and development stage percentages for corn and soybeans via the NASS API and writes them into the shared `macro` ArcticDB library via `write_series()`. Feeds ZC and ZS strategy conditioning.

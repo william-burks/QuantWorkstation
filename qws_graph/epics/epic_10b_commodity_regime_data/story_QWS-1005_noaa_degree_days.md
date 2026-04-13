@@ -4,13 +4,13 @@
 QWS-1005
 
 ## Status
-BLOCKED
+READY
 
 ## Type
 code
 
 ## Blocked On
-QWS-1000
+None
 
 ## Summary
 Add a NOAA Climate Data API collector that pulls weekly Heating Degree Days (HDD) and Cooling Degree Days (CDD) for US national and regional series and writes them into the shared `macro` ArcticDB library via `write_series()`. Primary weather input for NG strategy conditioning.

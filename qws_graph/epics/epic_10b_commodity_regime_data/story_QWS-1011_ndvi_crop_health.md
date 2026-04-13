@@ -4,22 +4,22 @@
 QWS-1011
 
 ## Status
-CLOSED
+READY
 
 ## Type
 code
 
 ## Blocked On
-QWS-1000
+None
 
 ## Summary
-Add a NASA MODIS NDVI collector that downloads daily satellite raster products for the US corn belt, applies a cropland mask, computes mean NDVI per region, derives an anomaly signal (deviation from 5-year daily historical average), and writes results into the shared `macro` ArcticDB library via `write_series()`. Crop health during growing season is a direct price input for ZC and ZS.
+Add a NASA AppEEARS NDVI collector that requests server-side spatial subsets for US corn belt regions via the AppEEARS REST API, receives CSV output (no rasterio dep), computes mean NDVI per region, derives an anomaly signal (deviation from 5-year daily historical average), and writes results into the shared `macro` ArcticDB library via `write_series()`. Crop health during growing season is a direct price input for ZC and ZS.
 
 ## Problem
 Grain strategies (ZC, ZS) have no structural awareness of in-season crop health. USDA crop progress (QWS-1006) captures development stage percentages, but not vegetative stress. NDVI anomaly is a fast signal: a sharply negative deviation during pollination (July) or grain fill (August) historically precedes supply shock revisions within days, not weeks.
 
 ## Goal
-Collect daily MODIS NDVI for US corn belt regions, compute `ndvi_anomaly` as deviation from the 5-year historical daily mean, and write into ArcticDB `macro` library keyed by region. During the November–March off-season, collector no-ops cleanly.
+Collect daily MODIS NDVI for US corn belt regions via NASA AppEEARS REST API, compute `ndvi_anomaly` as deviation from the 5-year historical daily mean, and write into ArcticDB `macro` library keyed by region. During the November–March off-season, collector no-ops cleanly.
 
 ## In Scope
 
@@ -33,9 +33,8 @@ Regions and source:
 | `NEBRASKA` | Nebraska cropland pixels |
 | `MINNESOTA` | Minnesota cropland pixels |
 
-- Source: NASA MODIS Terra/Aqua — MOD09GA (daily 500m surface reflectance, NDVI computed from bands 1+2)
+- Source: NASA AppEEARS REST API — server-side spatial subset, returns CSV, no rasterio dep
 - Auth: NASA Earthdata token — `NASA_EARTHDATA_TOKEN` env var; stored as export in `~/.zshrc`. Free account at https://urs.earthdata.nasa.gov/
-- Cropland mask: static GeoTIFF mask for corn/soy pixels; applied before computing regional mean
 - Derived metric: `ndvi_anomaly` = current NDVI − 5-year historical daily average for same calendar day
 - Write both `ndvi` (raw) and `ndvi_anomaly` columns per series via `store.write_series()`
 - Idempotent: incremental fetch from last stored date
@@ -46,23 +45,20 @@ Regions and source:
 - Sub-state (county) level resolution
 - Real-time or intraday NDVI
 - Graph ingestion / Regime node updates (separate story)
-- Automated cropland mask generation (use static CDL mask file bundled with collector)
-- Scheduler job registration (handled by QWS-1100b)
+- Scheduler job registration (handled by QWS-1013)
 
 ## Implementation Notes
 
-**NASA Earthdata download:**
-- MODIS CMR search endpoint: `https://cmr.earthdata.nasa.gov/search/granules.json`
-- Params: `short_name=MOD09GA`, `temporal={date},{date}`, `bounding_box={corn_belt_bbox}`
-- Download via `earthaccess` or direct HTTPS with `Authorization: Bearer {NASA_EARTHDATA_TOKEN}`
-- GeoTIFF processing: use `rasterio` to open HDF4/GeoTIFF, extract band arrays, compute NDVI = (NIR − Red) / (NIR + Red)
-
-**Cropland mask:**
-- Static CDL corn+soy mask GeoTIFF bundled at `data/collectors/assets/corn_belt_mask.tif`
-- Apply with numpy boolean indexing: `ndvi_array[mask == 0] = np.nan`; `np.nanmean(ndvi_array)`
+**NASA AppEEARS REST API:**
+- AppEEARS task submission: `POST https://appeears.earthdatacloud.nasa.gov/api/task`
+- Auth: Bearer token obtained via `POST /api/login` with NASA Earthdata credentials
+- Request type: `point` or `area` with GeoJSON polygon for corn belt bounding box
+- Product: `MOD13Q1.061` (MODIS Terra Vegetation Indices, 16-day, 250m) or `MYD13Q1.061` for combined
+- Response: CSV files returned via `GET /api/bundle/{task_id}` — no rasterio, no HDF4 download required
+- Parse CSV: date column + NDVI column; aggregate across sample points for regional mean
 
 **5-year historical baseline:**
-- On first run, download 5 years of MOD09GA to compute daily climatology
+- On first run, submit AppEEARS task spanning 5 years to compute daily climatology
 - Store climatology as separate `NDVI_{REGION}_CLIM_1D` series in `macro` library
 - Anomaly = today's NDVI − climatology value for same day-of-year
 
@@ -73,14 +69,13 @@ Regions and source:
 
 **Callable as** `python -m data.collectors.ndvi`
 
-**Unit tests:** No live HTTP or raster I/O — mock download function returning fixture numpy arrays; test mask application, anomaly computation, and ArcticDB write path.
+**Unit tests:** No live HTTP — mock AppEEARS API responses returning fixture CSV content; test anomaly computation and ArcticDB write path.
 
 ## Repo Touchpoints
 - `data/collectors/ndvi.py` — new
 - `data/config.py` — add `nasa_earthdata_token`
-- `pyproject.toml` — add `rasterio`, `earthpy`, `numpy`
+- `pyproject.toml` — add `numpy` (no rasterio dep)
 - `tests/unit/test_ndvi_collector.py` — new
-- `data/collectors/assets/corn_belt_mask.tif` — new
 
 ## Acceptance Criteria
 - [ ] `data/collectors/ndvi.py` exists and is importable
@@ -89,11 +84,10 @@ Regions and source:
 - [ ] All 5 state-level series write successfully
 - [ ] Re-running collector is idempotent (appends only new dates; no duplicates)
 - [ ] Off-season call (November–March): collector exits 0 with INFO log, no exception, no write
-- [ ] Cropland mask applied before regional mean (non-cropland pixels excluded)
 - [ ] `ndvi_anomaly` computed correctly as deviation from 5-year same-day baseline
 - [ ] `nasa_earthdata_token` present in `data/config.py`
-- [ ] `rasterio`, `earthpy`, `numpy` added to `pyproject.toml` dependencies
-- [ ] `tests/unit/test_ndvi_collector.py` passes with mocked download and fixture arrays
+- [ ] No `rasterio` or `earthaccess` dependency added to `pyproject.toml`
+- [ ] `tests/unit/test_ndvi_collector.py` passes with mocked AppEEARS responses and fixture CSV
 - [ ] `make verify` passes
 
 ## Definition of Done

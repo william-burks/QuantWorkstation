@@ -6,7 +6,7 @@
 >   - Sharpe target ≥ 2.0 (Professional) | ≥ 3.5 (Institutional)
 >   - Max holding period ≤ 4 hours
 >   - Optimize for alpha and risk-adjusted profitability — NOT win rate, NOT trend following
->   - Instruments: futures (ES, NQ, CL, MES, MNQ) and crypto (BTC) — short-duration edges
+>   - Instruments: futures (ES, NQ, CL, NG, ZC, ZS, MES, MNQ) and crypto (BTC) — short-duration edges
 >
 > BEFORE SUGGESTING a new strategy:
 >   1. Call qw query --name recent_champions
