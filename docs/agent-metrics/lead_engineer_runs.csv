@@ -14,3 +14,4 @@ run_id,timestamp,epic,story_id,branch,model,total_calls,necessary,wasted,waste_p
 20260412T132414,2026-04-12T13:24:14Z,epic_7,QWS-0703,feature/26.4.0/QWS-0703,sonnet,41,36,5,12,completed,,,file-reread
 20260412T135905,2026-04-12T00:00:00Z,epic_7,QWS-0804,feature/26.4.0/QWS-0804,sonnet,70,34,36,51,TESTING,,,grep-storm
 20260413T012149,2026-04-12T00:00:00Z,epic-9hf,QWS-HF-001,feature/26.4.0/QWS-HF-001,sonnet,78,38,40,51,COMPLETED-OVERRUN,,,post-stop-rampage
+20260413T021043,2026-04-13T02:10:43Z,epic-9hf,QWS-HF-001,feature/26.4.0/QWS-HF-001,sonnet,54,35,19,35,completed,,,grep-storm
