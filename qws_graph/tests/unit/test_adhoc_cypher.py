@@ -180,9 +180,9 @@ class TestCmdQueryCypherPath:
                 rc = cmd_query(args)
         assert rc == 0
         captured = capsys.readouterr()
-        lines = [l for l in captured.out.strip().splitlines() if l]
+        lines = [ln for ln in captured.out.strip().splitlines() if ln]
         assert len(lines) == 2
-        parsed = [json.loads(l) for l in lines]
+        parsed = [json.loads(ln) for ln in lines]
         assert parsed[0]["run_id"] == "abc123def456"
         assert parsed[1]["run_id"] == "xyz789uvw012"
 

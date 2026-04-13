@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  QuantWorkstation — Prefect Server launchd Daemon Template
+  ==========================================================
+  This file is a TEMPLATE checked into the repo at:
+    infra/launchd/com.quantworkstation.prefect.plist
+
+  INSTALL (one-time, run manually):
+    1. Copy to your LaunchAgents directory:
+         cp infra/launchd/com.quantworkstation.prefect.plist ~/Library/LaunchAgents/
+    2. Edit the copy — replace /path/to/prefect and /path/to/your/project with
+       your actual paths (see ProgramArguments and WorkingDirectory below).
+    3. Load the daemon:
+         launchctl load ~/Library/LaunchAgents/com.quantworkstation.prefect.plist
+    4. Verify it started:
+         launchctl list | grep quantworkstation
+         open http://localhost:4200
+
+  UNLOAD:
+    launchctl unload ~/Library/LaunchAgents/com.quantworkstation.prefect.plist
+
+  NOTES:
+  - RunAtLoad=true means the server starts immediately on load and on every login.
+  - Logs go to /tmp/prefect-server.{out,err}.log by default.
+  - If prefect is installed in a venv, set ProgramArguments[0] to the venv's
+    prefect binary (e.g. /Users/you/ClaudeProjects/QuantWorkstation/.venv/bin/prefect).
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.quantworkstation.prefect</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <!-- Replace with absolute path to prefect binary, e.g. /Users/you/.../.venv/bin/prefect -->
+    <string>/path/to/prefect</string>
+    <string>server</string>
+    <string>start</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <!-- Replace with absolute path to the repo root -->
+  <string>/path/to/your/project</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/prefect-server.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/tmp/prefect-server.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <!-- Prefect home; defaults to ~/.prefect. Override here if needed. -->
+    <key>PREFECT_HOME</key>
+    <string>/Users/your-username/.prefect</string>
+  </dict>
+</dict>
+</plist>

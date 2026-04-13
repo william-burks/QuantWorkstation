@@ -23,6 +23,10 @@ qws_graph/node_modules/
 # Local patch/diff scratch files
 *.diff
 
+# Prefect and MLflow artifacts
+prefect.db
+mlruns/
+
 # Generated research outputs
 research/results/registry.json
 research/trials/futures/liquidity_sweep/*.html
