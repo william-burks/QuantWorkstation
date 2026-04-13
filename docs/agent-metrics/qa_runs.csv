@@ -21,3 +21,5 @@ run_id,timestamp,epic,branch,agent,model,total_calls,necessary,wasted,waste_pct,
 20260411T193044,2026-04-11T19:30:44Z,6,release/26.4.0,lint-mechanic,haiku,7,3,4,57,completed,1,1,lint-misuse
 20260412T144246,2026-04-12T00:00:00Z,7,release/26.4.0,qa-engineer,sonnet,53,37,16,30,ISSUES_FIXED,,,grep-storm
 20260412T144246,2026-04-12T00:00:00Z,7,release/26.4.0,lint-mechanic,sonnet,22,11,11,50,completed,,,grep-storm
+20260413T044020,2026-04-13T04:40:20Z,9HF,release/26.4.0,qa-engineer,sonnet,36,24,12,33,ISSUES_REMAINING,,,grep-storm
+20260413T050407,2026-04-13T05:04:07Z,9HF,release/26.4.0,qa-engineer,sonnet,32,22,10,31,CLEAN,,,unlisted-tests

@@ -1,11 +1,13 @@
 ---
 name: pre-existing test failures in tests/unit/
-description: 9 ibkr_futures_collector tests fail in tests/unit/ — pre-existing, not epic-6 caused
+description: ibkr_futures_collector tests now pass — baseline as of Epic 9HF is 733 passed, 0 failed
 type: project
 ---
 
-As of 2026-04-11, `tests/unit/test_ibkr_futures_collector.py` has 9 failing tests. These are pre-existing and not caused by Epic 6 stories. Confirmed still present after Epic 6 QA complete (148 passing, same 9 failing, no regressions).
+As of 2026-04-13 (Epic 9HF QA), `make test-all` runs clean: 576 qws_graph unit + 157 top-level = 733 passed, 0 failed.
 
-**Why:** ibkr_futures_collector tests likely need IB Gateway or have a module-level import issue. Not related to qws_graph work.
+Previous 9 ibkr_futures_collector failures are resolved (likely fixed in a prior epic; confirmed gone at Epic 9HF baseline).
 
-**How to apply:** When running baseline for QA, note these as pre-existing. Do not investigate unless they appear in qws_graph/ scope.
+**Why:** Tracking so future QA baselines know the expected clean state.
+
+**How to apply:** If any tests fail at baseline, they are NEW regressions — investigate. Do not assume pre-existing.

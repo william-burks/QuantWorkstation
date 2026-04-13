@@ -145,7 +145,8 @@ Recipe — one Read, no grep:
 4. Report mismatches. Append findings to story tmp file.
 
 **Do NOT grep cypher.py. Do NOT re-read it. Do NOT re-read PROVENANCE_ENGINE.md — it is in context from Step 2d.**
-**STOP. Schema comparison complete.** cypher.py and PROVENANCE_ENGINE.md are done. Do not touch either file again for the rest of the run.
+
+**STOP GATE (convention): schema comparison complete → proceed to Step 2f. No further reads, greps, or Bash commands targeting cypher.py, PROVENANCE_ENGINE.md, or store.py. No exceptions.**
 
 ### 2f — Cross-story regressions
 ```
@@ -159,12 +160,14 @@ If fixture or demo seed issues found: fix those directly (these are schema consi
 Lint errors are handled by lint-mechanic — do NOT fix them here.
 
 ## Step 4 — Commit and push
-If fixture/seed fixes were made:
+**ONLY fixture/seed fixes from Step 3 are committed here. Never commit lint changes — `make lint` auto-fixes are NOT authorized for commit. Never use raw `git commit` or `git push` — use `make commit-push-qa` only.**
+
+If fixture/seed fixes were made in Step 3:
 ```
-git add <fixed files>
+git add <fixed files by name — never git add -A or git add .>
 make commit-push-qa EPIC=$ARGUMENTS
 ```
-If no fixture/seed issues and no lint fixlist → skip commit, report clean.
+If no fixture/seed fixes were made → skip commit entirely, report clean. Do NOT commit lint auto-fixes. Do NOT commit any file not explicitly edited in Step 3.
 If only lint fixlist exists → skip commit (lint-mechanic will commit after fixing).
 
 ## Step 5 — Teardown, cleanup, and arm gate
