@@ -85,6 +85,10 @@ class Settings(BaseSettings):
     # Loaded from FMP_API_KEY env var
     fmp_api_key: str = ""
 
+    # USDA NASS Quick Stats API key — free from https://quickstats.nass.usda.gov/api
+    # Loaded from USDA_API_KEY env var; stored as export in ~/.zshrc per security rules
+    usda_api_key: str = ""
+
     # NOAA Climate Data Online API key — free from https://www.ncdc.noaa.gov/cdo-web/token
     # Loaded from NOAA_API_KEY env var; stored as export in ~/.zshrc per security rules
     noaa_api_key: str = ""

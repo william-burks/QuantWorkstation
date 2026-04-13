@@ -58,15 +58,59 @@ Crops and stages (national + top-5 states):
 - `tests/unit/test_usda_crop_collector.py` — new
 
 ## Acceptance Criteria
-- [ ] `data/collectors/usda_crop.py` exists and is importable
-- [ ] `macro` ArcticDB library created on first run (or reuses existing)
-- [ ] National corn and soybean planted series write successfully with `pct` column and DatetimeIndex
-- [ ] All top-5 state series write for at least one crop and stage combination
-- [ ] Re-running collector is idempotent (appends only new dates; no duplicates)
-- [ ] Off-season call (NASS returns empty): collector exits 0 with INFO log, no exception, no write
-- [ ] `usda_api_key` present in `data/config.py`
-- [ ] `tests/unit/test_usda_crop_collector.py` passes with mocked `requests.get` including fixture for empty off-season response
-- [ ] `make verify` passes
+- [x] `data/collectors/usda_crop.py` exists and is importable
+- [x] `macro` ArcticDB library created on first run (or reuses existing)
+- [x] National corn and soybean planted series write successfully with `pct` column and DatetimeIndex
+- [x] All top-5 state series write for at least one crop and stage combination
+- [x] Re-running collector is idempotent (appends only new dates; no duplicates)
+- [x] Off-season call (NASS returns empty): collector exits 0 with INFO log, no exception, no write
+- [x] `usda_api_key` present in `data/config.py`
+- [x] `tests/unit/test_usda_crop_collector.py` passes with mocked `requests.get` including fixture for empty off-season response
+- [x] `make verify` passes
+
+## Acceptance Test Plan
+
+### AC1: usda_crop.py exists and is importable
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from data.collectors.usda_crop import collect, DEFAULT_SERIES, _SERIES_MAP; print('ok')"`
+- expect_contains: "ok"
+- expect_exit: 0
+
+### AC2: National corn and soybean planted series have pct column and DatetimeIndex (unit test)
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_usda_crop_collector.py::test_collect_writes_national_corn_and_soybean_planted -v 2>&1 | tail -5`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC3: Top-5 state series write (unit test)
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_usda_crop_collector.py::test_collect_writes_state_series -v 2>&1 | tail -5`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC4: Idempotent — no duplicate rows (unit test)
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_usda_crop_collector.py::test_collect_idempotent_no_duplicate_rows -v 2>&1 | tail -5`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC5: Off-season empty response — no write, no exception (unit test)
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_usda_crop_collector.py::test_collect_skips_empty_off_season_response -v 2>&1 | tail -5`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC6: usda_api_key in data/config.py
+- type: file_check
+- cmd: `grep 'usda_api_key' data/config.py`
+- expect_contains: "usda_api_key"
+- expect_exit: 0
+
+### AC7: Full unit test suite passes
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_usda_crop_collector.py -v 2>&1 | tail -5`
+- expect_contains: "passed"
+- expect_exit: 0
 
 ## Definition of Done
 - [ ] All ACs passing
