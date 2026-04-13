@@ -211,44 +211,33 @@ When adding a new spawned agent command, wire up the phase gate in 3 steps:
 
 ---
 
-## 13. VIOLATION pattern — illegal actions during execution
+## 13. Entry STOP GATE — pre-condition enforcement
 
-The STOP GATE signals terminal state. The VIOLATION signals an illegal action taken mid-run.
+**VIOLATION pattern was tried and failed (QWS-0904 R1 + R2).** Convention-tier VIOLATION has the same ~100% failure rate as any prose prohibition. Discarded.
 
-**Format:**
+**Correct approach for pre-conditions: STOP GATE (enforced) using an entry sentinel.**
+
+The STOP GATE pattern extends naturally to entry conditions — same conditional form, same structural backing, opposite direction:
+
+| Direction | Sentinel state | Effect |
+|-----------|---------------|--------|
+| Terminal STOP GATE | Sentinel EXISTS → block all tools | No tool calls after work complete |
+| Entry STOP GATE | Sentinel ABSENT → block specific tools | No .py reads before Step 0 |
+
+**Entry sentinel pattern:**
+
 ```
-**VIOLATION: <prohibited action> → <correction>. <enforcement note>.**
-```
-
-The conditional form maps directly from STOP GATE: "illegal action → correction" instead of "state reached → stop".
-
-Same two-tier system applies:
-
-| Tier | Label | Structural backing |
-|------|-------|--------------------|
-| Enforced | `VIOLATION (enforced)` | Hook exits 2 on violation |
-| Convention | `VIOLATION` | Prose signal only |
-
-**Example (convention tier):**
-```
-**VIOLATION: Any Read/Bash/MCP call before agent-init-state.sh completes → stop, run Step 0, restart from Step 1. No exceptions.**
-Convention tier — pre-init tool calls are waste, not initialization.
+**STOP GATE (enforced): Any .py source read before Step 0 completes → read-guard blocks with exit 2.**
+agent-read-guard.sh checks /tmp/agent-step0-complete.txt before allowing .py reads.
 ```
 
-**Example (enforced tier):**
-```
-**VIOLATION (enforced): Read of .py file before /tmp/agent-step0-done.txt exists → read-guard blocks with exit 2.**
-```
+Implementation:
+1. `agent-init-state.sh` writes `/tmp/agent-step0-complete.txt` at end of Step 0
+2. `agent-init-state.sh` clears it at the start (fresh init always re-arms the gate)
+3. `agent-read-guard.sh` checks for the sentinel before any `.py` read — blocks with exit 2 if absent
+4. `make prime-agent` clears it before spawning
 
-**When to use VIOLATION vs STOP GATE vs GATE:**
-
-| Pattern | Trigger | Scope |
-|---------|---------|-------|
-| `STOP GATE` | Terminal — work complete, stop everything | End of command |
-| `VIOLATION` | Illegal action taken during execution | Any step |
-| `GATE` | Mid-flow checkpoint — condition not met, blocked | Between phases |
-
-Place VIOLATION markers at the TOP of the command file for pre-conditions, or inline immediately before the step that would trigger them.
+**Do not use VIOLATION as a pattern.** Use STOP GATE (enforced) for pre-conditions and terminal states alike. Convention-tier labels fail for any action that is the agent's default instinct.
 
 ---
 

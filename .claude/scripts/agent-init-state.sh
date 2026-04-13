@@ -20,7 +20,8 @@ if [ -f "$GENERIC_SENTINEL" ]; then
   exit 1
 fi
 
-# Clear guard trackers and generic sentinels from previous command runs
+# Clear Step 0 sentinel and guard trackers from previous runs
+rm -f /tmp/agent-step0-complete.txt 2>/dev/null || true
 rm -f /tmp/agent-read-tracker/* 2>/dev/null; mkdir -p /tmp/agent-read-tracker
 rm -f /tmp/agent-discovery-tracker/* 2>/dev/null; mkdir -p /tmp/agent-discovery-tracker
 rm -f /tmp/circuit-breaker/* 2>/dev/null; mkdir -p /tmp/circuit-breaker
@@ -34,5 +35,8 @@ grep -n '^nodes:\|^relationships:\|^  [A-Z][A-Za-z_]*:' qws_graph/docs/data_dict
 
 # Arm command sentinel (activates guard scripts for this command)
 echo "$COMMAND" > /tmp/agent-current-command.txt
+
+# Arm Step 0 complete sentinel (unlocks .py source reads in agent-read-guard.sh)
+touch /tmp/agent-step0-complete.txt
 
 echo "State initialized for $COMMAND"

@@ -1,7 +1,7 @@
 Implement the QuantWorkstation story identified by: $ARGUMENTS
 
-**VIOLATION: Any Read, Bash, or MCP call before `agent-init-state.sh` completes → stop, run Step 0, restart from Step 1. No exceptions.**
-Convention tier — pre-init tool calls are waste, not initialization. The first tool call in any run must be `bash .claude/scripts/agent-init-state.sh implement-story`.
+**STOP GATE (enforced): Any `.py` source read before Step 0 completes → read-guard blocks with exit 2. No exceptions.**
+`agent-read-guard.sh` checks `/tmp/agent-step0-complete.txt` before allowing `.py` reads. This sentinel is written by `agent-init-state.sh` at the end of Step 0. The first tool call in any run must be `bash .claude/scripts/agent-init-state.sh implement-story`.
 
 ## Step 0 — Read memory (MANDATORY FIRST)
 ```bash

@@ -14,6 +14,14 @@ FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
 [ -z "$FILE" ] && exit 0
 
+# ENTRY GATE: block .py source reads before Step 0 completes
+# agent-init-state.sh writes /tmp/agent-step0-complete.txt at end of Step 0.
+# Any .py read before that sentinel exists is pre-init waste — block it.
+if echo "$FILE" | grep -qE '\.py$' && [ ! -f "/tmp/agent-step0-complete.txt" ]; then
+  echo "ENTRY GATE: .py read blocked — Step 0 not complete. Run agent-init-state.sh first." >&2
+  exit 2
+fi
+
 # Fix 8B: /tmp/*.py reads count against original source file's tracker (cp/snapshot bypass).
 # e.g., /tmp/store_snapshot.py → check tracker for store.py
 if echo "$FILE" | grep -qE '^/tmp/.*\.(py|yaml|yml|md)$'; then

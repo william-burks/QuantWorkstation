@@ -76,7 +76,7 @@ feature-branch:
 prime-agent:
 	@mkdir -p /tmp/agent-read-tracker /tmp/agent-discovery-tracker /tmp/circuit-breaker
 	@echo "implement-story" > /tmp/agent-current-command.txt
-	@rm -f /tmp/agent-step8-committed.txt /tmp/agent-*-done.txt
+	@rm -f /tmp/agent-step8-committed.txt /tmp/agent-*-done.txt /tmp/agent-step0-complete.txt
 	@echo "Agent guards primed. Safe to spawn lead-engineer."
 
 # Phase gate arm targets — called at terminal step before report output
