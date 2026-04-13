@@ -135,7 +135,7 @@
 | COT Collector | QWS-1001 (**CLOSED**) | CFTC COT positioning data in ArcticDB | ~~QWS-1000~~ |
 | FRED Macro Collector | QWS-1002 (**CLOSED**) | FRED macro indicators in ArcticDB | ~~QWS-1000~~ |
 | EIA Crude Collector | QWS-1003 (**CLOSED**) | EIA crude inventory + production data in ArcticDB | ~~QWS-1000~~ |
-| Baker Hughes Rig Count | QWS-1004 (**BLOCKED**) | Weekly rig count data in ArcticDB | ~~QWS-1000~~ |
+| Baker Hughes Rig Count | QWS-1004 (**TESTING**) | Weekly rig count data in ArcticDB | ~~QWS-1000~~ |
 | NOAA Degree Days | QWS-1005 (**BLOCKED**) | Heating/cooling degree days in ArcticDB | ~~QWS-1000~~ |
 | USDA Crop Progress | QWS-1006 (**BLOCKED**) | USDA weekly crop progress data in ArcticDB | ~~QWS-1000~~ |
 | Google Trends | QWS-1007 (**BLOCKED**) | Google Trends signals in ArcticDB | ~~QWS-1000~~ |
