@@ -4,7 +4,7 @@
 QWS-1008
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -103,9 +103,9 @@ Collect BDTI daily index values via Nasdaq Data Link API, write into ArcticDB `m
 - expect_exit: 0
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
-- [ ] Story marked CLOSED
+- [x] All ACs passing
+- [x] Tests green
+- [x] Story marked CLOSED
 
 ## Dependencies
 - Requires Nasdaq Data Link API key (free registration at https://data.nasdaq.com)
