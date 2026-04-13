@@ -461,6 +461,34 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
                             )
                     except Exception:  # noqa: BLE001
                         pass  # correlation check is advisory; never block ingest
+
+            # Hypothesis autolink: if bundle.json contains hypothesis_id, wire TESTED_AS edge.
+            bundle_hypothesis_id: str | None = manifest.get("hypothesis_id")
+            if bundle_hypothesis_id:
+                strategy_id_for_link = artifact.strategy.strategy_id
+                try:
+                    linked = store.link_hypothesis_tested_as(
+                        bundle_hypothesis_id, strategy_id_for_link
+                    )
+                    if linked:
+                        print(
+                            f"OK: TESTED_AS edge — hypothesis={bundle_hypothesis_id}"
+                            f" strategy={strategy_id_for_link}"
+                        )
+                    else:
+                        print(
+                            f"WARNING: hypothesis {bundle_hypothesis_id!r} not found"
+                            f" — TESTED_AS edge skipped",
+                            file=sys.stderr,
+                        )
+                except StoreError:
+                    print(
+                        f"WARNING: hypothesis {bundle_hypothesis_id!r} not found"
+                        f" — TESTED_AS edge skipped",
+                        file=sys.stderr,
+                    )
+                except Exception:  # noqa: BLE001
+                    pass  # autolink is advisory; never block ingest
         finally:
             store.close()
     except StoreInfraError as exc:
@@ -761,6 +789,32 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
                 return 0
 
             hypothesis_id = hypothesis_arg
+
+            # Mode 2b: combined — title string + --branched-from → create node then edge
+            def _looks_like_hypothesis_id(value: str) -> bool:
+                return len(value) == 12 and all(c in "0123456789abcdef" for c in value)
+
+            if branched_from is not None and not _looks_like_hypothesis_id(hypothesis_arg):
+                title = hypothesis_arg
+                if not title:
+                    print("ERROR: --hypothesis requires a non-empty title or ID", file=sys.stderr)
+                    return 1
+                if len(title) > 200:
+                    print("ERROR: hypothesis title must be ≤ 200 characters", file=sys.stderr)
+                    return 1
+                if not rationale:
+                    print("ERROR: --rationale is required with --branched-from", file=sys.stderr)
+                    return 1
+                created_at_iso = datetime.now(UTC).isoformat()
+                hypothesis_id = _ids.hash12(title, created_at_iso)
+                store.create_hypothesis(hypothesis_id=hypothesis_id, title=title, source="user")
+                print(f"OK: Hypothesis created — id={hypothesis_id}")
+                store.link_hypothesis_branched_from(hypothesis_id, branched_from, rationale)
+                print(
+                    f"OK: BRANCHED_FROM edge created"
+                    f" — hypothesis={hypothesis_id} node={branched_from}"
+                )
+                return 0
 
             # Mode 2: update status
             if status is not None:
