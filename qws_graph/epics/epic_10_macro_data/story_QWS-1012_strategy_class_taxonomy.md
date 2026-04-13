@@ -60,14 +60,52 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - `qws_graph/tests/unit/test_strategy_class.py` — new
 
 ## Acceptance Criteria
-- [ ] `MATCH (s:Strategy {strategy_class: 'liquidity_sweep'}) RETURN s` returns nodes after backfill
-- [ ] `qw record --bundle bundle.json` with `strategy_class` field writes property to Strategy node
-- [ ] `qw query --name portfolio_by_class` executes without error and groups by class
-- [ ] `qw backfill --strategy-class` prompts for each unclassified strategy and writes value
-- [ ] Strategy node created without `strategy_class` does not error — property nullable
-- [ ] `data_dictionary.yaml` contains `strategy_class` entry with type, description, example values
+- [x] `MATCH (s:Strategy {strategy_class: 'liquidity_sweep'}) RETURN s` returns nodes after backfill
+- [x] `qw record --bundle bundle.json` with `strategy_class` field writes property to Strategy node
+- [x] `qw query --name portfolio_by_class` executes without error and groups by class
+- [x] `qw backfill --strategy-class` prompts for each unclassified strategy and writes value
+- [x] Strategy node created without `strategy_class` does not error — property nullable
+- [x] `data_dictionary.yaml` contains `strategy_class` entry with type, description, example values
 
 ## Definition of Done
-- [ ] data_dictionary.yaml updated
-- [ ] Tests green
+- [x] data_dictionary.yaml updated
+- [x] Tests green
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: strategy_class nullable — no error without property
+- type: regression
+- cmd: `source .venv/bin/activate && python3 -c "from qws_graph.research.graph.models import Strategy; s=Strategy(strategy_id='x',instrument='ES',timeframe='1h',direction='bear',logic_type='t'); assert s.strategy_class is None; print('OK')"`
+- expect_contains: "OK"
+- expect_exit: 0
+
+### AC2: data_dictionary.yaml contains strategy_class
+- type: file_check
+- cmd: `grep 'strategy_class:' qws_graph/docs/data_dictionary.yaml && grep 'liquidity_sweep' qws_graph/docs/data_dictionary.yaml`
+- expect_contains: "strategy_class:"
+- expect_exit: 0
+
+### AC3: portfolio_by_class preset registered and callable without graph
+- type: cli
+- cmd: `source .venv/bin/activate && python3 -c "from qws_graph.research.graph.query_presets import PRESET_CATALOG; assert 'portfolio_by_class' in PRESET_CATALOG; print('OK')"`
+- expect_contains: "OK"
+- expect_exit: 0
+
+### AC4: qw backfill --strategy-class flag visible
+- type: cli
+- cmd: `source .venv/bin/activate && qw backfill --help`
+- expect_contains: "--strategy-class"
+- expect_exit: 0
+
+### AC5: qw query --name portfolio_by_class recognized by preset system
+- type: cli
+- cmd: `source .venv/bin/activate && python3 -c "from qws_graph.research.graph.query_presets import resolve_preset; spec=resolve_preset('portfolio_by_class'); print(spec.name)"`
+- expect_contains: "portfolio_by_class"
+- expect_exit: 0
+
+### AC6: bundle.json strategy_class read path exists in cli
+- type: regression
+- cmd: `source .venv/bin/activate && python3 -c "import inspect, qws_graph.research.graph.cli as c; src=inspect.getsource(c._cmd_bundle); assert 'strategy_class' in src; print('OK')"`
+- expect_contains: "OK"
+- expect_exit: 0

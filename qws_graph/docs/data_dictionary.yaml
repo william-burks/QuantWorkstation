@@ -67,6 +67,16 @@ nodes:
           Groups strategies that share the same logic source code across instruments
           or timeframes. hash12(normalize(logic_type), normalize(direction), source_hash).
           Null until backfill is run for pre-V1 nodes.
+      strategy_class:
+        type: str
+        nullable: true
+        description: >
+          Free-form lowercase underscore label grouping strategies by mechanism.
+          Set at ingest time via bundle.json "strategy_class" field, or retroactively
+          via `qw backfill --strategy-class`.
+          Examples: liquidity_sweep, momentum_breakout, mean_reversion, macro_regime.
+          No enum enforcement — researchers define classes organically.
+          Null until explicitly set. QWS-1012.
       best_run_id:
         type: str
         nullable: true

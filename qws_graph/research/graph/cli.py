@@ -490,6 +490,16 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
                 except Exception:  # noqa: BLE001
                     pass  # autolink is advisory; never block ingest
 
+            # strategy_class write (QWS-1012): set strategy_class property on Strategy node.
+            bundle_strategy_class: str | None = manifest.get("strategy_class")
+            if bundle_strategy_class and isinstance(bundle_strategy_class, str):
+                _sc = bundle_strategy_class.strip().lower()
+                if _sc:
+                    try:
+                        store.patch_strategy_class(artifact.strategy.strategy_id, _sc)
+                    except Exception:  # noqa: BLE001
+                        pass  # strategy_class write is advisory; never block ingest
+
             # trial_metadata write (QWS-0907): write map property onto persisted Run nodes.
             bundle_trial_metadata: dict[str, str] | None = manifest.get("trial_metadata")
             if bundle_trial_metadata and isinstance(bundle_trial_metadata, dict):
@@ -1328,7 +1338,59 @@ def cmd_query(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_backfill_strategy_class(args: argparse.Namespace) -> int:
+    """Interactive prompt: for each Strategy missing strategy_class, prompt and write."""
+    timeout_seconds = args.timeout_seconds
+    connector = NeoConnector(timeout_seconds=timeout_seconds)
+    if not connector.is_available():
+        print(
+            f"WARNING: Neo4j unavailable (timeout after {timeout_seconds}s)",
+            file=sys.stderr,
+        )
+        return 2
+    store = GraphStore.from_env(timeout_seconds=timeout_seconds)
+    try:
+        strategies = store.get_unclassified_strategies()
+        if not strategies:
+            print("OK: all strategies already have strategy_class set.")
+            return 0
+        # Collect distinct existing classes to show as suggestions
+        try:
+            class_rows = store.run_adhoc_cypher(
+                "MATCH (s:Strategy) WHERE s.strategy_class IS NOT NULL "
+                "RETURN DISTINCT s.strategy_class AS cls ORDER BY cls"
+            )
+            existing_classes = [r["cls"] for r in class_rows if r.get("cls")]
+        except Exception:  # noqa: BLE001
+            existing_classes = []
+        if existing_classes:
+            print(f"Existing classes: {', '.join(existing_classes)}")
+        print(f"Found {len(strategies)} unclassified strategies.\n")
+        patched = 0
+        for s in strategies:
+            label = (
+                f"{s['instrument']}/{s['timeframe']}/{s['direction']}/{s['logic_type']}"
+            )
+            print(f"Strategy: {s['strategy_id']} ({label})")
+            value = input("  strategy_class (blank to skip): ").strip().lower()
+            if not value:
+                print("  skipped")
+                continue
+            ok = store.patch_strategy_class(s["strategy_id"], value)
+            if ok:
+                print(f"  OK: strategy_class = {value!r}")
+                patched += 1
+            else:
+                print(f"  WARNING: strategy not found — {s['strategy_id']}")
+        print(f"\nDone: {patched}/{len(strategies)} strategies classified.")
+    finally:
+        store.close()
+    return 0
+
+
 def cmd_backfill(args: argparse.Namespace) -> int:
+    if getattr(args, "strategy_class_backfill", False):
+        return _cmd_backfill_strategy_class(args)
     """Execute `qw backfill --embeddings` — embed+store vectors for null-embedding hypothesis nodes.
 
     For each Hypothesis node with null embedding:
@@ -1992,6 +2054,16 @@ def main() -> int:
         type=int,
         default=3,
         help="Neo4j connection timeout in seconds (default 3)",
+    )
+    backfill_parser.add_argument(
+        "--strategy-class",
+        action="store_true",
+        default=False,
+        dest="strategy_class_backfill",
+        help=(
+            "Prompt for strategy_class for each Strategy node missing the property. "
+            "Prints existing classes as suggestions before each prompt."
+        ),
     )
     backfill_parser.set_defaults(func=cmd_backfill)
 

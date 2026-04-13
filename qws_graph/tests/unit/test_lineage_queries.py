@@ -796,4 +796,5 @@ class TestPresetCatalogStory4:
             "former_champions",
             "hypotheses_by_status",
             "hypothesis_search",
+            "portfolio_by_class",
         }

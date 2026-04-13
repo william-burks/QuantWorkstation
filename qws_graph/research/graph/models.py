@@ -34,6 +34,7 @@ class Strategy(BaseModel):
     direction: Literal["long", "short", "bear", "bull"]
     logic_type: str
     family_id: str | None = None
+    strategy_class: str | None = None
 
 
 class Config(BaseModel):

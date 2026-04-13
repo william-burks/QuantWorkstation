@@ -23,6 +23,7 @@ from .query import (
     get_list_aborted_v1,
     get_list_oos_pending_v1,
     get_portfolio_alpha_v1,
+    get_portfolio_by_class_v1,
     get_promotion_candidates_v1,
     get_recent_champions_v1,
     get_regime_performance_v1,
@@ -362,6 +363,16 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         ),
         requires_graph=True,
     ),
+    "portfolio_by_class": PresetSpec(
+        name="portfolio_by_class",
+        description=(
+            "Group active (non-ABORTED) strategies by strategy_class. "
+            "Unclassified strategies appear under '__unclassified__'. "
+            "Columns: strategy_class, count, strategies."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
 }
 
 
@@ -532,6 +543,10 @@ def run_preset(
         assert service is not None
         return service.get_hypothesis_search_v1(title_fragment=title_fragment)
 
+    if name == "portfolio_by_class":
+        assert service is not None
+        return service.get_portfolio_by_class_v1()
+
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 
 
@@ -605,6 +620,7 @@ _PRESET_VIEW_FUNCTIONS = {
     "runs_by_regime": get_runs_by_regime_v1,
     "regime_performance": get_regime_performance_v1,
     "similar_hypotheses": get_similar_hypotheses_v1,
+    "portfolio_by_class": get_portfolio_by_class_v1,
 }
 
 __all__ = [

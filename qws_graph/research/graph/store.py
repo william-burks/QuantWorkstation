@@ -21,6 +21,8 @@ from .cypher import (
     CORRELATED_WITH_CHAMPION_QUERY,
     CORRELATED_WITH_STRATEGY_QUERY,
     CSV_INGEST_QUERY,
+    GET_UNCLASSIFIED_STRATEGIES_QUERY,
+    PATCH_STRATEGY_CLASS_QUERY,
     DEGRADE_CHAMPION_QUERY,
     DEMO_SEED_CYPHER,
     DEMO_TEARDOWN_CYPHER,
@@ -415,6 +417,29 @@ class GraphStore:
             raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
         except Exception as exc:  # noqa: BLE001
             raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def patch_strategy_class(self, strategy_id: str, strategy_class: str) -> bool:
+        """Set strategy_class property on a Strategy node. Returns True if node found."""
+        with self._driver.session(database=self._database) as session:
+            def _write(tx) -> bool:
+                result = tx.run(
+                    PATCH_STRATEGY_CLASS_QUERY,
+                    strategy_id=strategy_id,
+                    strategy_class=strategy_class,
+                )
+                record = result.single()
+                return record is not None
+
+            return session.execute_write(_write)
+
+    def get_unclassified_strategies(self) -> list[dict]:
+        """Return Strategy nodes missing strategy_class, ordered by created_at DESC."""
+        with self._driver.session(database=self._database) as session:
+            def _read(tx) -> list[dict]:
+                result = tx.run(GET_UNCLASSIFIED_STRATEGIES_QUERY)
+                return [dict(r) for r in result]
+
+            return session.execute_read(_read)
 
     def update_champion_oos_status(
         self,

@@ -14,6 +14,7 @@ MERGE (s:Strategy {strategy_id: row.strategy.strategy_id})
     s.created_at = datetime()
   SET
     s.family_id = row.strategy.family_id,
+    s.strategy_class = row.strategy.strategy_class,
     s.updated_at = datetime()
 
 MERGE (r:Run {run_id: row.run.run_id})
@@ -515,6 +516,46 @@ SET r.trial_metadata = $trial_metadata
 
 
 # ---------------------------------------------------------------------------
+# strategy_class property writes (QWS-1012)
+# ---------------------------------------------------------------------------
+
+PATCH_STRATEGY_CLASS_QUERY = """
+MATCH (s:Strategy {strategy_id: $strategy_id})
+SET s.strategy_class = $strategy_class, s.updated_at = datetime()
+RETURN s.strategy_id AS strategy_id
+""".strip()
+
+GET_UNCLASSIFIED_STRATEGIES_QUERY = """
+MATCH (s:Strategy)
+WHERE s.strategy_class IS NULL AND s.status <> 'ABORTED'
+RETURN s.strategy_id AS strategy_id, s.instrument AS instrument,
+       s.timeframe AS timeframe, s.direction AS direction,
+       s.logic_type AS logic_type
+ORDER BY s.created_at DESC
+""".strip()
+
+PORTFOLIO_BY_CLASS_CYPHER = """
+MATCH (s:Strategy)
+WHERE s.status <> 'ABORTED'
+WITH s.strategy_class AS cls, collect({
+  strategy_id: s.strategy_id,
+  instrument: s.instrument,
+  timeframe: s.timeframe,
+  direction: s.direction,
+  logic_type: s.logic_type,
+  has_champion: exists((s)-[:PRODUCED_CHAMPION]->(:Champion)),
+  strategy_class: s.strategy_class
+}) AS strategies
+RETURN {
+  strategy_class: coalesce(cls, '__unclassified__'),
+  count: size(strategies),
+  strategies: strategies
+} AS result
+ORDER BY result.strategy_class ASC
+""".strip()
+
+
+# ---------------------------------------------------------------------------
 # CORRELATED_WITH edge write (QWS-0603)
 # Symmetric: written in both directions so queries can match either endpoint.
 # ---------------------------------------------------------------------------
@@ -682,6 +723,7 @@ MERGE (s1:Strategy {strategy_id: 'demo-strategy-alpha'})
       s1.direction = 'bear',
       s1.logic_type = 'demo-logic',
       s1.family_id = 'demo_family_001',
+      s1.strategy_class = 'liquidity_sweep',
       s1.is_demo = true,
       s1.updated_at = datetime()
 
@@ -693,6 +735,7 @@ MERGE (s2:Strategy {strategy_id: 'demo-strategy-beta'})
       s2.direction = 'bear',
       s2.logic_type = 'demo-logic',
       s2.family_id = 'demo_family_001',
+      s2.strategy_class = 'liquidity_sweep',
       s2.is_demo = true,
       s2.updated_at = datetime()
 

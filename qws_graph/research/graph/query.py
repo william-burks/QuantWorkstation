@@ -16,7 +16,7 @@ from typing import Any, Protocol
 
 from neo4j import GraphDatabase
 
-from .cypher import GET_FORMER_CHAMPIONS_V1_CYPHER
+from .cypher import GET_FORMER_CHAMPIONS_V1_CYPHER, PORTFOLIO_BY_CLASS_CYPHER
 from .query_models import (
     ChampionDetailsV1,
     ConfigLinkageV1,
@@ -740,6 +740,10 @@ class GraphQueryService:
         with self._driver.session(database=self._database) as session:
             return get_former_champions_v1(session)
 
+    def get_portfolio_by_class_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_portfolio_by_class_v1(session)
+
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
     if hasattr(record, "data") and callable(record.data):
@@ -1226,6 +1230,11 @@ def get_hypothesis_search_v1(
     return _all_results(session, GET_HYPOTHESIS_SEARCH_V1_CYPHER, title_fragment=title_fragment)
 
 
+def get_portfolio_by_class_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return strategies grouped by strategy_class; unclassified under '__unclassified__'."""
+    return _all_results(session, PORTFOLIO_BY_CLASS_CYPHER)
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -1252,6 +1261,7 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_hypothesis_audit_v1": get_hypothesis_audit_v1,
     "get_check_redundancy_v1": get_check_redundancy_v1,
     "get_similar_hypotheses_v1": get_similar_hypotheses_v1,
+    "get_portfolio_by_class_v1": get_portfolio_by_class_v1,
 }
 
 
@@ -1309,4 +1319,6 @@ __all__ = [
     "get_run_stats_summary_v1",
     "get_strategy_lineage_v1",
     "get_strategy_summary_v1",
+    "get_portfolio_by_class_v1",
+    "PORTFOLIO_BY_CLASS_CYPHER",
 ]
