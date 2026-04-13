@@ -29,7 +29,7 @@ After this story, a researcher can:
 - `queued` is a boolean property on `Hypothesis` node — additive, nullable, defaults false
 - `--queue` flag added to `qw record --hypothesis` — sets `queued=true`
 - `--branched-from <run_id or hypothesis_id>` already planned under QWS-HF-001; this story depends on that being merged
-- `queued_hypotheses` preset: `MATCH (h:Hypothesis {queued: true}) OPTIONAL MATCH (h)<-[:BRANCHED_FROM]-(src) RETURN h.hypothesis_id, h.title, h.findings, src.hypothesis_id, h.created_at ORDER BY h.created_at DESC`
+- `queued_hypotheses` preset: `MATCH (h:Hypothesis {queued: true}) OPTIONAL MATCH (h)-[:BRANCHED_FROM]->(src) RETURN h.hypothesis_id, h.title, h.findings, src.hypothesis_id, h.created_at ORDER BY h.created_at DESC`
 
 ## In Scope
 - `queued` property on `Hypothesis` node

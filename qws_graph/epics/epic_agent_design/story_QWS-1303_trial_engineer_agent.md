@@ -10,7 +10,7 @@ BLOCKED
 code
 
 ## Blocked On
-QWS-1302 (navigator handoff contract), QWS-0907 (trial_metadata — bundle.json must include hypothesis_id)
+QWS-1302 (navigator handoff contract), QWS-HF-001 (hypothesis_id in bundle.json)
 
 ## Summary
 Extract ~200-line trial boilerplate to `trial_base.py`, then build `trial-engineer` agent that generates trial scripts from a hypothesis input contract, writes script + bundle template, and stops. Does not auto-run.
@@ -30,7 +30,7 @@ After this story:
 - Boilerplate extraction is AC-1 — trial-engineer agent cannot be built without it
 - `trial_base.py` exports: `prepare_data()`, `compute_metrics()`, `write_html()`, `make_bundle()`
 - Agent model: Sonnet (mechanical code generation, not reasoning-heavy)
-- STOP gate is explicit in agent file: after write, print path and await instruction before executing
+- STOP gate is explicit in agent file: after write, print path and await instruction before executing. STOP gate is instruction-only — agent prints the generated script path and stops; no guard enforcement. Guard is scoped to blocking destructive qw commands only.
 - Guard enforces: generated bundle.json must contain `hypothesis_id` field before run is permitted
 - Trial NN = max existing NN + 1; guard blocks if numbering is wrong
 
@@ -63,6 +63,8 @@ After this story:
 - [ ] `agent-trial-guard.sh` blocks: writes to `execution/`, `data/collectors/`, `util/`, git operations
 - [ ] `agent-trial-guard.sh` blocks `qw record --bundle` if bundle.json missing `hypothesis_id`
 - [ ] `agent-trial-guard.sh` blocks trial script write if proposed NN ≠ max existing NN + 1
+- [ ] Guard blocks execution if generated bundle.json is missing `hypothesis_id` field
+- [ ] Guard blocks execution if trial script filename does not match `NN_description.py` pattern
 - [ ] Tool list in agent file: Read, Write (scoped to `research/trials/` and `research/results/` only), Bash (scoped to `python` execution and `qw record --bundle` only)
 
 ## Definition of Done

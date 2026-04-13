@@ -53,6 +53,12 @@ if [ "$TOOL" = "Bash" ] && [ -n "$COMMAND" ]; then
     exit 2
   fi
 
+  # Block qw monitor
+  if echo "$COMMAND" | grep -qE 'qw\s+monitor'; then
+    echo "Blocked: research-navigator cannot run qw monitor" >&2
+    exit 2
+  fi
+
   # Block git commit
   if echo "$COMMAND" | grep -qE 'git\s+commit'; then
     echo "Blocked: research-navigator cannot commit" >&2
