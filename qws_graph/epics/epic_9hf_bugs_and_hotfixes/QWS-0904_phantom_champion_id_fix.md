@@ -53,13 +53,45 @@ If the write succeeds but the read-back returns no node, treat as a write failur
 - `qws_graph/tests/integration/test_cli_record_bundle.py` — E2E assert: printed ID == graph ID for promoted champion
 
 ## Acceptance Criteria
-- [ ] `qw record --bundle <dir>` prints champion ID only after the Neo4j write transaction commits
-- [ ] Printed champion ID matches the ID returned by `qw query --name recent_champions` for the same strategy
-- [ ] If Neo4j write succeeds but read-back finds no node, command exits non-zero with an error message (no OK printed)
-- [ ] If Neo4j write fails, command exits non-zero with an error message (no OK printed)
-- [ ] E2E test: auto-promoted champion printed ID == graph ID for same strategy
+- [x] `qw record --bundle <dir>` prints champion ID only after the Neo4j write transaction commits
+- [x] Printed champion ID matches the ID returned by `qw query --name recent_champions` for the same strategy
+- [x] If Neo4j write succeeds but read-back finds no node, command exits non-zero with an error message (no OK printed)
+- [x] If Neo4j write fails, command exits non-zero with an error message (no OK printed)
+- [x] E2E test: auto-promoted champion printed ID == graph ID for same strategy
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
+- [x] All ACs passing
+- [x] Tests green
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: champion ID printed after write commits
+- type: cli
+- cmd: `source .venv/bin/activate && python -m research.graph.cli record --bundle <bundle_dir> 2>&1`
+- expect_contains: "[PROMOTED]"
+- expect_exit: 0
+
+### AC2: printed ID matches graph ID
+- type: regression
+- cmd: integration test `pytest qws_graph/tests/integration/test_cli_record_bundle.py -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC3: write succeeds, readback finds no node → non-zero exit
+- type: cli
+- cmd: unit test coverage — `StoreError` raised by `_maybe_auto_promote_champion` when `_readback` returns None; `_cmd_bundle` catches it, prints `ERROR: champion write verification failed:`, returns 1
+- expect_contains: "ERROR: champion write verification failed"
+- expect_exit: 1
+
+### AC4: write fails → non-zero exit
+- type: cli
+- cmd: existing `StoreInfraError` path — Neo4j write failure exits 2 with `ERROR: Neo4j write failed:`
+- expect_contains: "ERROR: Neo4j write failed"
+- expect_exit: 2
+
+### AC5: E2E printed ID == graph ID
+- type: regression
+- cmd: `source .venv/bin/activate && pytest qws_graph/tests/integration/test_cli_record_bundle.py::TestBundleChampionIdIntegrity::test_printed_champion_id_matches_graph_id -v 2>&1 | tail -5`
+- expect_contains: "PASSED"
+- expect_exit: 0
