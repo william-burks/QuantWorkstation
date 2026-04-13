@@ -4,7 +4,7 @@
 QWS-1002
 
 ## Status
-READY
+TESTING
 
 ## Type
 code

@@ -210,7 +210,7 @@ Stories (independent — implement in parallel):
 Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-1010 parallel from start) → QWS-1100b after QWS-1100a → QWS-1100c after QWS-1100b
 - `QWS-1000` `epic_10_macro_data/closed/story_0_store_series_methods.md` — `CLOSED`
 - `QWS-1001` `epic_10_macro_data/closed/story_cot_collector.md` — `CLOSED` (QWS-1000)
-- `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `CLOSED` (QWS-1000)
+- `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `TESTING` (QWS-1000)
 - `QWS-1003` `epic_10_macro_data/story_eia_crude_collector.md` — `CLOSED` (QWS-1000)
 - `QWS-1004` `epic_10_macro_data/story_baker_hughes_rig_count.md` — `CLOSED` (QWS-1000)
 - `QWS-1005` `epic_10_macro_data/story_noaa_degree_days.md` — `CLOSED` (QWS-1000)
