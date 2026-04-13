@@ -6,13 +6,11 @@ Tests use mock GraphQueryService / mock store — no live Neo4j required.
 from __future__ import annotations
 
 import argparse
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from qws_graph.research.graph.query_presets import PRESET_CATALOG, run_preset
-
 
 # ---------------------------------------------------------------------------
 # Preset catalog tests

@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from research.graph.store import GraphStore, StoreInfraError
-
+from research.graph.store import GraphStore
 
 # ---------------------------------------------------------------------------
 # Helpers

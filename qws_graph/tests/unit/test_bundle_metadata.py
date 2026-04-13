@@ -9,7 +9,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from research.graph.cli import _cmd_bundle
 from research.graph.store import GraphStore
 
@@ -229,7 +228,6 @@ class TestWriteTrialMetadataStore:
 
     def test_write_error_raises_store_infra_error(self):
         from neo4j.exceptions import ServiceUnavailable
-
         from research.graph.store import StoreInfraError
 
         store = self._make_store()

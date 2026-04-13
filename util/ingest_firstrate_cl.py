@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -45,8 +44,12 @@ def _ingest_ibkr() -> int:
     try:
         from ib_insync import IB
 
-        from data.collectors.ibkr_futures import _TIMEFRAMES, _get_contract_chain, _ratio_stitch
-        from data.collectors.ibkr_futures import _fetch_contract_bars
+        from data.collectors.ibkr_futures import (
+            _TIMEFRAMES,
+            _fetch_contract_bars,
+            _get_contract_chain,
+            _ratio_stitch,
+        )
     except ImportError as exc:
         print(f"ERROR: ib_insync not available — {exc}", file=sys.stderr)
         return 1
@@ -176,7 +179,7 @@ def _merge_and_write(store: Store, new_df: pd.DataFrame, source: str) -> int:
 
     new_start = str(combined.index.min().date())
     new_end = str(combined.index.max().date())
-    print(f"Done.")
+    print("Done.")
     print(f"  Source: {source}")
     print(f"  Old range: {existing_start} → {existing_end}")
     print(f"  New range: {new_start} → {new_end}")
@@ -187,7 +190,7 @@ def _merge_and_write(store: Store, new_df: pd.DataFrame, source: str) -> int:
         print(f"WARNING: {dupes} duplicate timestamps detected after merge", file=sys.stderr)
         return 1
 
-    print(f"  Duplicate check: PASS (0 duplicate timestamps)")
+    print("  Duplicate check: PASS (0 duplicate timestamps)")
     return 0
 
 
