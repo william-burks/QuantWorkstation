@@ -208,18 +208,18 @@ Stories (independent — implement in parallel):
 - Objective: wire macro and alternative data sources as inputs for regime signal generation
 
 Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-1010 parallel from start) → QWS-1100b after QWS-1100a → QWS-1100c after QWS-1100b
-- `QWS-1000` `epic_10_macro_data/story_0_store_series_methods.md` — `TESTING`
-- `QWS-1001` `epic_10_macro_data/story_cot_collector.md` — `TESTING` (QWS-1000)
-- `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `TESTING` (QWS-1000)
-- `QWS-1003` `epic_10_macro_data/story_eia_crude_collector.md` — `TESTING` (QWS-1000)
-- `QWS-1004` `epic_10_macro_data/story_baker_hughes_rig_count.md` — `TESTING` (QWS-1000)
-- `QWS-1005` `epic_10_macro_data/story_noaa_degree_days.md` — `TESTING` (QWS-1000)
-- `QWS-1006` `epic_10_macro_data/story_usda_crop_progress.md` — `TESTING` (QWS-1000)
-- `QWS-1007` `epic_10_macro_data/story_google_trends.md` — `TESTING` (QWS-1000)
-- `QWS-1008` `epic_10_macro_data/story_bdti_tanker_index.md` — `TESTING` (QWS-1000)
-- `QWS-1009` `epic_10_macro_data/story_economic_calendar_collector.md` — `TESTING` (QWS-1000)
+- `QWS-1000` `epic_10_macro_data/closed/story_0_store_series_methods.md` — `CLOSED`
+- `QWS-1001` `epic_10_macro_data/story_cot_collector.md` — `CLOSED` (QWS-1000)
+- `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `CLOSED` (QWS-1000)
+- `QWS-1003` `epic_10_macro_data/story_eia_crude_collector.md` — `CLOSED` (QWS-1000)
+- `QWS-1004` `epic_10_macro_data/story_baker_hughes_rig_count.md` — `CLOSED` (QWS-1000)
+- `QWS-1005` `epic_10_macro_data/story_noaa_degree_days.md` — `CLOSED` (QWS-1000)
+- `QWS-1006` `epic_10_macro_data/story_usda_crop_progress.md` — `CLOSED` (QWS-1000)
+- `QWS-1007` `epic_10_macro_data/story_google_trends.md` — `CLOSED` (QWS-1000)
+- `QWS-1008` `epic_10_macro_data/story_bdti_tanker_index.md` — `CLOSED` (QWS-1000)
+- `QWS-1009` `epic_10_macro_data/story_economic_calendar_collector.md` — `CLOSED` (QWS-1000)
 - `QWS-1010` `epic_10_macro_data/story_data_quality_validation.md` — `ready`
-- `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `TESTING` (QWS-1000)
+- `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `CLOSED` (QWS-1000)
 - `QWS-1012` `epic_10_macro_data/story_QWS-1012_strategy_class_taxonomy.md` — `READY` ⚠️ must close before any collector story closes
 - `QWS-1100a` `epic_10_macro_data/closed/story_prefect_1100a_scheduler_isolation.md` — `CLOSED`
 - `QWS-1100b` `epic_10_macro_data/story_prefect_1100b_flows.md` — `BLOCKED` (~~QWS-1100a~~)

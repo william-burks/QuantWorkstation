@@ -51,7 +51,7 @@ Collectors that store macro data have a correct, tested store interface. `write_
 ## Definition of Done
 - [x] All ACs passing
 - [x] Tests green
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 

@@ -4,7 +4,7 @@
 QWS-1011
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
