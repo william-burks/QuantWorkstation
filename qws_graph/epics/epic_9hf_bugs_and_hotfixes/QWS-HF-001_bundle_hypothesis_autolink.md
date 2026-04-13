@@ -1,7 +1,7 @@
 # QWS-HF-001 — Auto-link hypothesis from bundle manifest on ingest
 
 ## Status
-READY
+TESTING
 
 ## Type
 code
