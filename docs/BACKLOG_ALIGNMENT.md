@@ -103,7 +103,7 @@
 |---|---|---|---|
 | Hypothesis Lookup + Findings | QWS-0905 (**CLOSED**) | `findings` property on Hypothesis; `hypotheses_by_status` + `hypothesis_search` presets; `--findings` flag on `qw record --hypothesis` | — |
 | Ad-hoc Cypher + `qw patch` | QWS-0906 (**CLOSED**) | `qw query --cypher` read-only passthrough; `qw patch --run` for surgical property corrections | — |
-| Trial Metadata JSON Blob | QWS-0907 (**TESTING**) | `trial_metadata` map property on Run node; regime columns survive bundle ingest | — |
+| Trial Metadata JSON Blob | QWS-0907 (**CLOSED**) | `trial_metadata` map property on Run node; regime columns survive bundle ingest | — |
 | CL Historical Data Extension | QWS-0908 (**READY**) | CL 1H data extended to ≥ 2020 via IBKR audit or FirstRate CSV ingest | — |
 
 ### Epic 13 — Agent Design
@@ -112,7 +112,7 @@
 |---|---|---|---|
 | Research Ideas Layer | QWS-1301 (**READY**) | `queued` flag on Hypothesis; `queued_hypotheses` preset; lightweight mid-session idea intake; `BRANCHED_FROM` to Run | ~~QWS-HF-001~~, ~~QWS-0905~~ |
 | Research Navigator Agent | QWS-1302 (**BLOCKED**) | `research-navigator` agent; ranked next-direction synthesis; Phase 3 mid-session pivot; proactive redundancy check | QWS-1301, ~~QWS-0905~~, ~~QWS-0906~~ |
-| Trial Engineer Agent | QWS-1303 (**BLOCKED**) | `trial-engineer` agent; generates trial script + bundle.json from hypothesis context; stops before run | QWS-1302, QWS-0907 |
+| Trial Engineer Agent | QWS-1303 (**BLOCKED**) | `trial-engineer` agent; generates trial script + bundle.json from hypothesis context; stops before run | QWS-1302, ~~QWS-0907~~ |
 | Research Session Command Rewrite | QWS-1304 (**BLOCKED**) | `/research-session` orchestrates navigator + trial-engineer; handoff contract defined | QWS-1302, QWS-1303 |
 
 ### Epic 12 — ML Research Layer
