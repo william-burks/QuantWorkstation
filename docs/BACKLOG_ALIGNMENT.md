@@ -95,7 +95,7 @@
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
 | Bundle Hypothesis Autolink + branched-from fix | QWS-HF-001 (**CLOSED**) | `hypothesis_id` in bundle.json → auto TESTED_AS edge; single-call `--hypothesis + --branched-from` creates node + edge atomically | — |
-| Phantom Champion ID Fix | QWS-0904 (**TESTING**) | Auto-promotion prints verified persisted ID (not pre-write hash); researcher can trust CLI output | — |
+| Phantom Champion ID Fix | QWS-0904 (**READY**) | Auto-promotion prints verified persisted ID (not pre-write hash); researcher can trust CLI output | — |
 
 ### Epic 9.5 — Workflow Hardening
 
