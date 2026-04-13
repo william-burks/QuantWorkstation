@@ -7,16 +7,13 @@ AC: auto-promoted champion printed ID equals the ID returned by get_recent_champ
 
 from __future__ import annotations
 
-import io
 import json
-import sys
 import tempfile
 from pathlib import Path
 from unittest import mock
 
 import pytest
 from research.graph.store import EvolutionOutcome, StoreInfraError, StoreResult
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -232,7 +229,6 @@ class TestPhantomIdE2E:
 
     def test_printed_champion_id_matches_graph_id(self) -> None:
         """After bundle ingest with auto-promotion, printed ID == ID in Neo4j."""
-        from research.graph.query import GraphQueryService
         from research.graph.store import GraphStore
 
         uri, user, password = _require_live_neo4j()
