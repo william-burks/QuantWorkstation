@@ -53,45 +53,13 @@ If the write succeeds but the read-back returns no node, treat as a write failur
 - `qws_graph/tests/integration/test_cli_record_bundle.py` — E2E assert: printed ID == graph ID for promoted champion
 
 ## Acceptance Criteria
-- [x] `qw record --bundle <dir>` prints champion ID only after the Neo4j write transaction commits
-- [x] Printed champion ID matches the ID returned by `qw query --name recent_champions` for the same strategy
-- [x] If Neo4j write succeeds but read-back finds no node, command exits non-zero with an error message (no OK printed)
-- [x] If Neo4j write fails, command exits non-zero with an error message (no OK printed)
-- [x] E2E test: auto-promoted champion printed ID == graph ID for same strategy
+- [ ] `qw record --bundle <dir>` prints champion ID only after the Neo4j write transaction commits
+- [ ] Printed champion ID matches the ID returned by `qw query --name recent_champions` for the same strategy
+- [ ] If Neo4j write succeeds but read-back finds no node, command exits non-zero with an error message (no OK printed)
+- [ ] If Neo4j write fails, command exits non-zero with an error message (no OK printed)
+- [ ] E2E test: auto-promoted champion printed ID == graph ID for same strategy
 
 ## Definition of Done
-- [x] All ACs passing
-- [x] Tests green
+- [ ] All ACs passing
+- [ ] Tests green
 - [ ] Story marked CLOSED
-
-## Acceptance Test Plan
-
-### AC1: Prints champion ID only after write commits
-- type: regression
-- cmd: `source .venv/bin/activate && pytest qws_graph/tests/integration/test_cli_record_bundle.py::TestAutopromoteChampionIdVerified::test_printed_champion_id_matches_graph_id -v`
-- expect_contains: "PASSED"
-- expect_exit: 0
-
-### AC2: Printed ID matches graph ID
-- type: regression
-- cmd: `source .venv/bin/activate && pytest qws_graph/tests/integration/test_cli_record_bundle.py::TestAutopromoteChampionIdVerified::test_printed_champion_id_matches_graph_id -v`
-- expect_contains: "PASSED"
-- expect_exit: 0
-
-### AC3: Read-back failure → non-zero exit
-- type: regression
-- cmd: `source .venv/bin/activate && pytest qws_graph/tests/unit/test_store_dedup.py::TestMaybeAutoPromoteChampion::test_promotes_when_no_existing_champion -v`
-- expect_contains: "PASSED"
-- expect_exit: 0
-
-### AC4: Write failure → non-zero exit (existing behavior)
-- type: regression
-- cmd: `source .venv/bin/activate && pytest qws_graph/tests/unit/ -v -k "StoreInfraError or infra_error" 2>&1 | tail -5`
-- expect_contains: "no tests ran"
-- expect_exit: 0
-
-### AC5: E2E printed ID == graph ID
-- type: regression
-- cmd: `source .venv/bin/activate && pytest qws_graph/tests/integration/test_cli_record_bundle.py -v`
-- expect_contains: "PASSED"
-- expect_exit: 0

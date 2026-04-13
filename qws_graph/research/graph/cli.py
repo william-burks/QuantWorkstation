@@ -498,27 +498,15 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
     # Print bundle receipt
     print(f"BUNDLE: {bundle_dir.name}")
     print(f"  csv: {csv_filename} ({csv_kind})")
-    phantom_id_error = False
     for outcome in result.evolution:
         ev_str = f"  ev={outcome.evidence_score:.2f}" if outcome.evidence_score is not None else ""
         if outcome.status == "skipped":
             print(f"  [SKIPPED]  {outcome.run_id}{ev_str} — {outcome.reason}")
         elif outcome.status == "promoted":
-            if outcome.champion_id is None:
-                # Write appeared to succeed but read-back found no Champion node.
-                # Printing a phantom ID would cause silent downstream failures.
-                print(
-                    f"ERROR: champion write appeared to succeed for run {outcome.run_id}"
-                    " but no Champion node found in graph — check Neo4j state",
-                    file=sys.stderr,
-                )
-                phantom_id_error = True
-            else:
-                print(f"  [PROMOTED] {outcome.run_id}{ev_str} → Champion {outcome.champion_id}")
+            champ = f" → Champion {outcome.champion_id}" if outcome.champion_id else ""
+            print(f"  [PROMOTED] {outcome.run_id}{ev_str}{champ}")
         else:
             print(f"  [RECORDED] {outcome.run_id}{ev_str}")
-    if phantom_id_error:
-        return 1
     if html_abs_path:
         if persisted_run_ids:
             print(
