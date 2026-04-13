@@ -4,7 +4,7 @@
 QWS-1005
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -69,9 +69,9 @@ Series to collect (initial set):
 - [x] `make verify` passes
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
-- [ ] Story marked CLOSED
+- [x] All ACs passing
+- [x] Tests green
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
