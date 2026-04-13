@@ -17,7 +17,7 @@ shared brain. Any model with MCP access reads the same research history.
 - Interface is `qw` CLI + MCP only — no FastAPI
 - Before suggesting a strategy: `qw query --name recent_champions` + `qw query --name list_aborted`
 - Do NOT use nodes/tools marked `[TARGET]` in `PROVENANCE_ENGINE.md` until their story is COMPLETE in `BACKLOG_ALIGNMENT.md`
-- **Epic 9 COMPLETE** — all stories CLOSED (QWS-0901, QWS-0902, QWS-0903). **Next: Epic 9HF** (QWS-HF-001 bundle autolink + QWS-0904 phantom ID fix — implement before next research session) → Epic 9.5 (Workflow Hardening) + Epic 10 (Macro Data) in parallel → Epic 13 (Agent Design) → Epic 12.
+- **Epic 9HF COMPLETE** — QWS-HF-001 + QWS-0904 CLOSED. **Now: Epic 9.5 Workflow Hardening** (QWS-0905, 0906, 0907, 0908 — all READY, independent) in parallel with Epic 10 Macro Data (start QWS-1000). After 9.5: Epic 13 Agent Design (QWS-1301 unblocks after QWS-0905 closes) → Epic 12 ML Research.
 
 ---
 

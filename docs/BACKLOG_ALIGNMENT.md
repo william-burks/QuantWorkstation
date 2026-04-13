@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 9 in progress (QWS-0903 READY). Immediate: Epic 9HF bugs (QWS-HF-001 + QWS-0904) before next research session. Parallel: Epic 9.5 Workflow Hardening + Epic 10 Macro Data (QWS-1012 must close before any collector closes). After gaps: Epic 13 Agent Design (QWS-1301 READY) → Epic 12 ML Research.
+> Current sprint: Epic 9.5 Workflow Hardening (QWS-0905, 0906, 0907, 0908 all READY — independent, run in parallel). Parallel: Epic 10 Macro Data (QWS-1012 must close before any collector closes). After gaps: Epic 13 Agent Design (QWS-1301 READY, unblocked after QWS-0905) → Epic 12 ML Research.
 > ```
 
 ---
@@ -25,7 +25,7 @@
 | Epic 7 — Workflow Readiness | **COMPLETE** | FormerChampion cemetery, OpenAI curation, correlation gate re-check |
 | Epic 8 — Champion Lifecycle Hardening | **COMPLETE** | SUPERSEDED_BY direct lineage edge, recursive decay detection (monitor_champion) |
 | Epic 9 — Strategy Development | **COMPLETE** | Research sessions, workflow observation, system gap audit — no code deliverables |
-| Epic 9HF — Bugs & Hotfixes | **READY** | Fix silent data integrity bugs from Epic 9 sessions (phantom champion ID, TESTED_AS edge, branched-from node creation) |
+| Epic 9HF — Bugs & Hotfixes | **COMPLETE** | Fix silent data integrity bugs from Epic 9 sessions (phantom champion ID, TESTED_AS edge, branched-from node creation) |
 | Epic 9.5 — Workflow Hardening | **READY** | Hypothesis lookup/findings, ad-hoc Cypher, trial metadata, CL data extension |
 | Epic 10 — Macro Data | **PLANNED** | Macro + alternative data ingestion to ArcticDB — QWS-1012 must close before any collector closes |
 | Epic 11 — Production Tracking | **PLANNED** | MLflow Champion registration + OOS sync; split production results from research results |
