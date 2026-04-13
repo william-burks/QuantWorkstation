@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 13 Agent Design (QWS-1301 READY — start now; QWS-1302/1303/1304 unblocked) + Epic 10b Commodity Regime Data (QWS-1005/1006/1011/1013 all READY, parallel). Epic 10 Macro Data COMPLETE. After Epic 13: Epic 12 ML Research.
+> Current sprint: Epic 13 Agent Design (QWS-1301 READY — start now; QWS-1302/1303/1304 unblocked). Epic 10 Macro Data COMPLETE. Epic 10b Commodity Regime Data COMPLETE. After Epic 13: Epic 12 ML Research.
 > ```
 
 ---
@@ -28,7 +28,7 @@
 | Epic 9HF — Bugs & Hotfixes | **COMPLETE** | Fix silent data integrity bugs from Epic 9 sessions (phantom champion ID, TESTED_AS edge, branched-from node creation) |
 | Epic 9.5 — Workflow Hardening | **COMPLETE** | Hypothesis lookup/findings, ad-hoc Cypher, trial metadata, CL data extension |
 | Epic 10 — Macro Data | **COMPLETE** | Macro + alternative data ingestion to ArcticDB — 13 stories CLOSED, 3 moved to Epic 10b (NG/ZC/ZS now in scope) |
-| Epic 10b — Commodity Regime Data | **READY** | Weather + crop alt data for NG/ZC/ZS regime conditioning — extends Epic 10 infra |
+| Epic 10b — Commodity Regime Data | **COMPLETE** | Weather + crop alt data for NG/ZC/ZS regime conditioning — extends Epic 10 infra |
 | Epic 11 — Production Tracking | **PLANNED** | MLflow Champion registration + OOS sync; split production results from research results |
 | Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
 | Epic 13 — Agent Design | **PLANNED** | Research Navigator, Trial Engineer, Research Ideas Layer, Session Command Rewrite |

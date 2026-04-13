@@ -21,7 +21,7 @@ Navigation and execution index for `qws_graph/epics`.
 10. **Epic 9HF — Bugs & Hotfixes** — `READY` (implement now, parallel with 10)
 11. **Epic 9.5 — Workflow Hardening** — `COMPLETE`
 12. **Epic 10 — Macro Data** — `COMPLETE`
-13. **Epic 10b — Commodity Regime Data** — `READY`
+13. **Epic 10b — Commodity Regime Data** — `COMPLETE`
 14. **Epic 11 — Production Tracking** — `PLANNED`
 14. **Epic 13 — Agent Design** — `PLANNED` (QWS-1301 READY; 1302-1304 blocked on gap fixes)
 15. **Epic 12 — ML Research Layer** — `PLANNED`
@@ -229,15 +229,15 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 
 ---
 
-## Epic 10b — Commodity Regime Data [READY]
-- Epic README: `epic_10b_commodity_regime_data/README.md`
+## Epic 10b — Commodity Regime Data [COMPLETE]
+- Epic README: `epic_10b_commodity_regime_data[COMPLETE]/README.md`
 - Objective: weather + crop alternative data for NG/ZC/ZS regime conditioning
 
 Stories (independent — implement in parallel):
-- `QWS-1005` `epic_10b_commodity_regime_data/closed/story_QWS-1005_noaa_degree_days.md` — `CLOSED`
-- `QWS-1006` `epic_10b_commodity_regime_data/closed/story_QWS-1006_usda_crop_progress.md` — `CLOSED`
-- `QWS-1011` `epic_10b_commodity_regime_data/closed/story_QWS-1011_ndvi_crop_health.md` — `CLOSED`
-- `QWS-1013` `epic_10b_commodity_regime_data/closed/story_QWS-1013_macro_prefect_flow.md` — `CLOSED`
+- `QWS-1005` `epic_10b_commodity_regime_data[COMPLETE]/closed/story_QWS-1005_noaa_degree_days.md` — `CLOSED`
+- `QWS-1006` `epic_10b_commodity_regime_data[COMPLETE]/closed/story_QWS-1006_usda_crop_progress.md` — `CLOSED`
+- `QWS-1011` `epic_10b_commodity_regime_data[COMPLETE]/closed/story_QWS-1011_ndvi_crop_health.md` — `CLOSED`
+- `QWS-1013` `epic_10b_commodity_regime_data[COMPLETE]/closed/story_QWS-1013_macro_prefect_flow.md` — `CLOSED`
 
 ---
 
@@ -306,7 +306,7 @@ promotion).
 - **Epic 9 COMPLETE** — all 3 stories CLOSED.
 - **Epic 9.5 COMPLETE** — all 4 stories CLOSED.
 - **Epic 10 COMPLETE** — all stories CLOSED (QWS-1005, QWS-1006, QWS-1011 moved to Epic 10b).
-- **Epic 10b READY** — 4 stories (QWS-1005, QWS-1006, QWS-1011, QWS-1013), all independent.
-- **Immediate:** Epic 13 Agent Design (QWS-1301 READY, unblocked) + Epic 10b in parallel.
+- **Epic 10b COMPLETE** — all 4 stories CLOSED (QWS-1005, QWS-1006, QWS-1011, QWS-1013).
+- **Immediate:** Epic 13 Agent Design (QWS-1301 READY, unblocked).
 - **After 1301:** QWS-1302 → QWS-1303 → QWS-1304 → Epic 12 (ML research).
 
