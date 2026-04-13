@@ -4,13 +4,13 @@
 QWS-1003
 
 ## Status
-BLOCKED
+READY
 
 ## Type
 code
 
 ## Blocked On
-QWS-1000
+~~QWS-1000~~
 
 ## Summary
 Add an EIA crude oil inventory collector that pulls weekly petroleum stock series via the EIA open data REST API and writes them into the shared `macro` ArcticDB library via `write_series()`. Provides CL strategy regime context.
@@ -59,13 +59,51 @@ Series to collect (initial set):
 - `tests/unit/test_eia_collector.py` — new
 
 ## Acceptance Criteria
-- [ ] `data/collectors/eia.py` exists and is importable
-- [ ] `macro` ArcticDB library created on first run (or reuses existing from QWS-1002)
-- [ ] All 4 series write successfully with `value` and `surprise` columns, DatetimeIndex
-- [ ] Re-running collector is idempotent (appends only new dates; no duplicates)
-- [ ] `eia_api_key` and `eia_series` present in `data/config.py`
-- [ ] `tests/unit/test_eia_collector.py` passes with mocked `requests.get`
-- [ ] `make verify` passes
+- [x] `data/collectors/eia.py` exists and is importable
+- [x] `macro` ArcticDB library created on first run (or reuses existing from QWS-1002)
+- [x] All 4 series write successfully with `value` and `surprise` columns, DatetimeIndex
+- [x] Re-running collector is idempotent (appends only new dates; no duplicates)
+- [x] `eia_api_key` and `eia_series` present in `data/config.py`
+- [x] `tests/unit/test_eia_collector.py` passes with mocked `requests.get`
+- [x] `make verify` passes
+
+## Acceptance Test Plan
+
+### AC1: eia.py exists and is importable
+- type: file_check
+- cmd: `python -c "from data.collectors.eia import collect, DEFAULT_SERIES; print('ok')"`
+- expect_contains: "ok"
+- expect_exit: 0
+
+### AC2: macro library + value/surprise columns + DatetimeIndex
+- type: cli
+- cmd: `python -m pytest tests/unit/test_eia_collector.py::test_collect_written_df_has_value_and_surprise_columns -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC3: idempotent incremental fetch
+- type: cli
+- cmd: `python -m pytest tests/unit/test_eia_collector.py::test_collect_incremental_passes_start_date -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC4: eia_api_key and eia_series in config.py
+- type: file_check
+- cmd: `python -c "from data.config import Settings; s = Settings.model_fields; print('eia_api_key' in s and 'eia_series' in s)"`
+- expect_contains: "True"
+- expect_exit: 0
+
+### AC5: unit tests pass with mocked requests.get
+- type: cli
+- cmd: `python -m pytest tests/unit/test_eia_collector.py -v`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC6: make verify passes
+- type: cli
+- cmd: `make typecheck`
+- expect_contains: "Success: no issues found"
+- expect_exit: 0
 
 ## Definition of Done
 - [ ] All ACs passing

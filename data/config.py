@@ -67,6 +67,16 @@ class Settings(BaseSettings):
         "BAMLH0A0HYM2",
     ]
 
+    # EIA petroleum stock series to collect (see data/collectors/eia.py)
+    # API key loaded from EIA_API_KEY env var (free at https://www.eia.gov/opendata/)
+    eia_api_key: str = ""
+    eia_series: list[str] = [
+        "WCRSTUS1",
+        "WCSSTUS1",
+        "WGTSTUS1",
+        "WDISTUS1",
+    ]
+
     # Risk / evaluation
     eval_profit_target: float = 3000.0  # evaluation profit goal (USD)
     risk_per_trade_pct: float = 0.01  # 1% of balance per trade (range: 0.005–0.01)
