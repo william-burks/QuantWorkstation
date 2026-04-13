@@ -150,7 +150,19 @@ class TestMaybeAutoPromoteChampion:
     def test_promotes_when_no_existing_champion(self):
         store = _make_store()
         fake_session = MagicMock()
-        fake_session.execute_read.side_effect = lambda fn: fn(_make_tx_with_single(None))
+        # First execute_read: current champion query → None (no existing champion).
+        # Second execute_read: read-back after write → return the persisted ID.
+        _readback_id = "ab12cd34ef56"  # 12-char stub
+        _read_call = [0]
+
+        def _side_effect(fn):
+            _read_call[0] += 1
+            if _read_call[0] == 1:
+                return fn(_make_tx_with_single(None))
+            # read-back after write
+            return fn(_make_tx_with_single({"champion_id": _readback_id}))
+
+        fake_session.execute_read.side_effect = _side_effect
         fake_session.execute_write = MagicMock()
 
         champion_id = store._maybe_auto_promote_champion(
@@ -383,15 +395,20 @@ class TestReconcileChampion:
             "evidence_score": 3.0 * (30**0.5),
         }
         # _maybe_auto_promote_champion will call execute_read for the champion check
+        # and then a read-back after the write to return the persisted ID.
         call_idx = [0]
+        _readback_id = "ff00aa11bb22"  # 12-char stub
 
         def fake_read(fn):
             call_idx[0] += 1
             if call_idx[0] == 1:
                 # reconcile_champion's best-run query
                 return fn(_make_tx_with_single(reconcile_record))
-            # _maybe_auto_promote_champion's current champion query → no champion
-            return fn(_make_tx_with_single(None))
+            if call_idx[0] == 2:
+                # _maybe_auto_promote_champion's current champion query → no champion
+                return fn(_make_tx_with_single(None))
+            # call 3: read-back after write → return persisted champion_id
+            return fn(_make_tx_with_single({"champion_id": _readback_id}))
 
         fake_session.execute_read.side_effect = fake_read
         fake_session.execute_write = MagicMock()

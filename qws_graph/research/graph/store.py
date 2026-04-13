@@ -1409,7 +1409,22 @@ ORDER BY candidate_id
             ).consume()
 
         session.execute_write(_write)
-        return new_champ_id
+
+        # Read-back: return the ID that Neo4j actually persisted, not the
+        # pre-write computed hash.  If the node is absent after a successful
+        # write, the caller treats this as a write failure.
+        def _verify(tx) -> str | None:
+            row = tx.run(
+                """
+                MATCH (s:Strategy {strategy_id: $sid})-[:PRODUCED_CHAMPION]->(ch:Champion)
+                RETURN ch.champion_id AS champion_id
+                ORDER BY ch.freeze_date DESC LIMIT 1
+                """,
+                sid=strategy_id,
+            ).single()
+            return row["champion_id"] if row else None
+
+        return session.execute_read(_verify)
 
     def _reconcile_champion(
         self, session, strategy_id: str, promotion_rationale: str = ""
