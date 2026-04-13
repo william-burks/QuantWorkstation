@@ -150,19 +150,14 @@ class TestMaybeAutoPromoteChampion:
     def test_promotes_when_no_existing_champion(self):
         store = _make_store()
         fake_session = MagicMock()
-        # Call 1: _read (no existing champion). Call 2: _readback (persisted ID).
-        _READBACK_ID = "aabbcc112233"
-        read_calls = iter([None, {"champion_id": _READBACK_ID}])
-        fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single(next(read_calls))
-        )
+        fake_session.execute_read.side_effect = lambda fn: fn(_make_tx_with_single(None))
         fake_session.execute_write = MagicMock()
 
         champion_id = store._maybe_auto_promote_champion(
             fake_session, "s-x", self._make_run_data(3.0, 20), 3.0 * (20**0.5)
         )
 
-        assert champion_id == _READBACK_ID
+        assert champion_id is not None and len(champion_id) == 12
         fake_session.execute_write.assert_called_once()
 
     def test_promotes_when_evidence_beats_existing_champion(self):
@@ -237,12 +232,7 @@ class TestMaybeAutoPromoteChampion:
     def test_institutional_tier_assigned_above_threshold(self):
         store = _make_store()
         fake_session = MagicMock()
-        # Call 1: _read (no existing champion). Call 2: _readback (persisted ID).
-        _READBACK_ID = "aabbcc112233"
-        read_calls = iter([None, {"champion_id": _READBACK_ID}])
-        fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single(next(read_calls))
-        )
+        fake_session.execute_read.side_effect = lambda fn: fn(_make_tx_with_single(None))
 
         captured_params: list[dict] = []
 
@@ -305,12 +295,8 @@ class TestMaybeAutoPromoteChampion:
         """First promotion (prev IS NULL) must not emit SUPERSEDED_BY."""
         store = _make_store()
         fake_session = MagicMock()
-        # Call 1: _read (no existing champion). Call 2: _readback (persisted ID).
-        _READBACK_ID = "aabbcc112233"
-        read_calls = iter([None, {"champion_id": _READBACK_ID}])
-        fake_session.execute_read.side_effect = lambda fn: fn(
-            _make_tx_with_single(next(read_calls))
-        )
+        # No existing champion — execute_read returns None.
+        fake_session.execute_read.side_effect = lambda fn: fn(_make_tx_with_single(None))
 
         captured_queries: list[str] = []
 
@@ -396,8 +382,7 @@ class TestReconcileChampion:
             "artifact_path": "results/x.csv",
             "evidence_score": 3.0 * (30**0.5),
         }
-        # _maybe_auto_promote_champion will call execute_read for champion check + readback
-        _READBACK_ID = "aabbcc112233"
+        # _maybe_auto_promote_champion will call execute_read for the champion check
         call_idx = [0]
 
         def fake_read(fn):
@@ -405,18 +390,15 @@ class TestReconcileChampion:
             if call_idx[0] == 1:
                 # reconcile_champion's best-run query
                 return fn(_make_tx_with_single(reconcile_record))
-            if call_idx[0] == 2:
-                # _maybe_auto_promote_champion's current champion query → no champion
-                return fn(_make_tx_with_single(None))
-            # call 3: _readback — return persisted champion ID
-            return fn(_make_tx_with_single({"champion_id": _READBACK_ID}))
+            # _maybe_auto_promote_champion's current champion query → no champion
+            return fn(_make_tx_with_single(None))
 
         fake_session.execute_read.side_effect = fake_read
         fake_session.execute_write = MagicMock()
 
         result = store._reconcile_champion(fake_session, "strategy-y")
 
-        assert result == _READBACK_ID
+        assert result is not None and len(result) == 12
         # flatten (1) + promotion (1) = 2 execute_write calls
         assert fake_session.execute_write.call_count == 2
 

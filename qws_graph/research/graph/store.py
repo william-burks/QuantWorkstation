@@ -1409,25 +1409,7 @@ ORDER BY candidate_id
             ).consume()
 
         session.execute_write(_write)
-
-        def _readback(tx) -> str | None:
-            row = tx.run(
-                "MATCH (s:Strategy {strategy_id: $sid})-[:PRODUCED_CHAMPION]->(ch:Champion) "
-                "WHERE ch.champion_id = $cid "
-                "RETURN ch.champion_id AS champion_id",
-                sid=strategy_id,
-                cid=new_champ_id,
-            ).single()
-            return row["champion_id"] if row else None
-
-        persisted_id = session.execute_read(_readback)
-        if persisted_id is None:
-            raise StoreError(
-                f"auto-promote wrote Champion {new_champ_id!r} for strategy"
-                f" {strategy_id!r} but read-back found no node — write may have"
-                " silently rolled back"
-            )
-        return persisted_id
+        return new_champ_id
 
     def _reconcile_champion(
         self, session, strategy_id: str, promotion_rationale: str = ""

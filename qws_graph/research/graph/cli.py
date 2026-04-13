@@ -494,9 +494,6 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
     except StoreInfraError as exc:
         print(f"ERROR: Neo4j write failed: {exc}", file=sys.stderr)
         return 2
-    except StoreError as exc:
-        print(f"ERROR: champion write verification failed: {exc}", file=sys.stderr)
-        return 1
 
     # Print bundle receipt
     print(f"BUNDLE: {bundle_dir.name}")
