@@ -4,7 +4,7 @@
 QWS-0906
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -56,7 +56,7 @@ Researcher runs `qw query --cypher "MATCH (s:Strategy) RETURN s LIMIT 10"` for a
 ## Definition of Done
 - [x] All ACs passing
 - [x] Tests green
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
