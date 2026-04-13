@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 13 Agent Design (QWS-1301 READY — start now; QWS-1302/1303/1304 unblocked by Epic 9.5 COMPLETE). Parallel: Epic 10 Macro Data (QWS-1000 READY; QWS-1012 must close before any collector closes). After Epic 13: Epic 12 ML Research.
+> Current sprint: Epic 13 Agent Design (QWS-1301 READY — start now; QWS-1302/1303/1304 unblocked by Epic 9.5 COMPLETE). Parallel: Epic 10 Macro Data (QWS-1000 READY; QWS-1012 CLOSED — collectors may now close). After Epic 13: Epic 12 ML Research.
 > ```
 
 ---
@@ -27,7 +27,7 @@
 | Epic 9 — Strategy Development | **COMPLETE** | Research sessions, workflow observation, system gap audit — no code deliverables |
 | Epic 9HF — Bugs & Hotfixes | **COMPLETE** | Fix silent data integrity bugs from Epic 9 sessions (phantom champion ID, TESTED_AS edge, branched-from node creation) |
 | Epic 9.5 — Workflow Hardening | **COMPLETE** | Hypothesis lookup/findings, ad-hoc Cypher, trial metadata, CL data extension |
-| Epic 10 — Macro Data | **PLANNED** | Macro + alternative data ingestion to ArcticDB — QWS-1012 must close before any collector closes |
+| Epic 10 — Macro Data | **PLANNED** | Macro + alternative data ingestion to ArcticDB — ~~QWS-1012 must close before any collector closes~~ (QWS-1012 CLOSED) |
 | Epic 11 — Production Tracking | **PLANNED** | MLflow Champion registration + OOS sync; split production results from research results |
 | Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
 | Epic 13 — Agent Design | **PLANNED** | Research Navigator, Trial Engineer, Research Ideas Layer, Session Command Rewrite |
@@ -143,7 +143,7 @@
 | Economic Calendar Collector | QWS-1009 (**BLOCKED**) | Economic event calendar data in ArcticDB | ~~QWS-1000~~ |
 | Data Quality Validation | QWS-1010 (**READY**) | Validation gate — alerts on missing bars, stale feeds, schema drift | — |
 | NDVI Crop Health Collector | QWS-1011 (**BLOCKED**) | NDVI crop health index in ArcticDB | ~~QWS-1000~~ |
-| Strategy Class Taxonomy | QWS-1012 (**TESTING**) ⚠️ | `strategy_class` free-form string on Strategy; `portfolio_by_class` preset; `qw backfill --strategy-class`; `bundle.json` reads `strategy_class` | — |
+| Strategy Class Taxonomy | QWS-1012 (**CLOSED**) ⚠️ | `strategy_class` free-form string on Strategy; `portfolio_by_class` preset; `qw backfill --strategy-class`; `bundle.json` reads `strategy_class` | — |
 | Scheduler Isolation | QWS-1100a (**CLOSED**) | `execution/risk_scheduler.py` with risk jobs only; `prefect` in pyproject.toml | — |
 | Prefect Flows | QWS-1100b (**BLOCKED**) | Scheduled collection via Prefect flows; 5 `data/flows/` files; 4 deployments registered | ~~QWS-1100a~~ |
 | Prefect Daemon | QWS-1100c (**BLOCKED**) | launchd daemon; `prefect.db` + `mlruns/` in `.gitignore`; all 4 deployments live | QWS-1100b |
