@@ -20,7 +20,7 @@ Navigation and execution index for `qws_graph/epics`.
 9. **Epic 9 — Strategy Development** — `COMPLETE`
 10. **Epic 9HF — Bugs & Hotfixes** — `READY` (implement now, parallel with 10)
 11. **Epic 9.5 — Workflow Hardening** — `COMPLETE`
-12. **Epic 10 — Macro Data** — `PLANNED` (QWS-1012 must close before any collector closes)
+12. **Epic 10 — Macro Data** — `TESTING` (QWS-1012 must close before any collector closes)
 13. **Epic 11 — Production Tracking** — `PLANNED`
 14. **Epic 13 — Agent Design** — `PLANNED` (QWS-1301 READY; 1302-1304 blocked on gap fixes)
 15. **Epic 12 — ML Research Layer** — `PLANNED`
@@ -220,7 +220,7 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 - `QWS-1009` `epic_10_macro_data/story_economic_calendar_collector.md` — `CLOSED` (QWS-1000)
 - `QWS-1010` `epic_10_macro_data/story_data_quality_validation.md` — `ready`
 - `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `CLOSED` (QWS-1000)
-- `QWS-1012` `epic_10_macro_data/story_QWS-1012_strategy_class_taxonomy.md` — `READY` ⚠️ must close before any collector story closes
+- `QWS-1012` `epic_10_macro_data/story_QWS-1012_strategy_class_taxonomy.md` — `TESTING` ⚠️ must close before any collector story closes
 - `QWS-1100a` `epic_10_macro_data/closed/story_prefect_1100a_scheduler_isolation.md` — `CLOSED`
 - `QWS-1100b` `epic_10_macro_data/story_prefect_1100b_flows.md` — `BLOCKED` (~~QWS-1100a~~)
 - `QWS-1100c` `epic_10_macro_data/story_prefect_1100c_daemon.md` — `blocked` (QWS-1100b)

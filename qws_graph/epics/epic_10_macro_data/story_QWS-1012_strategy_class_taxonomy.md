@@ -4,7 +4,7 @@
 QWS-1012
 
 ## Status
-READY
+TESTING
 
 ## Type
 schema
