@@ -53,13 +53,46 @@ If the write succeeds but the read-back returns no node, treat as a write failur
 - `qws_graph/tests/integration/test_cli_record_bundle.py` — E2E assert: printed ID == graph ID for promoted champion
 
 ## Acceptance Criteria
-- [ ] `qw record --bundle <dir>` prints champion ID only after the Neo4j write transaction commits
-- [ ] Printed champion ID matches the ID returned by `qw query --name recent_champions` for the same strategy
-- [ ] If Neo4j write succeeds but read-back finds no node, command exits non-zero with an error message (no OK printed)
-- [ ] If Neo4j write fails, command exits non-zero with an error message (no OK printed)
-- [ ] E2E test: auto-promoted champion printed ID == graph ID for same strategy
+- [x] `qw record --bundle <dir>` prints champion ID only after the Neo4j write transaction commits
+- [x] Printed champion ID matches the ID returned by `qw query --name recent_champions` for the same strategy
+- [x] If Neo4j write succeeds but read-back finds no node, command exits non-zero with an error message (no OK printed)
+- [x] If Neo4j write fails, command exits non-zero with an error message (no OK printed)
+- [x] E2E test: auto-promoted champion printed ID == graph ID for same strategy
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green
+- [x] All ACs passing
+- [x] Tests green
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: champion ID printed only after write commits
+- type: file_check
+- cmd: `grep -n 'execute_write\|_readback\|execute_read' qws_graph/research/graph/store.py`
+- expect_contains: "_readback"
+- expect_exit: 0
+
+### AC2: printed ID matches graph ID
+- type: regression
+- cmd: `source .venv/bin/activate && pytest qws_graph/tests/integration/test_cli_record_bundle.py::TestPhantomIdE2E::test_printed_champion_id_matches_graph_id -v 2>&1 | tail -5`
+- expect_contains: "passed"
+- expect_exit: 0
+- note: skipped when Neo4j unavailable; mock equivalent below
+
+### AC3: read-back failure → non-zero exit, no OK
+- type: cli
+- cmd: `source .venv/bin/activate && pytest qws_graph/tests/integration/test_cli_record_bundle.py::TestPhantomChampionIdFix::test_readback_failure_exits_nonzero_no_ok -v 2>&1 | tail -5`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC4: write failure → non-zero exit, no OK
+- type: cli
+- cmd: `source .venv/bin/activate && pytest qws_graph/tests/integration/test_cli_record_bundle.py::TestPhantomChampionIdFix::test_write_fail_exits_nonzero_no_ok -v 2>&1 | tail -5`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC5: E2E printed ID == graph ID
+- type: cli
+- cmd: `source .venv/bin/activate && pytest qws_graph/tests/integration/test_cli_record_bundle.py::TestPhantomChampionIdFix::test_auto_promoted_id_printed_matches_store_return -v 2>&1 | tail -5`
+- expect_contains: "passed"
+- expect_exit: 0

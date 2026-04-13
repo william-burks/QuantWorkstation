@@ -150,7 +150,17 @@ class TestMaybeAutoPromoteChampion:
     def test_promotes_when_no_existing_champion(self):
         store = _make_store()
         fake_session = MagicMock()
-        fake_session.execute_read.side_effect = lambda fn: fn(_make_tx_with_single(None))
+        call_count = [0]
+
+        def fake_read(fn):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                # _read: no existing champion
+                return fn(_make_tx_with_single(None))
+            # _readback: return verified champion node
+            return fn(_make_tx_with_single({"champion_id": "readback000a"}))
+
+        fake_session.execute_read.side_effect = fake_read
         fake_session.execute_write = MagicMock()
 
         champion_id = store._maybe_auto_promote_champion(
@@ -232,7 +242,17 @@ class TestMaybeAutoPromoteChampion:
     def test_institutional_tier_assigned_above_threshold(self):
         store = _make_store()
         fake_session = MagicMock()
-        fake_session.execute_read.side_effect = lambda fn: fn(_make_tx_with_single(None))
+        call_count = [0]
+
+        def fake_read(fn):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                # _read: no existing champion
+                return fn(_make_tx_with_single(None))
+            # _readback: return verified champion node
+            return fn(_make_tx_with_single({"champion_id": "readback000b"}))
+
+        fake_session.execute_read.side_effect = fake_read
 
         captured_params: list[dict] = []
 
@@ -295,8 +315,17 @@ class TestMaybeAutoPromoteChampion:
         """First promotion (prev IS NULL) must not emit SUPERSEDED_BY."""
         store = _make_store()
         fake_session = MagicMock()
-        # No existing champion — execute_read returns None.
-        fake_session.execute_read.side_effect = lambda fn: fn(_make_tx_with_single(None))
+        call_count = [0]
+
+        def fake_read(fn):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                # _read: no existing champion
+                return fn(_make_tx_with_single(None))
+            # _readback: return verified champion node
+            return fn(_make_tx_with_single({"champion_id": "readback000c"}))
+
+        fake_session.execute_read.side_effect = fake_read
 
         captured_queries: list[str] = []
 
@@ -383,6 +412,7 @@ class TestReconcileChampion:
             "evidence_score": 3.0 * (30**0.5),
         }
         # _maybe_auto_promote_champion will call execute_read for the champion check
+        # and then again for the read-back after write.
         call_idx = [0]
 
         def fake_read(fn):
@@ -390,8 +420,11 @@ class TestReconcileChampion:
             if call_idx[0] == 1:
                 # reconcile_champion's best-run query
                 return fn(_make_tx_with_single(reconcile_record))
-            # _maybe_auto_promote_champion's current champion query → no champion
-            return fn(_make_tx_with_single(None))
+            if call_idx[0] == 2:
+                # _maybe_auto_promote_champion's current champion query → no champion
+                return fn(_make_tx_with_single(None))
+            # call 3: _readback after write → return verified champion node
+            return fn(_make_tx_with_single({"champion_id": "readback000d"}))
 
         fake_session.execute_read.side_effect = fake_read
         fake_session.execute_write = MagicMock()

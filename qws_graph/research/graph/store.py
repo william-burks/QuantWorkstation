@@ -1409,7 +1409,20 @@ ORDER BY candidate_id
             ).consume()
 
         session.execute_write(_write)
-        return new_champ_id
+
+        def _readback(tx):
+            row = tx.run(
+                "MATCH (ch:Champion {champion_id: $cid}) RETURN ch.champion_id AS champion_id",
+                cid=new_champ_id,
+            ).single()
+            return row
+
+        verified = session.execute_read(_readback)
+        if verified is None:
+            raise StoreInfraError(
+                f"Champion promoted but read-back found no node: strategy={strategy_id}"
+            )
+        return str(verified["champion_id"])
 
     def _reconcile_champion(
         self, session, strategy_id: str, promotion_rationale: str = ""
