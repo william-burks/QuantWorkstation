@@ -4,13 +4,13 @@
 QWS-1009
 
 ## Status
-BLOCKED
+READY
 
 ## Type
 code
 
 ## Blocked On
-QWS-1000
+None
 
 ## Summary
 Add a FinancialModelingPrep economic calendar collector that pulls upcoming and historical macro events daily and writes event metadata into a new `calendar` ArcticDB library via `write_series()`. Provides blackout window context for strategy research.

@@ -4,13 +4,13 @@
 QWS-1007
 
 ## Status
-BLOCKED
+READY
 
 ## Type
 code
 
 ## Blocked On
-QWS-1000
+None
 
 ## Summary
 Add a Google Trends collector using the `pytrends` library that pulls weekly retail interest scores (0–100) for gold and macro sentiment search terms and writes them into the shared `macro` ArcticDB library via `write_series()`. Provides a retail sentiment leading indicator for GC, MGC, and BTC/USD strategies.

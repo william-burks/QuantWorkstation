@@ -4,13 +4,13 @@
 QWS-1008
 
 ## Status
-BLOCKED
+READY
 
 ## Type
 code
 
 ## Blocked On
-QWS-1000
+None
 
 ## Summary
 Add a Baltic Dirty Tanker Index (BDTI) collector that pulls the daily index value via the Nasdaq Data Link (Quandl) API and writes it into the shared `macro` ArcticDB library via `write_series()`. Leading indicator for CL strategies.
