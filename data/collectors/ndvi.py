@@ -266,9 +266,9 @@ def _download_bundle_csv(bearer_token: str, task_id: str) -> pd.DataFrame:
 
     # Find the primary CSV (not QC or metadata)
     csv_files = [
-        f for f in files
-        if f.get("file_name", "").endswith(".csv")
-        and "_QC" not in f.get("file_name", "")
+        f
+        for f in files
+        if f.get("file_name", "").endswith(".csv") and "_QC" not in f.get("file_name", "")
     ]
     if not csv_files:
         log.warning("No CSV files found in bundle for task %s", task_id)
@@ -296,8 +296,7 @@ def _download_bundle_csv(bearer_token: str, task_id: str) -> pd.DataFrame:
 
     if ndvi_col is None:
         raise ValueError(
-            f"NDVI column not found in AppEEARS CSV for task {task_id}. "
-            f"Columns: {list(df.columns)}"
+            f"NDVI column not found in AppEEARS CSV for task {task_id}. Columns: {list(df.columns)}"
         )
 
     # Date column
@@ -311,9 +310,7 @@ def _download_bundle_csv(bearer_token: str, task_id: str) -> pd.DataFrame:
 
     # MODIS NDVI is stored as integer × 0.0001 in AppEEARS CSV — scale to 0–1
     # Values outside valid range (-2000 to 10000 raw → -0.2 to 1.0) are fill values
-    result["raw_ndvi"] = result["raw_ndvi"].where(
-        result["raw_ndvi"].between(-2000, 10000)
-    )
+    result["raw_ndvi"] = result["raw_ndvi"].where(result["raw_ndvi"].between(-2000, 10000))
     result["raw_ndvi"] = result["raw_ndvi"] * 0.0001
     result = result.dropna(subset=["raw_ndvi"])
 
@@ -453,16 +450,24 @@ def collect(regions: list[str] | None = None) -> None:
                 start_date = (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
                 log.info(
                     "Region %s: last stored %s, fetching from %s",
-                    region, last_date, start_date,
+                    region,
+                    last_date,
+                    start_date,
                 )
             else:
                 clim_start = (today - timedelta(days=365 * CLIM_YEARS)).strftime("%Y-%m-%d")
                 start_date = clim_start
-                log.info("Region %s: no existing data, fetching 5-year baseline from %s", region, start_date)
+                log.info(
+                    "Region %s: no existing data, fetching 5-year baseline from %s",
+                    region,
+                    start_date,
+                )
         except Exception:
             clim_start = (today - timedelta(days=365 * CLIM_YEARS)).strftime("%Y-%m-%d")
             start_date = clim_start
-            log.info("Region %s: no existing data, fetching 5-year baseline from %s", region, start_date)
+            log.info(
+                "Region %s: no existing data, fetching 5-year baseline from %s", region, start_date
+            )
 
         df_new = _collect_region(bearer_token, region, start_date, end_date)
 

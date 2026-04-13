@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 
 from data.collectors.noaa import (
-    DEFAULT_SERIES,
     _SERIES_MAP,
+    DEFAULT_SERIES,
     _fetch_series,
     collect,
 )

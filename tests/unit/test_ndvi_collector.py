@@ -5,9 +5,8 @@ All HTTP calls and store writes are mocked — no live API calls.
 """
 
 from datetime import UTC, date
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -53,9 +52,7 @@ def _make_status_resp(status: str) -> MagicMock:
 
 def _make_bundle_list_resp(file_id: str = "file001", file_name: str = "output.csv") -> MagicMock:
     mock = MagicMock()
-    mock.json.return_value = {
-        "files": [{"file_id": file_id, "file_name": file_name}]
-    }
+    mock.json.return_value = {"files": [{"file_id": file_id, "file_name": file_name}]}
     mock.raise_for_status.return_value = None
     return mock
 
@@ -70,10 +67,7 @@ def _make_csv_download_resp(csv_content: str) -> MagicMock:
 def _sample_ndvi_csv() -> str:
     """CSV matching AppEEARS output format with NDVI column."""
     return (
-        "Date,MOD13Q1_061__250m_16_days_NDVI\n"
-        "2024-05-01,5500\n"
-        "2024-05-17,6200\n"
-        "2024-06-02,7100\n"
+        "Date,MOD13Q1_061__250m_16_days_NDVI\n2024-05-01,5500\n2024-05-17,6200\n2024-06-02,7100\n"
     )
 
 
@@ -464,10 +458,7 @@ def test_collect_idempotent_no_duplicate_rows():
     )
 
     # The "new" data only has 2024-05-01 which is already stored
-    csv_with_same_date = (
-        "Date,MOD13Q1_061__250m_16_days_NDVI\n"
-        "2024-05-01,5500\n"
-    )
+    csv_with_same_date = "Date,MOD13Q1_061__250m_16_days_NDVI\n2024-05-01,5500\n"
 
     written_keys: list[str] = []
 

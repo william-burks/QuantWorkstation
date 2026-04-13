@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 
 from data.collectors.usda_crop import (
-    DEFAULT_SERIES,
     _SERIES_MAP,
+    DEFAULT_SERIES,
     _fetch_series,
     collect,
 )
@@ -50,8 +50,12 @@ def test_default_series_contains_soybeans_planted_natl():
 
 def test_default_series_contains_state_level_series():
     # At least one state series for corn and soybeans
-    corn_states = [k for k in DEFAULT_SERIES if k.startswith("USDA_CORN_") and not k.endswith("_NATL")]
-    soy_states = [k for k in DEFAULT_SERIES if k.startswith("USDA_SOYBEANS_") and not k.endswith("_NATL")]
+    corn_states = [
+        k for k in DEFAULT_SERIES if k.startswith("USDA_CORN_") and not k.endswith("_NATL")
+    ]
+    soy_states = [
+        k for k in DEFAULT_SERIES if k.startswith("USDA_SOYBEANS_") and not k.endswith("_NATL")
+    ]
     assert len(corn_states) > 0
     assert len(soy_states) > 0
 
@@ -124,7 +128,10 @@ def test_fetch_series_sorted_ascending():
 
 def test_fetch_series_drops_suppressed_values():
     """NASS uses '(D)' for suppressed/withheld data — should be dropped."""
-    rows = [{"week_ending": "2024-05-06", "Value": "(D)"}, {"week_ending": "2024-05-13", "Value": "62"}]
+    rows = [
+        {"week_ending": "2024-05-06", "Value": "(D)"},
+        {"week_ending": "2024-05-13", "Value": "62"},
+    ]
     mock_resp = _make_nass_response(rows)
 
     with patch("data.collectors.usda_crop.requests.get", return_value=mock_resp):

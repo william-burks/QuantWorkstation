@@ -17,9 +17,9 @@ def test_macro_deployment_constructible() -> None:
 
 
 def test_macro_collection_deployment_in_module() -> None:
-    import data.flows.deployment as dep_module
-
     import inspect
+
+    import data.flows.deployment as dep_module
 
     src = inspect.getsource(dep_module)
     assert "macro_collection" in src

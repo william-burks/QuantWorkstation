@@ -76,6 +76,7 @@ SOYBEAN_STAGES: dict[str, str] = {
     "HARVESTED": "PCT HARVESTED",
 }
 
+
 # All series as (arc_key, commodity_desc, unit_desc, state_alpha | None)
 def _build_series_list() -> list[tuple[str, str, str, str | None]]:
     series: list[tuple[str, str, str, str | None]] = []
@@ -94,8 +95,7 @@ USDA_SERIES: list[tuple[str, str, str, str | None]] = _build_series_list()
 
 # Lookup from arc_key → (commodity_desc, unit_desc, state_alpha | None)
 _SERIES_MAP: dict[str, tuple[str, str, str | None]] = {
-    arc_key: (commodity, unit, state)
-    for arc_key, commodity, unit, state in USDA_SERIES
+    arc_key: (commodity, unit, state) for arc_key, commodity, unit, state in USDA_SERIES
 }
 
 DEFAULT_SERIES: list[str] = [arc_key for arc_key, _, _, _ in USDA_SERIES]
