@@ -13,13 +13,13 @@ MASTER_BRANCH = master
 # --- QUALITY ---
 
 test:
-	source .venv/bin/activate && pytest qws_graph/tests/unit/ -v
+	source .venv/bin/activate && pytest qws_graph/tests/unit/ -v --tb=long
 
 test-unit:
-	source .venv/bin/activate && pytest tests/unit/ -v
+	source .venv/bin/activate && pytest tests/unit/ -v --tb=long
 
 test-integration:
-	source .venv/bin/activate && pytest qws_graph/tests/integration/ -v
+	source .venv/bin/activate && pytest qws_graph/tests/integration/ -v --tb=long
 
 test-all: test test-unit
 

@@ -81,7 +81,7 @@ If `/tmp/ruling_$ARGUMENTS.txt` exists → read it before reporting blocked. App
 Work ACs one by one. After each:
 1. Story checkboxes — do NOT edit story file during Step 4. Wait until Step 5 (test plan) and batch ALL checkbox updates + test plan into ONE Edit call. If Step 7 finds failures, that's the 2nd allowed edit. **Max 2 Edit calls to story file total.**
 2. `git add` each changed file (never `-A` or `.`)
-3. `make test` after any Python change — fix all failures
+3. `make test 2>&1 | tee /tmp/test-output.txt | tail -60` after any Python change — if failures need detail, `cat /tmp/test-output.txt`. Do NOT re-run pytest separately.
 4. Run `make typecheck` on the project. Baseline is **0 errors** — any failure = you introduced it. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
 
 **data_dictionary.yaml edits:** Use `grep 'NodeOrEdgeName' /tmp/schema-index.txt` → get line N → `Read offset=N limit=40`. Compose the ENTIRE node or edge block (all properties) in ONE `new_string`. Max 2 Edit calls total for this file — one for nodes section, one for relationships section.
@@ -101,7 +101,7 @@ New node types → add MERGE block (`is_demo=true`, deterministic IDs, realistic
 Modified properties → update existing SET blocks. This is part of implementation, not verification.
 
 ## Step 5 — Write Acceptance Test Plan
-**This is your first (and ideally only) Edit to the story file — include ALL checkbox updates from Step 4 in the same Edit call.**
+**This is your ONLY Edit to the story file — include ALL checkbox updates from Step 4 + the test plan in ONE Edit call. A second Edit to the story file here is waste.**
 Add `## Acceptance Test Plan` section to story file after ACs.
 
 ```markdown
@@ -121,6 +121,7 @@ Rules: demo seed IDs only. Never real data. Generate fixtures/scripts as needed.
 git add <files by name>
 make commit-impl STORY=$ARGUMENTS MSG="<summary>"
 ```
+These Makefile targets are exact — do NOT grep Makefile to verify syntax. `commit-impl` takes `STORY=` and optional `MSG=`. `commit-story-status` takes `STORY=` and optional `MSG=`.
 
 ## Step 7 — Execute acceptance tests (fail/fix cycle)
 Run each test step. Compare actual vs expected.
@@ -156,7 +157,9 @@ Do NOT run git add or echo the sentinel separately — the make target does both
 
 ## Step 9 — Report and STOP
 
-**All tool calls are structurally blocked after Step 8 commit (agent-phase-gate.sh fires on every tool). Output report text only:**
+**STOP GATE: Step 8 committed → output report below and STOP. No further tool calls. No exceptions.**
+
+The phase gate (agent-phase-gate.sh) blocks all tools after Step 8. Do not attempt to read verify-story.md, re-run agent-init-state.sh, re-locate the story, or run any command. The orchestrator invokes verify-story — you do not.
 
 ```
 ## $ARGUMENTS — Implemented and Self-Tested
@@ -178,11 +181,4 @@ Do NOT run git add or echo the sentinel separately — the make target does both
 [new fixtures/scripts]
 ```
 
-Final: **CLOSED-READY** or **BLOCKED** (with details).
-
-**HARD STOP — your work is done. No further tool calls.**
-- Do NOT read `close-story.md` or any command file other than verify-story.md.
-- Do NOT edit `data_dictionary.yaml`, `graph_v1_contract.md`, `PROVENANCE_ENGINE.md`, or epic README files UNLESS they appear in the story's DoD or Repo Touchpoints. When in scope, edit them during Step 4 — not after the Step 6 commit.
-- Do NOT change story status to CLOSED or move story files to `closed/`.
-- Do NOT run any more tool calls after outputting this report.
-- The orchestrator will invoke verify-story next (same session). Close is a separate agent spawn.
+Final status: **TESTING** or **BLOCKED** (with details).

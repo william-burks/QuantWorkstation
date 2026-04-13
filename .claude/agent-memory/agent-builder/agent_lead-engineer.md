@@ -16,6 +16,7 @@ type: project
 | 20260412T010023 | QWS-0801 | 154 | 117 | 37 | 24% | grep-storm | sed/mypy blocks, story tracking, symbol index |
 | 20260412T015108 | QWS-0801 | 150 | 97 | 53 | 35% | file-reread | .md tracking, circuit breaker, cat-n cap, yaml tracking, verify-story breadcrumb |
 | 20260412T023551 | QWS-0801 | 119 | 68 | 51 | 43% | post-commit-violation | cp block, phase-gate sentinel, /tmp snapshot tracking, settings deny |
+| 20260413T012149 | QWS-HF-001 | 78 | 38 | 40 | 51% | post-stop-rampage (agent-init-state cleared sentinel) | sentinel guard in init-state, Bash grep block on tracked files, HARD STOP clarification, tee recipe, --tb=long |
 
 ## Confirmed Waste Patterns
 
@@ -52,6 +53,20 @@ Files already in context re-read before editing. Prose failed every run. Hook no
 - `implement-story.md` Step 3 STOP: added graph_v1_contract.md to no-reread list
 - `implement-story.md` Step 9: PROVENANCE_ENGINE prohibition now conditional on story DoD scope
 - `verify-story.md` Step 7b: re-run acceptance tests instead of just checking checkboxes
+
+### 5. post-stop-rampage — Run 10 (27 calls, #52-78)
+After Step 8 commit, agent called `agent-init-state.sh verify-story` (#53) which ran `rm -f /tmp/agent-step8-committed.txt`, disarming its own phase gate. All 27 subsequent calls passed the gate because the sentinel was gone.
+
+**Root cause:** `agent-init-state.sh` unconditionally cleared the sentinel. Single-point-of-failure.
+**Secondary cause:** Step 9 said "orchestrator will invoke verify-story next (same session)" — agent read this as self-permission.
+
+**Fix applied:**
+- `agent-init-state.sh`: exits 1 if sentinel exists before any clearing
+- `implement-story.md` Step 9: explicit "ORCHESTRATOR invokes — you do NOT. Do not read verify-story.md, do not run agent-init-state.sh"
+
+**Pattern generalization:** Any init script that clears sentinel files is a self-disarming gate. Guard-before-clear must be applied to all such scripts.
+
+---
 
 ## Principle Confirmed
 **Prose prohibition failure rate ~100% when prohibited action is agent's default instinct.**
@@ -94,3 +109,10 @@ Only structural enforcement works: hooks, guards, removing the tool/command.
 | cp source→/tmp/ block | .claude/scripts/agent-bash-grep-guard.sh + settings.json | Applied Run 9→10 — closes snapshot bypass |
 | /tmp snapshot read tracking | .claude/scripts/agent-read-guard.sh | Applied Run 9→10 — defense-in-depth against snapshot reads |
 | Step 9 replaced with structural reference | .claude/commands/implement-story.md | Applied Run 9→10 — prose HARD STOP replaced by hook description |
+| Sentinel guard in agent-init-state.sh | .claude/scripts/agent-init-state.sh | Applied Run 10→11 — exits 1 if sentinel exists, prevents self-disarm |
+| Bash grep block on tracked source files | .claude/scripts/agent-guard.sh | Applied Run 10→11 — blocks `grep *.py` via Bash when file already Read |
+| HARD STOP clarification (no re-init, no re-locate) | .claude/commands/implement-story.md Step 9 | Applied Run 10→11 — explicit "ORCHESTRATOR invokes verify-story — you do NOT" |
+| Tee recipe for test output | .claude/commands/implement-story.md Step 4 + project_tooling.md | Applied Run 10→11 — `make test 2>&1 | tee /tmp/test-output.txt | tail -60` |
+| make test --tb=long | Makefile (test, test-unit, test-integration) | Applied Run 10→11 — full tracebacks by default |
+| Story file edit strictness (ONLY, not ideally) | .claude/commands/implement-story.md Step 5 | Applied Run 10→11 — one edit, no second pass |
+| Makefile target note in Step 6 | .claude/commands/implement-story.md Step 6 | Applied Run 10→11 — do NOT grep Makefile for known targets |

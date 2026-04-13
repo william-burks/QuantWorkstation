@@ -300,12 +300,14 @@ Then jump to 4-audit-g.
 **If Investigate:**
 Spawn agent-builder agent:
 ```
+Read .claude/agent-memory/agent-builder/BIBLE.md first — apply all principles as stylistic defaults before proposing any fix.
+
 Audit and fix agent waste. Context:
 
 Agent: lead-engineer (definition: .claude/agents/lead-engineer.md)
 Command file: .claude/commands/implement-story.md
 Trace: /tmp/agent-trace-lead-engineer-$STORY_ID.jsonl
-Audit memory: ~/.claude/agent-memory/agent-builder/agent_lead-engineer.md
+Audit memory: .claude/agent-memory/agent-builder/agent_lead-engineer.md
 Categorization table from qa-auditor:
 <paste the full categorization table here>
 
@@ -503,12 +505,14 @@ echo "<CSV line without the CSV: prefix>" >> docs/agent-metrics/qa_runs.csv
    **If Investigate:**
    Spawn agent-builder agent:
    ```
+   Read .claude/agent-memory/agent-builder/BIBLE.md first — apply all principles as stylistic defaults before proposing any fix.
+
    Audit and fix agent waste. Context:
 
    Agent: <agent name> (definition: .claude/agents/<agent>.md)
    Command file: .claude/commands/qa-epic.md
    Trace: /tmp/agent-trace-<agent>-<PID>.jsonl
-   Audit memory: ~/.claude/agent-memory/agent-builder/agent_qa-engineer.md
+   Audit memory: .claude/agent-memory/agent-builder/agent_qa-engineer.md
    Categorization table from qa-auditor:
    <paste the full categorization table here>
 

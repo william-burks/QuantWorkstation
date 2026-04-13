@@ -9,7 +9,7 @@ type: project
 All commands require venv activation: `source .venv/bin/activate`
 ALWAYS run from project root `/Users/will/ClaudeProjects/QuantWorkstation` — NOT from `qws_graph/`.
 
-- **qws_graph unit tests:** `make test`
+- **qws_graph unit tests:** `make test 2>&1 | tee /tmp/test-output.txt | tail -60` — if failures need more detail: `cat /tmp/test-output.txt`. Do NOT re-run pytest separately.
 - **main unit tests:** `make test-unit`
 - **both suites:** `make test-all`
 - **integration tests:** `make test-integration`

@@ -50,4 +50,19 @@ if echo "$COMMAND" | grep -qE 'make\s+check(\s|$)'; then
   exit 2
 fi
 
+# Block Bash grep on Makefile — target syntax is documented in command files
+if echo "$COMMAND" | grep -qE 'grep\b.*Makefile|grep\b.*makefile'; then
+  echo "Blocked: do not grep Makefile — target syntax is in the command file" >&2
+  exit 2
+fi
+
+# Block Bash grep on source files already in read-tracker (use context instead)
+if echo "$COMMAND" | grep -qE 'grep\b.*\.(py|yaml|yml)'; then
+  TARGET_FILE=$(echo "$COMMAND" | grep -oE '[^ ]+\.(py|yaml|yml)' | tail -1 | xargs basename 2>/dev/null)
+  if [ -n "$TARGET_FILE" ] && [ -f "/tmp/agent-read-tracker/$TARGET_FILE" ]; then
+    echo "Blocked: $TARGET_FILE is already in context — search context instead of Bash grep" >&2
+    exit 2
+  fi
+fi
+
 exit 0
