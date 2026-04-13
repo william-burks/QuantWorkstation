@@ -1,5 +1,8 @@
 Implement the QuantWorkstation story identified by: $ARGUMENTS
 
+**VIOLATION: Any Read, Bash, or MCP call before `agent-init-state.sh` completes → stop, run Step 0, restart from Step 1. No exceptions.**
+Convention tier — pre-init tool calls are waste, not initialization. The first tool call in any run must be `bash .claude/scripts/agent-init-state.sh implement-story`.
+
 ## Step 0 — Read memory (MANDATORY FIRST)
 ```bash
 bash .claude/scripts/agent-init-state.sh implement-story

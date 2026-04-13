@@ -211,7 +211,48 @@ When adding a new spawned agent command, wire up the phase gate in 3 steps:
 
 ---
 
-## 13. Efficiency baselines
+## 13. VIOLATION pattern — illegal actions during execution
+
+The STOP GATE signals terminal state. The VIOLATION signals an illegal action taken mid-run.
+
+**Format:**
+```
+**VIOLATION: <prohibited action> → <correction>. <enforcement note>.**
+```
+
+The conditional form maps directly from STOP GATE: "illegal action → correction" instead of "state reached → stop".
+
+Same two-tier system applies:
+
+| Tier | Label | Structural backing |
+|------|-------|--------------------|
+| Enforced | `VIOLATION (enforced)` | Hook exits 2 on violation |
+| Convention | `VIOLATION` | Prose signal only |
+
+**Example (convention tier):**
+```
+**VIOLATION: Any Read/Bash/MCP call before agent-init-state.sh completes → stop, run Step 0, restart from Step 1. No exceptions.**
+Convention tier — pre-init tool calls are waste, not initialization.
+```
+
+**Example (enforced tier):**
+```
+**VIOLATION (enforced): Read of .py file before /tmp/agent-step0-done.txt exists → read-guard blocks with exit 2.**
+```
+
+**When to use VIOLATION vs STOP GATE vs GATE:**
+
+| Pattern | Trigger | Scope |
+|---------|---------|-------|
+| `STOP GATE` | Terminal — work complete, stop everything | End of command |
+| `VIOLATION` | Illegal action taken during execution | Any step |
+| `GATE` | Mid-flow checkpoint — condition not met, blocked | Between phases |
+
+Place VIOLATION markers at the TOP of the command file for pre-conditions, or inline immediately before the step that would trigger them.
+
+---
+
+## 14. Efficiency baselines
 
 | Agent | Target waste% | Current best | Primary waste pattern |
 |---|---|---|---|
