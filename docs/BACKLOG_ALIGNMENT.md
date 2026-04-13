@@ -103,7 +103,7 @@
 |---|---|---|---|
 | Hypothesis Lookup + Findings | QWS-0905 (**CLOSED**) | `findings` property on Hypothesis; `hypotheses_by_status` + `hypothesis_search` presets; `--findings` flag on `qw record --hypothesis` | — |
 | Ad-hoc Cypher + `qw patch` | QWS-0906 (**CLOSED**) | `qw query --cypher` read-only passthrough; `qw patch --run` for surgical property corrections | — |
-| Trial Metadata JSON Blob | QWS-0907 (**READY**) | `trial_metadata` map property on Run node; regime columns survive bundle ingest | — |
+| Trial Metadata JSON Blob | QWS-0907 (**TESTING**) | `trial_metadata` map property on Run node; regime columns survive bundle ingest | — |
 | CL Historical Data Extension | QWS-0908 (**READY**) | CL 1H data extended to ≥ 2020 via IBKR audit or FirstRate CSV ingest | — |
 
 ### Epic 13 — Agent Design

@@ -198,7 +198,7 @@ Stories (independent — implement in parallel):
 Stories (independent — implement in parallel):
 - `QWS-0905` `epic_9_5_workflow_hardening/closed/story_QWS-0905_hypothesis_lookup_and_findings.md` — `CLOSED`
 - `QWS-0906` `epic_9_5_workflow_hardening/closed/story_QWS-0906_adhoc_cypher_and_patch.md` — `CLOSED`
-- `QWS-0907` `epic_9_5_workflow_hardening/story_QWS-0907_trial_metadata_json_blob.md` — `READY`
+- `QWS-0907` `epic_9_5_workflow_hardening/story_QWS-0907_trial_metadata_json_blob.md` — `TESTING`
 - `QWS-0908` `epic_9_5_workflow_hardening/story_QWS-0908_cl_historical_data_extension.md` — `READY`
 
 ---
@@ -247,7 +247,7 @@ Stories (QWS-1101 first, QWS-1102 after):
 Stories:
 - `QWS-1301` `epic_agent_design/story_QWS-1301_research_ideas_layer.md` — `READY`
 - `QWS-1302` `epic_agent_design/story_QWS-1302_research_navigator_agent.md` — `CLOSED` (QWS-1301, QWS-0905, QWS-0906)
-- `QWS-1303` `epic_agent_design/story_QWS-1303_trial_engineer_agent.md` — `BLOCKED` (QWS-1302, QWS-0907)
+- `QWS-1303` `epic_agent_design/story_QWS-1303_trial_engineer_agent.md` — `TESTING` (QWS-1302, QWS-0907)
 - `QWS-1304` `epic_agent_design/story_QWS-1304_research_session_command_rewrite.md` — `BLOCKED` (QWS-1302, QWS-1303)
 
 ---

@@ -4,7 +4,7 @@
 QWS-0907
 
 ## Status
-READY
+TESTING
 
 ## Type
 schema
