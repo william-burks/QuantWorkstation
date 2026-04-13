@@ -89,5 +89,20 @@ Use this to identify which lint errors are in-scope vs pre-existing. Do NOT use 
 | QWS-0803 | qws_graph/tests/unit/test_monitor.py |
 | QWS-0805 | qws_graph/tests/unit/test_graph_query_models.py |
 
+## Epic 10 story test map (add to table above)
+| QWS-1000 | tests/unit/test_store_series.py |
+| QWS-1010 | tests/unit/test_validation.py |
+| QWS-1012 | qws_graph/tests/unit/test_strategy_class.py |
+| QWS-1001 | tests/unit/test_cot_collector.py |
+| QWS-1002 | tests/unit/test_fred_collector.py |
+| QWS-1003 | tests/unit/test_eia_collector.py |
+| QWS-1004 | tests/unit/test_baker_hughes_collector.py |
+| QWS-1007 | tests/unit/test_google_trends_collector.py |
+| QWS-1008 | tests/unit/test_bdti_collector.py |
+| QWS-1009 | tests/unit/test_economic_calendar_collector.py |
+| QWS-1100a | (no dedicated test file — verified via file checks) |
+| QWS-1100b | (no dedicated test file — verified via file checks) |
+| QWS-1100c | (no dedicated test file — verified via file checks) |
+
 ## qws_graph tests require venv
 Use `make test` or `make test-all` — both handle venv. If running a single file: `source .venv/bin/activate && pytest qws_graph/tests/unit/<file> -v`

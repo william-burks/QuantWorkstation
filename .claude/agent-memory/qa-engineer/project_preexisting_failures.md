@@ -4,9 +4,9 @@ description: ibkr_futures_collector tests now pass — baseline as of Epic 9HF i
 type: project
 ---
 
-As of 2026-04-13 (Epic 9HF QA), `make test-all` runs clean: 576 qws_graph unit + 157 top-level = 733 passed, 0 failed.
+As of 2026-04-13 (Epic 10 QA), `make test-all` runs clean: 647 qws_graph unit + 295 top-level = 942 passed, 0 failed.
 
-Previous 9 ibkr_futures_collector failures are resolved (likely fixed in a prior epic; confirmed gone at Epic 9HF baseline).
+Epic 10 added collectors (COT, FRED, EIA, BH, Google Trends, BDTI, EcoCal), store_series, validation, strategy_class, and Prefect flows — test count grew from 733 to 942.
 
 **Why:** Tracking so future QA baselines know the expected clean state.
 
