@@ -4,7 +4,7 @@
 QWS-1100c
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 infra

@@ -4,13 +4,13 @@
 QWS-1100b
 
 ## Status
-BLOCKED
+TESTING
 
 ## Type
 infra
 
 ## Blocked On
-QWS-1100a
+~~QWS-1100a~~
 
 ## Summary
 Create all `data/flows/` Python files — crypto, futures, parquet, and deployment — wiring existing collectors into Prefect `@task`/`@flow` decorators with retry config and schedule registration. Collectors gain no direct Prefect imports. Daemon setup deferred to QWS-1100c.
@@ -57,7 +57,7 @@ Five new `data/flows/` files exist, are importable, register 4 deployments again
 - [x] All ACs passing
 - [x] Flows importable without Prefect server running
 - [x] 4 deployments register when server is running
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 

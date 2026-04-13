@@ -145,8 +145,8 @@
 | NDVI Crop Health Collector | QWS-1011 (**BLOCKED**) | NDVI crop health index in ArcticDB | ~~QWS-1000~~ |
 | Strategy Class Taxonomy | QWS-1012 (**CLOSED**) ⚠️ | `strategy_class` free-form string on Strategy; `portfolio_by_class` preset; `qw backfill --strategy-class`; `bundle.json` reads `strategy_class` | — |
 | Scheduler Isolation | QWS-1100a (**CLOSED**) | `execution/risk_scheduler.py` with risk jobs only; `prefect` in pyproject.toml | — |
-| Prefect Flows | QWS-1100b (**TESTING**) | Scheduled collection via Prefect flows; 5 `data/flows/` files; 4 deployments registered | ~~QWS-1100a~~ |
-| Prefect Daemon | QWS-1100c (**BLOCKED**) | launchd daemon; `prefect.db` + `mlruns/` in `.gitignore`; all 4 deployments live | QWS-1100b |
+| Prefect Flows | QWS-1100b (**CLOSED**) | Scheduled collection via Prefect flows; 5 `data/flows/` files; 4 deployments registered | ~~QWS-1100a~~ |
+| Prefect Daemon | QWS-1100c (**BLOCKED**) | launchd daemon; `prefect.db` + `mlruns/` in `.gitignore`; all 4 deployments live | ~~QWS-1100b~~ |
 
 ### Epic 11 — Production Tracking
 
