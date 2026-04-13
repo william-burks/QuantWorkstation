@@ -4,7 +4,7 @@
 QWS-1001
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
