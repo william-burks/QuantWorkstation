@@ -4,7 +4,7 @@
 QWS-0908
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 infra
@@ -53,7 +53,7 @@ Two-path decision gated on IBKR depth audit:
 
 ## Definition of Done
 - [x] All ACs passing
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
