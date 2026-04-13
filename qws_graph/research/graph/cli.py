@@ -740,6 +740,7 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
     branched_from: str | None = getattr(args, "branched_from", None)
     rationale: str | None = getattr(args, "rationale", None)
     status: str | None = getattr(args, "status", None)
+    findings: str | None = getattr(args, "findings", None)
     timeout_seconds: int = getattr(args, "timeout_seconds", 3)
     similarity_threshold: float = float(
         getattr(args, "similarity_threshold", None) or _DEFAULT_SIMILARITY_THRESHOLD
@@ -754,7 +755,7 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
         store = GraphStore.from_env(timeout_seconds=timeout_seconds)
         try:
             # Mode 1: create hypothesis (title is a new quoted string — not a 12-char id)
-            if tested_as is None and branched_from is None and status is None:
+            if tested_as is None and branched_from is None and status is None and findings is None:
                 title = hypothesis_arg
                 if not title:
                     print("ERROR: --hypothesis requires a non-empty title or ID", file=sys.stderr)
@@ -789,6 +790,18 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
                 return 0
 
             hypothesis_id = hypothesis_arg
+
+            # Mode 5: update findings
+            if findings is not None and tested_as is None and branched_from is None and status is None:
+                found = store.update_hypothesis_findings(hypothesis_id, findings)
+                if not found:
+                    print(
+                        f"ERROR: Hypothesis {hypothesis_id!r} not found in graph",
+                        file=sys.stderr,
+                    )
+                    return 1
+                print(f"OK: Hypothesis {hypothesis_id!r} findings updated")
+                return 0
 
             # Mode 2b: combined — title string + --branched-from → create node then edge
             def _looks_like_hypothesis_id(value: str) -> bool:
@@ -1671,6 +1684,15 @@ def main() -> int:
         help=(
             "Cosine similarity cutoff for SEMANTICALLY_RELATED edges (default 0.85). "
             "Use with --hypothesis to override the default threshold."
+        ),
+    )
+    record_parser.add_argument(
+        "--findings",
+        default=None,
+        metavar="TEXT",
+        help=(
+            "Session findings or notes to store on an existing Hypothesis node. "
+            "Use with --hypothesis <id>. Re-running overwrites the previous value."
         ),
     )
     record_parser.set_defaults(func=cmd_record)

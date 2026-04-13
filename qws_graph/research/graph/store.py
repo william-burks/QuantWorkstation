@@ -37,6 +37,7 @@ from .cypher import (
     HYPOTHESIS_SET_EMBEDDING_QUERY,
     HYPOTHESIS_SUGGESTED_EDGE_QUERY,
     HYPOTHESIS_TESTED_AS_QUERY,
+    HYPOTHESIS_UPDATE_FINDINGS_QUERY,
     HYPOTHESIS_UPDATE_STATUS_QUERY,
     PATCH_FAMILY_ID_QUERY,
     PATCH_RESEARCH_TARGET_QUERY,
@@ -666,6 +667,30 @@ class GraphStore:
                         HYPOTHESIS_UPDATE_STATUS_QUERY,
                         hypothesis_id=hypothesis_id,
                         status=status,
+                    )
+                    return list(result)
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def update_hypothesis_findings(self, hypothesis_id: str, findings: str) -> bool:
+        """Write or overwrite the findings text on a Hypothesis node.
+
+        Returns True when found and updated, False when not found.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+
+                def _write(tx):
+                    result = tx.run(
+                        HYPOTHESIS_UPDATE_FINDINGS_QUERY,
+                        hypothesis_id=hypothesis_id,
+                        findings=findings,
                     )
                     return list(result)
 

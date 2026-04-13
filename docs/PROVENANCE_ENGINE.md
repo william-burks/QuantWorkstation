@@ -212,6 +212,7 @@ story is marked COMPLETE in `BACKLOG_ALIGNMENT.md`.
 | `hypothesis_id` | str | 12-char deterministic ID |
 | `title` | str | Short description of the market inefficiency theory |
 | `status` | str | `open \| confirmed \| rejected` |
+| `findings` | str \| null | Free-text session notes or findings. Written via `qw record --hypothesis <id> --findings "<text>"`. Re-running overwrites. Null until first write. QWS-0905. |
 | `embedding` | list[float] | 384-dim sentence-transformer vector of `title`. Null for pre-QWS-0604 nodes; backfill via `qw backfill --embeddings`. Used to compute cosine similarity for `SEMANTICALLY_RELATED` edges. |
 | `created_at` | datetime | Timestamp of node creation |
 | `updated_at` | datetime | Timestamp of last node update |

@@ -544,6 +544,30 @@ RETURN {
 ORDER BY r.similarity DESC
 """.strip()
 
+GET_HYPOTHESES_BY_STATUS_V1_CYPHER = """
+MATCH (h:Hypothesis)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  status: h.status,
+  findings: left(coalesce(h.findings, ''), 80),
+  created_at: toString(h.created_at)
+} AS result
+ORDER BY h.status ASC, h.created_at DESC
+""".strip()
+
+GET_HYPOTHESIS_SEARCH_V1_CYPHER = """
+MATCH (h:Hypothesis)
+WHERE toLower(h.title) CONTAINS toLower($title_fragment)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  status: h.status,
+  findings: h.findings
+} AS result
+ORDER BY h.created_at DESC
+""".strip()
+
 
 class QuerySession(Protocol):
     """Small protocol for Neo4j read sessions and test doubles."""
@@ -703,6 +727,14 @@ class GraphQueryService:
     def get_similar_hypotheses_v1(self, hypothesis_id: str) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
             return get_similar_hypotheses_v1(session, hypothesis_id=hypothesis_id)
+
+    def get_hypotheses_by_status_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_hypotheses_by_status_v1(session)
+
+    def get_hypothesis_search_v1(self, title_fragment: str) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_hypothesis_search_v1(session, title_fragment=title_fragment)
 
     def get_former_champions_v1(self) -> list[dict[str, Any]]:
         with self._driver.session(database=self._database) as session:
@@ -1181,6 +1213,19 @@ def get_former_champions_v1(session: QuerySession) -> list[dict[str, Any]]:
     ]
 
 
+def get_hypotheses_by_status_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return all hypotheses sorted by status then created_at DESC; findings truncated at 80 chars."""
+    return _all_results(session, GET_HYPOTHESES_BY_STATUS_V1_CYPHER)
+
+
+def get_hypothesis_search_v1(
+    session: QuerySession,
+    title_fragment: str,
+) -> list[dict[str, Any]]:
+    """Return hypotheses whose title contains title_fragment (case-insensitive)."""
+    return _all_results(session, GET_HYPOTHESIS_SEARCH_V1_CYPHER, title_fragment=title_fragment)
+
+
 QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_strategy_summary_v1": get_strategy_summary_v1,
     "get_run_history_v1": get_run_history_v1,
@@ -1201,6 +1246,8 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_research_targets_v1": get_research_targets_v1,
     "get_runs_by_regime_v1": get_runs_by_regime_v1,
     "get_regime_performance_v1": get_regime_performance_v1,
+    "get_hypotheses_by_status_v1": get_hypotheses_by_status_v1,
+    "get_hypothesis_search_v1": get_hypothesis_search_v1,
     "get_list_hypotheses_v1": get_list_hypotheses_v1,
     "get_hypothesis_audit_v1": get_hypothesis_audit_v1,
     "get_check_redundancy_v1": get_check_redundancy_v1,

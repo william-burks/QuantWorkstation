@@ -354,6 +354,12 @@ SET h.status = $status, h.updated_at = datetime()
 RETURN h.hypothesis_id AS hypothesis_id
 """.strip()
 
+HYPOTHESIS_UPDATE_FINDINGS_QUERY = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+SET h.findings = $findings, h.updated_at = datetime()
+RETURN h.hypothesis_id AS hypothesis_id
+""".strip()
+
 GET_HYPOTHESIS_BY_ID_QUERY = """
 MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
 RETURN h.hypothesis_id AS hypothesis_id, h.title AS title, h.status AS status,
@@ -454,6 +460,30 @@ RETURN {
   status: other.status
 } AS result
 ORDER BY r.similarity DESC
+""".strip()
+
+GET_HYPOTHESES_BY_STATUS_V1_CYPHER = """
+MATCH (h:Hypothesis)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  status: h.status,
+  findings: left(coalesce(h.findings, ''), 80),
+  created_at: toString(h.created_at)
+} AS result
+ORDER BY h.status ASC, h.created_at DESC
+""".strip()
+
+GET_HYPOTHESIS_SEARCH_V1_CYPHER = """
+MATCH (h:Hypothesis)
+WHERE toLower(h.title) CONTAINS toLower($title_fragment)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  status: h.status,
+  findings: h.findings
+} AS result
+ORDER BY h.created_at DESC
 """.strip()
 
 
@@ -829,6 +859,7 @@ MERGE (h1:Hypothesis {hypothesis_id: 'demo_hyp_001'})
   ON CREATE SET h1.created_at = datetime('2026-01-10T09:00:00'), h1.is_demo = true
   SET h1.title = 'ES bear high_vol regime has elevated win rate in first 30 min',
       h1.status = 'open',
+      h1.findings = 'Parked after session 3 — needs CL data extension before retry.',
       h1.updated_at = datetime()
 MERGE (hsrc1:HypothesisSource {source_key: 'user'})
   ON CREATE SET hsrc1.created_at = datetime()

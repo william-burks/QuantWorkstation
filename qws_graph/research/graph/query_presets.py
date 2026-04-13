@@ -337,6 +337,31 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         ),
         requires_graph=True,
     ),
+    "hypotheses_by_status": PresetSpec(
+        name="hypotheses_by_status",
+        description=(
+            "List all Hypothesis nodes grouped by status (open, confirmed, rejected), "
+            "ordered by status ASC then created_at DESC. "
+            "Columns: hypothesis_id, title, status, findings (truncated to 80 chars), created_at."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
+    "hypothesis_search": PresetSpec(
+        name="hypothesis_search",
+        description=(
+            "Find Hypothesis nodes whose title contains title_fragment (case-insensitive). "
+            "Columns: hypothesis_id, title, status, findings."
+        ),
+        params=(
+            PresetParam(
+                "title_fragment",
+                required=True,
+                description="Text to search for in hypothesis titles",
+            ),
+        ),
+        requires_graph=True,
+    ),
 }
 
 
@@ -497,6 +522,15 @@ def run_preset(
     if name == "former_champions":
         assert service is not None
         return service.get_former_champions_v1()
+
+    if name == "hypotheses_by_status":
+        assert service is not None
+        return service.get_hypotheses_by_status_v1()
+
+    if name == "hypothesis_search":
+        title_fragment = params["title_fragment"]
+        assert service is not None
+        return service.get_hypothesis_search_v1(title_fragment=title_fragment)
 
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 

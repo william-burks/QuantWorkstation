@@ -883,6 +883,13 @@ nodes:
         description: >
           Current state of the hypothesis. Updated via
           `qw record --hypothesis <id> --status <value>`.
+      findings:
+        type: str
+        nullable: true
+        description: >
+          Free-text session notes or findings stored on the hypothesis. Written via
+          `qw record --hypothesis <id> --findings "<text>"`. Re-running overwrites the
+          previous value. Null until first findings are recorded. Added QWS-0905.
       embedding:
         type: list[float]
         nullable: true

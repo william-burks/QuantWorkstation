@@ -794,4 +794,6 @@ class TestPresetCatalogStory4:
             "check_redundancy",
             "similar_hypotheses",
             "former_champions",
+            "hypotheses_by_status",
+            "hypothesis_search",
         }
