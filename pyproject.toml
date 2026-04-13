@@ -26,6 +26,8 @@ dependencies = [
     "arch>=6",
     # HTTP
     "httpx>=0.27",
+    # FRED macro data
+    "fredapi>=0.5",
     # API
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
