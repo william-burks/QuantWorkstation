@@ -65,16 +65,59 @@ Collect economic calendar events daily from FMP, write into ArcticDB `calendar` 
 - `tests/unit/test_economic_calendar_collector.py` — new
 
 ## Acceptance Criteria
-- [ ] `data/collectors/economic_calendar.py` exists and is importable
-- [ ] `calendar` ArcticDB library added to `_LIBRARIES` in `data/store.py`
-- [ ] `fmp_api_key: str` present in `data/config.py` (`Settings`)
-- [ ] `FMP_API_KEY` documented in `.env.example`
-- [ ] Collector writes `ECON_CALENDAR` symbol with correct columns and UTC DatetimeIndex
-- [ ] `is_blackout` is `True` for all rows where `impact == 'high'`, `False` otherwise
-- [ ] `actual` stored as `NaN` for pre-release events (not 0)
-- [ ] Re-running collector is idempotent — no duplicate index entries
-- [ ] `tests/unit/test_economic_calendar_collector.py` passes with mocked HTTP calls
-- [ ] `make verify` passes
+- [x] `data/collectors/economic_calendar.py` exists and is importable
+- [x] `calendar` ArcticDB library added to `_LIBRARIES` in `data/store.py`
+- [x] `fmp_api_key: str` present in `data/config.py` (`Settings`)
+- [ ] `FMP_API_KEY` documented in `.env.example` — MANUAL: agent-guard blocks writes to .env files; add `FMP_API_KEY=your_fmp_api_key_here` to `.env.example` manually
+- [x] Collector writes `ECON_CALENDAR` symbol with correct columns and UTC DatetimeIndex
+- [x] `is_blackout` is `True` for all rows where `impact == 'high'`, `False` otherwise
+- [x] `actual` stored as `NaN` for pre-release events (not 0)
+- [x] Re-running collector is idempotent — no duplicate index entries (delegated to `write_series` which deduplicates by index)
+- [x] `tests/unit/test_economic_calendar_collector.py` passes with mocked HTTP calls
+- [ ] `make verify` passes — blocked by pre-existing lint errors in bdti/cot/eia/baker_hughes (unused ignore comments); typecheck clean for new code
+
+## Acceptance Test Plan
+
+### AC1: economic_calendar.py importable
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from data.collectors.economic_calendar import collect, ARC_SYMBOL, ARC_LIB; print(ARC_SYMBOL, ARC_LIB)"`
+- expect_contains: "ECON_CALENDAR calendar"
+- expect_exit: 0
+
+### AC2: calendar library in _LIBRARIES
+- type: file_check
+- cmd: `grep 'calendar' /Users/will/ClaudeProjects/QuantWorkstation/data/store.py`
+- expect_contains: "calendar"
+- expect_exit: 0
+
+### AC3: fmp_api_key in Settings
+- type: file_check
+- cmd: `grep 'fmp_api_key' /Users/will/ClaudeProjects/QuantWorkstation/data/config.py`
+- expect_contains: "fmp_api_key"
+- expect_exit: 0
+
+### AC4: .env.example — MANUAL (agent-guard blocks)
+- type: file_check
+- cmd: manual — add `FMP_API_KEY=your_fmp_api_key_here` to `.env.example`
+- expect_contains: "FMP_API_KEY"
+
+### AC5+AC6+AC7: columns, is_blackout, NaN actual
+- type: regression
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_economic_calendar_collector.py -v 2>&1 | tail -30`
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC8: idempotent upsert
+- type: regression
+- cmd: same pytest run covers this via write_series mock tests
+- expect_contains: "passed"
+- expect_exit: 0
+
+### AC9: unit tests pass
+- type: cli
+- cmd: `source .venv/bin/activate && pytest tests/unit/test_economic_calendar_collector.py -v 2>&1 | tail -10`
+- expect_contains: "passed"
+- expect_exit: 0
 
 ## Definition of Done
 - [ ] All ACs passing

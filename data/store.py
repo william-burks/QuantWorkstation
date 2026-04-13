@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from arcticdb import Arctic
     from arcticdb.version_store.library import Library
 
-_LIBRARIES = ("crypto", "futures", "futures_meta", "signals")
+_LIBRARIES = ("crypto", "futures", "futures_meta", "signals", "calendar")
 
 _FUTURES_KEY_RE = re.compile(
     r"^[A-Z0-9]+(?:_contfut|_idx)?_(?:5min|10min|15min|30min|1H|2H|4H|8H|1D|1W|1M)$"

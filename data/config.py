@@ -81,6 +81,10 @@ class Settings(BaseSettings):
     # Loaded from NASDAQ_DATA_LINK_API_KEY env var; stored as export in ~/.zshrc
     nasdaq_data_link_api_key: str = ""
 
+    # Financial Modeling Prep API key — free at https://financialmodelingprep.com/developer/docs
+    # Loaded from FMP_API_KEY env var
+    fmp_api_key: str = ""
+
     # Google Trends search terms to collect (see data/collectors/google_trends.py)
     gtrends_terms: list[str] = [
         "buy gold",
