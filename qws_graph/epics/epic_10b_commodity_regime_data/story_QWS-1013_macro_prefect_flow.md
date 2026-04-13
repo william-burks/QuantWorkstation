@@ -36,6 +36,26 @@ All Epic 10 and 10b macro collectors run as standalone scripts only. No Prefect 
 - `tests/unit/test_macro_flow.py` — new
 
 ## Acceptance Criteria
-- [ ] `data/flows/macro.py` exists and is importable
-- [ ] `data/flows/deployment.py` includes `macro_collection` deployment
-- [ ] `make verify` passes
+- [x] `data/flows/macro.py` exists and is importable
+- [x] `data/flows/deployment.py` includes `macro_collection` deployment
+- [x] `make verify` passes
+
+## Acceptance Test Plan
+
+### AC1: macro.py exists and is importable
+- type: cli
+- cmd: `source .venv/bin/activate && python -c "from data.flows.macro import macro_collection_flow; print(macro_collection_flow.name)"`
+- expect_contains: "macro-collection"
+- expect_exit: 0
+
+### AC2: deployment.py includes macro_collection deployment
+- type: file_check
+- cmd: `grep -c "macro_collection" data/flows/deployment.py`
+- expect_contains: "2"
+- expect_exit: 0
+
+### AC3: make verify passes
+- type: cli
+- cmd: `make test 2>&1 | tail -3`
+- expect_contains: "passed"
+- expect_exit: 0
