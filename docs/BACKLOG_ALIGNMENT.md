@@ -131,7 +131,7 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| Store Series Methods | QWS-1000 (**READY**) | `write_series`/`read_series` for non-OHLCV data in ArcticDB | — |
+| Store Series Methods | QWS-1000 (**TESTING**) | `write_series`/`read_series` for non-OHLCV data in ArcticDB | — |
 | COT Collector | QWS-1001 (**BLOCKED**) | CFTC COT positioning data in ArcticDB | QWS-1000 |
 | FRED Macro Collector | QWS-1002 (**BLOCKED**) | FRED macro indicators in ArcticDB | QWS-1000 |
 | EIA Crude Collector | QWS-1003 (**BLOCKED**) | EIA crude inventory + production data in ArcticDB | QWS-1000 |
