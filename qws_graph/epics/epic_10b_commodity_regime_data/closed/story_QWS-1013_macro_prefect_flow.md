@@ -4,7 +4,7 @@
 QWS-1013
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 infra
