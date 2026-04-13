@@ -10,7 +10,7 @@ BLOCKED
 code
 
 ## Blocked On
-QWS-1301 (queued_hypotheses query), QWS-0905 (findings field on Hypothesis + hypothesis search presets)
+QWS-1301 (queued_hypotheses query), ~~QWS-0905~~ (findings field on Hypothesis + hypothesis search presets)
 
 ## Summary
 Build `research-navigator` agent that synthesizes "what to try next" at session start, gates hypothesis commit with redundancy check, pivots mid-session based on live trial output, and wraps session with updated findings.
@@ -56,7 +56,7 @@ After this story, a `research-navigator` agent:
 - [ ] Phase 4 updates `findings` on active hypothesis and writes session wrap structure
 - [ ] Agent reads project memory at session start (`.claude/agent-memory/` relevant files)
 - [ ] `agent-research-guard.sh` blocks: `qw degrade`, `qw retire`, `qw monitor`, `qw abort`, `qw record --bundle`, git operations, writes outside `research/ideas/`
-- [ ] Integration test: run navigator Phase 1 against current graph; output contains session brief section and ≥ 1 ranked direction
+- [ ] Integration test: Phase 1 run against current graph produces structured output. If ≥ 1 Champion or queued Hypothesis exists, output contains ≥ 1 ranked direction with node ID citation. If graph is empty, output states 'No prior research — cold start' with no error.
 - [ ] Tool list in agent file: Read, Glob, Grep, Bash (scoped to `qw query` and `qw record --hypothesis` only), Write (scoped to `research/ideas/` only)
 
 ## Definition of Done

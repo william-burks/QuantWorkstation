@@ -47,8 +47,8 @@ After this story, a researcher can:
 
 ## Repo Touchpoints
 - `qws_graph/research/graph/cli.py` — `record` command, `--queue` flag, `--branched-from` flag wiring
-- `qws_graph/research/graph/queries/queued_hypotheses.cypher` — new preset file
-- `qws_graph/research/graph/query_presets.yaml` — register `queued_hypotheses`
+- `qws_graph/research/graph/query.py` — add `get_queued_hypotheses_v1()` function here
+- `qws_graph/research/graph/query_presets.py` — register `queued_hypotheses`
 - `qws_graph/data_dictionary.yaml` — add `queued: bool` to Hypothesis properties
 - `docs/RESEARCH_WORKFLOW.md` — parking sequence update
 

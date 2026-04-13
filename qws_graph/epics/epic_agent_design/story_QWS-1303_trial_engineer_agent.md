@@ -10,7 +10,7 @@ BLOCKED
 code
 
 ## Blocked On
-QWS-1302 (navigator handoff contract), QWS-HF-001 (hypothesis_id in bundle.json)
+QWS-1302 (navigator handoff contract), ~~QWS-HF-001~~ (hypothesis_id in bundle.json)
 
 ## Summary
 Extract ~200-line trial boilerplate to `trial_base.py`, then build `trial-engineer` agent that generates trial scripts from a hypothesis input contract, writes script + bundle template, and stops. Does not auto-run.
