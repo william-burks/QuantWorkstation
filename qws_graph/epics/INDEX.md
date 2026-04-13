@@ -187,7 +187,7 @@ Note: this epic has no code deliverables. Done criteria = gap audit written, bac
 
 Stories (independent — implement in parallel):
 - `QWS-HF-001` `epic_9hf_bugs_and_hotfixes/closed/QWS-HF-001_bundle_hypothesis_autolink.md` — `CLOSED`
-- `QWS-0904` `epic_9hf_bugs_and_hotfixes/QWS-0904_phantom_champion_id_fix.md` — `READY`
+- `QWS-0904` `epic_9hf_bugs_and_hotfixes/QWS-0904_phantom_champion_id_fix.md` — `TESTING`
 
 ---
 
