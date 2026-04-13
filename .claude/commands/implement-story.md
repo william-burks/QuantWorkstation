@@ -82,6 +82,8 @@ Work ACs one by one. After each:
 1. Story checkboxes — do NOT edit story file during Step 4. Wait until Step 5 (test plan) and batch ALL checkbox updates + test plan into ONE Edit call. If Step 7 finds failures, that's the 2nd allowed edit. **Max 2 Edit calls to story file total.**
 2. `git add` each changed file (never `-A` or `.`)
 3. `make test 2>&1 | tee /tmp/test-output.txt | tail -60` after any Python change — if failures need detail, `cat /tmp/test-output.txt`. Do NOT re-run pytest separately.
+   - `make test` runs ONLY `qws_graph/tests/unit/`. Integration tests are EXCLUDED — this is expected, not a bug.
+   - If you wrote integration tests, they will NOT appear in `make test` output. Run them at Step 7 via direct pytest. Do NOT search for pytest config to explain missing tests — the Makefile hardcodes the path.
 4. Run `make typecheck` on the project. Baseline is **0 errors** — any failure = you introduced it. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
 
 **data_dictionary.yaml edits:** Use `grep 'NodeOrEdgeName' /tmp/schema-index.txt` → get line N → `Read offset=N limit=40`. Compose the ENTIRE node or edge block (all properties) in ONE `new_string`. Max 2 Edit calls total for this file — one for nodes section, one for relationships section.
@@ -127,6 +129,7 @@ These Makefile targets are exact — do NOT grep Makefile to verify syntax. `com
 Run each test step. Compare actual vs expected.
 **One `ls` per directory — if result answers the question, stop. Do NOT drill into subdirectories.**
 **Do NOT re-run the full test suite if no code changed since the last passing run.**
+For integration tests: `source .venv/bin/activate && pytest qws_graph/tests/integration/<file>::<Class> -v 2>&1 | tail -30`. Do NOT use `make test` for integration tests — it runs unit tests only.
 
 Passing AC → confirm `- [x]`.
 

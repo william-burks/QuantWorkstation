@@ -16,7 +16,8 @@ type: project
 | 20260412T010023 | QWS-0801 | 154 | 117 | 37 | 24% | grep-storm | sed/mypy blocks, story tracking, symbol index |
 | 20260412T015108 | QWS-0801 | 150 | 97 | 53 | 35% | file-reread | .md tracking, circuit breaker, cat-n cap, yaml tracking, verify-story breadcrumb |
 | 20260412T023551 | QWS-0801 | 119 | 68 | 51 | 43% | post-commit-violation | cp block, phase-gate sentinel, /tmp snapshot tracking, settings deny |
-| 20260413T012149 | QWS-HF-001 | 78 | 38 | 40 | 51% | post-stop-rampage (agent-init-state cleared sentinel) | sentinel guard in init-state, Bash grep block on tracked files, HARD STOP clarification, tee recipe, --tb=long |
+| 20260413T012149 | QWS-HF-001 impl-R1 | 78 | 38 | 40 | 51% | post-stop-rampage (agent-init-state cleared sentinel) | sentinel guard in init-state, Bash grep block on tracked files, HARD STOP clarification, tee recipe, --tb=long |
+| 20260413T021043 | QWS-HF-001 impl-R2 | 54 | 35 | 19 | 35% | grep-storm (7 empty greps — pyproject.toml, pytest config that doesn't exist) | test-target explainer in cmd file + memory, empty-grep circuit breaker (3-strike), .toml in guards, Step 7 integration recipe |
 
 ## Confirmed Waste Patterns
 

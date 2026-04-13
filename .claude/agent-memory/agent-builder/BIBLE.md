@@ -156,7 +156,19 @@ Never leave the agent to infer syntax.
 
 ---
 
-## 10. Efficiency baselines
+## 10. Empty-grep storm = config doesn't exist
+
+If an agent issues 3+ consecutive grep calls returning empty output, it is searching for config that doesn't exist. This is a structural failure mode — broadening the grep pattern never helps when the file has no match.
+
+**Structural block:** `agent-circuit-breaker.sh` — 3-strike on consecutive empty grep → exit 2 with message "Read the file directly instead of re-grepping with different patterns."
+
+**Documentation fix:** whenever a Makefile target hardcodes a path (e.g. `pytest qws_graph/tests/unit/`), document what it EXCLUDES in the command file and agent memory — not just what it runs. Agents that see unexpected absence of output go searching for the config that explains the absence.
+
+Pattern: `make test` runs unit only → agent writes integration tests → `make test` shows 0 new tests → agent searches pytest config for 7 calls. Fix: "integration tests NOT included in `make test` — this is expected."
+
+---
+
+## 11. Efficiency baselines
 
 | Agent | Target waste% | Current best | Primary waste pattern |
 |---|---|---|---|

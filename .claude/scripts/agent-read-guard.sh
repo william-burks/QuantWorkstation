@@ -68,6 +68,8 @@ BASENAME=$(basename "$FILE")
 if echo "$BASENAME" | grep -qE '\.(json|cfg|txt)$'; then
   exit 0
 fi
+# Track .toml files (pyproject.toml re-grepped 5x in R10 after not being read)
+# Falls through to standard read-count tracking below.
 # For .md files: track those inside qws_graph/ (implementation docs like graph_v1_contract.md
 # that shouldn't change mid-run). Exempt .md outside qws_graph/ (command files, project docs).
 if echo "$BASENAME" | grep -qE '\.md$'; then

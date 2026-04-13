@@ -83,6 +83,31 @@ if [ -z "$ERROR_CLASS" ]; then
   ERROR_CLASS=$(echo "$OUTPUT" | grep -m1 -oE 'Error [0-9]+|recipe for target .* failed')
 fi
 
+# --- Grep-storm circuit breaker (empty grep) ---
+# Track consecutive Bash grep calls that return nothing.
+# Agent looping on empty greps is searching for config that doesn't exist.
+TRACK_DIR_GS="/tmp/circuit-breaker"
+mkdir -p "$TRACK_DIR_GS" 2>/dev/null || true
+if echo "$COMMAND" | grep -qE '^\s*grep\b'; then
+  OUT_LEN=$(echo "$OUTPUT" | tr -d '[:space:]' | wc -c | tr -d ' ')
+  if [ "$OUT_LEN" -le 2 ]; then
+    GS_FILE="$TRACK_DIR_GS/grep_empty_consecutive"
+    if [ -f "$GS_FILE" ]; then
+      GCOUNT=$(cat "$GS_FILE")
+      GNEW=$((GCOUNT + 1))
+      echo "$GNEW" > "$GS_FILE"
+      if [ "$GNEW" -ge 3 ]; then
+        echo "CIRCUIT BREAK: ${GNEW} consecutive grep calls returned empty — the config you're looking for doesn't exist here. Read the file directly instead of re-grepping with different patterns." >&2
+        exit 2
+      fi
+    else
+      echo "1" > "$GS_FILE"
+    fi
+  else
+    rm -f "$TRACK_DIR_GS/grep_empty_consecutive" 2>/dev/null || true
+  fi
+fi
+
 # No recognizable error pattern → not a failure worth tracking
 [ -z "$ERROR_CLASS" ] && exit 0
 

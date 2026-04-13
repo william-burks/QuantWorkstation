@@ -10,6 +10,8 @@ All commands require venv activation: `source .venv/bin/activate`
 ALWAYS run from project root `/Users/will/ClaudeProjects/QuantWorkstation` — NOT from `qws_graph/`.
 
 - **qws_graph unit tests:** `make test 2>&1 | tee /tmp/test-output.txt | tail -60` — if failures need more detail: `cat /tmp/test-output.txt`. Do NOT re-run pytest separately.
+  - `make test` runs ONLY `qws_graph/tests/unit/`. Integration tests (`qws_graph/tests/integration/`) are NOT included — this is expected, not a bug. Do NOT search for pytest config to explain missing integration tests.
+  - Integration tests: run directly at Step 7 — `source .venv/bin/activate && pytest qws_graph/tests/integration/<file>::<Class> -v 2>&1 | tail -30`
 - **main unit tests:** `make test-unit`
 - **both suites:** `make test-all`
 - **integration tests:** `make test-integration`
