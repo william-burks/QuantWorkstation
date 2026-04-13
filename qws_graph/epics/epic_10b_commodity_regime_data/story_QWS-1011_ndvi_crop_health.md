@@ -78,17 +78,55 @@ Regions and source:
 - `tests/unit/test_ndvi_collector.py` — new
 
 ## Acceptance Criteria
-- [ ] `data/collectors/ndvi.py` exists and is importable
-- [ ] `macro` ArcticDB library created on first run (or reuses existing)
-- [ ] `NDVI_CORN_BELT_1D` series writes with `ndvi` and `ndvi_anomaly` columns and DatetimeIndex
-- [ ] All 5 state-level series write successfully
-- [ ] Re-running collector is idempotent (appends only new dates; no duplicates)
-- [ ] Off-season call (November–March): collector exits 0 with INFO log, no exception, no write
-- [ ] `ndvi_anomaly` computed correctly as deviation from 5-year same-day baseline
-- [ ] `nasa_earthdata_token` present in `data/config.py`
-- [ ] No `rasterio` or `earthaccess` dependency added to `pyproject.toml`
-- [ ] `tests/unit/test_ndvi_collector.py` passes with mocked AppEEARS responses and fixture CSV
-- [ ] `make verify` passes
+- [x] `data/collectors/ndvi.py` exists and is importable
+- [x] `macro` ArcticDB library created on first run (or reuses existing)
+- [x] `NDVI_CORN_BELT_1D` series writes with `ndvi` and `ndvi_anomaly` columns and DatetimeIndex
+- [x] All 5 state-level series write successfully
+- [x] Re-running collector is idempotent (appends only new dates; no duplicates)
+- [x] Off-season call (November–March): collector exits 0 with INFO log, no exception, no write
+- [x] `ndvi_anomaly` computed correctly as deviation from 5-year same-day baseline
+- [x] `nasa_earthdata_token` present in `data/config.py`
+- [x] No `rasterio` or `earthaccess` dependency added to `pyproject.toml`
+- [x] `tests/unit/test_ndvi_collector.py` passes with mocked AppEEARS responses and fixture CSV
+- [x] `make verify` passes
+
+## Acceptance Test Plan
+
+### AC1: ndvi.py exists and is importable
+- type: file_check
+- cmd: `python -c "from data.collectors.ndvi import collect, REGIONS, _is_off_season; print('ok')"`
+- expect_contains: "ok"
+- expect_exit: 0
+
+### AC2: Off-season no-op
+- type: cli
+- cmd: `python -c "from unittest.mock import patch; from data.collectors.ndvi import collect; [open('/dev/null').read() for _ in []]; patch('data.collectors.ndvi._is_off_season', return_value=True).__enter__(); collect()"`
+- expect_contains: (no exception)
+- expect_exit: 0
+
+### AC3: Unit tests pass with mocked AppEEARS responses
+- type: cli
+- cmd: `pytest tests/unit/test_ndvi_collector.py -v`
+- expect_contains: "41 passed"
+- expect_exit: 0
+
+### AC4: nasa_earthdata_token in config.py
+- type: file_check
+- cmd: `python -c "from data.config import Settings; s = Settings.model_fields; print('present' if 'nasa_earthdata_token' in s else 'missing')"`
+- expect_contains: "present"
+- expect_exit: 0
+
+### AC5: No rasterio or earthaccess in pyproject.toml
+- type: file_check
+- cmd: `python -c "import pathlib; txt = pathlib.Path('pyproject.toml').read_text(); print('clean' if 'rasterio' not in txt and 'earthaccess' not in txt else 'FAIL')"`
+- expect_contains: "clean"
+- expect_exit: 0
+
+### AC6: ndvi_anomaly computation correctness
+- type: regression
+- cmd: `pytest tests/unit/test_ndvi_collector.py::test_compute_anomaly_zero_when_ndvi_equals_clim tests/unit/test_ndvi_collector.py::test_compute_anomaly_positive_when_ndvi_above_clim tests/unit/test_ndvi_collector.py::test_compute_anomaly_negative_when_ndvi_below_clim -v`
+- expect_contains: "3 passed"
+- expect_exit: 0
 
 ## Definition of Done
 - [ ] All ACs passing

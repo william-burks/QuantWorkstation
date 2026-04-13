@@ -92,6 +92,11 @@ class Settings(BaseSettings):
     # NOAA Climate Data Online API key — free from https://www.ncdc.noaa.gov/cdo-web/token
     # Loaded from NOAA_API_KEY env var; stored as export in ~/.zshrc per security rules
     noaa_api_key: str = ""
+
+    # NASA Earthdata API token — free from https://urs.earthdata.nasa.gov/
+    # Loaded from NASA_EARTHDATA_TOKEN env var; stored as export in ~/.zshrc per security rules
+    # Do NOT add to .env
+    nasa_earthdata_token: str = ""
     noaa_series: list[str] = [
         "NOAA_HDD_NATIONAL",
         "NOAA_CDD_NATIONAL",
