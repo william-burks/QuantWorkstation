@@ -268,6 +268,17 @@ nodes:
           Denormalized convenience copy of the linked Regime node's regime_id. Researcher-defined;
           no enum validation. Suggested conventions: high_vol, low_vol, trend_up, trend_down,
           mean_reverting, crisis. Absent (NULL) when no regime was tagged.
+      trial_metadata:
+        type: map
+        nullable: true
+        description: >
+          Free-form key-value dict written from bundle.json at ingest time (QWS-0907).
+          Preserves custom CSV columns (e.g. atr_bucket, avg_atr, regime_label) that would
+          otherwise be discarded. Values are string-typed. Absent (NULL) when bundle.json
+          does not include a trial_metadata key or when size exceeds 10KB guard.
+          Queryable as a map property: r.trial_metadata.atr_bucket.
+        source: bundle.json top-level "trial_metadata" key (key-value dict, string values)
+        size_guard: "Skipped when json.dumps(trial_metadata) > 10240 bytes"
         cli_flag: "--regime"
       artifact_hash:
         type: str

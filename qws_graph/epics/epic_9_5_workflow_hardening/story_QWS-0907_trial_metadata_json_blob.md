@@ -54,14 +54,52 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 - `qws_graph/tests/unit/test_bundle_metadata.py` — new
 
 ## Acceptance Criteria
-- [ ] Bundle with `trial_metadata: {atr_bucket: "high", avg_atr: "2.3"}` → property present on Run node, queryable via `r.trial_metadata.atr_bucket`
-- [ ] Bundle without `trial_metadata` field → ingest succeeds, `trial_metadata` absent on node (no error)
-- [ ] Bundle with `trial_metadata` > 10KB → WARNING printed, ingest succeeds, `trial_metadata` absent on node
-- [ ] Unknown CSV columns still emit WARNING (behavior unchanged)
-- [ ] `data_dictionary.yaml` has `trial_metadata` entry under `Run`
-- [ ] `PROVENANCE_ENGINE.md` Run Key Properties table includes `trial_metadata`
+- [x] Bundle with `trial_metadata: {atr_bucket: "high", avg_atr: "2.3"}` → property present on Run node, queryable via `r.trial_metadata.atr_bucket`
+- [x] Bundle without `trial_metadata` field → ingest succeeds, `trial_metadata` absent on node (no error)
+- [x] Bundle with `trial_metadata` > 10KB → WARNING printed, ingest succeeds, `trial_metadata` absent on node
+- [x] Unknown CSV columns still emit WARNING (behavior unchanged)
+- [x] `data_dictionary.yaml` has `trial_metadata` entry under `Run`
+- [x] `PROVENANCE_ENGINE.md` Run Key Properties table includes `trial_metadata`
 
 ## Definition of Done
-- [ ] data_dictionary.yaml updated
-- [ ] Tests green
+- [x] data_dictionary.yaml updated
+- [x] Tests green
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: Bundle with trial_metadata → write_trial_metadata called with correct dict
+- type: regression
+- cmd: `pytest qws_graph/tests/unit/test_bundle_metadata.py::TestTrialMetadataWritten -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC2: Bundle without trial_metadata → write_trial_metadata not called
+- type: regression
+- cmd: `pytest qws_graph/tests/unit/test_bundle_metadata.py::TestTrialMetadataAbsent -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC3: Bundle with trial_metadata > 10KB → WARNING, no write
+- type: regression
+- cmd: `pytest qws_graph/tests/unit/test_bundle_metadata.py::TestTrialMetadataSizeGuard -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC4 (store method): TRIAL_METADATA_WRITE_QUERY used, correct params, empty list skips
+- type: regression
+- cmd: `pytest qws_graph/tests/unit/test_bundle_metadata.py::TestWriteTrialMetadataStore -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC5: data_dictionary.yaml has trial_metadata entry
+- type: file_check
+- cmd: `grep -c 'trial_metadata' qws_graph/docs/data_dictionary.yaml`
+- expect_contains: "1"
+- expect_exit: 0
+
+### AC6: PROVENANCE_ENGINE.md has trial_metadata in Run table
+- type: file_check
+- cmd: `grep -c 'trial_metadata' docs/PROVENANCE_ENGINE.md`
+- expect_contains: "1"
+- expect_exit: 0

@@ -149,6 +149,7 @@ name — `BRANCHED_FROM` — to avoid ambiguity. The Hypothesis points BACK to w
 | `oos_status` | str | `oos_pending \| oos_pass \| oos_fail` |
 | `artifact_path` | str | Repo-relative POSIX path to source CSV |
 | `peaked_as_best` | bool | Permanent flag: was ever Strategy.best_run_id |
+| `trial_metadata` | map \| null | Free-form key-value dict from bundle.json manifest. Preserves custom columns (e.g. `atr_bucket`, `regime_label`). Null when absent or > 10KB. QWS-0907. |
 
 ### RunStatsSummary — key query properties
 

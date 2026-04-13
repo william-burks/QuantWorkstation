@@ -502,6 +502,19 @@ MERGE (r)-[:IN_REGIME]->(reg)
 
 
 # ---------------------------------------------------------------------------
+# trial_metadata map write (QWS-0907)
+# Writes a free-form map property onto existing Run nodes.
+# Called after CSV ingest when bundle.json contains a trial_metadata key.
+# ---------------------------------------------------------------------------
+
+TRIAL_METADATA_WRITE_QUERY = """
+UNWIND $run_ids AS run_id
+MATCH (r:Run {run_id: run_id})
+SET r.trial_metadata = $trial_metadata
+""".strip()
+
+
+# ---------------------------------------------------------------------------
 # CORRELATED_WITH edge write (QWS-0603)
 # Symmetric: written in both directions so queries can match either endpoint.
 # ---------------------------------------------------------------------------
@@ -707,6 +720,7 @@ MERGE (r1:Run {run_id: 'demo_run_001'})
       r1.evidence_score = 14.18,
       r1.tier = 'professional',
       r1.regime = 'high_vol',
+  r1.trial_metadata = {atr_bucket: 'high', avg_atr: '2.3', regime_label: 'high_vol'},
       r1.profit_factor = 1.45,
       r1.win_rate = 0.58,
       r1.max_drawdown = -0.082,

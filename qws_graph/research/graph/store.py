@@ -388,6 +388,34 @@ class GraphStore:
         except Exception as exc:  # noqa: BLE001
             raise StoreInfraError(f"Unexpected store error: {exc}") from exc
 
+    def write_trial_metadata(self, run_ids: list[str], trial_metadata: dict[str, str]) -> None:
+        """Write ``trial_metadata`` map property onto existing Run nodes (QWS-0907).
+
+        Idempotent — repeated calls overwrite with the same value.  Silently
+        skips run IDs that no longer exist.
+
+        Raises ``StoreInfraError`` on Neo4j connectivity or execution failure.
+        """
+        from research.graph.cypher import TRIAL_METADATA_WRITE_QUERY  # local import avoids circular
+
+        if not run_ids:
+            return
+        try:
+            with self._driver.session(database=self._database) as session:
+
+                def _write(tx) -> None:
+                    tx.run(
+                        TRIAL_METADATA_WRITE_QUERY,
+                        run_ids=run_ids,
+                        trial_metadata=trial_metadata,
+                    ).consume()
+
+                session.execute_write(_write)
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
     def update_champion_oos_status(
         self,
         champion_id: str,

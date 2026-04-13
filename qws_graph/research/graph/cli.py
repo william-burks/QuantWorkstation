@@ -489,6 +489,22 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
                     )
                 except Exception:  # noqa: BLE001
                     pass  # autolink is advisory; never block ingest
+
+            # trial_metadata write (QWS-0907): write map property onto persisted Run nodes.
+            bundle_trial_metadata: dict[str, str] | None = manifest.get("trial_metadata")
+            if bundle_trial_metadata and isinstance(bundle_trial_metadata, dict):
+                _tm_json = json.dumps(bundle_trial_metadata, separators=(",", ":"))
+                if len(_tm_json) > 10240:
+                    print(
+                        f"WARNING: trial_metadata exceeds 10KB limit"
+                        f" ({len(_tm_json)} bytes) — skipping trial_metadata write",
+                        file=sys.stderr,
+                    )
+                elif persisted_run_ids:
+                    try:
+                        store.write_trial_metadata(persisted_run_ids, bundle_trial_metadata)
+                    except Exception:  # noqa: BLE001
+                        pass  # trial_metadata write is advisory; never block ingest
         finally:
             store.close()
     except StoreInfraError as exc:
