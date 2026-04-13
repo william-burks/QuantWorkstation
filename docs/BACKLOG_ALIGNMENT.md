@@ -144,7 +144,7 @@
 | Data Quality Validation | QWS-1010 (**READY**) | Validation gate — alerts on missing bars, stale feeds, schema drift | — |
 | NDVI Crop Health Collector | QWS-1011 (**BLOCKED**) | NDVI crop health index in ArcticDB | QWS-1000 |
 | Strategy Class Taxonomy | QWS-1012 (**READY**) ⚠️ | `strategy_class` free-form string on Strategy; `portfolio_by_class` preset; `qw backfill --strategy-class`; `bundle.json` reads `strategy_class` | — |
-| Scheduler Isolation | QWS-1100a (**READY**) | `execution/risk_scheduler.py` with risk jobs only; `prefect` in pyproject.toml | — |
+| Scheduler Isolation | QWS-1100a (**TESTING**) | `execution/risk_scheduler.py` with risk jobs only; `prefect` in pyproject.toml | — |
 | Prefect Flows | QWS-1100b (**BLOCKED**) | Scheduled collection via Prefect flows; 5 `data/flows/` files; 4 deployments registered | QWS-1100a |
 | Prefect Daemon | QWS-1100c (**BLOCKED**) | launchd daemon; `prefect.db` + `mlruns/` in `.gitignore`; all 4 deployments live | QWS-1100b |
 

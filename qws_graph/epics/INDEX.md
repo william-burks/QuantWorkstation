@@ -221,8 +221,8 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 - `QWS-1010` `epic_10_macro_data/story_data_quality_validation.md` — `ready`
 - `QWS-1011` `epic_10_macro_data/story_ndvi_crop_health_collector.md` — `blocked` (QWS-1000)
 - `QWS-1012` `epic_10_macro_data/story_QWS-1012_strategy_class_taxonomy.md` — `READY` ⚠️ must close before any collector story closes
-- `QWS-1100a` `epic_10_macro_data/story_prefect_1100a_scheduler_isolation.md` — `ready`
-- `QWS-1100b` `epic_10_macro_data/story_prefect_1100b_flows.md` — `blocked` (QWS-1100a)
+- `QWS-1100a` `epic_10_macro_data/story_prefect_1100a_scheduler_isolation.md` — `TESTING`
+- `QWS-1100b` `epic_10_macro_data/story_prefect_1100b_flows.md` — `TESTING` (QWS-1100a)
 - `QWS-1100c` `epic_10_macro_data/story_prefect_1100c_daemon.md` — `blocked` (QWS-1100b)
 
 ---
