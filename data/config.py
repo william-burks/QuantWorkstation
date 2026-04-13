@@ -77,6 +77,14 @@ class Settings(BaseSettings):
         "WDISTUS1",
     ]
 
+    # Google Trends search terms to collect (see data/collectors/google_trends.py)
+    gtrends_terms: list[str] = [
+        "buy gold",
+        "gold inflation hedge",
+        "recession",
+        "inflation",
+    ]
+
     # Risk / evaluation
     eval_profit_target: float = 3000.0  # evaluation profit goal (USD)
     risk_per_trade_pct: float = 0.01  # 1% of balance per trade (range: 0.005–0.01)
