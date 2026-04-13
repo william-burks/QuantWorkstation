@@ -50,13 +50,13 @@ Five new `data/flows/` files exist, are importable, register 4 deployments again
 - [x] `@flow(retries=2, retry_delay_seconds=60)` present on all collection flows
 - [x] Each collector step wrapped as a `@task`
 - [x] Zero Prefect imports in `data/collectors/alpaca_crypto.py` or `data/collectors/ibkr_futures.py`
-- [ ] `python data/flows/deployment.py` registers 4 deployments successfully when Prefect server is running
+- [x] `python data/flows/deployment.py` registers 4 deployments successfully when Prefect server is running
 - [x] `make verify` passes
 
 ## Definition of Done
-- [ ] All ACs passing
+- [x] All ACs passing
 - [x] Flows importable without Prefect server running
-- [ ] 4 deployments register when server is running
+- [x] 4 deployments register when server is running
 - [ ] Story marked CLOSED
 
 ## Acceptance Test Plan

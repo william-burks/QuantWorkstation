@@ -10,60 +10,38 @@ Deployments registered:
   4. parquet-export   — parquet-export flow, daily at 02:00 UTC
 """
 
-from prefect.client.schemas.schedules import CronSchedule
+from prefect import serve
+from prefect.deployments.runner import RunnerDeployment
 
 from data.flows.crypto import crypto_collection_flow
 from data.flows.futures import futures_collection_flow
 from data.flows.parquet import parquet_export_flow
 
 
-def register_deployments() -> None:
-    crypto_collection_flow.serve(
+def register_all() -> None:
+    """Build and serve all 4 deployments against a running Prefect server."""
+    # to_deployment is async_dispatch — callable synchronously; cast narrows union
+    crypto_daily: RunnerDeployment = crypto_collection_flow.to_deployment(  # type: ignore[assignment]
         name="crypto-daily",
-        schedules=[CronSchedule(cron="15 0 * * *", timezone="UTC")],
+        cron="15 0 * * *",
         parameters={"timeframe": "daily"},
     )
-
-
-def _build_all() -> None:
-    """Build and apply all 4 deployments to a running Prefect server."""
-    import asyncio
-
-    from prefect.deployments import Deployment
-
-    deployments = [
-        Deployment.build_from_flow(
-            flow=crypto_collection_flow,
-            name="crypto-daily",
-            schedule=CronSchedule(cron="15 0 * * *", timezone="UTC"),
-            parameters={"timeframe": "daily"},
-        ),
-        Deployment.build_from_flow(
-            flow=crypto_collection_flow,
-            name="crypto-hourly",
-            schedule=CronSchedule(cron="5 * * * *", timezone="UTC"),
-            parameters={"timeframe": "1H"},
-        ),
-        Deployment.build_from_flow(
-            flow=futures_collection_flow,
-            name="futures-daily",
-            schedule=CronSchedule(cron="0 1 * * *", timezone="UTC"),
-            parameters={"timeframe": "1D"},
-        ),
-        Deployment.build_from_flow(
-            flow=parquet_export_flow,
-            name="parquet-export",
-            schedule=CronSchedule(cron="0 2 * * *", timezone="UTC"),
-        ),
-    ]
-
-    async def _apply_all() -> None:
-        for dep in deployments:
-            dep_id = await dep.apply()
-            print(f"Registered deployment: {dep.name} ({dep_id})")
-
-    asyncio.run(_apply_all())
+    crypto_hourly: RunnerDeployment = crypto_collection_flow.to_deployment(  # type: ignore[assignment]
+        name="crypto-hourly",
+        cron="5 * * * *",
+        parameters={"timeframe": "1H"},
+    )
+    futures_daily: RunnerDeployment = futures_collection_flow.to_deployment(  # type: ignore[assignment]
+        name="futures-daily",
+        cron="0 1 * * *",
+        parameters={"timeframe": "1D"},
+    )
+    parquet_export: RunnerDeployment = parquet_export_flow.to_deployment(  # type: ignore[assignment]
+        name="parquet-export",
+        cron="0 2 * * *",
+    )
+    serve(crypto_daily, crypto_hourly, futures_daily, parquet_export)
 
 
 if __name__ == "__main__":
-    _build_all()
+    register_all()
