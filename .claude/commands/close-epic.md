@@ -22,17 +22,18 @@ In `docs/BACKLOG_ALIGNMENT.md`:
 ## Step 5 — Update CLAUDE.md
 In `.claude/CLAUDE.md`: update sprint pointer to next active epic and its first unblocked story.
 
-## Step 6 — Stage and commit
+## Step 6 — Stage, commit, and arm gate
 ```
 git add qws_graph/epics/INDEX.md docs/BACKLOG_ALIGNMENT.md .claude/CLAUDE.md
 git commit -m "close(epic-$ARGUMENTS): <epic name> — all stories CLOSED"
+make arm-close-epic-gate
 ```
 
 ## Step 7 — Report and STOP
 
-**STOP GATE: Step 6 committed → output report below and STOP. No further tool calls. No exceptions.**
+**STOP GATE: `make arm-close-epic-gate` called → output report below and STOP. No further tool calls. No exceptions.**
 
-The orchestrator reads this report and decides what comes next. Do not read implement-story.md, do not start any new story.
+The phase gate (agent-phase-gate.sh) blocks all tools after `arm-close-epic-gate` writes `/tmp/agent-close-epic-done.txt`. The orchestrator decides what comes next. Do not read implement-story.md, do not start any new story.
 
 ```
 ## Epic $ARGUMENTS — COMPLETE

@@ -7,7 +7,7 @@ REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
 
-.PHONY: to-release to-master check-clean done-with-feature test test-unit test-integration test-all lint typecheck check verify commit-impl commit-test commit-push-qa commit-close-story prime-agent prime-lint-mechanic feature-branch
+.PHONY: to-release to-master check-clean done-with-feature test test-unit test-integration test-all lint typecheck check verify commit-impl commit-test commit-push-qa commit-close-story prime-agent prime-lint-mechanic feature-branch arm-verify-gate arm-qa-gate arm-close-epic-gate
 
 
 # --- QUALITY ---
@@ -76,8 +76,22 @@ feature-branch:
 prime-agent:
 	@mkdir -p /tmp/agent-read-tracker /tmp/agent-discovery-tracker /tmp/circuit-breaker
 	@echo "implement-story" > /tmp/agent-current-command.txt
-	@rm -f /tmp/agent-step8-committed.txt
+	@rm -f /tmp/agent-step8-committed.txt /tmp/agent-*-done.txt
 	@echo "Agent guards primed. Safe to spawn lead-engineer."
+
+# Phase gate arm targets — called at terminal step before report output
+# Each writes a sentinel that blocks ALL subsequent tool calls via agent-phase-gate.sh
+arm-verify-gate:
+	@touch /tmp/agent-verify-story-done.txt
+	@echo "Verify-story phase gate armed. Report and stop."
+
+arm-qa-gate:
+	@touch /tmp/agent-qa-epic-done.txt
+	@echo "QA-epic phase gate armed. Report and stop."
+
+arm-close-epic-gate:
+	@touch /tmp/agent-close-epic-done.txt
+	@echo "Close-epic phase gate armed. Report and stop."
 
 prime-lint-mechanic:
 	@mkdir -p /tmp/agent-read-tracker /tmp/agent-discovery-tracker /tmp/circuit-breaker

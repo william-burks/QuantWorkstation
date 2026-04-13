@@ -58,18 +58,19 @@ Any `- [ ]` or `- [FAILED]` after fix cycles → note in "Remaining before CLOSE
 ## Step 8 — Update DoD checkboxes
 Check off verified items. Leave unchecked only items requiring manual verification.
 
-## Step 9 — Stage and commit
+## Step 9 — Stage, commit, and arm gate
 ```
 git add <test files> <fixtures> <cypher.py if changed> <story file>
 make commit-test STORY=$ARGUMENTS
+make arm-verify-gate
 ```
 Never `git add -A` or `git add .`.
 
 ## Step 10 — Report and STOP
 
-**STOP GATE: Step 9 committed → output report below and STOP. No further tool calls. No exceptions.**
+**STOP GATE: `make arm-verify-gate` called → output report below and STOP. No further tool calls. No exceptions.**
 
-The orchestrator invokes close-story — you do NOT. Do not read close-story.md, do not change story Status, do not run agent-init-state.sh.
+The phase gate (agent-phase-gate.sh) blocks all tools after `arm-verify-gate` writes `/tmp/agent-verify-story-done.txt`. The orchestrator invokes close-story — you do NOT. Do not read close-story.md, do not change story Status, do not run agent-init-state.sh.
 
 ```
 ## $ARGUMENTS — Verification Report

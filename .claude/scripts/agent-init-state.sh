@@ -9,15 +9,22 @@
 
 COMMAND="${1:-implement-story}"
 
-# Clear guard trackers
-rm -f /tmp/agent-read-tracker/* 2>/dev/null; mkdir -p /tmp/agent-read-tracker
-rm -f /tmp/agent-discovery-tracker/* 2>/dev/null; mkdir -p /tmp/agent-discovery-tracker
-rm -f /tmp/circuit-breaker/* 2>/dev/null; mkdir -p /tmp/circuit-breaker
-# GATE: refuse to clear phase-gate sentinel if it is already armed
+# GATE: refuse to re-initialize if this command's phase gate is already armed
 if [ -f "/tmp/agent-step8-committed.txt" ]; then
   echo "ERROR: Phase gate is armed (Step 8 committed). Cannot re-initialize. Agent must STOP." >&2
   exit 1
 fi
+GENERIC_SENTINEL="/tmp/agent-${COMMAND}-done.txt"
+if [ -f "$GENERIC_SENTINEL" ]; then
+  echo "ERROR: Phase gate is armed ($GENERIC_SENTINEL). Cannot re-initialize. Agent must STOP." >&2
+  exit 1
+fi
+
+# Clear guard trackers and generic sentinels from previous command runs
+rm -f /tmp/agent-read-tracker/* 2>/dev/null; mkdir -p /tmp/agent-read-tracker
+rm -f /tmp/agent-discovery-tracker/* 2>/dev/null; mkdir -p /tmp/agent-discovery-tracker
+rm -f /tmp/circuit-breaker/* 2>/dev/null; mkdir -p /tmp/circuit-breaker
+rm -f /tmp/agent-*-done.txt 2>/dev/null || true
 
 # Build symbol index (functions + classes across graph module)
 grep -rn 'def \|class ' qws_graph/research/graph/*.py 2>/dev/null > /tmp/symbol-index.txt || true

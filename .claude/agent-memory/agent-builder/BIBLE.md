@@ -168,7 +168,50 @@ Pattern: `make test` runs unit only → agent writes integration tests → `make
 
 ---
 
-## 11. Efficiency baselines
+## 11. Two-tier STOP GATE — know which tier you're in
+
+Every STOP GATE is one of two tiers. Conflating them causes drift.
+
+| Tier | Label | Structural backing | Failure mode |
+|------|-------|--------------------|--------------|
+| **Enforced** | `STOP GATE (enforced)` | Sentinel file + `agent-phase-gate.sh` blocks ALL tools | Self-disarming (see Law #4) |
+| **Convention** | `STOP GATE (convention)` | None — prose only | ~100% failure rate on default agent instincts |
+
+**Rule:** When writing a STOP GATE, declare the tier and the sentinel file. Example:
+
+```
+**STOP GATE (enforced): `make arm-verify-gate` called → output report and STOP. No further tool calls. No exceptions.**
+The phase gate (agent-phase-gate.sh) blocks all tools after `/tmp/agent-verify-story-done.txt` is written.
+```
+
+If no sentinel exists for the command, it's convention tier. Label it honestly and file a fix proposal.
+
+**Sentinel registry** (enforced gates as of 2026-04-12):
+
+| Command | Sentinel | Written by |
+|---------|----------|------------|
+| implement-story Step 8 | `/tmp/agent-step8-committed.txt` | `make commit-story-status` |
+| verify-story Step 9 | `/tmp/agent-verify-story-done.txt` | `make arm-verify-gate` |
+| qa-epic Step 5 | `/tmp/agent-qa-epic-done.txt` | `make arm-qa-gate` |
+| close-epic Step 6 | `/tmp/agent-close-epic-done.txt` | `make arm-close-epic-gate` |
+
+All sentinels are cleared by `make prime-agent` before each new spawn.
+
+---
+
+## 12. Generic sentinel pattern for new command files
+
+When adding a new spawned agent command, wire up the phase gate in 3 steps:
+
+1. **Makefile**: add `arm-<command>-gate` target that runs `touch /tmp/agent-<command>-done.txt`
+2. **Command file terminal step**: call `make arm-<command>-gate` BEFORE the report output
+3. **STOP GATE header**: reference the sentinel filename and `agent-phase-gate.sh`
+
+`agent-init-state.sh` already clears all `*-done.txt` sentinels at Step 0 and guards against re-init for the current command. `make prime-agent` clears all of them before spawning.
+
+---
+
+## 13. Efficiency baselines
 
 | Agent | Target waste% | Current best | Primary waste pattern |
 |---|---|---|---|

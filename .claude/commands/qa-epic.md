@@ -167,7 +167,7 @@ make commit-push-qa EPIC=$ARGUMENTS
 If no fixture/seed issues and no lint fixlist → skip commit, report clean.
 If only lint fixlist exists → skip commit (lint-mechanic will commit after fixing).
 
-## Step 5 — Teardown and cleanup
+## Step 5 — Teardown, cleanup, and arm gate
 ```
 qw seed --demo --teardown
 ```
@@ -188,11 +188,16 @@ Do NOT use glob patterns or `&&` chains — use separate Bash calls for each rm.
 
 Update agent memory if needed. READ the memory file BEFORE writing to it (Write tool requires prior Read).
 
+After all cleanup and memory writes are done, arm the phase gate:
+```
+make arm-qa-gate
+```
+
 ## Step 6 — Report and STOP
 
-**STOP GATE: Step 5 teardown complete → output report below and STOP. No further tool calls. No exceptions.**
+**STOP GATE: `make arm-qa-gate` called → output report below and STOP. No further tool calls. No exceptions.**
 
-The orchestrator reads the report and decides next steps. Do not re-run tests, do not re-read tmp files, do not push.
+The phase gate (agent-phase-gate.sh) blocks all tools after `arm-qa-gate` writes `/tmp/agent-qa-epic-done.txt`. The orchestrator reads the report and decides next steps. Do not re-run tests, do not re-read tmp files, do not push.
 
 ```
 ## Epic $ARGUMENTS — QA Report
