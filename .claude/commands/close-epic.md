@@ -28,7 +28,12 @@ git add qws_graph/epics/INDEX.md docs/BACKLOG_ALIGNMENT.md .claude/CLAUDE.md
 git commit -m "close(epic-$ARGUMENTS): <epic name> — all stories CLOSED"
 ```
 
-## Step 7 — Report
+## Step 7 — Report and STOP
+
+**STOP GATE: Step 6 committed → output report below and STOP. No further tool calls. No exceptions.**
+
+The orchestrator reads this report and decides what comes next. Do not read implement-story.md, do not start any new story.
+
 ```
 ## Epic $ARGUMENTS — COMPLETE
 

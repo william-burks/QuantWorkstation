@@ -96,3 +96,7 @@ After writing stories, update:
 
 Report: stories created, index entries, BACKLOG_ALIGNMENT updates.
 ```
+
+**STOP GATE: product-owner reports → session ends. No further tool calls. No exceptions.**
+
+The user reviews stories and decides next steps. Do not spawn additional agents, do not read implement-story.md.

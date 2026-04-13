@@ -45,8 +45,10 @@ If verdict = NOT WORTH BUILDING: write a memory entry capturing why — what con
 it violated or what capability it duplicated. Prevents similar proposals surfacing again.
 ```
 
-If NEEDS DECISION → stop, present to user. Do not proceed to Phase 2.
-If NOT WORTH BUILDING → stop, explain why.
+**STOP GATE: verdict = NEEDS DECISION → present findings and STOP. No Phase 2. No exceptions.**
+**STOP GATE: verdict = NOT WORTH BUILDING → explain why and STOP. No Phase 2. No exceptions.**
+
+The user decides what happens next. Do not spawn product-owner without explicit user approval.
 
 ---
 
@@ -63,3 +65,7 @@ Add the following candidate(s) to the New Story Candidates table in docs/BACKLOG
 
 Append to the existing table. Do not remove existing rows.
 ```
+
+**STOP GATE: product-owner reports → session ends. No further tool calls. No exceptions.**
+
+Do not spawn additional agents. Do not proceed to plan-sprint. The user drives next steps.

@@ -105,12 +105,9 @@ Both files are now in context. Make ONE pass through arrows.txt from top to bott
 - When you reach the end of arrows.txt, you are DONE. Do NOT re-read arrows.txt. Do NOT re-read changed.txt. Do NOT grep either file. Do NOT go back to lint.txt.
 One pass. No re-reads.
 
-**STOP. Lint analysis complete.**
-You have your complete fix list. From this point forward:
-- Do NOT read, grep, or reference ANY `/tmp/qa_epic_*` file (lint, arrows, changed, fixlist — all off-limits).
-- Do NOT run `make lint`, `ruff`, or any lint-related command.
-- Do NOT search for lint-related patterns in any file.
-- Do NOT re-read `qws_graph/research/graph/cypher.py` or `docs/PROVENANCE_ENGINE.md` after their designated steps (2d/2e).
+**STOP GATE: lint analysis complete → proceed to next action below. No lint tool calls. No exceptions.**
+
+All `/tmp/qa_epic_*` lint files are off-limits from this point. The phase gate (agent-phase-gate.sh) blocks any further lint/ruff/grep on those files.
 
 Next action:
 - Fix list empty → skip Phase 3, proceed to Step 2d.
@@ -191,7 +188,12 @@ Do NOT use glob patterns or `&&` chains — use separate Bash calls for each rm.
 
 Update agent memory if needed. READ the memory file BEFORE writing to it (Write tool requires prior Read).
 
-## Step 6 — Report
+## Step 6 — Report and STOP
+
+**STOP GATE: Step 5 teardown complete → output report below and STOP. No further tool calls. No exceptions.**
+
+The orchestrator reads the report and decides next steps. Do not re-run tests, do not re-read tmp files, do not push.
+
 ```
 ## Epic $ARGUMENTS — QA Report
 

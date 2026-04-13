@@ -65,7 +65,12 @@ make commit-test STORY=$ARGUMENTS
 ```
 Never `git add -A` or `git add .`.
 
-## Step 10 — Report
+## Step 10 — Report and STOP
+
+**STOP GATE: Step 9 committed → output report below and STOP. No further tool calls. No exceptions.**
+
+The orchestrator invokes close-story — you do NOT. Do not read close-story.md, do not change story Status, do not run agent-init-state.sh.
+
 ```
 ## $ARGUMENTS — Verification Report
 
@@ -90,5 +95,3 @@ Never `git add -A` or `git add .`.
 ### Remaining before CLOSED
 [blockers or empty]
 ```
-
-Do not change story Status.
