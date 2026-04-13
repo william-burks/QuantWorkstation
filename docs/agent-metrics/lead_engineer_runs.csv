@@ -19,3 +19,4 @@ run_id,timestamp,epic,story_id,branch,model,total_calls,necessary,wasted,waste_p
 20260413T030836,2026-04-13T00:00:00Z,9hf,QWS-0904,feature/26.4.0/QWS-0904,sonnet,47,36,11,23,TESTING,,,file-reread
 20260413T030836-R2,2026-04-13,9hf,QWS-0904,feature/26.4.0/QWS-0904,sonnet,68,43,25,37,TESTING,,,file-reread
 20260413T030836-R3,2026-04-13,9hf,QWS-0904,feature/26.4.0/QWS-0904,sonnet,53,37,16,30,TESTING,,,grep-storm
+20260413T055321,2026-04-13T00:00:00Z,epic-9.5,QWS-0905,feature/26.4.0/QWS-0905,sonnet,86,69,17,20,completed,6,0,file-reread

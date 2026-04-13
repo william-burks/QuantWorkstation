@@ -196,7 +196,7 @@ Stories (independent — implement in parallel):
 - Objective: fix researcher friction gaps discovered during Epic 9 — hypothesis lookup, ad-hoc queries, trial metadata, CL data window
 
 Stories (independent — implement in parallel):
-- `QWS-0905` `epic_9_5_workflow_hardening/story_QWS-0905_hypothesis_lookup_and_findings.md` — `TESTING`
+- `QWS-0905` `epic_9_5_workflow_hardening/closed/story_QWS-0905_hypothesis_lookup_and_findings.md` — `CLOSED`
 - `QWS-0906` `epic_9_5_workflow_hardening/story_QWS-0906_adhoc_cypher_and_patch.md` — `READY`
 - `QWS-0907` `epic_9_5_workflow_hardening/story_QWS-0907_trial_metadata_json_blob.md` — `READY`
 - `QWS-0908` `epic_9_5_workflow_hardening/story_QWS-0908_cl_historical_data_extension.md` — `READY`
@@ -207,7 +207,7 @@ Stories (independent — implement in parallel):
 - Epic README: `epic_10_macro_data/README.md`
 - Objective: wire macro and alternative data sources as inputs for regime signal generation
 
-Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-1010 parallel from start) → QWS-1100b after QWS-1100a
+Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-1010 parallel from start) → QWS-1100b after QWS-1100a → QWS-1100c after QWS-1100b
 - `QWS-1000` `epic_10_macro_data/story_0_store_series_methods.md` — `ready`
 - `QWS-1001` `epic_10_macro_data/story_cot_collector.md` — `blocked` (QWS-1000)
 - `QWS-1002` `epic_10_macro_data/story_fred_macro_collector.md` — `BLOCKED` (QWS-1000)
@@ -223,6 +223,7 @@ Execution order: QWS-1100a first → QWS-1000 → QWS-1001–1011 parallel (QWS-
 - `QWS-1012` `epic_10_macro_data/story_QWS-1012_strategy_class_taxonomy.md` — `READY` ⚠️ must close before any collector story closes
 - `QWS-1100a` `epic_10_macro_data/story_prefect_1100a_scheduler_isolation.md` — `ready`
 - `QWS-1100b` `epic_10_macro_data/story_prefect_1100b_flows.md` — `blocked` (QWS-1100a)
+- `QWS-1100c` `epic_10_macro_data/story_prefect_1100c_daemon.md` — `blocked` (QWS-1100b)
 
 ---
 
@@ -245,7 +246,7 @@ Stories (QWS-1101 first, QWS-1102 after):
 
 Stories:
 - `QWS-1301` `epic_agent_design/story_QWS-1301_research_ideas_layer.md` — `READY`
-- `QWS-1302` `epic_agent_design/story_QWS-1302_research_navigator_agent.md` — `TESTING` (QWS-1301, QWS-0905, QWS-0906)
+- `QWS-1302` `epic_agent_design/story_QWS-1302_research_navigator_agent.md` — `CLOSED` (QWS-1301, QWS-0905, QWS-0906)
 - `QWS-1303` `epic_agent_design/story_QWS-1303_trial_engineer_agent.md` — `BLOCKED` (QWS-1302, QWS-0907)
 - `QWS-1304` `epic_agent_design/story_QWS-1304_research_session_command_rewrite.md` — `BLOCKED` (QWS-1302, QWS-1303)
 

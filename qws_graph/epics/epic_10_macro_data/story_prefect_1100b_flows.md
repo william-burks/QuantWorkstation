@@ -13,32 +13,30 @@ infra
 QWS-1100a
 
 ## Summary
-Create `data/flows/` directory with crypto, futures, parquet, and deployment flows; configure macOS launchd plist to run Prefect server as a daemon.
+Create all `data/flows/` Python files — crypto, futures, parquet, and deployment — wiring existing collectors into Prefect `@task`/`@flow` decorators with retry config and schedule registration. Collectors gain no direct Prefect imports. Daemon setup deferred to QWS-1100c.
 
 ## Problem
-After scheduler isolation (QWS-1100a), data collection has no scheduler. Epic 10 collectors need retry logic, structured logging, and run history. APScheduler provides none of these.
+Collectors run manually only. No scheduling, no retry, no deployment registry. Flows layer isolates Prefect from collectors so collectors remain importable without Prefect installed.
 
 ## Goal
-Prefect server runs as a launchd daemon. Crypto, futures, and parquet collection flows are registered with schedules. Each flow retries twice on failure. UI accessible at localhost:4200.
-
-## Design
-- Collector modules stay pure — no Prefect imports in `alpaca_crypto.py` or `ibkr_futures.py`
-- Flows wrap collectors: import collector functions, decorate with `@flow`/`@task`
-- SQLite backend (no Docker, no Postgres)
-- `retries=2, retry_delay_seconds=60` on each `@flow`
-- launchd plist runs `prefect server start` at login; `RunAtLoad=true`
+Five new `data/flows/` files exist, are importable, register 4 deployments against a running Prefect server, and pass `make verify`.
 
 ## In Scope
-- `data/flows/__init__.py`, `crypto.py`, `futures.py`, `parquet.py`, `deployment.py`
-- macOS launchd plist at `~/Library/LaunchAgents/com.quantworkstation.prefect.plist`
-- `.gitignore` entries: `mlruns/`, `prefect.db`
-- Schedules: crypto 00:15 UTC, futures 23:20 UTC, parquet 00:30 + 23:35 UTC
+- `data/flows/__init__.py` — new
+- `data/flows/crypto.py` — new; wraps `alpaca_crypto` collector; `retries=2, retry_delay_seconds=60`
+- `data/flows/futures.py` — new; wraps `ibkr_futures` collector; `retries=2, retry_delay_seconds=60`
+- `data/flows/parquet.py` — new; parquet export flow; `retries=2, retry_delay_seconds=60`
+- `data/flows/deployment.py` — new; registers all 4 deployments with schedules via `flow.serve()` or `Deployment.build_from_flow()`
+- Retry config: `retries=2, retry_delay_seconds=60` on all `@flow` decorators
+- Schedule registration: deployment registration runnable via `python data/flows/deployment.py`
 
 ## Out of Scope
+- macOS launchd plist (QWS-1100c)
+- `.gitignore` entries for `prefect.db` and `mlruns/` (QWS-1100c)
+- `mlruns/` gitignore entry (Epic 11 — not in scope here)
 - Slack/webhook alerting
 - Docker or container workers
 - Prefect Cloud
-- Epic 10 collector flows (added per-story when collectors land)
 
 ## Repo Touchpoints
 - `data/flows/__init__.py` — new
@@ -46,22 +44,17 @@ Prefect server runs as a launchd daemon. Crypto, futures, and parquet collection
 - `data/flows/futures.py` — new
 - `data/flows/parquet.py` — new
 - `data/flows/deployment.py` — new
-- `~/Library/LaunchAgents/com.quantworkstation.prefect.plist` — new
 
 ## Acceptance Criteria
-- [ ] All 5 `data/flows/` files exist and are importable
-- [ ] Each flow has `retries=2, retry_delay_seconds=60` on `@flow` decorator
-- [ ] Each flow has `@task`-decorated steps for fetch, validate, write
-- [ ] `data/collectors/alpaca_crypto.py` and `data/collectors/ibkr_futures.py` have zero Prefect imports
-- [ ] `prefect server start` launches cleanly; UI accessible at `localhost:4200`
-- [ ] launchd plist exists at `~/Library/LaunchAgents/com.quantworkstation.prefect.plist`; `launchctl load` succeeds
-- [ ] `python data/flows/deployment.py` registers all 4 deployments in Prefect UI without error
-- [ ] `mlruns/` and `prefect.db` present in `.gitignore`
-- [ ] `pytest tests/unit/ -v` passes
+- [ ] All 5 `data/flows/` files exist and are importable (`python -c "import data.flows"` succeeds)
+- [ ] `@flow(retries=2, retry_delay_seconds=60)` present on all collection flows
+- [ ] Each collector step wrapped as a `@task`
+- [ ] Zero Prefect imports in `data/collectors/alpaca_crypto.py` or `data/collectors/ibkr_futures.py`
+- [ ] `python data/flows/deployment.py` registers 4 deployments successfully when Prefect server is running
 - [ ] `make verify` passes
 
 ## Definition of Done
 - [ ] All ACs passing
-- [ ] launchd plist load-tested on dev machine
-- [ ] All 4 deployments visible and triggerable in Prefect UI
+- [ ] Flows importable without Prefect server running
+- [ ] 4 deployments register when server is running
 - [ ] Story marked CLOSED

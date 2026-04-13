@@ -101,7 +101,7 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| Hypothesis Lookup + Findings | QWS-0905 (**TESTING**) | `findings` property on Hypothesis; `hypotheses_by_status` + `hypothesis_search` presets; `--findings` flag on `qw record --hypothesis` | — |
+| Hypothesis Lookup + Findings | QWS-0905 (**CLOSED**) | `findings` property on Hypothesis; `hypotheses_by_status` + `hypothesis_search` presets; `--findings` flag on `qw record --hypothesis` | — |
 | Ad-hoc Cypher + `qw patch` | QWS-0906 (**READY**) | `qw query --cypher` read-only passthrough; `qw patch --run` for surgical property corrections | — |
 | Trial Metadata JSON Blob | QWS-0907 (**READY**) | `trial_metadata` map property on Run node; regime columns survive bundle ingest | — |
 | CL Historical Data Extension | QWS-0908 (**READY**) | CL 1H data extended to ≥ 2020 via IBKR audit or FirstRate CSV ingest | — |
@@ -110,8 +110,8 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| Research Ideas Layer | QWS-1301 (**READY**) | `queued` flag on Hypothesis; `queued_hypotheses` preset; lightweight mid-session idea intake; `BRANCHED_FROM` to Run | ~~QWS-HF-001~~, QWS-0905 |
-| Research Navigator Agent | QWS-1302 (**BLOCKED**) | `research-navigator` agent; ranked next-direction synthesis; Phase 3 mid-session pivot; proactive redundancy check | QWS-1301, QWS-0905, QWS-0906 |
+| Research Ideas Layer | QWS-1301 (**READY**) | `queued` flag on Hypothesis; `queued_hypotheses` preset; lightweight mid-session idea intake; `BRANCHED_FROM` to Run | ~~QWS-HF-001~~, ~~QWS-0905~~ |
+| Research Navigator Agent | QWS-1302 (**BLOCKED**) | `research-navigator` agent; ranked next-direction synthesis; Phase 3 mid-session pivot; proactive redundancy check | QWS-1301, ~~QWS-0905~~, QWS-0906 |
 | Trial Engineer Agent | QWS-1303 (**BLOCKED**) | `trial-engineer` agent; generates trial script + bundle.json from hypothesis context; stops before run | QWS-1302, QWS-0907 |
 | Research Session Command Rewrite | QWS-1304 (**BLOCKED**) | `/research-session` orchestrates navigator + trial-engineer; handoff contract defined | QWS-1302, QWS-1303 |
 
@@ -145,7 +145,8 @@
 | NDVI Crop Health Collector | QWS-1011 (**BLOCKED**) | NDVI crop health index in ArcticDB | QWS-1000 |
 | Strategy Class Taxonomy | QWS-1012 (**READY**) ⚠️ | `strategy_class` free-form string on Strategy; `portfolio_by_class` preset; `qw backfill --strategy-class`; `bundle.json` reads `strategy_class` | — |
 | Scheduler Isolation | QWS-1100a (**READY**) | `execution/risk_scheduler.py` with risk jobs only; `prefect` in pyproject.toml | — |
-| Prefect Flows | QWS-1100b (**BLOCKED**) | Scheduled collection via Prefect flows; launchd daemon | QWS-1100a |
+| Prefect Flows | QWS-1100b (**BLOCKED**) | Scheduled collection via Prefect flows; 5 `data/flows/` files; 4 deployments registered | QWS-1100a |
+| Prefect Daemon | QWS-1100c (**BLOCKED**) | launchd daemon; `prefect.db` + `mlruns/` in `.gitignore`; all 4 deployments live | QWS-1100b |
 
 ### Epic 11 — Production Tracking
 

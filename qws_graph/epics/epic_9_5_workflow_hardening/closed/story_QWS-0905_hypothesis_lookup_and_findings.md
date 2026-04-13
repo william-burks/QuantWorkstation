@@ -4,7 +4,7 @@
 QWS-0905
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 schema
@@ -62,7 +62,7 @@ All additions must be registered in `qws_graph/docs/data_dictionary.yaml`.
 ## Definition of Done
 - [x] data_dictionary.yaml updated
 - [x] Tests green
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
