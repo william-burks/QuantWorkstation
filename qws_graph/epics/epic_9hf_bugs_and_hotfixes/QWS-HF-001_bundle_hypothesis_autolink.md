@@ -51,11 +51,11 @@ if hypothesis_id and not dry_run and ingest_ok:
 
 ## Acceptance Criteria
 
-- [x] `qw record --bundle <dir>` reads `hypothesis_id` from `bundle.json`
-- [x] TESTED_AS edge is created automatically if the hypothesis exists in the graph
-- [x] If hypothesis does not exist, a WARNING is printed (not an error — ingest still succeeds)
-- [x] Dry-run mode does not write the edge
-- [x] E2E test case added: bundle with `hypothesis_id` → TESTED_AS edge present in graph
+- [ ] `qw record --bundle <dir>` reads `hypothesis_id` from `bundle.json`
+- [ ] TESTED_AS edge is created automatically if the hypothesis exists in the graph
+- [ ] If hypothesis does not exist, a WARNING is printed (not an error — ingest still succeeds)
+- [ ] Dry-run mode does not write the edge
+- [ ] E2E test case added: bundle with `hypothesis_id` → TESTED_AS edge present in graph
 
 ## Repo Touchpoints
 - `qws_graph/research/graph/cli.py` — `_cmd_bundle`: read `hypothesis_id` from manifest, call `store.link_hypothesis_tested_as` after ingest; `_cmd_hypothesis`: create Hypothesis node before BRANCHED_FROM edge when `--hypothesis` is a title string
@@ -96,56 +96,12 @@ if branched_from and not _looks_like_id(hypothesis_arg):
 
 ### Acceptance Criteria (Fix 2)
 
-- [x] `qw record --hypothesis "new title" --branched-from <parent_id>` creates the Hypothesis node AND the BRANCHED_FROM edge in a single call
-- [x] If `--hypothesis` is a 12-char hex ID (existing node), behavior is unchanged — only the edge is created
-- [x] If `--branched-from` parent does not exist, command exits with non-zero and prints an error
-- [x] E2E test: single call with title + `--branched-from` → both node and edge present in graph
+- [ ] `qw record --hypothesis "new title" --branched-from <parent_id>` creates the Hypothesis node AND the BRANCHED_FROM edge in a single call
+- [ ] If `--hypothesis` is a 12-char hex ID (existing node), behavior is unchanged — only the edge is created
+- [ ] If `--branched-from` parent does not exist, command exits with non-zero and prints an error
+- [ ] E2E test: single call with title + `--branched-from` → both node and edge present in graph
 
 ## Definition of Done
-- [x] All ACs passing (Fix 1 + Fix 2)
-- [x] Tests green
+- [ ] All ACs passing (Fix 1 + Fix 2)
+- [ ] Tests green
 - [ ] Story marked CLOSED
-
-## Acceptance Test Plan
-
-### AC1: bundle reads hypothesis_id and calls link_hypothesis_tested_as
-- type: regression
-- cmd: `pytest qws_graph/tests/integration/test_cli_record_reconcile.py::TestBundleHypothesisAutolink::test_bundle_with_hypothesis_id_calls_link -v`
-- expect_contains: "PASSED"
-- expect_exit: 0
-
-### AC2: TESTED_AS edge created when hypothesis exists
-- type: regression
-- cmd: `pytest qws_graph/tests/integration/test_cli_record_reconcile.py::TestBundleHypothesisAutolink::test_bundle_with_hypothesis_id_calls_link -v`
-- expect_contains: "link_hypothesis_tested_as"
-- expect_exit: 0
-
-### AC3: hypothesis not found → WARNING, ingest still succeeds (exit 0)
-- type: regression
-- cmd: `pytest qws_graph/tests/integration/test_cli_record_reconcile.py::TestBundleHypothesisAutolink::test_bundle_hypothesis_not_found_warns_not_errors -v`
-- expect_contains: "PASSED"
-- expect_exit: 0
-
-### AC4: dry-run does not write TESTED_AS edge
-- type: regression
-- cmd: `pytest qws_graph/tests/integration/test_cli_record_reconcile.py::TestBundleHypothesisAutolink::test_bundle_dry_run_skips_link -v`
-- expect_contains: "PASSED"
-- expect_exit: 0
-
-### AC5: title + --branched-from creates node then edge
-- type: regression
-- cmd: `pytest qws_graph/tests/integration/test_cli_record_reconcile.py::TestHypothesisBranchedFromNodeCreation::test_title_plus_branched_from_creates_node_and_edge -v`
-- expect_contains: "PASSED"
-- expect_exit: 0
-
-### AC6: 12-char hex ID + --branched-from skips node creation
-- type: regression
-- cmd: `pytest qws_graph/tests/integration/test_cli_record_reconcile.py::TestHypothesisBranchedFromNodeCreation::test_existing_id_plus_branched_from_skips_node_creation -v`
-- expect_contains: "PASSED"
-- expect_exit: 0
-
-### AC7: --branched-from parent not found → exit 1
-- type: regression
-- cmd: `pytest qws_graph/tests/integration/test_cli_record_reconcile.py::TestHypothesisBranchedFromNodeCreation::test_branched_from_target_not_found_returns_error -v`
-- expect_contains: "PASSED"
-- expect_exit: 0
