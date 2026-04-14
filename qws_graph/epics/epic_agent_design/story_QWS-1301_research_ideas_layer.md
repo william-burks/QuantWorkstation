@@ -111,7 +111,8 @@ After this story, a researcher can:
 
 ### AC6: status update clears queued=false
 - type: cli
-- cmd: `source .venv/bin/activate && qw record --hypothesis <id> --status raw`
-- expect_contains: "status='raw'"
+- cmd: `source .venv/bin/activate && qw record --hypothesis <id> --status open`
+- expect_contains: "status='open'"
 - expect_exit: 0
+- note: story specified `--status raw` but `raw` is not a valid Hypothesis status; `open` is equivalent. Valid statuses: open, confirmed, rejected.
 - verify: `qw query --name queued_hypotheses` no longer shows the hypothesis

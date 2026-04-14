@@ -111,7 +111,7 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| Research Ideas Layer | QWS-1301 (**READY**) | `queued` flag on Hypothesis; `queued_hypotheses` preset; lightweight mid-session idea intake; `BRANCHED_FROM` to Run | ~~QWS-HF-001~~, ~~QWS-0905~~ |
+| Research Ideas Layer | QWS-1301 (**TESTING**) | `queued` flag on Hypothesis; `queued_hypotheses` preset; lightweight mid-session idea intake; `BRANCHED_FROM` to Run | ~~QWS-HF-001~~, ~~QWS-0905~~ |
 | Research Navigator Agent | QWS-1302 (**BLOCKED**) | `research-navigator` agent; ranked next-direction synthesis; Phase 3 mid-session pivot; proactive redundancy check | QWS-1301 |
 | Trial Engineer Agent | QWS-1303 (**BLOCKED**) | `trial-engineer` agent; generates trial script + bundle.json from hypothesis context; stops before run | QWS-1302 |
 | Research Session Command Rewrite | QWS-1304 (**BLOCKED**) | `/research-session` orchestrates navigator + trial-engineer; handoff contract defined | QWS-1302, QWS-1303 |
@@ -171,7 +171,7 @@
 |---|---|---|---|
 | PyPI Packaging | QWS-0701 | `strategy_utils` package importable from PyPI; cross-repo reuse | — |
 | CI Graph Integrity Gate | QWS-0702 | `make test-integrity` runs 5 integrity checks on every push | — |
-| Research Ideas Layer | QWS-1301 (**READY**) | Structured idea intake layer — see Epic 13 | Epic 13 |
+| Research Ideas Layer | QWS-1301 (**TESTING**) | Structured idea intake layer — see Epic 13 | Epic 13 |
 | Research Navigator Agent | QWS-1302 (**BLOCKED**) | Agent-guided research session navigation — see Epic 13 | Epic 13 |
 | Trial Engineer Agent | QWS-1303 (**BLOCKED**) | Agent that drafts and runs trial scripts — see Epic 13 | Epic 13 |
 | Research Session Command Rewrite | QWS-1304 (**BLOCKED**) | Rewrite `/research-session` command — see Epic 13 | Epic 13 |
