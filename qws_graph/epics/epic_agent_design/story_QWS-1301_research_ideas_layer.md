@@ -4,7 +4,7 @@
 QWS-1301
 
 ## Status
-READY
+TESTING
 
 ## Type
 code
@@ -65,8 +65,8 @@ After this story, a researcher can:
 - [x] `docs/PROVENANCE_ENGINE.md` [TARGET] tools section updated with `queued_hypotheses` preset entry
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green (where applicable)
+- [x] All ACs passing
+- [x] Tests green (where applicable)
 - [ ] Story marked CLOSED
 
 ## Acceptance Test Plan
