@@ -7,7 +7,7 @@
 QWS-1301
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 None
