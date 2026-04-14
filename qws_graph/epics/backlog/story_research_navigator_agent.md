@@ -1,3 +1,6 @@
+> **SUPERSEDED** — Active canonical story: `qws_graph/epics/epic_agent_design/story_QWS-1302_research_navigator_agent.md`
+> Do NOT implement from this file — agents searching by name will find the canonical story first.
+
 # Story 2 — Research Navigator Agent
 
 ## ID

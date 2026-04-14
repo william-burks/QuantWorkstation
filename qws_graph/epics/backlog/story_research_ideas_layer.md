@@ -1,3 +1,6 @@
+> **SUPERSEDED** — Active canonical story: `qws_graph/epics/epic_agent_design/story_QWS-1301_research_ideas_layer.md`
+> Do NOT implement from this file — agents searching by name will find the canonical story first.
+
 # Story 1 — Research Ideas Layer
 
 ## ID

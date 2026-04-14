@@ -1,3 +1,6 @@
+> **SUPERSEDED** — Active canonical story: `qws_graph/epics/epic_agent_design/story_QWS-1303_trial_engineer_agent.md`
+> Do NOT implement from this file — agents searching by name will find the canonical story first.
+
 # Story 3 — Trial Engineer Agent
 
 ## ID
