@@ -4,7 +4,7 @@
 QWS-1302
 
 ## Status
-READY
+CLOSED
 
 ## Type
 code
@@ -62,7 +62,7 @@ After this story, a `research-navigator` agent:
 ## Definition of Done
 - [x] All ACs passing
 - [x] Tests green (where applicable)
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
