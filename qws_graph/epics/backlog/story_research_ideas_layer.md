@@ -77,7 +77,7 @@ related_hypothesis_id: ""   # populated after qw record --hypothesis
 - [x] `research/ideas/.gitkeep` committed
 - [x] Example idea file present with valid frontmatter
 - [x] RESEARCH_WORKFLOW.md Pre-Graph Ideation section merged
-- [x] All tests pass (`make verify` passes)
+- [ ] All tests pass (`make verify` passes)
 - [ ] Story marked CLOSED
 
 ## Acceptance Test Plan
