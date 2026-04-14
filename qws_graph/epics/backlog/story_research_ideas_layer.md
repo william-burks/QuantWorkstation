@@ -4,7 +4,7 @@
 QWS-1301
 
 ## Status
-DRAFT
+READY
 
 ## Blocked On
 None
@@ -66,16 +66,48 @@ related_hypothesis_id: ""   # populated after qw record --hypothesis
 - `docs/RESEARCH_WORKFLOW.md`
 
 ## Acceptance Criteria
-- [ ] `research/ideas/` directory exists and is tracked in git via `.gitkeep`
-- [ ] `docs/RESEARCH_WORKFLOW.md` contains "Pre-Graph Ideation" section with file convention,
+- [x] `research/ideas/` directory exists and is tracked in git via `.gitkeep`
+- [x] `docs/RESEARCH_WORKFLOW.md` contains "Pre-Graph Ideation" section with file convention,
   frontmatter spec, and promotion trigger documented
-- [ ] Example idea file exists at `research/ideas/2026-04-11-example-cl-eia-reversal.md` with
+- [x] Example idea file exists at `research/ideas/2026-04-11-example-cl-eia-reversal.md` with
   correct frontmatter (`status: raw`, `source: user`, `related_hypothesis_id: ""`)
-- [ ] No graph schema changes, no CLI changes
+- [x] No graph schema changes, no CLI changes
 
 ## Definition of Done
-- [ ] `research/ideas/.gitkeep` committed
-- [ ] Example idea file present with valid frontmatter
-- [ ] RESEARCH_WORKFLOW.md Pre-Graph Ideation section merged
+- [x] `research/ideas/.gitkeep` committed
+- [x] Example idea file present with valid frontmatter
+- [x] RESEARCH_WORKFLOW.md Pre-Graph Ideation section merged
 - [ ] All tests pass (`make verify` passes)
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: research/ideas directory tracked in git
+- type: file_check
+- cmd: `ls /Users/will/ClaudeProjects/QuantWorkstation/research/ideas/.gitkeep`
+- expect_contains: ".gitkeep"
+- expect_exit: 0
+
+### AC2: RESEARCH_WORKFLOW.md Pre-Graph Ideation section
+- type: file_check
+- cmd: `grep -l "Pre-Graph Ideation" /Users/will/ClaudeProjects/QuantWorkstation/docs/RESEARCH_WORKFLOW.md`
+- expect_contains: "RESEARCH_WORKFLOW.md"
+- expect_exit: 0
+
+### AC2b: frontmatter spec documented
+- type: file_check
+- cmd: `grep "related_hypothesis_id" /Users/will/ClaudeProjects/QuantWorkstation/docs/RESEARCH_WORKFLOW.md`
+- expect_contains: "related_hypothesis_id"
+- expect_exit: 0
+
+### AC3: example idea file frontmatter
+- type: file_check
+- cmd: `head -5 /Users/will/ClaudeProjects/QuantWorkstation/research/ideas/2026-04-11-example-cl-eia-reversal.md`
+- expect_contains: "status: raw"
+- expect_exit: 0
+
+### AC4: no graph or CLI changes
+- type: regression
+- cmd: `git diff HEAD -- qws_graph/research/graph/cli.py qws_graph/docs/data_dictionary.yaml`
+- expect_contains: ""
+- expect_exit: 0
