@@ -49,17 +49,73 @@ After this story, a `research-navigator` agent:
 - `.claude/scripts/agent-research-guard.sh` — existing file (already at this path)
 
 ## Acceptance Criteria
-- [ ] `.claude/agents/research-navigator.md` updated with all 4 phases documented
-- [ ] Phase 1 output is ranked 2-3 direction shortlist with rationale — not raw table output
-- [ ] Phase 2 redundancy check runs silently before hypothesis commit and surfaces matches if found
-- [ ] Phase 3 reads bundle.json from provided path and produces branch/abandon/continue recommendation
-- [ ] Phase 4 updates `findings` on active hypothesis and writes session wrap structure
-- [ ] Agent reads project memory at session start (`.claude/agent-memory/` relevant files)
-- [ ] `agent-research-guard.sh` blocks: `qw degrade`, `qw retire`, `qw monitor`, `qw abort`, `qw record --bundle`, git operations, writes outside `research/ideas/`
-- [ ] Integration test: Phase 1 run against current graph produces structured output. If ≥ 1 Champion or queued Hypothesis exists, output contains ≥ 1 ranked direction with node ID citation. If graph is empty, output states 'No prior research — cold start' with no error.
-- [ ] Tool list in agent file: Read, Glob, Grep, Bash (scoped to `qw query` and `qw record --hypothesis` only), Write (scoped to `research/ideas/` only)
+- [x] `.claude/agents/research-navigator.md` updated with all 4 phases documented
+- [x] Phase 1 output is ranked 2-3 direction shortlist with rationale — not raw table output
+- [x] Phase 2 redundancy check runs silently before hypothesis commit and surfaces matches if found
+- [x] Phase 3 reads bundle.json from provided path and produces branch/abandon/continue recommendation
+- [x] Phase 4 updates `findings` on active hypothesis and writes session wrap structure
+- [x] Agent reads project memory at session start (`.claude/agent-memory/` relevant files)
+- [x] `agent-research-guard.sh` blocks: `qw degrade`, `qw retire`, `qw monitor`, `qw abort`, `qw record --bundle`, git operations, writes outside `research/ideas/`
+- [x] Integration test: Phase 1 run against current graph produces structured output. If ≥ 1 Champion or queued Hypothesis exists, output contains ≥ 1 ranked direction with node ID citation. If graph is empty, output states 'No prior research — cold start' with no error.
+- [x] Tool list in agent file: Read, Glob, Grep, Bash (scoped to `qw query` and `qw record --hypothesis` only), Write (scoped to `research/ideas/` only)
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green (where applicable)
+- [x] All ACs passing
+- [x] Tests green (where applicable)
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: agent file has all 4 phases
+- type: file_check
+- cmd: `pytest qws_graph/tests/integration/test_research_navigator.py::TestNavigatorAgentFile::test_has_four_phases -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC2: Phase 1 output ranked shortlist format
+- type: file_check
+- cmd: `pytest qws_graph/tests/integration/test_research_navigator.py::TestNavigatorAgentFile::test_phase1_ranked_shortlist_format -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC3: Phase 2 redundancy check silent
+- type: file_check
+- cmd: `pytest qws_graph/tests/integration/test_research_navigator.py::TestNavigatorAgentFile::test_phase2_redundancy_check -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC4: Phase 3 bundle.json pivot
+- type: file_check
+- cmd: `pytest qws_graph/tests/integration/test_research_navigator.py::TestNavigatorAgentFile::test_phase3_bundle_json -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC5: Phase 4 findings update
+- type: file_check
+- cmd: `pytest qws_graph/tests/integration/test_research_navigator.py::TestNavigatorAgentFile::test_phase4_findings_update -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC6: reads project memory
+- type: file_check
+- cmd: `pytest qws_graph/tests/integration/test_research_navigator.py::TestNavigatorAgentFile::test_reads_project_memory -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC7: guard blocks prohibited commands
+- type: cli
+- cmd: `pytest qws_graph/tests/integration/test_research_navigator.py::TestResearchGuardBlocks -v`
+- expect_contains: "7 passed"
+- expect_exit: 0
+
+### AC8: integration test — cold start and structured output
+- type: file_check
+- cmd: `pytest qws_graph/tests/integration/test_research_navigator.py::TestNavigatorAgentFile::test_phase1_cold_start_clause -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
+
+### AC9: tool list scoped
+- type: file_check
+- cmd: `pytest qws_graph/tests/integration/test_research_navigator.py::TestNavigatorAgentFile::test_tool_list_scoped -v`
+- expect_contains: "PASSED"
+- expect_exit: 0
