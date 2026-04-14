@@ -911,6 +911,15 @@ nodes:
           Free-text session notes or findings stored on the hypothesis. Written via
           `qw record --hypothesis <id> --findings "<text>"`. Re-running overwrites the
           previous value. Null until first findings are recorded. Added QWS-0905.
+      queued:
+        type: bool
+        nullable: true
+        default: false
+        description: >
+          True if the hypothesis is parked for a future research session (not actively being
+          tested). Set via `qw record --hypothesis "<title>" --queue` or
+          `qw record --hypothesis <id> --queue`. Cleared automatically when status is updated
+          via `qw record --hypothesis <id> --status <value>`. Added QWS-1301.
       embedding:
         type: list[float]
         nullable: true

@@ -489,6 +489,36 @@ ORDER BY h.created_at DESC
 
 
 # ---------------------------------------------------------------------------
+# Queued hypotheses (QWS-1301)
+# ---------------------------------------------------------------------------
+
+HYPOTHESIS_SET_QUEUED_QUERY = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+SET h.queued = $queued, h.updated_at = datetime()
+RETURN h.hypothesis_id AS hypothesis_id
+""".strip()
+
+HYPOTHESIS_DEQUEUE_ON_STATUS_QUERY = """
+MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
+SET h.status = $status, h.queued = false, h.updated_at = datetime()
+RETURN h.hypothesis_id AS hypothesis_id
+""".strip()
+
+GET_QUEUED_HYPOTHESES_V1_CYPHER = """
+MATCH (h:Hypothesis {queued: true})
+OPTIONAL MATCH (h)-[:BRANCHED_FROM]->(src)
+RETURN {
+  hypothesis_id: h.hypothesis_id,
+  title: h.title,
+  findings: left(coalesce(h.findings, ''), 200),
+  branched_from_id: coalesce(src.hypothesis_id, src.run_id),
+  created_at: toString(h.created_at)
+} AS result
+ORDER BY h.created_at DESC
+""".strip()
+
+
+# ---------------------------------------------------------------------------
 # Regime node + IN_REGIME edge merge (QWS-0502)
 # ---------------------------------------------------------------------------
 
@@ -934,6 +964,7 @@ MERGE (h1:Hypothesis {hypothesis_id: 'demo_hyp_001'})
   SET h1.title = 'ES bear high_vol regime has elevated win rate in first 30 min',
       h1.status = 'open',
       h1.findings = 'Parked after session 3 — needs CL data extension before retry.',
+      h1.queued = false,
       h1.updated_at = datetime()
 MERGE (hsrc1:HypothesisSource {source_key: 'user'})
   ON CREATE SET hsrc1.created_at = datetime()
@@ -944,6 +975,7 @@ MERGE (h2:Hypothesis {hypothesis_id: 'demo_hyp_002'})
   ON CREATE SET h2.created_at = datetime('2026-02-01T10:00:00'), h2.is_demo = true
   SET h2.title = 'Demo alpha bear logic exploits London open liquidity imbalance',
       h2.status = 'confirmed',
+      h2.queued = false,
       h2.updated_at = datetime()
 MERGE (hsrc2:HypothesisSource {source_key: 'llm'})
   ON CREATE SET hsrc2.created_at = datetime()

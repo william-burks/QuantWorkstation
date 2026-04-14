@@ -744,6 +744,10 @@ class GraphQueryService:
         with self._driver.session(database=self._database) as session:
             return get_portfolio_by_class_v1(session)
 
+    def get_queued_hypotheses_v1(self) -> list[dict[str, Any]]:
+        with self._driver.session(database=self._database) as session:
+            return get_queued_hypotheses_v1(session)
+
 
 def _record_to_mapping(record: Any) -> dict[str, Any]:
     if hasattr(record, "data") and callable(record.data):
@@ -1222,6 +1226,16 @@ def get_hypotheses_by_status_v1(session: QuerySession) -> list[dict[str, Any]]:
     return _all_results(session, GET_HYPOTHESES_BY_STATUS_V1_CYPHER)
 
 
+def get_queued_hypotheses_v1(session: QuerySession) -> list[dict[str, Any]]:
+    """Return all Hypothesis nodes with queued=true, ordered by created_at DESC.
+
+    Columns: hypothesis_id, title, findings (truncated 200), branched_from_id, created_at.
+    """
+    from .cypher import GET_QUEUED_HYPOTHESES_V1_CYPHER  # noqa: PLC0415
+
+    return _all_results(session, GET_QUEUED_HYPOTHESES_V1_CYPHER)
+
+
 def get_hypothesis_search_v1(
     session: QuerySession,
     title_fragment: str,
@@ -1256,6 +1270,7 @@ QUERY_VIEW_REGISTRY: dict[str, Callable[..., Any]] = {
     "get_runs_by_regime_v1": get_runs_by_regime_v1,
     "get_regime_performance_v1": get_regime_performance_v1,
     "get_hypotheses_by_status_v1": get_hypotheses_by_status_v1,
+    "get_queued_hypotheses_v1": get_queued_hypotheses_v1,
     "get_hypothesis_search_v1": get_hypothesis_search_v1,
     "get_list_hypotheses_v1": get_list_hypotheses_v1,
     "get_hypothesis_audit_v1": get_hypothesis_audit_v1,
@@ -1285,6 +1300,7 @@ __all__ = [
     "GET_FRAGILITY_REPORT_V1_CYPHER",
     "GET_INSTRUMENT_CONCENTRATION_V1_CYPHER",
     "GET_LIST_ABORTED_V1_CYPHER",
+    "get_queued_hypotheses_v1",
     "GET_LIST_OOS_PENDING_V1_CYPHER",
     "GET_PORTFOLIO_ALPHA_V1_CYPHER",
     "GET_PROMOTION_CANDIDATES_V1_CYPHER",

@@ -214,7 +214,7 @@ story is marked COMPLETE in `BACKLOG_ALIGNMENT.md`.
 | `title` | str | Short description of the market inefficiency theory |
 | `status` | str | `open \| confirmed \| rejected` |
 | `findings` | str \| null | Free-text session notes or findings. Written via `qw record --hypothesis <id> --findings "<text>"`. Re-running overwrites. Null until first write. QWS-0905. |
-| `queued` | bool | `true` if hypothesis is parked for a future session; cleared when hypothesis enters active research. **[TARGET — QWS-1301]** |
+| `queued` | bool | `true` if hypothesis is parked for a future session; cleared when `--status` is set. Set via `qw record --hypothesis "<title>" --queue` or `qw record --hypothesis <id> --queue`. QWS-1301. |
 | `embedding` | list[float] | 384-dim sentence-transformer vector of `title`. Null for pre-QWS-0604 nodes; backfill via `qw backfill --embeddings`. Used to compute cosine similarity for `SEMANTICALLY_RELATED` edges. |
 | `created_at` | datetime | Timestamp of node creation |
 | `updated_at` | datetime | Timestamp of last node update |
@@ -264,7 +264,7 @@ JSON output: append `--json` to any preset. Pipe to `jq` for filtering.
 | `promotion_candidates` | QWS-0406 | Runs meeting `standards.py` tier thresholds not yet promoted. Dual-hurdle gate: `total_trades >= 30` AND `active_window_frequency >= 0.06 trades/day`. Output includes **Tier** (Professional / Institutional), **Active-Window Frequency**, and **Regime Diversity Score** — so the LLM can distinguish "Regime Specialist" from "Robust Performer" before recommending promotion. |
 | `regime_performance` | QWS-0503 | Performance table grouped by `--regime` property. Includes **Regime Diversity Score** (count of distinct regimes meeting Sharpe threshold). Score = 1 → "Regime Specialist" (fragility flag). |
 | `hypothesis_audit` | QWS-0601 | Traces current state back to the original `curator_note` intent |
-| `queued_hypotheses` | QWS-1301 | Returns all Hypothesis nodes with `queued=true`, ordered by `created_at` desc |
+| `queued_hypotheses` | QWS-1301 (**IMPLEMENTED**) | Returns all Hypothesis nodes with `queued=true`, ordered by `created_at` desc. Columns: hypothesis_id, title, findings (200-char truncated), branched_from_id, created_at. |
 
 ### [TARGET] Fragility Signal Distribution
 

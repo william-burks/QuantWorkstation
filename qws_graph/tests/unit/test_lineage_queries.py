@@ -797,4 +797,5 @@ class TestPresetCatalogStory4:
             "hypotheses_by_status",
             "hypothesis_search",
             "portfolio_by_class",
+            "queued_hypotheses",
         }

@@ -39,8 +39,9 @@ from .cypher import (
     HYPOTHESIS_SET_EMBEDDING_QUERY,
     HYPOTHESIS_SUGGESTED_EDGE_QUERY,
     HYPOTHESIS_TESTED_AS_QUERY,
+    HYPOTHESIS_DEQUEUE_ON_STATUS_QUERY,
+    HYPOTHESIS_SET_QUEUED_QUERY,
     HYPOTHESIS_UPDATE_FINDINGS_QUERY,
-    HYPOTHESIS_UPDATE_STATUS_QUERY,
     PATCH_FAMILY_ID_QUERY,
     PATCH_RESEARCH_TARGET_QUERY,
     PATCH_RUN_HTML_PATH_QUERY,
@@ -705,7 +706,7 @@ class GraphStore:
             raise StoreInfraError(f"Unexpected store error: {exc}") from exc
 
     def update_hypothesis_status(self, hypothesis_id: str, status: str) -> bool:
-        """Update status on a Hypothesis node.
+        """Update status on a Hypothesis node; also clears queued=false.
 
         Returns True when found and updated, False when not found.
         Raises ValueError for invalid status values.
@@ -721,9 +722,33 @@ class GraphStore:
 
                 def _write(tx):
                     result = tx.run(
-                        HYPOTHESIS_UPDATE_STATUS_QUERY,
+                        HYPOTHESIS_DEQUEUE_ON_STATUS_QUERY,
                         hypothesis_id=hypothesis_id,
                         status=status,
+                    )
+                    return list(result)
+
+                records = session.execute_write(_write)
+                return len(records) > 0
+
+        except Neo4jError as exc:
+            raise StoreInfraError(f"Neo4j execution failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise StoreInfraError(f"Unexpected store error: {exc}") from exc
+
+    def set_hypothesis_queued(self, hypothesis_id: str, queued: bool) -> bool:
+        """Set or clear the queued flag on a Hypothesis node.
+
+        Returns True when found and updated, False when not found.
+        """
+        try:
+            with self._driver.session(database=self._database) as session:
+
+                def _write(tx):
+                    result = tx.run(
+                        HYPOTHESIS_SET_QUEUED_QUERY,
+                        hypothesis_id=hypothesis_id,
+                        queued=queued,
                     )
                     return list(result)
 

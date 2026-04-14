@@ -53,18 +53,65 @@ After this story, a researcher can:
 - `docs/RESEARCH_WORKFLOW.md` — parking sequence update
 
 ## Acceptance Criteria
-- [ ] `qw record --hypothesis "test idea" --queue` creates Hypothesis node with `queued=true`
-- [ ] `qw record --hypothesis "test idea" --branched-from <run_id> --queue` creates node + BRANCHED_FROM edge + `queued=true` in one call
-- [ ] `qw record --hypothesis <existing_id> --queue` sets `queued=true` on existing node without creating duplicate
-- [ ] `qw query --name queued_hypotheses` returns all `queued=true` hypotheses; result includes id, title, findings (truncated to 200 chars), branched-from id if present, created_at
-- [ ] `qw query --name queued_hypotheses` returns empty result (not error) when queue is empty
-- [ ] Setting `--status` on a queued hypothesis also sets `queued=false`. Dequeue by running `qw record --hypothesis --id <id> --status raw` which sets `queued=false`. No separate `--dequeue` flag.
-- [ ] `data_dictionary.yaml` reflects `queued` property with type and default
-- [ ] `RESEARCH_WORKFLOW.md` parking sequence updated
-- [ ] `docs/PROVENANCE_ENGINE.md` Hypothesis Key Properties table updated with `queued: bool — true if hypothesis is parked for future research session`
-- [ ] `docs/PROVENANCE_ENGINE.md` [TARGET] tools section updated with `queued_hypotheses` preset entry
+- [x] `qw record --hypothesis "test idea" --queue` creates Hypothesis node with `queued=true`
+- [x] `qw record --hypothesis "test idea" --branched-from <run_id> --queue` creates node + BRANCHED_FROM edge + `queued=true` in one call
+- [x] `qw record --hypothesis <existing_id> --queue` sets `queued=true` on existing node without creating duplicate
+- [x] `qw query --name queued_hypotheses` returns all `queued=true` hypotheses; result includes id, title, findings (truncated to 200 chars), branched-from id if present, created_at
+- [x] `qw query --name queued_hypotheses` returns empty result (not error) when queue is empty
+- [x] Setting `--status` on a queued hypothesis also sets `queued=false`. Dequeue by running `qw record --hypothesis --id <id> --status raw` which sets `queued=false`. No separate `--dequeue` flag.
+- [x] `data_dictionary.yaml` reflects `queued` property with type and default
+- [x] `RESEARCH_WORKFLOW.md` parking sequence updated
+- [x] `docs/PROVENANCE_ENGINE.md` Hypothesis Key Properties table updated with `queued: bool — true if hypothesis is parked for future research session`
+- [x] `docs/PROVENANCE_ENGINE.md` [TARGET] tools section updated with `queued_hypotheses` preset entry
 
 ## Definition of Done
 - [ ] All ACs passing
 - [ ] Tests green (where applicable)
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: create + queue in one command
+- type: cli
+- cmd: `source .venv/bin/activate && qw record --hypothesis "QWS1301 test queue idea" --queue`
+- expect_contains: "Hypothesis created"
+- expect_contains: "queued"
+- expect_exit: 0
+
+### AC1 verify: node has queued=true in Neo4j
+- type: cypher
+- cmd: `qw query --cypher "MATCH (h:Hypothesis {title: 'QWS1301 test queue idea'}) RETURN h.hypothesis_id AS id, h.queued AS queued"`
+- expect_contains: "queued"
+
+### AC2: create + branched-from + queue
+- type: cli
+- cmd: `source .venv/bin/activate && qw record --hypothesis "QWS1301 branched queue idea" --branched-from <run_id> --rationale "test rationale" --queue`
+- expect_contains: "Hypothesis created"
+- expect_contains: "BRANCHED_FROM edge created"
+- expect_contains: "queued"
+- expect_exit: 0
+
+### AC3: queue existing hypothesis by ID
+- type: cli
+- cmd: `source .venv/bin/activate && qw record --hypothesis <existing_id> --queue`
+- expect_contains: "queued"
+- expect_exit: 0
+
+### AC4: queued_hypotheses preset returns queued hypothesis
+- type: cli
+- cmd: `source .venv/bin/activate && qw query --name queued_hypotheses`
+- expect_contains: "QWS1301 test queue idea"
+- expect_exit: 0
+
+### AC5: queued_hypotheses returns empty when queue is empty (teardown state)
+- type: cli
+- cmd: `source .venv/bin/activate && qw query --name queued_hypotheses`
+- expect_exit: 0
+- note: run after dequeue step
+
+### AC6: status update clears queued=false
+- type: cli
+- cmd: `source .venv/bin/activate && qw record --hypothesis <id> --status raw`
+- expect_contains: "status='raw'"
+- expect_exit: 0
+- verify: `qw query --name queued_hypotheses` no longer shows the hypothesis

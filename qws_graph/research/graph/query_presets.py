@@ -25,6 +25,7 @@ from .query import (
     get_portfolio_alpha_v1,
     get_portfolio_by_class_v1,
     get_promotion_candidates_v1,
+    get_queued_hypotheses_v1,
     get_recent_champions_v1,
     get_regime_performance_v1,
     get_research_targets_v1,
@@ -373,6 +374,17 @@ PRESET_CATALOG: dict[str, PresetSpec] = {
         params=(),
         requires_graph=True,
     ),
+    "queued_hypotheses": PresetSpec(
+        name="queued_hypotheses",
+        description=(
+            "Return all Hypothesis nodes with queued=true, ordered by created_at DESC. "
+            "Columns: hypothesis_id, title, findings (truncated to 200 chars), "
+            "branched_from_id (if present), created_at. "
+            "Returns empty list (not error) when queue is empty."
+        ),
+        params=(),
+        requires_graph=True,
+    ),
 }
 
 
@@ -546,6 +558,10 @@ def run_preset(
     if name == "portfolio_by_class":
         assert service is not None
         return service.get_portfolio_by_class_v1()
+
+    if name == "queued_hypotheses":
+        assert service is not None
+        return service.get_queued_hypotheses_v1()
 
     raise ValueError(f"preset {name!r} has no implementation")  # unreachable
 

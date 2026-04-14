@@ -50,6 +50,54 @@ related_hypothesis_id: ""   # populate after qw record --hypothesis
 
 ---
 
+## [CURRENT] Graph-First Idea Parking (QWS-1301)
+
+Mid-session ideas should go directly into the graph, not flat files. Use `--queue` to park
+a hypothesis without committing to running it now.
+
+### One-command intake (new idea)
+```bash
+qw record --hypothesis "CL 1h mean-reversion after EIA miss in low-vol regime" --queue
+# → creates Hypothesis node with queued=true
+# → returns hypothesis_id for future reference
+```
+
+### Park idea with lineage (emerged from a trial result)
+```bash
+qw record --hypothesis "tighten stop to 0.8 ATR — reduce DD" \
+  --branched-from <run_id> \
+  --rationale "Trial 63bcef04 hit Sharpe 2.3 but -18% DD" \
+  --queue
+# → creates Hypothesis node + BRANCHED_FROM edge + queued=true in one call
+```
+
+### Queue an existing hypothesis by ID
+```bash
+qw record --hypothesis <hypothesis_id> --queue
+# → sets queued=true on existing node
+```
+
+### See what's queued
+```bash
+qw query --name queued_hypotheses
+# → returns id, title, findings (200-char truncated), branched-from context, created_at
+```
+
+### Pop from queue (start working on it)
+```bash
+qw record --hypothesis <id> --status raw
+# → sets status=raw AND clears queued=false in one call
+```
+
+### When to use flat files vs. graph
+| `research/ideas/` flat file | Graph + `--queue` |
+|---|---|
+| Half-formed observation, not yet testable | Specific, testable hypothesis ready to log |
+| No instrument or timeframe yet | Instrument + timeframe known |
+| "Shower thought" before session starts | Mid-session pivot idea |
+
+---
+
 ## [CURRENT] The Manual Loop
 
 The current workflow is functional but fragmented. Each step requires manual handoff.

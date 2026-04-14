@@ -747,6 +747,11 @@ def cmd_seed(args: argparse.Namespace) -> int:
     return 0
 
 
+def _looks_like_hypothesis_id_early(value: str) -> bool:
+    """Return True when value looks like a 12-char hex hypothesis ID."""
+    return len(value) == 12 and all(c in "0123456789abcdef" for c in value)
+
+
 def _cmd_hypothesis(args: argparse.Namespace) -> int:
     """Execute `qw record --hypothesis ...` — hypothesis journaling commands.
 
@@ -767,6 +772,7 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
     rationale: str | None = getattr(args, "rationale", None)
     status: str | None = getattr(args, "status", None)
     findings: str | None = getattr(args, "findings", None)
+    queue: bool = bool(getattr(args, "queue", False))
     timeout_seconds: int = getattr(args, "timeout_seconds", 3)
     similarity_threshold: float = float(
         getattr(args, "similarity_threshold", None) or _DEFAULT_SIMILARITY_THRESHOLD
@@ -781,7 +787,14 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
         store = GraphStore.from_env(timeout_seconds=timeout_seconds)
         try:
             # Mode 1: create hypothesis (title is a new quoted string — not a 12-char id)
-            if tested_as is None and branched_from is None and status is None and findings is None:
+            # Also triggered when --queue is the only extra flag (creates + queues in one call)
+            if (
+                tested_as is None
+                and branched_from is None
+                and status is None
+                and findings is None
+                and not _looks_like_hypothesis_id_early(hypothesis_arg)
+            ):
                 title = hypothesis_arg
                 if not title:
                     print("ERROR: --hypothesis requires a non-empty title or ID", file=sys.stderr)
@@ -793,6 +806,10 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
                 hypothesis_id = _ids.hash12(title, created_at_iso)
                 store.create_hypothesis(hypothesis_id=hypothesis_id, title=title, source="user")
                 print(f"OK: Hypothesis created — id={hypothesis_id}")
+
+                if queue:
+                    store.set_hypothesis_queued(hypothesis_id, True)
+                    print(f"OK: Hypothesis {hypothesis_id!r} queued")
 
                 # Semantic deduplication: embed + store + create edges
                 try:
@@ -816,6 +833,24 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
                 return 0
 
             hypothesis_id = hypothesis_arg
+
+            # Mode 6: set queued on existing hypothesis (ID + --queue, no other flags)
+            if (
+                queue
+                and tested_as is None
+                and branched_from is None
+                and status is None
+                and findings is None
+            ):
+                found = store.set_hypothesis_queued(hypothesis_id, True)
+                if not found:
+                    print(
+                        f"ERROR: Hypothesis {hypothesis_id!r} not found in graph",
+                        file=sys.stderr,
+                    )
+                    return 1
+                print(f"OK: Hypothesis {hypothesis_id!r} queued")
+                return 0
 
             # Mode 5: update findings
             if (
@@ -858,6 +893,9 @@ def _cmd_hypothesis(args: argparse.Namespace) -> int:
                     f"OK: BRANCHED_FROM edge created"
                     f" — hypothesis={hypothesis_id} node={branched_from}"
                 )
+                if queue:
+                    store.set_hypothesis_queued(hypothesis_id, True)
+                    print(f"OK: Hypothesis {hypothesis_id!r} queued")
                 return 0
 
             # Mode 2: update status
@@ -1778,6 +1816,16 @@ def main() -> int:
         default=None,
         metavar="STATUS",
         help=f"Update hypothesis status. One of: {', '.join(sorted(_VALID_HYPOTHESIS_STATUSES))}",
+    )
+    record_parser.add_argument(
+        "--queue",
+        action="store_true",
+        default=False,
+        dest="queue",
+        help=(
+            "Park hypothesis in queue (sets queued=true). Use with --hypothesis to create-and-queue"
+            " or to queue an existing hypothesis by ID."
+        ),
     )
     record_parser.add_argument(
         "--champion",
