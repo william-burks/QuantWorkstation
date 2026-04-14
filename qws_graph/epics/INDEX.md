@@ -23,7 +23,7 @@ Navigation and execution index for `qws_graph/epics`.
 12. **Epic 10 — Macro Data** — `COMPLETE`
 13. **Epic 10b — Commodity Regime Data** — `COMPLETE`
 14. **Epic 11 — Production Tracking** — `PLANNED`
-14. **Epic 13 — Agent Design** — `IN PROGRESS` (QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303/1304 BLOCKED)
+14. **Epic 13 — Agent Design** — `IN PROGRESS` (QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303 CLOSED; QWS-1304 BLOCKED)
 15. **Epic 12 — ML Research Layer** — `PLANNED`
 
 ## Dependency Notes
@@ -33,7 +33,7 @@ Navigation and execution index for `qws_graph/epics`.
 - Epic 10: COMPLETE. QWS-1005, QWS-1006, QWS-1011 moved to Epic 10b (NG/ZC/ZS now in scope).
 - Epic 10b: all 4 stories READY, no mutual deps — implement in parallel.
 - Epic 12 entry blocked on QWS-0803 CLOSED (satisfied). QWS-0907 (trial_metadata) must land before QWS-1204.
-- Epic 13: QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303/1304 blocked on QWS-1302.
+- Epic 13: QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303 CLOSED; QWS-1304 BLOCKED (~~QWS-1303~~ satisfied).
 - Epic 9HF stories live in `qws_graph/epics/epic_9hf_bugs_and_hotfixes/`. Future one-off hotfixes go in `qws_graph/epics/hotfix/` (currently empty).
 
 ---
@@ -261,8 +261,8 @@ Stories (QWS-1101 first, QWS-1102 after):
 Stories:
 - `QWS-1301` `epic_agent_design/closed/story_QWS-1301_research_ideas_layer.md` — `CLOSED`
 - `QWS-1302` `epic_agent_design/closed/story_QWS-1302_research_navigator_agent.md` — `CLOSED`
-- `QWS-1303` `epic_agent_design/story_QWS-1303_trial_engineer_agent.md` — `TESTING` (~~QWS-1302~~, QWS-0907)
-- `QWS-1304` `epic_agent_design/story_QWS-1304_research_session_command_rewrite.md` — `TESTING` (~~QWS-1302~~, QWS-1303)
+- `QWS-1303` `epic_agent_design/closed/story_QWS-1303_trial_engineer_agent.md` — `CLOSED` (~~QWS-1302~~, QWS-0907)
+- `QWS-1304` `epic_agent_design/story_QWS-1304_research_session_command_rewrite.md` — `BLOCKED` (~~QWS-1302~~, ~~QWS-1303~~)
 
 ---
 
@@ -307,6 +307,6 @@ promotion).
 - **Epic 9.5 COMPLETE** — all 4 stories CLOSED.
 - **Epic 10 COMPLETE** — all stories CLOSED (QWS-1005, QWS-1006, QWS-1011 moved to Epic 10b).
 - **Epic 10b COMPLETE** — all 4 stories CLOSED (QWS-1005, QWS-1006, QWS-1011, QWS-1013).
-- **Immediate:** Epic 13 Agent Design (QWS-1302 CLOSED; QWS-1303 unblocked).
-- **After 1303:** QWS-1304 → Epic 12 (ML research).
+- **Immediate:** Epic 13 Agent Design (QWS-1303 CLOSED; QWS-1304 now unblocked).
+- **After 1304:** Epic 12 (ML research).
 

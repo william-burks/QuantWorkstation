@@ -7,7 +7,7 @@
 QWS-1303
 
 ## Status
-TESTING
+CLOSED
 
 ## Blocked On
 QWS-0902 CLOSED

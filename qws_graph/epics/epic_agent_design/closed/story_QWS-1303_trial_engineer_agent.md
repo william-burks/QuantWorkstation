@@ -70,7 +70,7 @@ After this story:
 ## Definition of Done
 - [x] All ACs passing
 - [x] Tests green (where applicable)
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
