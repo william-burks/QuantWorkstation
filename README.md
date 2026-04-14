@@ -3,7 +3,7 @@
 End-to-end algo trading workbench: data collection → research → strategy → execution.
 
 **Markets:** Crypto (Alpaca) · Futures (IBKR) — no equities
-**Mode:** Paper trading by default
+**Mode:** Paper trading by default. Interface: `qw` CLI + MCP only.
 
 ---
 
@@ -13,18 +13,48 @@ End-to-end algo trading workbench: data collection → research → strategy →
 data/           — collectors, schemas, arcticdb store
 execution/      — broker clients, OMS, risk engine, scheduler
 strategies/     — BaseStrategy ABC, adapters, signal implementations
-research/       — vectorbt sweeps, walk-forward harness, notebooks
-api/            — FastAPI REST interface
+research/       — trials, experiments (sweep, walk-forward), results, ideas staging
+qws_graph/      — Neo4j research graph, qw CLI, MCP server
 ```
 
-Data flows:
+Data + research flows:
 
 ```
 arcticdb → strategy.generate_signals()
          → OMS.rebalance(targets, current_positions)
          → RiskEngine.check_order()
          → broker.submit_order()
+
+research/trials/NN_script.py
+         → qw record --bundle <results_dir>
+         → Neo4j graph (Trial → Hypothesis → Champion lineage)
+         → qw query --name recent_champions
 ```
+
+### Research Graph
+
+Neo4j tracks the full provenance chain: Hypothesis → Trial → Champion → FormerChampion.
+The `qw` CLI is the only interface — no direct Cypher, no FastAPI.
+
+```bash
+qw record --hypothesis "CL 1H bear liquidity sweep, ATR regime filter"
+qw record --bundle research/results/futures/liquidity_sweep/runs/<timestamp>/
+qw query --name recent_champions
+qw query --name queued_hypotheses
+```
+
+Schema, MCP tools, and promotion gate logic: `docs/PROVENANCE_ENGINE.md`
+
+### Research Agents
+
+Two agents assist with research sessions:
+
+| Agent | Role |
+|---|---|
+| `research-navigator` | Session start: graph screening → ranked shortlist. Redundancy check before hypothesis commit. Mid-session pivot analysis. Session wrap with findings update. |
+| `trial-engineer` | Accepts hypothesis input contract, generates trial script + bundle.json, stops before run. After "run it": executes, ingests, reports raw metrics. |
+
+Usage: `docs/AGENT_USER_MANUAL.md`
 
 ---
 
@@ -154,9 +184,10 @@ To wipe and start fresh — delete the `arctic_data/` directory. It is recreated
 ### Run tests
 
 ```bash
-pytest tests/unit/ -v          # all unit tests
-pytest tests/unit/test_risk.py -v
-pytest tests/unit/test_oms.py -v
+make test           # qws_graph unit tests
+make test-unit      # legacy tests/unit/ (risk, OMS)
+make test-all       # both suites
+make verify         # lint + typecheck + both test suites
 ```
 
 ---

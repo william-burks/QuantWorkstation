@@ -59,6 +59,12 @@ if [ "$TOOL" = "Bash" ] && [ -n "$COMMAND" ]; then
     exit 2
   fi
 
+  # Block qw champion (promotion is Will's decision)
+  if echo "$COMMAND" | grep -qE 'qw\s+champion'; then
+    echo "Blocked: research-navigator cannot promote champions — Will decides" >&2
+    exit 2
+  fi
+
   # Block git commit
   if echo "$COMMAND" | grep -qE 'git\s+commit'; then
     echo "Blocked: research-navigator cannot commit" >&2
