@@ -2,7 +2,7 @@
 """Shared trial scaffolding — extracted from existing trial scripts.
 
 All trials should import from here instead of re-implementing boilerplate.
-Exports: prepare_data, compute_metrics, write_html, make_bundle.
+Exports: prepare_data, compute_metrics, write_html, make_bundle, best_metrics, write_bundle.
 """
 
 from __future__ import annotations
@@ -194,11 +194,34 @@ def write_html(
 # ---------------------------------------------------------------------------
 
 
+def best_metrics(rows: list[dict], min_trades: int = 10) -> dict | None:
+    """Return metrics summary dict for the best row in a results list.
+
+    Picks the row with highest sharpe among rows where total_trades >= min_trades.
+    Falls back to highest sharpe overall if no row meets the trades threshold.
+    Returns a standardised subset: sharpe, max_drawdown, win_rate, total_trades, calmar.
+    Returns None if rows is empty.
+    """
+    if not rows:
+        return None
+    qualified = [r for r in rows if r.get("total_trades", 0) >= min_trades]
+    pool = qualified if qualified else rows
+    best = max(pool, key=lambda r: r.get("sharpe", float("-inf")))
+    return {
+        "sharpe": best.get("sharpe"),
+        "max_drawdown": best.get("max_drawdown"),
+        "win_rate": best.get("win_rate"),
+        "total_trades": best.get("total_trades"),
+        "calmar": best.get("calmar"),
+    }
+
+
 def make_bundle(
     trial_name: str,
     hypothesis_id: str,
     run_ts: str,
     files: dict,
+    metrics: dict | None = None,
     extra: dict | None = None,
 ) -> dict:
     """Build bundle.json manifest dict.
@@ -208,6 +231,8 @@ def make_bundle(
         hypothesis_id: 12-char hypothesis ID — REQUIRED for qw record --bundle
         run_ts: timestamp string (YYYYmmdd-HHMMSS)
         files: dict mapping role → filename, e.g. {"csv": "results.csv", "html": "results.html"}
+        metrics: optional best-row metrics summary (use best_metrics(rows) helper).
+                 Stored as metrics_summary for navigator pivot analysis.
         extra: optional additional top-level fields
 
     Returns dict ready for json.dumps.
@@ -218,6 +243,8 @@ def make_bundle(
         "run_ts": run_ts,
         "files": files,
     }
+    if metrics:
+        bundle["metrics_summary"] = metrics
     if extra:
         bundle.update(extra)
     return bundle

@@ -31,7 +31,7 @@
 | Epic 10b — Commodity Regime Data | **COMPLETE** | Weather + crop alt data for NG/ZC/ZS regime conditioning — extends Epic 10 infra |
 | Epic 11 — Production Tracking | **PLANNED** | MLflow Champion registration + OOS sync; split production results from research results |
 | Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
-| Epic 13 — Agent Design | **PLANNED** | Research Navigator, Trial Engineer, Research Ideas Layer, Session Command Rewrite |
+| Epic 13 — Agent Design | **IN PROGRESS** | Research Navigator, Trial Engineer, Research Ideas Layer, Session Command Rewrite (QWS-1301/1302/1303 CLOSED; QWS-1304 BLOCKED) |
 | Backlog | **UNSCHEDULED** | QWS-0701, 0702 |
 
 ---

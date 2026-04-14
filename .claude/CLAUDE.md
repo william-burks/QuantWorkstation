@@ -17,7 +17,7 @@ shared brain. Any model with MCP access reads the same research history.
 - Interface is `qw` CLI + MCP only — no FastAPI
 - Before suggesting a strategy: `qw query --name recent_champions` + `qw query --name list_aborted`
 - Do NOT use nodes/tools marked `[TARGET]` in `PROVENANCE_ENGINE.md` until their story is COMPLETE in `BACKLOG_ALIGNMENT.md`
-- **Epic 10 COMPLETE** — all stories CLOSED. **Epic 10b COMPLETE** — QWS-1005, QWS-1006, QWS-1011, QWS-1013 CLOSED. **Now: Epic 13 Agent Design** (QWS-1301 READY — start now). After QWS-1301: QWS-1302 → QWS-1303 → QWS-1304 → Epic 12 ML Research.
+- **Epic 10 COMPLETE. Epic 10b COMPLETE. Epic 13 Agent Design IN PROGRESS** — QWS-1301/1302/1303 CLOSED. QWS-1304 BLOCKED (needs one live session run before command rewrite). **Next: run a real research session, then QWS-1304, then Epic 12 ML Research.**
 
 ---
 

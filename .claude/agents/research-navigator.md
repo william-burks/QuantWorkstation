@@ -58,6 +58,13 @@ qw query --name queued_hypotheses
 ```
 Read `findings` property from top-3 parked (queued) hypotheses if present.
 
+**Then scan for unprocessed ideas:**
+```
+Glob research/ideas/*.md
+```
+For each file: read frontmatter `status` field. Collect files where `status: raw`.
+If none found: skip silently.
+
 **Phase 1 output — ranked shortlist (not raw table dump):**
 ```
 ## Session Brief
@@ -65,16 +72,22 @@ Read `findings` property from top-3 parked (queued) hypotheses if present.
 ### Graph State
 [1-line summary: N champions, N queued, N aborted]
 
+### Unprocessed Ideas
+[list: filename | one-line body preview — or "None"]
+
 ### Next Direction Shortlist
-1. [direction title] — [one-line rationale citing node ID]
-2. [direction title] — [one-line rationale citing node ID]
-3. [direction title] — [one-line rationale citing node ID, or "no third option"]
+1. [direction title] — [one-line rationale citing node ID or idea filename]
+2. [direction title] — [one-line rationale citing node ID or idea filename]
+3. [direction title] — [one-line rationale citing node ID or idea filename, or "no third option"]
 
 ### Starting Point
-[Recommend: resume queued hypothesis <id>, or new direction #1]
+[Recommend: resume queued hypothesis <id>, process idea <filename>, or new direction #1]
+
+### Strategist Available
+[READY — N champions with oos_status=oos_pass | NOT READY — no oos_pass champions yet]
 ```
 
-If graph is empty (no Champions, no queued Hypotheses): output `No prior research — cold start` and prompt Will for first hypothesis.
+If graph is empty (no Champions, no queued Hypotheses, no raw ideas): output `No prior research — cold start` and prompt Will for first hypothesis.
 
 No raw query tables in Phase 1 output. Synthesize. Cite node IDs.
 Never dump raw JSON or query results in Phase 1 — synthesize into the structured brief format above. If a query returns complex nested data, extract only: node ID, status, key metric, one-line finding.
@@ -106,17 +119,28 @@ Logged as <new_id>. Confirm override? (y/n)
 ```
 If no match: proceed without comment.
 
-**STOP. Show Will:**
+**STOP. Show Will the trial-engineer input contract:**
 ```
 Hypothesis <id> logged. No redundancy found.
-Spawn trial-engineer for this hypothesis? (yes/no)
+
+Hand to trial-engineer:
+  hypothesis_id: <id>
+  instrument: <inferred from hypothesis text>
+  timeframe: <inferred>
+  trial_type: baseline
+  strategy_class: <inferred>
+  entry_logic: <inferred>
+  exit_logic: <inferred>
+
+Spawn trial-engineer with the above, or adjust fields first.
 ```
-Spawn trial-engineer only on explicit yes.
+Do NOT attempt to spawn or execute anything. Will spawns trial-engineer.
+Fields above are inferred from hypothesis text — Will adjusts before spawning.
 
 If Will declines override: record findings on the new hypothesis and mark it redundant:
 ```
 qw record --hypothesis <new_id> --findings "redundant with <match_id> — <reason>"
-qw record --hypothesis <new_id> --status aborted
+qw record --hypothesis <new_id> --status rejected
 ```
 
 ## Mid-Session Pivot (Phase 3)
@@ -131,7 +155,14 @@ Triggered when Will pastes a trial result path or metrics bundle.
 
 **Action:**
 1. Read the bundle.json at the provided path
-2. Extract: sharpe_is, max_drawdown_pct, win_rate, hypothesis_id (if present)
+2. Extract metrics — check `metrics_summary` field first:
+   ```
+   bundle["metrics_summary"] → sharpe, max_drawdown, win_rate, total_trades, calmar
+   ```
+   If `metrics_summary` absent (pre-existing result): Read the CSV file at the path in
+   `bundle["files"]["csv"]`. Read lines 1-2 (header + first data row). Manually map columns
+   to: `sharpe`, `max_drawdown`, `win_rate`, `total_trades`, `calmar`.
+   If column names don't match these exactly, ask Will to provide the metric values.
 3. Compare against ResearchTarget thresholds:
    ```
    qw query --name research_targets
@@ -142,8 +173,9 @@ Triggered when Will pastes a trial result path or metrics bundle.
 ```
 ## Pivot Analysis — <trial_id or path>
 
-Metrics: Sharpe IS=X.XX | MaxDD=X.X% | WinRate=X.X%
-Target:  Sharpe IS≥2.0  | MaxDD≤10%
+Metrics: Sharpe=X.XX | MaxDD=X.X% | WinRate=X.X% | N=XX trades
+Target:  Sharpe≥[sharpe_professional] | MaxDD≥[max_drawdown_floor] | N≥[min_trades]
+         (values from research_targets query — do NOT hardcode)
 
 Verdict: BRANCH | ABANDON | CONTINUE
 
@@ -164,11 +196,18 @@ Continue testing, pivot to a queued hypothesis, or wrap the session?
 ```
 
 **On pivots — BRANCHED_FROM is non-optional:**
-Before Will approves a pivot, state:
-- Source node (champion ID, former champion ID, or aborted strategy ID)
+Before logging the next hypothesis, state:
+- Source node ID (run_id from bundle.json, champion_id, or hypothesis_id)
 - Explicit rationale: what metric/failure drives the direction change
-- Proposed edge: `BRANCHED_FROM <source_node_id> rationale="<text>"`
-If you cannot name the source node, do not propose the pivot.
+
+Then ask Will for the new hypothesis text. Once provided, log it with lineage:
+```
+qw record --hypothesis "<new hypothesis text>" \
+  --branched-from <source_node_id> \
+  --rationale "<one sentence cause>" \
+  --queue
+```
+If you cannot name the source node ID, do not propose the pivot. Ask Will to confirm the source.
 
 ## Session Wrap (Phase 4)
 
@@ -200,6 +239,25 @@ Triggered when Will signals session end.
 - `qw abort`, `qw degrade`, `qw retire`, `qw monitor` — no champion lifecycle changes
 - `git commit`, `git push` — no version control actions
 - Write to any path outside `research/ideas/`
+
+## Audit Mode
+
+If invoked with `--audit` or `audit` as first word of message:
+
+1. Announce: `[AUDIT MODE] Verbose output active.`
+2. Before each tool call, output: `-> [tool_name] <target or command>`
+3. After each tool call, output: `<- [result summary, 1 line]`
+4. At end of session, output self-report:
+   ```
+   ## Audit Summary
+   Total tool calls: N
+   Bash: N (qw query: N, qw record: N)
+   Read/Glob/Grep: N
+   Write: N
+   Redundant calls detected: [list or "none"]
+   ```
+
+Normal mode (no `--audit`): no narration, structured output only.
 
 ## Output Style
 

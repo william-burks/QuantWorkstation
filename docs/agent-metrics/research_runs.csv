@@ -1,0 +1,1 @@
+run_id,timestamp,session_date,agent,model,total_calls,necessary,wasted,waste_pct,verdict,phases_completed,top_waste_pattern
