@@ -4,7 +4,7 @@
 QWS-1302
 
 ## Status
-DRAFT
+TESTING
 
 ## Blocked On
 Epic 7 COMPLETE (QWS-0801, QWS-0703, QWS-0704 all CLOSED on main)
