@@ -4,7 +4,7 @@
 QWS-1302
 
 ## Status
-BLOCKED
+READY
 
 ## Type
 code
