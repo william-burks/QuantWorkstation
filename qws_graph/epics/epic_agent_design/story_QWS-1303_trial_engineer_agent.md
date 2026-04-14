@@ -4,13 +4,13 @@
 QWS-1303
 
 ## Status
-BLOCKED
+READY
 
 ## Type
 code
 
 ## Blocked On
-QWS-1302 (navigator handoff contract), ~~QWS-HF-001~~ (hypothesis_id in bundle.json)
+~~QWS-1302~~ (navigator handoff contract CLOSED), ~~QWS-HF-001~~ (hypothesis_id in bundle.json)
 
 ## Summary
 Extract ~200-line trial boilerplate to `trial_base.py`, then build `trial-engineer` agent that generates trial scripts from a hypothesis input contract, writes script + bundle template, and stops. Does not auto-run.
@@ -53,21 +53,81 @@ After this story:
 - `.claude/scripts/agent-trial-guard.sh` — update existing file
 
 ## Acceptance Criteria
-- [ ] `research/trials/trial_base.py` exists and exports `prepare_data`, `compute_metrics`, `write_html`, `make_bundle`
-- [ ] At least 3 existing trial scripts updated to import from `trial_base.py`; behavior unchanged (same output)
-- [ ] `.claude/agents/trial-engineer.md` updated with input contract, output contract, and explicit STOP gate documented
-- [ ] Agent generates valid trial script at correct path with correct NN (max+1)
-- [ ] Agent generates bundle.json template in same dir as script
-- [ ] Agent prints path and stop message after write; does not execute without explicit "run it"
-- [ ] After "run it": executes script, runs `qw record --bundle`, reports Sharpe, max_dd, n_trades in single output block
-- [ ] `agent-trial-guard.sh` blocks: writes to `execution/`, `data/collectors/`, `util/`, git operations
-- [ ] `agent-trial-guard.sh` blocks `qw record --bundle` if bundle.json missing `hypothesis_id`
-- [ ] `agent-trial-guard.sh` blocks trial script write if proposed NN ≠ max existing NN + 1
-- [ ] Guard blocks execution if generated bundle.json is missing `hypothesis_id` field
-- [ ] Guard blocks execution if trial script filename does not match `NN_description.py` pattern
-- [ ] Tool list in agent file: Read, Write (scoped to `research/trials/` and `research/results/` only), Bash (scoped to `python` execution and `qw record --bundle` only)
+- [x] `research/trials/trial_base.py` exists and exports `prepare_data`, `compute_metrics`, `write_html`, `make_bundle`
+- [x] At least 3 existing trial scripts updated to import from `trial_base.py`; behavior unchanged (same output)
+- [x] `.claude/agents/trial-engineer.md` updated with input contract, output contract, and explicit STOP gate documented
+- [x] Agent generates valid trial script at correct path with correct NN (max+1)
+- [x] Agent generates bundle.json template in same dir as script
+- [x] Agent prints path and stop message after write; does not execute without explicit "run it"
+- [x] After "run it": executes script, runs `qw record --bundle`, reports Sharpe, max_dd, n_trades in single output block
+- [x] `agent-trial-guard.sh` blocks: writes to `execution/`, `data/collectors/`, `util/`, git operations
+- [x] `agent-trial-guard.sh` blocks `qw record --bundle` if bundle.json missing `hypothesis_id`
+- [x] `agent-trial-guard.sh` blocks trial script write if proposed NN ≠ max existing NN + 1
+- [x] Guard blocks execution if generated bundle.json is missing `hypothesis_id` field
+- [x] Guard blocks execution if trial script filename does not match `NN_description.py` pattern
+- [x] Tool list in agent file: Read, Write (scoped to `research/trials/` and `research/results/` only), Bash (scoped to `python` execution and `qw record --bundle` only)
 
 ## Definition of Done
-- [ ] All ACs passing
-- [ ] Tests green (where applicable)
+- [x] All ACs passing
+- [x] Tests green (where applicable)
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: trial_base.py exports required symbols
+- type: file_check
+- cmd: `python -c "from research.trials.trial_base import prepare_data, compute_metrics, write_html, make_bundle, write_bundle; print('OK')"`
+- expect_contains: "OK"
+- expect_exit: 0
+
+### AC2: 3 trial scripts import from trial_base
+- type: file_check
+- cmd: `grep -l "from research.trials.trial_base import" research/trials/crypto/btc_donchian/01_baseline.py research/trials/futures/liquidity_sweep/04_atr_filtered_baseline.py research/trials/futures/liquidity_sweep/05_5m_stop_stacked_filters.py | wc -l`
+- expect_contains: "3"
+- expect_exit: 0
+
+### AC3: trial-engineer.md has input contract, output contract, STOP gate
+- type: file_check
+- cmd: `grep -c "Input Contract\|Output Contract\|STOP Gate" .claude/agents/trial-engineer.md`
+- expect_contains: "3"
+- expect_exit: 0
+
+### AC6: guard blocks execution/ writes
+- type: cli
+- cmd: `echo '{"tool_name":"Write","tool_input":{"file_path":"execution/oms.py","content":"x"}}' | .claude/scripts/agent-trial-guard.sh`
+- expect_exit: 2
+
+### AC7: guard blocks data/collectors/ writes
+- type: cli
+- cmd: `echo '{"tool_name":"Write","tool_input":{"file_path":"data/collectors/foo.py","content":"x"}}' | .claude/scripts/agent-trial-guard.sh`
+- expect_exit: 2
+
+### AC8: guard blocks util/ writes
+- type: cli
+- cmd: `echo '{"tool_name":"Write","tool_input":{"file_path":"util/deleteData.py","content":"x"}}' | .claude/scripts/agent-trial-guard.sh`
+- expect_exit: 2
+
+### AC9: guard blocks git commit
+- type: cli
+- cmd: `echo '{"tool_name":"Bash","tool_input":{"command":"git commit -m test"}}' | .claude/scripts/agent-trial-guard.sh`
+- expect_exit: 2
+
+### AC10: guard blocks qw record --bundle with missing hypothesis_id
+- type: cli
+- cmd: `TMPDIR=$(mktemp -d) && echo '{}' > $TMPDIR/bundle.json && echo "{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"qw record --bundle $TMPDIR\"}}" | .claude/scripts/agent-trial-guard.sh; rm -rf $TMPDIR`
+- expect_exit: 2
+
+### AC11: guard allows qw record --bundle with valid hypothesis_id
+- type: cli
+- cmd: `TMPDIR=$(mktemp -d) && echo '{"hypothesis_id":"abc123def456"}' > $TMPDIR/bundle.json && echo "{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"qw record --bundle $TMPDIR\"}}" | .claude/scripts/agent-trial-guard.sh; rm -rf $TMPDIR`
+- expect_exit: 0
+
+### AC12: guard blocks invalid trial filename
+- type: cli
+- cmd: `echo '{"tool_name":"Write","tool_input":{"file_path":"research/trials/crypto/btc_donchian/MyTrial.py","content":"x"}}' | .claude/scripts/agent-trial-guard.sh`
+- expect_exit: 2
+
+### AC13: guard allows valid trial filename
+- type: cli
+- cmd: `echo '{"tool_name":"Write","tool_input":{"file_path":"research/trials/crypto/btc_donchian/05_new_trial.py","content":"x"}}' | .claude/scripts/agent-trial-guard.sh`
+- expect_exit: 0
