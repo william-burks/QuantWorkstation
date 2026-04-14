@@ -4,7 +4,7 @@
 QWS-1301
 
 ## Status
-TESTING
+READY
 
 ## Blocked On
 None

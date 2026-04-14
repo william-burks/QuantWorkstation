@@ -17,30 +17,15 @@ rm -f /tmp/agent-trace-product-analyst-*.jsonl 2>/dev/null || true
 rm -f /tmp/agent-trace-qws-architect-*.jsonl 2>/dev/null || true
 ```
 
-## Step 1b — Resolve story paths + infra state
-```
-STORY_FILES=$(ls qws_graph/epics/epic_*/story_*.md 2>/dev/null | grep -i "QWS-$ARGUMENTS" | head -20 || ls qws_graph/epics/epic_*/story_*.md 2>/dev/null | head -20)
-NEO4J_STATUS=$(make -C qws_graph neo4j-status 2>&1 | tail -2)
-RELEASE_BRANCH=$(git branch | grep release/ | sort -V | tail -1)
-```
-If STORY_FILES is empty → STOP. Report "No story files found for epic $ARGUMENTS."
-
 ## Step 2 — Readiness check (product-analyst, Haiku)
 Spawn product-analyst agent:
 ```
 Read qws_graph/epics/INDEX.md and docs/BACKLOG_ALIGNMENT.md.
-
-Story files for epic $ARGUMENTS:
-<STORY_FILES — one path per line>
-
-Infrastructure context (already verified):
-- Neo4j: <NEO4J_STATUS>
-- Release branch: <RELEASE_BRANCH>
-
 For epic $ARGUMENTS check:
 1. Any story not `ready` (draft, TESTING, BLOCKED)?
 2. Any story with unresolved dependencies (blocked-on not CLOSED)?
-3. Confirm Neo4j is UP and release branch exists (use the context above — do not re-run).
+3. Neo4j reachable? Run: make -C qws_graph neo4j-status
+4. Latest release branch name (git branch | grep release/ | sort -V | tail -1)?
 Return: READY_TO_RUN | BLOCKED — one line per issue. Max 10 lines total.
 ```
 
