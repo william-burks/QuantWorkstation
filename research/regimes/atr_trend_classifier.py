@@ -197,11 +197,12 @@ def run(symbol: str, tf: str) -> None:
     symbol_tf = f"{symbol}_{tf}"
     _check_distribution(labels, symbol_tf)
 
-    # Write: store.write_signals(strategy, signal_symbol, df_with_direction)
-    # signals lib key becomes regime_atr/<symbol>_<tf>
-    # We store labels as a DataFrame with a 'label' column
-    signal_df = labels.rename("label").to_frame()
-    store.write_signals("regime_atr", symbol_tf, signal_df)
+    # Write regime labels — full overwrite (regime series are always recalculated in full).
+    # ArcticDB does not support categorical dtype — store as string.
+    # Use overwrite_bars on signals lib to avoid schema conflicts on re-seed.
+    signal_df = labels.astype(str).rename("label").to_frame()
+    arc_key = f"regime_atr/{symbol_tf}"
+    store.overwrite_bars("signals", arc_key, signal_df)
 
     # Print distribution
     n = len(labels)

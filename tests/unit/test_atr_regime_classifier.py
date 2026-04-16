@@ -12,9 +12,7 @@ from research.regimes.atr_trend_classifier import (
     LABEL_DTYPE,
     LABELS,
     MAX_SINGLE_LABEL_FRACTION,
-    _atr_zscore,
     _check_distribution,
-    _wilder_atr,
     classify,
     run,
 )
@@ -172,8 +170,8 @@ class TestDistributionGuard:
 
 
 class TestStoreWrite:
-    def test_write_signals_called_once(self) -> None:
-        """run() must call store.write_signals() exactly once."""
+    def test_overwrite_bars_called_once(self) -> None:
+        """run() must call store.overwrite_bars() exactly once."""
         df = _make_bars(500)
 
         mock_store = MagicMock()
@@ -182,10 +180,10 @@ class TestStoreWrite:
         with patch("research.regimes.atr_trend_classifier.Store", return_value=mock_store):
             run("CL", "1H")
 
-        mock_store.write_signals.assert_called_once()
+        mock_store.overwrite_bars.assert_called_once()
 
-    def test_write_signals_key(self) -> None:
-        """write_signals must be called with strategy='regime_atr', symbol='CL_1H'."""
+    def test_overwrite_bars_key(self) -> None:
+        """overwrite_bars must be called with library='signals', symbol='regime_atr/CL_1H'."""
         df = _make_bars(500)
 
         mock_store = MagicMock()
@@ -194,12 +192,12 @@ class TestStoreWrite:
         with patch("research.regimes.atr_trend_classifier.Store", return_value=mock_store):
             run("CL", "1H")
 
-        call_args = mock_store.write_signals.call_args
-        assert call_args[0][0] == "regime_atr"
-        assert call_args[0][1] == "CL_1H"
+        call_args = mock_store.overwrite_bars.call_args
+        assert call_args[0][0] == "signals"
+        assert call_args[0][1] == "regime_atr/CL_1H"
 
-    def test_write_signals_df_has_label_column(self) -> None:
-        """DataFrame passed to write_signals must have a 'label' column."""
+    def test_overwrite_bars_df_has_label_column(self) -> None:
+        """DataFrame passed to overwrite_bars must have a 'label' column."""
         df = _make_bars(500)
 
         mock_store = MagicMock()
@@ -208,8 +206,21 @@ class TestStoreWrite:
         with patch("research.regimes.atr_trend_classifier.Store", return_value=mock_store):
             run("CL", "1H")
 
-        written_df: pd.DataFrame = mock_store.write_signals.call_args[0][2]
+        written_df: pd.DataFrame = mock_store.overwrite_bars.call_args[0][2]
         assert "label" in written_df.columns
+
+    def test_label_column_is_string_not_categorical(self) -> None:
+        """Written DataFrame must use string dtype — ArcticDB cannot store categorical."""
+        df = _make_bars(500)
+
+        mock_store = MagicMock()
+        mock_store.read_bars.return_value = df
+
+        with patch("research.regimes.atr_trend_classifier.Store", return_value=mock_store):
+            run("CL", "1H")
+
+        written_df: pd.DataFrame = mock_store.overwrite_bars.call_args[0][2]
+        assert str(written_df["label"].dtype) == "object"
 
     def test_unknown_symbol_raises(self) -> None:
         mock_store = MagicMock()
