@@ -16,6 +16,7 @@ from typing import Any
 
 import pandas as pd
 
+from research.experiments.metrics import annual_pnl_breakdown
 from research.experiments.standards import (
     CALMAR,
     MAX_DRAWDOWN_LIMIT,
@@ -158,6 +159,7 @@ def report(
     metadata: dict[str, Any],
     top_n: int = 3,
     full_n: int = 10,
+    trades_df: pd.DataFrame | None = None,
 ) -> None:
     """
     Print standardized evaluation output for a trial.
@@ -178,6 +180,9 @@ def report(
         Number of rows to show in Top-N sections.
     full_n : int
         Number of rows to show in the full results table.
+    trades_df : pd.DataFrame, optional
+        Per-trade records with ``entry_time`` and ``pnl_usd`` columns.
+        When provided, appends annual P&L breakdown after aggregate metrics.
     """
     _print_metadata(metadata)
     _print_bh(bh)
@@ -190,6 +195,8 @@ def report(
     _print_top_n(results, bh, top_n, sort_by="sharpe", label="Sharpe")
     _print_top_n(results, bh, top_n, sort_by="return", label="Return")
     _print_full(results, full_n)
+    if trades_df is not None and not trades_df.empty:
+        print(_annual_breakdown(trades_df))
     _record_passing(results, metadata)
 
 
@@ -274,6 +281,46 @@ def worst_trades(
     )
 
     return records.sort_values("pnl_usd").head(n).reset_index(drop=True)
+
+
+# ---------------------------------------------------------------------------
+# Annual breakdown
+# ---------------------------------------------------------------------------
+
+_CONCENTRATION_THRESHOLD = 50.0  # pct
+
+
+def _annual_breakdown(trades_df: pd.DataFrame) -> str:
+    """
+    Format annual P&L breakdown table and concentration warning.
+
+    Returns a multi-line string ready to print.
+    """
+    rows = annual_pnl_breakdown(trades_df)
+    if not rows:
+        return ""
+
+    sep = "=" * 10
+    lines = [f"\n{sep} Annual Breakdown {sep}"]
+    header = f"{'Year':<6} | {'Trades':>6} | {'Gross P&L':>10} | {'Sharpe':>6} | {'% of Total':>10}"
+    divider = "-" * len(header)
+    lines.append(header)
+    lines.append(divider)
+    for r in rows:
+        lines.append(
+            f"{r['year']:<6} | {r['trades']:>6} | "
+            f"${r['gross_pnl']:>9,.0f} | {r['sharpe']:>6.2f} | {r['pct_of_total']:>9.1f}%"
+        )
+
+    # Concentration warning: strictly > 50%
+    for r in rows:
+        if r["pct_of_total"] > _CONCENTRATION_THRESHOLD:
+            lines.append(
+                f"\n[WARN] Regime concentration: "
+                f"{r['year']} = {r['pct_of_total']:.1f}% of profit"
+            )
+
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
