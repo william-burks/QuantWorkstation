@@ -1,0 +1,11 @@
+# Generated data — do not commit
+data/research.db
+data/research.db-shm
+data/research.db-wal
+data/chroma/
+data/papers/
+data/extracts/
+data/text/
+data/inbox/
+data/ingested/
+data/unmatched/

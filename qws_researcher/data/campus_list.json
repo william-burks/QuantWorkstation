@@ -1,0 +1,21 @@
+{
+  "s2:5c2a7c181d717a9f30cade2691ffefc7479d5fad": {
+    "paper_id": "s2:5c2a7c181d717a9f30cade2691ffefc7479d5fad",
+    "title": "Volatility and variance swaps and options in the fractional SABR model",
+    "authors": [
+      "See-Woo Kim",
+      "Jeong\u2010Hoon Kim"
+    ],
+    "year": 2020,
+    "doi": "10.1080/1351847x.2020.1775671",
+    "filename_hint": "10.1080_1351847x.2020.1775671.pdf",
+    "source": "semantic_scholar",
+    "url": "https://www.semanticscholar.org/paper/5c2a7c181d717a9f30cade2691ffefc7479d5fad",
+    "abstract": "Appropriate capturing the nature of financial market volatility is a significant factor for the pricing of volatility derivatives. A recent study by Gatheral, Jaisson and Rosenbaum [2018. \u201cVolatility is Rough.\u201d Quantitative Finance 18 (6): 933\u2013949] has found that log-volatility behaves as a fractional Brownian motion with a small Hurst exponent at any reasonable time scale. Also, there are several empirical works showing that a stochastic volatility model driven by the fractional Brownian motion well approximates at-the-money volatility skew near expiration. In this paper, we choose the log-normal SABR model with fractional stochastic volatility to valuate variance and volatility swaps. We derive a closed-form exact solution for the fair strike price of the variance swap by using fractional Ito calculus, while we obtain an approximate solution for the fair strike price of the volatility swap by exploiting the shifted log-normal approximation. Also, solution formulas for the variance and volatility option prices are derived. Their accuracy is confirmed through numerical studies. Calibration to market variance swap rates demonstrates the strength of fractional SABR model compared to the Heston and SABR models.",
+    "tags": [
+      "test"
+    ],
+    "added_at": "2026-03-29T02:07:18.371526+00:00",
+    "reason": "Testing bookmark 1"
+  }
+}
