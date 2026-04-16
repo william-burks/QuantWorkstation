@@ -26,3 +26,4 @@ run_id,timestamp,epic,story_id,branch,model,total_calls,necessary,wasted,waste_p
 20260414T042729,2026-04-14T00:00:00Z,13,QWS-1303,feature/26.4.0/QWS-1303,sonnet,70,50,20,29,TESTING,,,edit-storm
 20260416T134711,2026-04-16T13:47:11Z,14,QWS-1404,feature/26.4.0/QWS-1404,sonnet,28,22,6,21,TESTING,,,file-reread
 20260416T150456,2026-04-16T15:04:56Z,14,QWS-1401,feature/26.4.0/QWS-1401,sonnet,27,24,3,11,TESTING,,,lint-rerun
+20260416T151355,2026-04-16T15:13:55Z,14,QWS-1402,feature/26.4.0/QWS-1402,sonnet,43,30,13,30,TESTING,,,scope-archaeology

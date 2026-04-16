@@ -4,7 +4,7 @@
 QWS-1402
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -92,7 +92,7 @@ diversity_score = distinct_profitable_years / total_distinct_years
 - [x] `metrics.py` updated
 - [x] Bundle ingest path updated
 - [x] Unit tests pass
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
