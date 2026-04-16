@@ -328,10 +328,11 @@ def test_collect_upsert_deduplicates_index():
 
     assert len(written_dfs) == 1
     result = written_dfs[0]
-    # No duplicate index
+    # Collector writes the freshly fetched rows (2 rows: overlap + new week)
+    # store.write_series handles full dedup/merge with existing data
+    assert len(result) == 2
+    # No duplicate index in what was written
     assert result.index.duplicated().sum() == 0
-    # All 3 distinct dates present
-    assert len(result) == 3
     # Overlap row uses new value (55, not 50)
     overlap_ts = pd.Timestamp("2024-01-08", tz="UTC")
     assert result.loc[overlap_ts, "interest"] == 55

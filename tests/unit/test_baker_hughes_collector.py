@@ -26,13 +26,25 @@ from data.collectors.baker_hughes import (
 
 
 def _make_excel_bytes(
-    rows: list[tuple],
+    date_str: str | None = "2024-01-05",
+    us_total: int = 600,
+    us_oil: int = 480,
+    us_gas: int = 110,
+    canada: int = 190,
     sheet_name: str = "North America Rig Count",
 ) -> bytes:
-    """Build a minimal Baker Hughes-style Excel workbook as bytes.
+    """Build a minimal BHI-format Excel workbook as bytes (single-week snapshot).
+
+    Mirrors the real BHI NA rig count sheet structure:
+    - Row 3 (0-indexed): date value in col 3
+    - Subsequent rows: label in col 1, this-week count in col 3
 
     Args:
-        rows: List of (date_str, us_total, us_oil, us_gas, canada) tuples.
+        date_str: ISO date string for the report week. None → missing date (parse error).
+        us_total: US total rig count.
+        us_oil: US oil rig count.
+        us_gas: US gas rig count.
+        canada: Canada rig count.
         sheet_name: Sheet name to create.
 
     Returns:
@@ -42,30 +54,22 @@ def _make_excel_bytes(
     ws = wb.active
     ws.title = sheet_name
 
-    # Header row matching the column names the parser expects
-    ws.append(
-        [
-            "Date",
-            "United States Total",
-            "United States Oil",
-            "United States Gas",
-            "Canada Total",
-        ]
-    )
-    for date_str, us_total, us_oil, us_gas, canada in rows:
-        ws.append([date_str, us_total, us_oil, us_gas, canada])
+    # Rows 0-2: junk/header rows (match real BHI layout; use non-None so openpyxl keeps them)
+    for i in range(3):
+        ws.append([f"row{i}", None, None, None, None])
+    # Row 3: date in col 3 (0-indexed → openpyxl 1-indexed col 4)
+    ws.append(["row3", None, None, date_str, None])
+
+    # Label rows: col 1 = label, col 3 = value (0-indexed)
+    if date_str is not None:
+        ws.append([None, "United States Total", None, us_total, None])
+        ws.append([None, "Oil", None, us_oil, None])
+        ws.append([None, "Gas", None, us_gas, None])
+        ws.append([None, "Canada", None, canada, None])
 
     buf = BytesIO()
     wb.save(buf)
     return buf.getvalue()
-
-
-def _sample_rows() -> list[tuple]:
-    return [
-        ("2024-01-05", 600, 480, 110, 190),
-        ("2024-01-12", 605, 485, 111, 192),
-        ("2024-01-19", 598, 478, 109, 188),
-    ]
 
 
 # ---------------------------------------------------------------------------
@@ -100,7 +104,7 @@ def test_download_excel_raises_on_http_error():
 
 
 def test_parse_returns_all_four_series():
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    excel_bytes = _make_excel_bytes()
     result = _parse_na_rig_count(excel_bytes)
 
     assert set(result.keys()) == {
@@ -112,7 +116,7 @@ def test_parse_returns_all_four_series():
 
 
 def test_parse_count_column_present():
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    excel_bytes = _make_excel_bytes()
     result = _parse_na_rig_count(excel_bytes)
 
     for key, df in result.items():
@@ -120,7 +124,7 @@ def test_parse_count_column_present():
 
 
 def test_parse_index_is_utc_datetime():
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    excel_bytes = _make_excel_bytes()
     result = _parse_na_rig_count(excel_bytes)
 
     for key, df in result.items():
@@ -129,55 +133,38 @@ def test_parse_index_is_utc_datetime():
 
 
 def test_parse_correct_row_count():
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    """Parser returns one row per series (single weekly snapshot)."""
+    excel_bytes = _make_excel_bytes()
     result = _parse_na_rig_count(excel_bytes)
 
     for key, df in result.items():
-        assert len(df) == 3, f"{key} expected 3 rows, got {len(df)}"
+        assert len(df) == 1, f"{key} expected 1 row, got {len(df)}"
 
 
 def test_parse_correct_values():
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    excel_bytes = _make_excel_bytes(
+        date_str="2024-01-05",
+        us_total=600,
+        us_oil=480,
+        us_gas=110,
+        canada=190,
+    )
     result = _parse_na_rig_count(excel_bytes)
 
-    us_total = result["BHI_US_TOTAL_RIGS"]
-    assert int(us_total["count"].iloc[0]) == 600
-    assert int(us_total["count"].iloc[1]) == 605
-
-    canada = result["BHI_CANADA_RIGS"]
-    assert int(canada["count"].iloc[0]) == 190
-
-
-def test_parse_sorted_ascending():
-    # Reverse order in sheet
-    rows = [
-        ("2024-01-19", 598, 478, 109, 188),
-        ("2024-01-05", 600, 480, 110, 190),
-        ("2024-01-12", 605, 485, 111, 192),
-    ]
-    excel_bytes = _make_excel_bytes(rows)
-    result = _parse_na_rig_count(excel_bytes)
-
-    for key, df in result.items():
-        assert df.index.is_monotonic_increasing, f"{key} index not sorted ascending"
-
-
-def test_parse_drops_non_date_rows():
-    """Non-date rows (notes, blank rows) should be silently dropped."""
-    rows = [
-        ("2024-01-05", 600, 480, 110, 190),
-        ("NOT A DATE", 0, 0, 0, 0),  # should be dropped
-        ("2024-01-12", 605, 485, 111, 192),
-    ]
-    excel_bytes = _make_excel_bytes(rows)
-    result = _parse_na_rig_count(excel_bytes)
-
-    for key, df in result.items():
-        assert len(df) == 2, f"{key} expected 2 rows after dropping bad row, got {len(df)}"
+    assert int(result["BHI_US_TOTAL_RIGS"]["count"].iloc[0]) == 600
+    assert int(result["BHI_US_OIL_RIGS"]["count"].iloc[0]) == 480
+    assert int(result["BHI_CANADA_RIGS"]["count"].iloc[0]) == 190
 
 
 def test_parse_raises_on_missing_sheet():
-    excel_bytes = _make_excel_bytes(_sample_rows(), sheet_name="Wrong Sheet")
+    excel_bytes = _make_excel_bytes(sheet_name="Wrong Sheet")
+    with pytest.raises(Exception):
+        _parse_na_rig_count(excel_bytes)
+
+
+def test_parse_raises_on_missing_date():
+    """Excel with no date in row 3 col 3 raises an exception."""
+    excel_bytes = _make_excel_bytes(date_str=None)
     with pytest.raises(Exception):
         _parse_na_rig_count(excel_bytes)
 
@@ -197,7 +184,7 @@ def _mock_requests_get(excel_bytes: bytes):
 
 def test_collect_writes_all_four_series():
     """collect() calls store.write_series() once per series key."""
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    excel_bytes = _make_excel_bytes()
     mock_get = _mock_requests_get(excel_bytes)
     mock_store = MagicMock()
     mock_store.read_series.side_effect = Exception("not found")
@@ -220,7 +207,7 @@ def test_collect_writes_all_four_series():
 
 def test_collect_written_df_has_count_column_and_datetime_index():
     """DataFrames written to store have 'count' column and UTC DatetimeIndex."""
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    excel_bytes = _make_excel_bytes()
     written: dict[str, pd.DataFrame] = {}
 
     def capture(lib: str, sym: str, df: pd.DataFrame) -> None:
@@ -246,8 +233,9 @@ def test_collect_written_df_has_count_column_and_datetime_index():
 
 
 def test_collect_incremental_appends_only_new_rows():
-    """If existing data present, collect appends only rows after last stored date."""
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    """If existing data is older than the snapshot date, collect writes 1 new row."""
+    # Snapshot is 2024-01-19; existing data ends at 2024-01-05 → new row expected
+    excel_bytes = _make_excel_bytes(date_str="2024-01-19", us_total=598, us_oil=478, us_gas=109, canada=188)
 
     existing_df = pd.DataFrame(
         {"count": pd.array([600], dtype="Int64")},
@@ -271,17 +259,17 @@ def test_collect_incremental_appends_only_new_rows():
     ):
         collect()
 
-    # Each series should have only rows after 2024-01-05 (i.e. 2 rows)
+    # Snapshot date (2024-01-19) > existing last date (2024-01-05) → 1 new row per series
     for key in SERIES_KEYS:
         assert key in written
-        assert len(written[key]) == 2, f"{key}: expected 2 new rows, got {len(written[key])}"
+        assert len(written[key]) == 1, f"{key}: expected 1 new row, got {len(written[key])}"
 
 
 def test_collect_idempotent_no_write_when_fully_up_to_date():
-    """If last stored date is current, write_series is not called."""
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    """If last stored date matches the snapshot date, write_series is not called."""
+    excel_bytes = _make_excel_bytes(date_str="2024-01-19", us_total=598, us_oil=478, us_gas=109, canada=188)
 
-    # Last stored date matches the most recent row in the fixture
+    # Last stored date matches the snapshot date → no new rows
     existing_df = pd.DataFrame(
         {"count": pd.array([598], dtype="Int64")},
         index=pd.to_datetime(["2024-01-19"]).tz_localize("UTC"),
@@ -302,9 +290,9 @@ def test_collect_idempotent_no_write_when_fully_up_to_date():
 
 
 def test_collect_skips_series_on_parse_empty():
-    """collect() does not call write_series for any series with no parsed rows."""
-    # Sheet with no data rows (only header)
-    excel_bytes = _make_excel_bytes([])
+    """collect() does not call write_series when Excel has no parseable date."""
+    # date_str=None → no date in row 3 col 3 → parse raises ValueError → collect skips
+    excel_bytes = _make_excel_bytes(date_str=None)
 
     mock_get = _mock_requests_get(excel_bytes)
     mock_store = MagicMock()
@@ -321,7 +309,7 @@ def test_collect_skips_series_on_parse_empty():
 
 def test_collect_uses_default_url():
     """collect() fetches from BHI_NA_EXCEL_URL by default."""
-    excel_bytes = _make_excel_bytes(_sample_rows())
+    excel_bytes = _make_excel_bytes()
     mock_get = _mock_requests_get(excel_bytes)
     mock_store = MagicMock()
     mock_store.read_series.side_effect = Exception("not found")

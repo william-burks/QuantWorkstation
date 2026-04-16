@@ -220,7 +220,11 @@ def collect(url: str = BHI_NA_EXCEL_URL) -> None:
     excel_bytes = _download_excel(url)
     log.info("Downloaded %d bytes; parsing…", len(excel_bytes))
 
-    series_map = _parse_na_rig_count(excel_bytes)
+    try:
+        series_map = _parse_na_rig_count(excel_bytes)
+    except (ValueError, IndexError, KeyError) as exc:
+        log.warning("Failed to parse BHI NA rig count Excel: %s — skipping", exc)
+        return
     store = get_store()
 
     for arc_key, df_new in series_map.items():
@@ -248,7 +252,6 @@ def collect(url: str = BHI_NA_EXCEL_URL) -> None:
             log.info("Series %s: no new data to write", arc_key)
             continue
 
-        print("data", df_new)
         store.write_series("macro", arc_key, df_new)
         log.info("Wrote %d rows to macro/%s", len(df_new), arc_key)
 
