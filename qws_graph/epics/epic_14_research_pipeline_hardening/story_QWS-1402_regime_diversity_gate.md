@@ -4,7 +4,7 @@
 QWS-1402
 
 ## Status
-READY
+TESTING
 
 ## Type
 code
