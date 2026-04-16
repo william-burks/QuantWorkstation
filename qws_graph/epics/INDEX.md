@@ -285,8 +285,8 @@ Stories (no order):
 - Objective: eliminate regime-concentration blind spot; add upstream quality gates; fix Cypher bug; seed literature library
 
 Execution order: QWS-1404 → QWS-1401 ∥ QWS-1406 → QWS-1402 → QWS-1403 ∥ QWS-1405
-- `QWS-1401` `epic_14_research_pipeline_hardening/story_QWS-1401_year_by_year_pnl.md` — `TESTING`
-- `QWS-1402` `epic_14_research_pipeline_hardening/story_QWS-1402_regime_diversity_gate.md` — `TESTING` (~~QWS-1401~~)
+- `QWS-1401` `epic_14_research_pipeline_hardening/closed/story_QWS-1401_year_by_year_pnl.md` — `CLOSED`
+- `QWS-1402` `epic_14_research_pipeline_hardening/story_QWS-1402_regime_diversity_gate.md` — `CLOSED` (~~QWS-1401~~)
 - `QWS-1403` `epic_14_research_pipeline_hardening/story_QWS-1403_atr_regime_labels.md` — `READY`
 - `QWS-1404` `epic_14_research_pipeline_hardening/closed/story_QWS-1404_fix_redundancy_gate_cypher.md` — `CLOSED`
 - `QWS-1405` `epic_14_research_pipeline_hardening/story_QWS-1405_champion_degradation_advisory.md` — `READY`

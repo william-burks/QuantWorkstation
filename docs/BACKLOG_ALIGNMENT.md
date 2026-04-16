@@ -121,7 +121,7 @@
 
 | Story | ID | Capabilities Unlocked | Blocked On |
 |---|---|---|---|
-| Year-by-Year P&L | QWS-1401 (**TESTING**) | `annual_pnl_breakdown()` in metrics.py; annual table in evaluator.report(); regime concentration warning | — |
+| Year-by-Year P&L | QWS-1401 (**CLOSED**) | `annual_pnl_breakdown()` in metrics.py; annual table in evaluator.report(); regime concentration warning | — |
 | Regime Diversity Gate | QWS-1402 (**READY**) | `diversity_score()` in metrics.py; diversity block in evaluator.report(); `diversity_score`, `diversity_years_positive`, `diversity_distinct_years` in `trial_metadata` on Run node | ~~QWS-1401~~ |
 | ATR Regime Pre-Labels | QWS-1403 (**READY**) | `research/regimes/atr_trend_classifier.py`; `regime_atr_{symbol}_{tf}` series in ArcticDB signals lib for CL_1H, MES_1H, BTC/USD_1H | — |
 | Fix Redundancy Gate Cypher | QWS-1404 (**CLOSED**) | `check_redundancy` returns correct results (no cartesian product duplicates) | — |

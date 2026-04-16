@@ -4,7 +4,7 @@
 QWS-1401
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -71,7 +71,7 @@ Year  | Trades | Gross P&L | Sharpe | % of Total
 - [x] `evaluator.py` updated
 - [x] `metrics.py` updated
 - [x] Unit tests pass
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
