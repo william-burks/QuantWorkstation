@@ -16,7 +16,7 @@ from typing import Any
 
 import pandas as pd
 
-from research.experiments.metrics import annual_pnl_breakdown
+from research.experiments.metrics import annual_pnl_breakdown, diversity_score
 from research.experiments.standards import (
     CALMAR,
     MAX_DRAWDOWN_LIMIT,
@@ -61,6 +61,9 @@ _METRIC_COLS: frozenset[str] = frozenset(
 )
 
 _REGISTRY_PATH = Path(__file__).parent.parent / "results" / "registry.json"
+
+_DISTINCT_YEARS_THRESHOLD = 3
+_PROFITABLE_YEARS_THRESHOLD = 2
 
 
 # ---------------------------------------------------------------------------
@@ -160,7 +163,8 @@ def report(
     top_n: int = 3,
     full_n: int = 10,
     trades_df: pd.DataFrame | None = None,
-) -> None:
+    bundle_path: Path | None = None,
+) -> dict[str, Any] | None:
     """
     Print standardized evaluation output for a trial.
 
@@ -182,22 +186,38 @@ def report(
         Number of rows to show in the full results table.
     trades_df : pd.DataFrame, optional
         Per-trade records with ``entry_time`` and ``pnl_usd`` columns.
-        When provided, appends annual P&L breakdown after aggregate metrics.
+        When provided, appends annual P&L breakdown and diversity block.
+    bundle_path : Path, optional
+        Path to bundle.json. When provided and trades_df is given, diversity
+        fields are merged into the ``trial_metadata`` key of the manifest.
+
+    Returns
+    -------
+    dict | None
+        Diversity fields dict (``diversity_score``, ``diversity_distinct_years``,
+        ``diversity_years_positive``) when trades_df is provided; else None.
     """
     _print_metadata(metadata)
     _print_bh(bh)
 
     if results.empty:
         print("\nNo valid results.")
-        return
+        return None
 
     _print_tier_assessment(results, bh)
     _print_top_n(results, bh, top_n, sort_by="sharpe", label="Sharpe")
     _print_top_n(results, bh, top_n, sort_by="return", label="Return")
     _print_full(results, full_n)
+
+    diversity: dict[str, Any] | None = None
     if trades_df is not None and not trades_df.empty:
-        print(_annual_breakdown(trades_df))
+        diversity = _diversity_score(trades_df)
+        print(_annual_breakdown(trades_df, diversity))
+        if bundle_path is not None:
+            _write_diversity_to_bundle(bundle_path, diversity)
+
     _record_passing(results, metadata)
+    return diversity
 
 
 # ---------------------------------------------------------------------------
@@ -290,9 +310,15 @@ def worst_trades(
 _CONCENTRATION_THRESHOLD = 50.0  # pct
 
 
-def _annual_breakdown(trades_df: pd.DataFrame) -> str:
+def _diversity_score(trades_df: pd.DataFrame) -> dict[str, Any]:
+    """Compute diversity fields from a trades DataFrame."""
+    rows = annual_pnl_breakdown(trades_df)
+    return diversity_score(rows)
+
+
+def _annual_breakdown(trades_df: pd.DataFrame, div: dict[str, Any] | None = None) -> str:
     """
-    Format annual P&L breakdown table and concentration warning.
+    Format annual P&L breakdown table, concentration warning, and diversity block.
 
     Returns a multi-line string ready to print.
     """
@@ -320,7 +346,44 @@ def _annual_breakdown(trades_df: pd.DataFrame) -> str:
                 f"{r['year']} = {r['pct_of_total']:.1f}% of profit"
             )
 
+    # Diversity block
+    if div is None:
+        div = diversity_score(rows)
+    score_val = div["diversity_score"]
+    distinct = div["diversity_distinct_years"]
+    profitable = div["diversity_years_positive"]
+    lines.append(f"\n{sep} Regime Diversity {sep}")
+    lines.append(f"Score: {score_val:.2f} | Years traded: {distinct} | Profitable years: {profitable}")
+    if distinct < _DISTINCT_YEARS_THRESHOLD:
+        lines.append(
+            f"[WARN] Diversity: only {distinct} year{'s' if distinct != 1 else ''} of IS trades"
+            " — consider extending backtest window"
+        )
+    if profitable < _PROFITABLE_YEARS_THRESHOLD:
+        lines.append(
+            f"[WARN] Diversity: only {profitable} profitable year{'s' if profitable != 1 else ''}"
+            " — strategy may be regime-dependent"
+        )
+
     return "\n".join(lines)
+
+
+def _write_diversity_to_bundle(bundle_path: Path, div: dict[str, Any]) -> None:
+    """Merge diversity fields into trial_metadata of bundle.json (non-blocking)."""
+    try:
+        manifest: dict[str, Any] = json.loads(bundle_path.read_text())
+        tm: dict[str, Any] = manifest.get("trial_metadata") or {}
+        tm.update(
+            {
+                "diversity_score": str(div["diversity_score"]),
+                "diversity_distinct_years": str(div["diversity_distinct_years"]),
+                "diversity_years_positive": str(div["diversity_years_positive"]),
+            }
+        )
+        manifest["trial_metadata"] = tm
+        bundle_path.write_text(json.dumps(manifest, indent=2))
+    except Exception:  # noqa: BLE001
+        pass  # bundle write is advisory; never block report
 
 
 # ---------------------------------------------------------------------------

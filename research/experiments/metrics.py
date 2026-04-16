@@ -113,6 +113,41 @@ def annual_pnl_breakdown(trades_df: pd.DataFrame) -> list[dict[str, Any]]:
     return sorted(rows, key=lambda r: r["year"])
 
 
+def diversity_score(annual_breakdown: list[dict[str, Any]]) -> dict[str, Any]:
+    """
+    Compute regime diversity score from annual P&L breakdown.
+
+    Parameters
+    ----------
+    annual_breakdown : list[dict]
+        Output of annual_pnl_breakdown(): list of dicts with keys
+        ``year``, ``trades``, ``gross_pnl``, ``sharpe``, ``pct_of_total``.
+
+    Returns
+    -------
+    dict with keys:
+        ``diversity_score``            float [0.0, 1.0]
+        ``diversity_distinct_years``   int
+        ``diversity_years_positive``   int
+    """
+    if not annual_breakdown:
+        return {
+            "diversity_score": 0.0,
+            "diversity_distinct_years": 0,
+            "diversity_years_positive": 0,
+        }
+
+    distinct_years = len(annual_breakdown)
+    profitable_years = sum(1 for r in annual_breakdown if r["gross_pnl"] > 0)
+    score = float(profitable_years / distinct_years) if distinct_years > 0 else 0.0
+
+    return {
+        "diversity_score": round(score, 4),
+        "diversity_distinct_years": distinct_years,
+        "diversity_years_positive": profitable_years,
+    }
+
+
 def summary(equity: pd.Series, pnl: pd.Series | None = None) -> dict[str, Any]:
     """
     Full performance summary.

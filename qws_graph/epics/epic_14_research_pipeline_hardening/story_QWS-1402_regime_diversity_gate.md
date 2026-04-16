@@ -76,20 +76,76 @@ diversity_score = distinct_profitable_years / total_distinct_years
 - `tests/unit/test_diversity_gate.py` — new
 
 ## Acceptance Criteria
-- [ ] `diversity_score()` returns correct dict for synthetic annual_breakdown fixture
-- [ ] `report()` prints diversity block with score, years traded, profitable years
-- [ ] Warning fires when `distinct_years < 3` OR `distinct_profitable_years < 2`
-- [ ] Warning silent when both thresholds met
-- [ ] `qw record --bundle` prints diversity warning when below threshold
-- [ ] `bundle.json` includes `diversity_score`, `diversity_years_positive`, `diversity_distinct_years` fields after trial run
-- [ ] `qw record --bundle` reads diversity fields from bundle.json (does not recompute)
-- [ ] `trial_metadata` on ingested Run node contains `diversity_score`, `diversity_years_positive`, `diversity_distinct_years`
-- [ ] No auto-rejection — ingest proceeds regardless of diversity score
-- [ ] `make verify` passes with no new violations
+- [x] `diversity_score()` returns correct dict for synthetic annual_breakdown fixture
+- [x] `report()` prints diversity block with score, years traded, profitable years
+- [x] Warning fires when `distinct_years < 3` OR `distinct_profitable_years < 2`
+- [x] Warning silent when both thresholds met
+- [x] `qw record --bundle` prints diversity warning when below threshold
+- [x] `bundle.json` includes `diversity_score`, `diversity_years_positive`, `diversity_distinct_years` fields after trial run
+- [x] `qw record --bundle` reads diversity fields from bundle.json (does not recompute)
+- [x] `trial_metadata` on ingested Run node contains `diversity_score`, `diversity_years_positive`, `diversity_distinct_years`
+- [x] No auto-rejection — ingest proceeds regardless of diversity score
+- [x] `make verify` passes with no new violations
 
 ## Definition of Done
-- [ ] `evaluator.py` updated
-- [ ] `metrics.py` updated
-- [ ] Bundle ingest path updated
-- [ ] Unit tests pass
+- [x] `evaluator.py` updated
+- [x] `metrics.py` updated
+- [x] Bundle ingest path updated
+- [x] Unit tests pass
 - [ ] Story marked CLOSED
+
+## Acceptance Test Plan
+
+### AC1: diversity_score() returns correct dict
+- type: regression
+- cmd: `pytest tests/unit/test_diversity_gate.py::TestDiversityScoreMetric -v`
+- expect_contains: "6 passed"
+- expect_exit: 0
+
+### AC2: report() prints diversity block
+- type: regression
+- cmd: `pytest tests/unit/test_diversity_gate.py::TestReportDiversityBlock -v`
+- expect_contains: "2 passed"
+- expect_exit: 0
+
+### AC3: Warning fires below threshold
+- type: regression
+- cmd: `pytest tests/unit/test_diversity_gate.py::TestDiversityWarnings -v`
+- expect_contains: "4 passed"
+- expect_exit: 0
+
+### AC4: Warning silent at/above threshold
+- type: regression
+- cmd: `pytest tests/unit/test_diversity_gate.py::TestDiversityNoWarnAtThreshold -v`
+- expect_contains: "2 passed"
+- expect_exit: 0
+
+### AC5+AC7: bundle CLI reads diversity fields from bundle.json
+- type: regression
+- cmd: `pytest tests/unit/test_diversity_gate.py::TestBundleCliDiversityWarning tests/unit/test_diversity_gate.py::TestBundleDoesNotRecompute -v`
+- expect_contains: "2 passed"
+- expect_exit: 0
+
+### AC6: bundle.json includes diversity fields after evaluator writes
+- type: regression
+- cmd: `pytest tests/unit/test_diversity_gate.py::TestEvaluatorWritesToBundle -v`
+- expect_contains: "2 passed"
+- expect_exit: 0
+
+### AC8: trial_metadata on Run node contains diversity keys
+- type: regression
+- cmd: `pytest tests/unit/test_diversity_gate.py::TestTrialMetadataOnRunNode -v`
+- expect_contains: "1 passed"
+- expect_exit: 0
+
+### AC9: No auto-rejection
+- type: regression
+- cmd: `pytest tests/unit/test_diversity_gate.py::TestNoAutoRejection -v`
+- expect_contains: "1 passed"
+- expect_exit: 0
+
+### AC10: Full suite — no regressions
+- type: regression
+- cmd: `pytest tests/unit/test_diversity_gate.py -v`
+- expect_contains: "20 passed"
+- expect_exit: 0
