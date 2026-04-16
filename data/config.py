@@ -47,7 +47,7 @@ class Settings(BaseSettings):
         "DX",
         "VX",
         "NKD",
-        "DAX",
+        "FDAX",
         "Z",
     ]
 
@@ -60,11 +60,23 @@ class Settings(BaseSettings):
     # FRED macro series to collect (see data/collectors/fred.py)
     fred_api_key: str = ""
     fred_series: list[str] = [
+        # Yield curve
         "DGS2",
         "DGS10",
         "T10Y2Y",
+        # Vol / credit
         "VIXCLS",
         "BAMLH0A0HYM2",
+        # Inflation expectations
+        "T5YIE",       # 5-year breakeven inflation
+        "T10YIE",      # 10-year breakeven inflation
+        "DFII10",      # 10-year TIPS real yield
+        "PCEPILFE",    # Core PCE (Fed's preferred inflation measure)
+        # Labor / activity
+        "ICSA",        # Initial jobless claims (weekly)
+        "RSAFS",       # Retail sales (monthly)
+        # Financial stress
+        "STLFSI4",     # St. Louis Fed Financial Stress Index
     ]
 
     # EIA petroleum stock series to collect (see data/collectors/eia.py)
@@ -77,9 +89,10 @@ class Settings(BaseSettings):
         "WDISTUS1",
     ]
 
-    # Nasdaq Data Link (Quandl) API key — free at https://data.nasdaq.com
-    # Loaded from NASDAQ_DATA_LINK_API_KEY env var; stored as export in ~/.zshrc
-    nasdaq_data_link_api_key: str = ""
+    eia_mer_series: list[str] = [
+        "ZWHDPUS",  # US Heating Degree Days (monthly, population-weighted, 1973-present)
+        "ZWCDPUS",  # US Cooling Degree Days (monthly, population-weighted, 1973-present)
+    ]
 
     # Financial Modeling Prep API key — free at https://financialmodelingprep.com/developer/docs
     # Loaded from FMP_API_KEY env var
@@ -88,21 +101,6 @@ class Settings(BaseSettings):
     # USDA NASS Quick Stats API key — free from https://quickstats.nass.usda.gov/api
     # Loaded from USDA_API_KEY env var; stored as export in ~/.zshrc per security rules
     usda_api_key: str = ""
-
-    # NOAA Climate Data Online API key — free from https://www.ncdc.noaa.gov/cdo-web/token
-    # Loaded from NOAA_API_KEY env var; stored as export in ~/.zshrc per security rules
-    noaa_api_key: str = ""
-
-    # NASA Earthdata API token — free from https://urs.earthdata.nasa.gov/
-    # Loaded from NASA_EARTHDATA_TOKEN env var; stored as export in ~/.zshrc per security rules
-    # Do NOT add to .env
-    nasa_earthdata_token: str = ""
-    noaa_series: list[str] = [
-        "NOAA_HDD_NATIONAL",
-        "NOAA_CDD_NATIONAL",
-        "NOAA_HDD_NORTHEAST",
-        "NOAA_HDD_MIDWEST",
-    ]
 
     # Google Trends search terms to collect (see data/collectors/google_trends.py)
     gtrends_terms: list[str] = [

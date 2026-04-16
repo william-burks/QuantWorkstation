@@ -54,9 +54,20 @@ class Store:
             )
         lib = self._libs[library]
         if lib.has_symbol(symbol):
-            lib.append(symbol, df, prune_previous_version=True)
+            lib.append(symbol, df)
         else:
             lib.write(symbol, df)
+
+    def overwrite_bars(self, library: str, symbol: str, df: pd.DataFrame) -> None:
+        """Unconditional full overwrite — replaces any existing data for symbol."""
+        if library == "futures" and not _FUTURES_KEY_RE.match(symbol):
+            raise ValueError(
+                f"Invalid futures key: {symbol!r}. "
+                "Expected '{ROOT}_{TF}' (stitched), '{ROOT}_contfut_{TF}' (CONTFUT), "
+                "or '{SYMBOL}_idx_{TF}' (cash index). "
+                "Valid TF values: 5min, 10min, 15min, 30min, 1H, 2H, 4H, 8H, 1D, 1W, 1M."
+            )
+        self._libs[library].write(symbol, df)
 
     def read_bars(
         self,
@@ -173,7 +184,7 @@ class Store:
     def write_contract_meta(self, root: str, df: pd.DataFrame) -> None:
         """df indexed by expiry date, one row per contract."""
         lib = self._libs["futures_meta"]
-        lib.write(root, df, prune_previous_version=True)
+        lib.write(root, df)
 
     def read_contract_meta(self, root: str) -> pd.DataFrame:
         return self._libs["futures_meta"].read(root).data

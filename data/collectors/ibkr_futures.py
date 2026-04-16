@@ -174,9 +174,9 @@ _CONTRACT_SPECS: dict[str, dict[str, Any]] = {
     "ZN": {"multiplier": "1000", "exchange": "CBOT", "currency": "USD"},  # 10yr T-Note
     "ZB": {"multiplier": "1000", "exchange": "CBOT", "currency": "USD"},  # 30yr T-Bond
     # ── FX ──
-    "6E": {"multiplier": "125000", "exchange": "CME", "currency": "USD"},  # EUR/USD
-    "6J": {"multiplier": "12500000", "exchange": "CME", "currency": "USD"},  # JPY/USD
-    "6B": {"multiplier": "62500", "exchange": "CME", "currency": "USD"},  # GBP/USD
+    "6E": {"multiplier": "125000", "exchange": "GLOBEX", "currency": "USD"},  # EUR/USD
+    "6J": {"multiplier": "12500000", "exchange": "GLOBEX", "currency": "USD"},  # JPY/USD
+    "6B": {"multiplier": "62500", "exchange": "GLOBEX", "currency": "USD"},  # GBP/USD
     "DX": {"multiplier": "1000", "exchange": "NYBOT", "currency": "USD"},  # Dollar Index
     # ── Grains ──
     "ZC": {"multiplier": "50", "exchange": "CBOT", "currency": "USD"},  # Corn
@@ -187,7 +187,7 @@ _CONTRACT_SPECS: dict[str, dict[str, Any]] = {
     "MBT": {"multiplier": "0.1", "exchange": "CME", "currency": "USD"},  # Micro Bitcoin
     # ── Global Equity ──
     "NKD": {"multiplier": "5", "exchange": "CME", "currency": "USD"},  # Nikkei 225 (dollar)
-    "DAX": {"multiplier": "25", "exchange": "EUREX", "currency": "EUR"},  # DAX
+    "FDAX": {"multiplier": "25", "exchange": "EUREX", "currency": "EUR"},  # DAX (full)
     "Z": {"multiplier": "10", "exchange": "ICEEU", "currency": "GBP"},  # FTSE 100
 }
 
@@ -441,7 +441,8 @@ def _ratio_stitch(frames: list[pd.DataFrame], label: str = "") -> pd.DataFrame:
             p_new = newer.loc[roll_ts, "close"]
             method = f"overlap ({len(common_ts)} common bars, roll_ts={roll_ts.date()})"
         else:
-            # No overlap — fall back to adjacent endpoints
+            # No overlap — fall back to adjacent endpoints; stitch at end of older contract
+            roll_ts = older.index[-1]
             p_old = older["close"].iloc[-1]
             p_new = newer["close"].iloc[0]
             method = "NO OVERLAP — endpoint fallback (ratio may be inaccurate)"
@@ -709,13 +710,14 @@ def collect_all_timeframes() -> None:
             f"── Timeframe {i}/{len(timeframes)}: {tf_key} ({tf_cfg['bar_size']}, {mode}) ──",
             flush=True,
         )  # noqa: E501
-        for root in symbols:
+        for j, root in enumerate(symbols, 1):
+            done += 1
+            print(f"  [Job {done}/{total}] {root} {tf_key}", flush=True)
             try:
                 collect(root, tf_key)
             except Exception:
                 log.exception("Failed to collect %s %s", root, tf_key)
-            done += 1
-        print(f"   {done}/{total} jobs done\n", flush=True)
+        print(f"  Timeframe {i}/{len(timeframes)} complete\n", flush=True)
 
     print("=== Futures seed complete ===\n", flush=True)
 
@@ -728,3 +730,15 @@ def collect_all_timeframes() -> None:
             except Exception:
                 log.exception("Failed to collect index %s", sym)
         print("=== Index collection complete ===", flush=True)
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    import logging as _logging
+    _logging.basicConfig(level=_logging.INFO, format="%(levelname)s %(message)s")
+    # Suppress IB connection-status pings (2104/2106/2158) — not actionable
+    _logging.getLogger("ib_insync").setLevel(_logging.WARNING)
+    collect_all_timeframes()

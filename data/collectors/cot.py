@@ -59,8 +59,10 @@ CFTC_SYMBOL_MAP: dict[str, _SymbolSpec] = {
 }
 
 # Columns to extract per report type
+# Newer files (2017+) use YYYY-MM-DD; older files use MM_DD_YYYY format.
+_DATE_COL_CANDIDATES = ["Report_Date_as_YYYY-MM-DD", "Report_Date_as_MM_DD_YYYY"]
+
 _DISAGG_COLS = {
-    "date": "Report_Date_as_YYYY-MM-DD",
     "code": "CFTC_Contract_Market_Code",
     "oi": "Open_Interest_All",
     "comm_long": "Prod_Merc_Positions_Long_All",
@@ -70,7 +72,6 @@ _DISAGG_COLS = {
 }
 
 _FIN_COLS = {
-    "date": "Report_Date_as_YYYY-MM-DD",
     "code": "CFTC_Contract_Market_Code",
     "oi": "Open_Interest_All",
     "comm_long": "Dealer_Positions_Long_All",
@@ -107,11 +108,18 @@ def _fetch_csv(url: str, timeout: int = 60) -> pd.DataFrame:
             return pd.read_csv(f, low_memory=False, dtype={"CFTC_Contract_Market_Code": str})
 
 
-def _years_to_fetch() -> list[int]:
-    """Return years to fetch: historical batches + current year."""
+def _years_to_fetch(backfill: bool = False) -> list[int]:
+    """Return years to fetch.
+
+    Args:
+        backfill: If True, fetch full CFTC history from 2006 to current year.
+                  If False (default), fetch the 3 most-recent years (incremental).
+    """
     current = datetime.now(UTC).year
-    # Hist files go back to 2006 in one large file, then annual.
-    # We fetch 3 most-recent years for a ~3yr window (CFTC hist provides ~3yr).
+    if backfill:
+        # Disaggregated report introduced Sept 2009; financial futures from 2006.
+        # Use 2009 as safe start — both report types have data from then.
+        return list(range(2009, current + 1))
     return [current - 2, current - 1, current]
 
 
@@ -124,10 +132,26 @@ def _parse_df(raw: pd.DataFrame, report_type: str) -> pd.DataFrame:
     """
     From a raw CFTC CSV DataFrame, extract date + comm_net + noncomm_net + open_interest.
     Returns a tidy DataFrame indexed by UTC DatetimeIndex.
+
+    Handles two date column formats:
+      - Newer (2017+): Report_Date_as_YYYY-MM-DD  (format: YYYY-MM-DD)
+      - Older (pre-2017): Report_Date_as_MM_DD_YYYY  (format: MM/DD/YYYY)
     """
     cols = _COL_MAP[report_type]
+
+    # Strip whitespace from column names
+    raw.columns = raw.columns.str.strip()
+
+    # Detect date column
+    date_col = next((c for c in _DATE_COL_CANDIDATES if c in raw.columns), None)
+    if date_col is None:
+        raise ValueError(
+            f"Cannot find date column. Tried: {_DATE_COL_CANDIDATES}. "
+            f"Available: {list(raw.columns[:10])}"
+        )
+
     needed = [
-        cols["date"],
+        date_col,
         cols["code"],
         cols["oi"],
         cols["comm_long"],
@@ -136,8 +160,6 @@ def _parse_df(raw: pd.DataFrame, report_type: str) -> pd.DataFrame:
         cols["noncomm_short"],
     ]
 
-    # Strip whitespace from column names
-    raw.columns = raw.columns.str.strip()
     sub = raw[needed].copy()
     sub.columns = [
         "date",
@@ -149,13 +171,14 @@ def _parse_df(raw: pd.DataFrame, report_type: str) -> pd.DataFrame:
         "noncomm_short",
     ]
 
-    # Strip whitespace from code column (may be numeric dtype if inferred by pandas)
+    # Strip whitespace from code column
     sub["code"] = sub["code"].astype(str).str.strip()
 
-    # Parse date — CFTC format: "YYYY-MM-DD"
-    sub["date"] = pd.to_datetime(sub["date"], format="%Y-%m-%d", utc=True)
+    # Parse date — handle both YYYY-MM-DD and MM/DD/YYYY
+    sub["date"] = pd.to_datetime(sub["date"], utc=False)
+    sub["date"] = sub["date"].dt.tz_localize("UTC")
 
-    # Convert position columns to numeric (CFTC may have leading spaces)
+    # Convert position columns to numeric
     for col in ["open_interest", "comm_long", "comm_short", "noncomm_long", "noncomm_short"]:
         sub[col] = pd.to_numeric(sub[col], errors="coerce")
 
@@ -170,13 +193,15 @@ def _parse_df(raw: pd.DataFrame, report_type: str) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 
-def collect(symbols: list[str] | None = None) -> None:
+def collect(symbols: list[str] | None = None, backfill: bool = False) -> None:
     """
     Download CFTC COT data and write to ArcticDB ``cot`` library.
 
     Args:
         symbols: list of symbol strings from CFTC_SYMBOL_MAP keys.
                  Defaults to all symbols in CFTC_SYMBOL_MAP.
+        backfill: If True, fetch full history from 2006 to present (~20yr).
+                  If False (default), fetch the 3 most-recent years.
     """
     if symbols is None:
         symbols = list(CFTC_SYMBOL_MAP.keys())
@@ -186,7 +211,9 @@ def collect(symbols: list[str] | None = None) -> None:
         raise ValueError(f"Unknown COT symbols: {unknown}. Known: {list(CFTC_SYMBOL_MAP.keys())}")
 
     store = get_store()
-    years = _years_to_fetch()
+    years = _years_to_fetch(backfill=backfill)
+    if backfill:
+        log.info("Backfill mode: fetching %d years (%d → %d)", len(years), years[0], years[-1])
 
     # Group symbols by report type to minimise downloads
     disagg_syms = [s for s in symbols if CFTC_SYMBOL_MAP[s].report_type == "disagg"]
@@ -254,5 +281,18 @@ def _collect_report(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    import argparse
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    collect()
+    parser = argparse.ArgumentParser(description="CFTC COT collector")
+    parser.add_argument(
+        "--backfill",
+        action="store_true",
+        help="Fetch full history from 2006 to present (~20yr, ~40 downloads)",
+    )
+    parser.add_argument(
+        "--symbols", nargs="+", default=None,
+        help="Symbols to collect (default: all)",
+    )
+    args = parser.parse_args()
+    collect(symbols=args.symbols, backfill=args.backfill)

@@ -25,7 +25,6 @@ from .query import (
     get_portfolio_alpha_v1,
     get_portfolio_by_class_v1,
     get_promotion_candidates_v1,
-    get_queued_hypotheses_v1,
     get_recent_champions_v1,
     get_regime_performance_v1,
     get_research_targets_v1,

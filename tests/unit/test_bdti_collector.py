@@ -1,41 +1,33 @@
 # mypy: ignore-errors
 """
 Unit tests for the BDTI (Baltic Dirty Tanker Index) collector.
-All requests.get calls and store writes are mocked — no live API calls in tests.
+All network calls and store writes are mocked — no live requests in tests.
 """
 
-from datetime import UTC
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
-from data.collectors.bdti import ARC_KEY, NDQL_DATASET, _fetch_bdti, collect
+from data.collectors.bdti import ARC_KEY, STOCKQ_URL, _fetch_bdti, collect
 
 # ---------------------------------------------------------------------------
-# Fixtures
+# Helpers
 # ---------------------------------------------------------------------------
 
 
-def _make_response(data: list[list], status_code: int = 200) -> MagicMock:
-    """Build a mock requests.Response with a Nasdaq Data Link-shaped payload."""
+def _html_with_value(value: str) -> str:
+    """Minimal StockQ-like HTML containing a numeric cell."""
+    return f"<html><body><table><tr><td>{value}</td></tr></table></body></html>"
+
+
+def _mock_response(html: str, status_code: int = 200) -> MagicMock:
     mock_resp = MagicMock()
     mock_resp.status_code = status_code
-    mock_resp.json.return_value = {
-        "dataset": {
-            "data": data,
-        }
-    }
+    mock_resp.text = html
     mock_resp.raise_for_status = MagicMock()
     return mock_resp
-
-
-def _sample_data() -> list[list]:
-    return [
-        ["2024-01-02", 750.0],
-        ["2024-01-03", 760.0],
-        ["2024-01-04", 755.0],
-    ]
 
 
 # ---------------------------------------------------------------------------
@@ -47,8 +39,8 @@ def test_arc_key_value():
     assert ARC_KEY == "BDTI_1D"
 
 
-def test_dataset_code():
-    assert NDQL_DATASET == "BWAVE/BDTI"
+def test_stockq_url_contains_bdti():
+    assert "BDTI" in STOCKQ_URL
 
 
 # ---------------------------------------------------------------------------
@@ -56,77 +48,43 @@ def test_dataset_code():
 # ---------------------------------------------------------------------------
 
 
-def test_fetch_bdti_returns_value_column():
-    mock_resp = _make_response(_sample_data())
-    with patch("data.collectors.bdti.requests.get", return_value=mock_resp):
-        df = _fetch_bdti("test-key", None)
-
-    assert list(df.columns) == ["value"]
-    assert len(df) == 3
-
-
-def test_fetch_bdti_index_is_utc_datetime():
-    mock_resp = _make_response(_sample_data())
-    with patch("data.collectors.bdti.requests.get", return_value=mock_resp):
-        df = _fetch_bdti("test-key", None)
-
-    assert pd.api.types.is_datetime64_any_dtype(df.index)
-    assert df.index.tz == UTC
+def test_fetch_bdti_returns_float():
+    resp = _mock_response(_html_with_value("1,107.00"))
+    with patch("data.collectors.bdti.requests.get", return_value=resp):
+        result = _fetch_bdti()
+    assert isinstance(result, float)
+    assert result == 1107.0
 
 
-def test_fetch_bdti_sorted_ascending():
-    # Reverse order input — output should be sorted asc
-    data = [["2024-01-04", 755.0], ["2024-01-02", 750.0], ["2024-01-03", 760.0]]
-    mock_resp = _make_response(data)
-    with patch("data.collectors.bdti.requests.get", return_value=mock_resp):
-        df = _fetch_bdti("test-key", None)
-
-    assert list(df.index) == sorted(df.index)
+def test_fetch_bdti_parses_value_in_range():
+    resp = _mock_response(_html_with_value("850"))
+    with patch("data.collectors.bdti.requests.get", return_value=resp):
+        result = _fetch_bdti()
+    assert 200 <= result <= 10000
 
 
-def test_fetch_bdti_passes_start_date_param():
-    mock_resp = _make_response(_sample_data())
-    with patch("data.collectors.bdti.requests.get", return_value=mock_resp) as mock_get:
-        _fetch_bdti("test-key", "2024-01-03")
-
-    call_kwargs = mock_get.call_args[1]
-    assert call_kwargs["params"]["start_date"] == "2024-01-03"
-
-
-def test_fetch_bdti_no_start_date_when_none():
-    mock_resp = _make_response(_sample_data())
-    with patch("data.collectors.bdti.requests.get", return_value=mock_resp) as mock_get:
-        _fetch_bdti("test-key", None)
-
-    call_kwargs = mock_get.call_args[1]
-    assert "start_date" not in call_kwargs["params"]
-
-
-def test_fetch_bdti_empty_data_returns_empty_df():
-    mock_resp = _make_response([])
-    with patch("data.collectors.bdti.requests.get", return_value=mock_resp):
-        df = _fetch_bdti("test-key", None)
-
-    assert df.empty
-    assert "value" in df.columns
-
-
-def test_fetch_bdti_drops_nan_rows():
-    data = [["2024-01-02", None], ["2024-01-03", 760.0]]
-    mock_resp = _make_response(data)
-    with patch("data.collectors.bdti.requests.get", return_value=mock_resp):
-        df = _fetch_bdti("test-key", None)
-
-    assert len(df) == 1
-    assert not df["value"].isna().any()
+def test_fetch_bdti_raises_value_error_when_no_valid_number():
+    resp = _mock_response("<html><body><td>N/A</td></body></html>")
+    with patch("data.collectors.bdti.requests.get", return_value=resp):
+        with pytest.raises(ValueError, match="Could not parse"):
+            _fetch_bdti()
 
 
 def test_fetch_bdti_raises_on_http_error():
-    mock_resp = MagicMock()
-    mock_resp.raise_for_status.side_effect = Exception("404 Not Found")
-    with patch("data.collectors.bdti.requests.get", return_value=mock_resp):
-        with pytest.raises(Exception, match="404"):
-            _fetch_bdti("test-key", None)
+    resp = MagicMock()
+    resp.raise_for_status.side_effect = Exception("403 Forbidden")
+    with patch("data.collectors.bdti.requests.get", return_value=resp):
+        with pytest.raises(Exception, match="403"):
+            _fetch_bdti()
+
+
+def test_fetch_bdti_ignores_out_of_range_values():
+    # Values outside 200–10000 should be skipped; only 900 should match
+    html = "<html><body><td>50</td><td>900</td><td>99999</td></body></html>"
+    resp = _mock_response(html)
+    with patch("data.collectors.bdti.requests.get", return_value=resp):
+        result = _fetch_bdti()
+    assert result == 900.0
 
 
 # ---------------------------------------------------------------------------
@@ -134,82 +92,71 @@ def test_fetch_bdti_raises_on_http_error():
 # ---------------------------------------------------------------------------
 
 
-def test_collect_writes_bdti_1d_to_macro():
-    mock_resp = _make_response(_sample_data())
+def test_collect_writes_single_row_with_today():
     mock_store = MagicMock()
     mock_store.read_series.side_effect = Exception("not found")
 
     with (
-        patch("data.collectors.bdti.requests.get", return_value=mock_resp),
+        patch("data.collectors.bdti._fetch_bdti", return_value=1107.0),
         patch("data.collectors.bdti.get_store", return_value=mock_store),
-        patch("data.collectors.bdti.get_settings") as mock_settings,
     ):
-        mock_settings.return_value.nasdaq_data_link_api_key = "test-key"
         collect()
 
     mock_store.write_series.assert_called_once()
-    args = mock_store.write_series.call_args[0]
-    assert args[0] == "macro"
-    assert args[1] == "BDTI_1D"
-
-
-def test_collect_written_df_has_value_column_and_datetime_index():
-    mock_resp = _make_response(_sample_data())
-    written: dict[str, pd.DataFrame] = {}
-
-    def capture(lib: str, sym: str, df: pd.DataFrame) -> None:
-        written[sym] = df
-
-    mock_store = MagicMock()
-    mock_store.read_series.side_effect = Exception("not found")
-    mock_store.write_series.side_effect = capture
-
-    with (
-        patch("data.collectors.bdti.requests.get", return_value=mock_resp),
-        patch("data.collectors.bdti.get_store", return_value=mock_store),
-        patch("data.collectors.bdti.get_settings") as mock_settings,
-    ):
-        mock_settings.return_value.nasdaq_data_link_api_key = "test-key"
-        collect()
-
-    assert "BDTI_1D" in written
-    df = written["BDTI_1D"]
+    lib, key, df = mock_store.write_series.call_args[0]
+    assert lib == "macro"
+    assert key == "BDTI_1D"
+    assert len(df) == 1
     assert list(df.columns) == ["value"]
-    assert pd.api.types.is_datetime64_any_dtype(df.index)
+    assert df["value"].iloc[0] == 1107.0
 
 
-def test_collect_incremental_uses_last_date_plus_one():
-    existing_df = pd.DataFrame(
-        {"value": [750.0]},
-        index=pd.to_datetime(["2024-01-03"]).tz_localize("UTC"),
-    )
-    mock_resp = _make_response([["2024-01-04", 755.0]])
-    mock_store = MagicMock()
-    mock_store.read_series.return_value = existing_df
-
-    with (
-        patch("data.collectors.bdti.requests.get", return_value=mock_resp) as mock_get,
-        patch("data.collectors.bdti.get_store", return_value=mock_store),
-        patch("data.collectors.bdti.get_settings") as mock_settings,
-    ):
-        mock_settings.return_value.nasdaq_data_link_api_key = "test-key"
-        collect()
-
-    call_kwargs = mock_get.call_args[1]
-    assert call_kwargs["params"]["start_date"] == "2024-01-04"
-
-
-def test_collect_skips_write_when_no_new_data():
-    mock_resp = _make_response([])
+def test_collect_written_df_has_utc_datetime_index():
+    written: dict = {}
     mock_store = MagicMock()
     mock_store.read_series.side_effect = Exception("not found")
+    mock_store.write_series.side_effect = lambda lib, key, df: written.update({"df": df})
 
     with (
-        patch("data.collectors.bdti.requests.get", return_value=mock_resp),
+        patch("data.collectors.bdti._fetch_bdti", return_value=900.0),
         patch("data.collectors.bdti.get_store", return_value=mock_store),
-        patch("data.collectors.bdti.get_settings") as mock_settings,
     ):
-        mock_settings.return_value.nasdaq_data_link_api_key = "test-key"
         collect()
 
+    df = written["df"]
+    assert pd.api.types.is_datetime64_any_dtype(df.index)
+    assert df.index.tz == UTC
+
+
+def test_collect_skips_write_when_today_already_stored():
+    today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    existing = pd.DataFrame(
+        {"value": [1000.0]},
+        index=pd.DatetimeIndex([today]),
+    )
+    mock_store = MagicMock()
+    mock_store.read_series.return_value = existing
+
+    with (
+        patch("data.collectors.bdti._fetch_bdti") as mock_fetch,
+        patch("data.collectors.bdti.get_store", return_value=mock_store),
+    ):
+        collect()
+
+    mock_fetch.assert_not_called()
     mock_store.write_series.assert_not_called()
+
+
+def test_collect_writes_when_existing_data_is_stale():
+    old_date = pd.Timestamp("2025-01-01", tz="UTC")
+    existing = pd.DataFrame({"value": [800.0]}, index=pd.DatetimeIndex([old_date]))
+    mock_store = MagicMock()
+    mock_store.read_series.return_value = existing
+
+    with (
+        patch("data.collectors.bdti._fetch_bdti", return_value=1107.0),
+        patch("data.collectors.bdti.get_store", return_value=mock_store),
+    ):
+        collect()
+
+    mock_store.write_series.assert_called_once()

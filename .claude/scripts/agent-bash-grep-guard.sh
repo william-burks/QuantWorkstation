@@ -20,6 +20,12 @@ COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 _MYPY_ONLY=false
 if [ ! -f "/tmp/agent-current-command.txt" ]; then
   _MYPY_ONLY=true
+else
+  # Stale-file guard: if the file is older than 30 min, no active lead-engineer run
+  _FILE_AGE=$(( $(date +%s) - $(stat -f "%m" /tmp/agent-current-command.txt 2>/dev/null || echo 0) ))
+  if [ "$_FILE_AGE" -gt 1800 ]; then
+    _MYPY_ONLY=true
+  fi
 fi
 
 TRACK_DIR="/tmp/agent-read-tracker"

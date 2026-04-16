@@ -1,44 +1,34 @@
 """
 Baltic Dirty Tanker Index (BDTI) collector.
 
-Fetches the daily BDTI value via the Nasdaq Data Link (Quandl) REST API and
-writes it into the ``macro`` ArcticDB library via ``store.write_series()``.
+Scrapes the current BDTI value from StockQ and appends it to the ``macro``
+ArcticDB library via ``store.write_series()``.
 
-Dataset: ``BWAVE/BDTI`` — Baltic Exchange daily dirty tanker route composite
-         (available on Nasdaq Data Link free tier as of implementation).
-
-If the BWAVE/BDTI dataset is unavailable on the free tier, obtain the
-dataset code from https://data.nasdaq.com/search?query=BDTI and update the
-``NDQL_DATASET`` constant below.  A free-tier API key can be registered at
-https://data.nasdaq.com.
+Historical seed: run ``python util/seed_bdti_history.py`` once to load the
+Investing.com CSV export (Apr 2016 onward).
 
 ArcticDB key: ``BDTI_1D``
 Column: ``value`` (BDTI composite index level, float)
-Index: UTC DatetimeIndex
+Index: UTC DatetimeIndex (date-level, time set to 00:00 UTC)
 
-Incremental fetch: reads last stored date, passes ``start_date`` query param
-so only new rows are fetched on subsequent runs.
+Incremental fetch: reads last stored date; skips write if today is already
+present.
 
 Run via: ``python -m data.collectors.bdti``
 """
 
 import logging
-from datetime import timedelta
+from datetime import UTC, datetime
 
 import pandas as pd
 import requests  # type: ignore[import-untyped]
+from bs4 import BeautifulSoup  # type: ignore[import-untyped]
 
-from data.config import get_settings
 from data.store import get_store
 
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-NDQL_BASE_URL = "https://data.nasdaq.com/api/v3/datasets"
-NDQL_DATASET = "BWAVE/BDTI"
+STOCKQ_URL = "https://en.stockq.org/index/BDTI.php"
 ARC_KEY = "BDTI_1D"
 
 
@@ -47,44 +37,33 @@ ARC_KEY = "BDTI_1D"
 # ---------------------------------------------------------------------------
 
 
-def _fetch_bdti(api_key: str, start_date: str | None) -> pd.DataFrame:
-    """Fetch BDTI data from Nasdaq Data Link REST API.
-
-    Args:
-        api_key: Nasdaq Data Link API key.
-        start_date: ISO date string (``YYYY-MM-DD``) for incremental fetch,
-            or None for full history.
+def _fetch_bdti() -> float:
+    """Scrape current BDTI value from StockQ.
 
     Returns:
-        DataFrame with UTC DatetimeIndex and single column ``value``.
+        BDTI index level as float.
 
     Raises:
-        requests.HTTPError: if the API returns a non-2xx status.
+        ValueError: if the value cannot be parsed from the page.
+        requests.HTTPError: if the request fails.
     """
-    url = f"{NDQL_BASE_URL}/{NDQL_DATASET}.json"
-    params: dict[str, str] = {
-        "api_key": api_key,
-        "order": "asc",
-    }
-    if start_date is not None:
-        params["start_date"] = start_date
+    resp = requests.get(STOCKQ_URL, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
 
-    response = requests.get(url, params=params, timeout=30)
-    response.raise_for_status()
+    # StockQ layout: large number in a <td class="tdtable1"> or similar;
+    # the index value appears as the first numeric cell after the header row.
+    # Fallback: search all td text for a plausible BDTI value (500–5000).
+    for td in soup.find_all("td"):
+        text = td.get_text(strip=True).replace(",", "")
+        try:
+            val = float(text)
+            if 200 <= val <= 10000:
+                return val
+        except ValueError:
+            continue
 
-    payload = response.json()
-    dataset = payload.get("dataset", {})
-    data = dataset.get("data", [])
-
-    if not data:
-        return pd.DataFrame(columns=["value"])
-
-    df = pd.DataFrame(data, columns=["date", "value"])
-    df["date"] = pd.to_datetime(df["date"], utc=True)
-    df = df.set_index("date").sort_index()
-    df["value"] = pd.to_numeric(df["value"], errors="coerce")
-    df = df.dropna(subset=["value"])
-    return df
+    raise ValueError("Could not parse BDTI value from StockQ page")
 
 
 # ---------------------------------------------------------------------------
@@ -93,38 +72,27 @@ def _fetch_bdti(api_key: str, start_date: str | None) -> pd.DataFrame:
 
 
 def collect() -> None:
-    """Fetch BDTI data and write to ArcticDB ``macro`` library.
+    """Fetch current BDTI and append to ArcticDB ``macro`` library.
 
-    Reads last stored date from ArcticDB to perform an incremental fetch.
-    Creates the ``macro`` library if it does not exist.
+    Skips the write if today's date is already stored.
     """
-    settings = get_settings()
-    api_key = settings.nasdaq_data_link_api_key
     store = get_store()
+    today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
 
-    start_date: str | None = None
     try:
         existing = store.read_series("macro", ARC_KEY)
-        if not existing.empty:
-            last_date = existing.index.max()
-            next_date = last_date + timedelta(days=1)
-            start_date = next_date.strftime("%Y-%m-%d")
-            log.info(
-                "BDTI: last stored %s, fetching from %s",
-                last_date.date(),
-                start_date,
-            )
+        if not existing.empty and existing.index.max() >= pd.Timestamp(today):
+            log.info("BDTI: already up to date (%s)", existing.index.max().date())
+            return
     except Exception:
-        log.info("BDTI: no existing data, fetching full history")
+        log.info("BDTI: no existing data")
 
-    df = _fetch_bdti(api_key, start_date)
+    value = _fetch_bdti()
+    log.info("BDTI: fetched %.2f for %s", value, today.date())
 
-    if df.empty:
-        log.info("BDTI: no new data to write")
-        return
-
+    df = pd.DataFrame({"value": [value]}, index=pd.DatetimeIndex([today]))
     store.write_series("macro", ARC_KEY, df)
-    log.info("Wrote %d rows to macro/%s", len(df), ARC_KEY)
+    log.info("Wrote 1 row to macro/%s", ARC_KEY)
     log.info("BDTI collection complete")
 
 

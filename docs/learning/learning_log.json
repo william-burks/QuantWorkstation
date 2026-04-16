@@ -1,0 +1,36 @@
+{
+  "sessions": [
+    {
+      "id": "ed80d7ba",
+      "date": "2026-04-15",
+      "topic_id": "3",
+      "topic_name": "#3 Strategy Evaluation",
+      "duration_min": 1,
+      "depth_after": "none",
+      "notes": "Test",
+      "logged_at": "2026-04-15T08:24:15.616807"
+    }
+  ],
+  "topic_depth": {
+    "1": "working",
+    "2": "applied",
+    "3": "none",
+    "4": "none",
+    "5": "none",
+    "6": "applied",
+    "7": "working",
+    "8": "none",
+    "9": "working",
+    "10": "none",
+    "11": "none",
+    "12": "none",
+    "13": "applied"
+  },
+  "resource_status": {},
+  "resource_urls": {},
+  "recommendations": {
+    "next_reading": null,
+    "depth_gaps": [],
+    "updated": null
+  }
+}

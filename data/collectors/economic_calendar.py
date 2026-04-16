@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-FMP_BASE_URL = "https://financialmodelingprep.com/api/v3/economic_calendar"
+FMP_BASE_URL = "https://financialmodelingprep.com/stable/economic-calendar"
 ARC_SYMBOL = "ECON_CALENDAR"
 ARC_LIB = "calendar"
 WINDOW_PAST_DAYS = 7
@@ -100,7 +100,7 @@ def _fetch_calendar(api_key: str, from_date: str, to_date: str) -> pd.DataFrame:
     df["impact"] = df.get("impact", pd.Series(dtype=str)).fillna("low").astype(str)
 
     # Derived blackout flag
-    df["is_blackout"] = df["impact"] == "high"
+    df["is_blackout"] = df["impact"].str.lower() == "high"
 
     return df[["event_name", "previous", "consensus", "actual", "impact", "is_blackout"]]
 

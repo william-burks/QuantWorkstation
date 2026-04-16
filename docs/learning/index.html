@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning Companion</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --orange: #e3b341;
+    --red: #f85149;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", monospace;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Header */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .streak-bar {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .streak-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .streak-count {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .streak-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .btn {
+    background: var(--accent);
+    color: #0d1117;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn:hover { opacity: 0.85; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  .btn-ghost:hover { background: rgba(88, 166, 255, 0.1); }
+
+  /* Main layout */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* Topics sections */
+  .topics-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .topics-section-label.gap-label { color: var(--accent); }
+  .topics-section-label.covered-label { color: var(--green); }
+
+  .topics-section { margin-bottom: 20px; }
+
+  /* Topics grid */
+  .topics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .topic-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .topic-card:hover {
+    border-color: var(--accent);
+    background: #1c2230;
+  }
+
+  .topic-card.covered {
+    opacity: 0.75;
+  }
+
+  .topic-card.covered:hover {
+    opacity: 1;
+    border-color: var(--green);
+  }
+
+  .topic-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .topic-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .depth-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .depth-none      { background: rgba(110,118,129,0.15); color: var(--muted); }
+  .depth-awareness { background: rgba(210,153,34,0.15);  color: var(--yellow); }
+  .depth-working   { background: rgba(227,179,65,0.15);  color: var(--orange); }
+  .depth-applied   { background: rgba(63,185,80,0.15);   color: var(--green); }
+  .depth-mastered  { background: rgba(88,166,255,0.15);  color: #58a6ff; }
+
+  .topic-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .topic-meta {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Bottom panels */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  /* Recommendation card */
+  .rec-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+
+  .rec-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .rec-empty {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .rec-date {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* Chat panel */
+  .chat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 420px;
+  }
+
+  .chat-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .msg-user {
+    align-self: flex-end;
+    background: rgba(88, 166, 255, 0.15);
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    color: var(--text);
+  }
+
+  .msg-assistant {
+    align-self: flex-start;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .msg-assistant .save-rec-btn {
+    display: block;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .msg-assistant .save-rec-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .msg-thinking {
+    align-self: flex-start;
+    color: var(--muted);
+    font-style: italic;
+    font-size: 12px;
+    padding: 4px 0;
+  }
+
+  .chat-input-row {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .chat-input:focus { border-color: var(--accent); }
+
+  /* Log modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    width: 400px;
+    max-width: 90vw;
+  }
+
+  .modal h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+
+  .form-select, .form-input, .form-textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-select:focus,
+  .form-input:focus,
+  .form-textarea:focus { border-color: var(--accent); }
+
+  .form-textarea { resize: vertical; min-height: 70px; }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  /* Depth progress bar */
+  .depth-bar {
+    display: flex;
+    gap: 3px;
+    margin-top: 10px;
+  }
+
+  .depth-seg {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background 0.3s ease;
+  }
+
+  /* segment 1 = awareness, 2 = working, 3 = applied, 4 = mastered */
+  .depth-seg:nth-child(1).filled { background: var(--yellow); }
+  .depth-seg:nth-child(2).filled { background: var(--orange); }
+  .depth-seg:nth-child(3).filled { background: var(--green); }
+  .depth-seg:nth-child(4).filled { background: #58a6ff; }
+
+  .empty-chat {
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+    margin: auto;
+    padding: 20px;
+  }
+
+  code {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    background: rgba(110,118,129,0.15);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  /* Topic detail modal */
+  .topic-modal {
+    width: 580px;
+    max-width: 94vw;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+
+  .topic-modal::-webkit-scrollbar { width: 4px; }
+  .topic-modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .topic-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+
+  .topic-modal-header h2 { font-size: 17px; font-weight: 700; }
+
+  .topic-modal-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .curriculum-section {
+    margin-bottom: 22px;
+  }
+
+  .curriculum-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .curriculum-section-title.read    { color: #58a6ff; }
+  .curriculum-section-title.explore { color: #bc8cff; }
+  .curriculum-section-title.do      { color: #3fb950; }
+
+  .curriculum-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+  }
+
+  .curriculum-item:last-child { border-bottom: none; }
+
+  .item-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  .read .item-dot    { background: #58a6ff; }
+  .explore .item-dot { background: #bc8cff; }
+  .do .item-dot      { background: #3fb950; }
+
+  .item-body { flex: 1; }
+
+  .item-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .item-sub {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .item-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+
+  .tag-paper   { background: rgba(88,166,255,0.12); color: #58a6ff; }
+  .tag-book    { background: rgba(188,140,255,0.12); color: #bc8cff; }
+  .tag-dataset { background: rgba(63,185,80,0.12); color: #3fb950; }
+  .tag-concept { background: rgba(227,179,65,0.12); color: var(--orange); }
+  .tag-code    { background: rgba(110,118,129,0.15); color: var(--muted); }
+
+  .item-status {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 2px;
+  }
+  .status-btn {
+    background: none;
+    border: 1px solid rgba(110,118,129,0.3);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .status-btn:hover { opacity: 0.8; }
+  .status-btn.unread  { color: var(--muted); border-color: rgba(110,118,129,0.3); }
+  .status-btn.done    { color: #3fb950; border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.08); }
+  .status-btn.campus  { color: #e3b341; border-color: rgba(227,179,65,0.4); background: rgba(227,179,65,0.08); }
+
+  /* Session mode */
+  .session-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(63,185,80,0.07);
+    border: 1px solid rgba(63,185,80,0.2);
+    border-radius: 6px;
+    margin-bottom: 18px;
+  }
+  .session-banner-label { font-size: 12px; color: var(--muted); flex: 1; }
+  .session-timer { font-size: 14px; font-weight: 700; color: #3fb950; font-variant-numeric: tabular-nums; }
+  .session-check {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(110,118,129,0.4);
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    padding: 0;
+    color: transparent;
+    font-size: 11px;
+  }
+  .session-check:hover { border-color: #3fb950; }
+  .session-check.checked { background: #3fb950; border-color: #3fb950; color: #0d1117; }
+  .session-check.checked::after { content: '✓'; }
+  .curriculum-item.item-checked .item-title { opacity: 0.45; }
+  .curriculum-item.item-checked .item-title a { opacity: 0.45; }
+  .session-notes-section {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .session-notes-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .session-notes-input {
+    width: 100%;
+    min-height: 80px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    padding: 10px 12px;
+    resize: vertical;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  .session-notes-input:focus { outline: none; border-color: rgba(63,185,80,0.4); }
+  .session-notes-input::placeholder { color: rgba(110,118,129,0.5); }
+  .url-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
+    opacity: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 11px;
+    padding: 0 2px;
+    vertical-align: middle;
+    transition: opacity 0.15s, color 0.15s;
+  }
+  .curriculum-item:hover .url-edit-btn { opacity: 1; }
+  .url-edit-btn:hover { color: var(--text); }
+  .url-inline-input {
+    width: 100%;
+    margin-top: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(88,166,255,0.4);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 12px;
+    padding: 4px 8px;
+    font-family: monospace;
+    box-sizing: border-box;
+  }
+  .url-inline-input:focus { outline: none; }
+
+  .topic-modal-footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .priority-badge {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    align-self: center;
+    margin-left: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Learning Companion</h1>
+  <div class="streak-bar">
+    <div class="streak-item">
+      <span class="streak-count" id="streak-current">—</span>
+      <span class="streak-label">Day streak</span>
+    </div>
+    <div class="streak-item">
+      <span class="streak-count" id="streak-longest">—</span>
+      <span class="streak-label">Best streak</span>
+    </div>
+    <button class="btn btn-ghost" onclick="openSessionLog()">Session Log</button>
+    <button class="btn" onclick="openModal()">Log Session</button>
+  </div>
+</header>
+
+<main>
+  <div id="topics-container"></div>
+
+  <div class="bottom-grid">
+    <div class="rec-card">
+      <div class="card-title">Next Up</div>
+      <div id="rec-text" class="rec-text rec-empty">Ask the agent "what should I read next?"</div>
+      <div id="rec-date" class="rec-date"></div>
+    </div>
+
+    <div class="chat-card">
+      <div class="chat-header">
+        <span class="card-title" style="margin:0">Chat with Learning Companion</span>
+        <button class="btn btn-ghost" onclick="clearChat()" style="font-size:11px;padding:4px 10px;">Clear</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="empty-chat">Ask a theory question, request reading recommendations,<br>or say "quiz me on #11 factor models"</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea
+          class="chat-input"
+          id="chat-input"
+          rows="2"
+          placeholder="Ask a question..."
+          onkeydown="handleKey(event)"
+        ></textarea>
+        <button class="btn" onclick="sendMessage()" id="send-btn">Send</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Topic Detail Modal -->
+<div class="modal-overlay" id="topic-overlay" onclick="closeTopicIfOutside(event)">
+  <div class="modal topic-modal" id="topic-modal-body"></div>
+</div>
+
+<!-- Session Log Modal -->
+<div class="modal-overlay" id="session-log-overlay" onclick="closeSessionLogIfOutside(event)">
+  <div class="modal" style="max-width:600px;max-height:80vh;overflow-y:auto">
+    <h2>Session Log</h2>
+    <div id="session-log-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSessionLog()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Log Session Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalIfOutside(event)">
+  <div class="modal">
+    <h2>Log Study Session</h2>
+    <div class="form-group">
+      <label class="form-label">Topic</label>
+      <select class="form-select" id="log-topic"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Duration (minutes)</label>
+      <input class="form-input" type="number" id="log-duration" value="30" min="5" max="180">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Depth after this session</label>
+      <select class="form-select" id="log-depth">
+        <option value="none">None — skimmed, not retained</option>
+        <option value="awareness">Awareness — can define key terms</option>
+        <option value="working">Working — can explain and apply</option>
+        <option value="applied">Applied — used in QuantWorkstation</option>
+        <option value="mastered">Mastered — theory + implementation, could teach it</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <textarea class="form-textarea" id="log-notes" placeholder="What did you read? Key insight?"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="submitLog()">Save Session</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let appData = null;
+  let chatHistory = [];  // [{role, content}] for the API
+  let isStreaming = false;
+  let activeSession = null; // { topicId, startTime, checkedItems: Set, timerInterval }
+
+  // ---- Boot ----
+
+  async function boot() {
+    const data = await fetchData();
+    render(data);
+  }
+
+  async function fetchData() {
+    const res = await fetch('/api/data');
+    appData = await res.json();
+    return appData;
+  }
+
+  function render(data) {
+    // Streaks
+    document.getElementById('streak-current').textContent = data.streaks.current;
+    document.getElementById('streak-longest').textContent = data.streaks.longest;
+
+    // Topics — split into gap and covered sections
+    const container = document.getElementById('topics-container');
+    container.innerHTML = '';
+
+    const DEPTH_ORDER = ['none', 'awareness', 'working', 'applied', 'mastered'];
+
+    function depthBar(depth) {
+      const idx = DEPTH_ORDER.indexOf(depth);
+      return `<div class="depth-bar">${[1,2,3,4].map(i =>
+        `<div class="depth-seg${idx >= i ? ' filled' : ''}"></div>`
+      ).join('')}</div>`;
+    }
+
+    function topicCard(topic) {
+      const depth = data.topic_depth[topic.id] || 'none';
+      const count = data.sessions.filter(s => s.topic_id === topic.id).length;
+      const lastSession = [...data.sessions].reverse().find(s => s.topic_id === topic.id);
+      const lastDate = lastSession ? lastSession.date : null;
+      const coveredClass = topic.gap ? '' : ' covered';
+      return `
+        <div class="topic-card${coveredClass}" onclick="openTopicDetail('${topic.id}')">
+          <div class="topic-card-header">
+            <span class="topic-name">${topic.name}</span>
+            <span class="depth-badge depth-${depth}">${depth}</span>
+          </div>
+          <div class="topic-desc">${topic.desc}</div>
+          ${depthBar(depth)}
+          <div class="topic-meta" style="margin-top:8px">
+            <span>${count} session${count !== 1 ? 's' : ''}</span>
+            <span>${lastDate ? 'last: ' + lastDate : (topic.gap ? 'not started' : 'pre-built')}</span>
+          </div>
+        </div>`;
+    }
+
+    const gapTopics = data.topics.filter(t => t.gap);
+    const coveredTopics = data.topics.filter(t => !t.gap);
+
+    container.innerHTML = `
+      <div class="topics-section">
+        <div class="topics-section-label gap-label">Gap Topics — study these (${gapTopics.length})</div>
+        <div class="topics-grid">${gapTopics.map(topicCard).join('')}</div>
+      </div>
+      <div class="topics-section">
+        <div class="topics-section-label covered-label">Covered — built in QuantWorkstation (${coveredTopics.length})</div>
+        <div class="topics-grid">${coveredTopics.map(topicCard).join('')}</div>
+      </div>`;
+
+    // Recommendation
+    const rec = data.recommendations;
+    if (rec.next_reading) {
+      document.getElementById('rec-text').textContent = rec.next_reading;
+      document.getElementById('rec-text').classList.remove('rec-empty');
+      document.getElementById('rec-date').textContent = rec.updated ? 'Updated ' + rec.updated : '';
+    }
+
+    // Populate topic dropdown in modal
+    const sel = document.getElementById('log-topic');
+    if (sel.children.length === 0) {
+      for (const topic of data.topics) {
+        const opt = document.createElement('option');
+        opt.value = topic.id;
+        opt.textContent = topic.name;
+        sel.appendChild(opt);
+      }
+    }
+  }
+
+  // ---- Log session modal ----
+
+  function openModal() { document.getElementById('modal-overlay').classList.add('open'); }
+  function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+  function closeModalIfOutside(e) { if (e.target === e.currentTarget) closeModal(); }
+
+  async function submitLog() {
+    const topic_id = document.getElementById('log-topic').value;
+    const duration_min = parseInt(document.getElementById('log-duration').value, 10);
+    const depth_after = document.getElementById('log-depth').value;
+    const notes = document.getElementById('log-notes').value.trim();
+
+    if (!topic_id || !duration_min) return;
+
+    try {
+      const res = await fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic_id, duration_min, depth_after, notes }),
+      });
+      const data = await res.json();
+      appData = data;
+      render(data);
+    } catch (e) {
+      console.error('Failed to log session', e);
+    } finally {
+      closeModal();
+      document.getElementById('log-notes').value = '';
+    }
+  }
+
+  // ---- Chat ----
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function clearChat() {
+    chatHistory = [];
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = '<div class="empty-chat">Ask a theory question, request reading recommendations,<br>or say "quiz me on #11 factor models"</div>';
+  }
+
+  async function sendMessage() {
+    if (isStreaming) return;
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+
+    input.value = '';
+    isStreaming = true;
+    document.getElementById('send-btn').disabled = true;
+
+    // Clear empty state
+    const container = document.getElementById('chat-messages');
+    const empty = container.querySelector('.empty-chat');
+    if (empty) empty.remove();
+
+    // Append user message
+    appendMsg('user', message);
+
+    // Show thinking indicator
+    const thinkingEl = document.createElement('div');
+    thinkingEl.className = 'msg-thinking';
+    thinkingEl.id = 'thinking';
+    thinkingEl.textContent = 'thinking...';
+    container.appendChild(thinkingEl);
+    scrollToBottom();
+
+    // Create assistant message element
+    const assistantEl = document.createElement('div');
+    assistantEl.className = 'msg msg-assistant';
+    let assistantText = '';
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, history: chatHistory }),
+      });
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+      // Remove thinking, add assistant bubble
+      thinkingEl.remove();
+      container.appendChild(assistantEl);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const payload = JSON.parse(line.slice(6));
+            if (payload.done) break;
+            if (payload.error) {
+              assistantText += `\n[Error: ${payload.error}]`;
+              assistantEl.textContent = assistantText;
+              break;
+            }
+            if (payload.text) {
+              assistantText += payload.text;
+              assistantEl.textContent = assistantText;
+              scrollToBottom();
+            }
+          } catch { /* skip malformed */ }
+        }
+      }
+
+      // Add "Save as Next Up" button to assistant message
+      if (assistantText) {
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'save-rec-btn';
+        saveBtn.textContent = 'Save as Next Up';
+        saveBtn.onclick = () => saveRecommendation(assistantText, saveBtn);
+        assistantEl.appendChild(saveBtn);
+      }
+
+      // Update chat history
+      chatHistory.push({ role: 'user', content: message });
+      chatHistory.push({ role: 'assistant', content: assistantText });
+
+    } catch (err) {
+      thinkingEl.remove();
+      assistantEl.textContent = `Error: ${err.message}`;
+      assistantEl.style.color = 'var(--red)';
+      container.appendChild(assistantEl);
+    } finally {
+      isStreaming = false;
+      document.getElementById('send-btn').disabled = false;
+      scrollToBottom();
+    }
+  }
+
+  function appendMsg(role, text) {
+    const container = document.getElementById('chat-messages');
+    const el = document.createElement('div');
+    el.className = `msg msg-${role}`;
+    el.textContent = text;
+    container.appendChild(el);
+    scrollToBottom();
+  }
+
+  function scrollToBottom() {
+    const c = document.getElementById('chat-messages');
+    c.scrollTop = c.scrollHeight;
+  }
+
+  async function saveRecommendation(text, btn) {
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+    try {
+      await fetch('/api/save-recommendation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      const data = await fetchData();
+      appData = data;
+      render(data);
+      btn.textContent = 'Saved to Next Up';
+      btn.style.color = 'var(--green)';
+      btn.style.borderColor = 'var(--green)';
+    } catch {
+      btn.textContent = 'Failed';
+      btn.disabled = false;
+    }
+  }
+
+  // ---- Topic curriculum (hardcoded) ----
+
+  const CURRICULUM = {
+    "11": {
+      priority: 1,
+      read: [
+        {
+          tag: "paper",
+          title: "Fama & French 1993 — Common Risk Factors in the Returns on Stocks and Bonds",
+          url: "https://doi.org/10.1016/0304-405X(93)90023-5",
+          sub: "ScienceDirect — campus access. The original FF3 paper. Read the empirical section first (§3). 6 factors become 3 orthogonal ones."
+        },
+        {
+          tag: "book",
+          title: "Cochrane — Asset Pricing, ch 9: Factor Pricing Models",
+          sub: "Free PDF at faculty.chicagobooth.edu/john.cochrane. Best derivation of why factors exist and what 'loading' means geometrically."
+        },
+        {
+          tag: "paper",
+          title: "Fama & French 2015 — A Five-Factor Asset Pricing Model",
+          url: "https://doi.org/10.1016/j.jfineco.2014.10.010",
+          sub: "ScienceDirect — campus access. Adds profitability (RMW) and investment (CMA) to FF3. Understand what each factor proxies for before using it."
+        }
+      ],
+      explore: [
+        {
+          tag: "dataset",
+          title: "Ken French's Data Library",
+          url: "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html",
+          sub: "Free daily/monthly FF3 and FF5 factor returns going back to 1926. Download and load into pandas."
+        },
+        {
+          tag: "concept",
+          title: "Beta-neutralization on a futures strategy",
+          sub: "Your CL and BTC strategies have market beta. What does stripping it out do to Sharpe? Compute strategy beta vs CL front-month then hedge it."
+        },
+        {
+          tag: "concept",
+          title: "Risk contribution decomposition",
+          sub: "For a portfolio of champions: what % of total risk does each strategy contribute? Contrast marginal risk contribution with notional weight."
+        }
+      ],
+      do: [
+        {
+          tag: "code",
+          title: "Regress a champion's returns on FF3 factors",
+          sub: "Load champion returns from ArcticDB. Download FF3 daily from Ken French. Run statsmodels.OLS — the intercept is your alpha net of factors."
+        },
+        {
+          tag: "code",
+          title: "Compute factor loadings (betas) for each champion",
+          sub: "Use rolling 60-day OLS to see how factor exposure shifts over time. Plot the HML and MOM loadings — does your strategy have style drift?"
+        },
+        {
+          tag: "code",
+          title: "Build a factor-neutralized signal",
+          sub: "Subtract predicted returns from factor model. Test whether residual signal has higher Sharpe than raw signal in your backtest harness."
+        }
+      ]
+    },
+    "12": {
+      priority: 2,
+      read: [
+        {
+          tag: "paper",
+          title: "Markowitz 1952 — Portfolio Selection",
+          url: "https://doi.org/10.2307/2975974",
+          sub: "JSTOR — campus access. Only 14 pages. Read it. The efficient frontier derivation is the foundation for everything else in this topic."
+        },
+        {
+          tag: "book",
+          title: "Boyd & Vandenberghe — Convex Optimization, ch 4",
+          url: "https://web.stanford.edu/~boyd/cvxbook/",
+          sub: "Free PDF. Chapter 4: convex optimization problems. Then ch 7: statistical estimation. Skip proofs, read examples."
+        },
+        {
+          tag: "book",
+          title: "cvxpy documentation — Portfolio Optimization tutorial",
+          url: "https://www.cvxpy.org/examples/finance/portfolio_optimization.html",
+          sub: "Min-variance, max-Sharpe, and risk-parity in cvxpy. Run every example locally."
+        }
+      ],
+      explore: [
+        {
+          tag: "concept",
+          title: "Efficient frontier: min-variance vs max-Sharpe vs risk-parity",
+          sub: "On 2 assets (BTC + CL daily returns from ArcticDB), plot all three portfolios on the risk-return plane. How different are the weights?"
+        },
+        {
+          tag: "concept",
+          title: "Long-only constraint effect",
+          sub: "Add x >= 0 to the cvxpy problem. How does the constraint change the frontier? When does it bind? What happens to Sharpe?"
+        },
+        {
+          tag: "concept",
+          title: "Transaction cost penalty in the objective",
+          sub: "Add lambda * norm1(w - w_prev) to penalize turnover. This is how real optimizers balance expected return against trading costs."
+        }
+      ],
+      do: [
+        {
+          tag: "code",
+          title: "Minimum variance portfolio in cvxpy — BTC + CL",
+          sub: "Minimize w.T @ Sigma @ w subject to sum(w)==1, w>=0. Use 90-day rolling covariance from ArcticDB returns. pip install cvxpy."
+        },
+        {
+          tag: "code",
+          title: "Add a max-drawdown constraint as a SOCP",
+          sub: "Approximate max-drawdown constraint using CVaR (Conditional Value at Risk). cvxpy has a built-in cvar() function. Enforce CVaR <= 10%."
+        },
+        {
+          tag: "code",
+          title: "Compare equal-weight vs optimized weights on champion returns",
+          sub: "Take your 2-3 champions. Run equal-weight vs min-variance vs max-Sharpe on IS period. Evaluate OOS Sharpe and MaxDD. Does optimization help?"
+        }
+      ]
+    },
+    "8": {
+      priority: 3,
+      read: [
+        {
+          tag: "paper",
+          title: "Engle & Granger 1987 — Co-Integration and Error Correction",
+          url: "https://doi.org/10.2307/1913236",
+          sub: "JSTOR — campus access. The paper that defines cointegration. Read §1-3. The Engle-Granger 2-step test is still the standard first pass for pairs."
+        },
+        {
+          tag: "book",
+          title: "Ernie Chan — Algorithmic Trading, ch 3-4",
+          sub: "Mean-reverting strategies and pairs trading. Buy it (~$50). Chan's code is in MATLAB but the intuition translates directly to Python/pandas."
+        },
+        {
+          tag: "paper",
+          title: "Avellaneda & Lee 2010 — Statistical Arbitrage in the U.S. Equities Market",
+          url: "https://doi.org/10.1080/14697680903124632",
+          sub: "Taylor & Francis — campus access. PCA-based stat arb. Section 3 (mean reversion model) is the most applicable part. Use for crypto cross-asset pairs."
+        }
+      ],
+      explore: [
+        {
+          tag: "concept",
+          title: "Augmented Dickey-Fuller test on BTC/ETH spread",
+          sub: "statsmodels.tsa.stattools.coint(btc_returns, eth_returns). Is the spread stationary? What p-value do you get? How does it change over time?"
+        },
+        {
+          tag: "concept",
+          title: "Half-life of mean reversion (Ornstein-Uhlenbeck)",
+          sub: "Fit AR(1) to the spread: spread_t = a + b * spread_{t-1} + e. Half-life = -log(2) / log(b). Sub-4h half-life means your ≤4h holding fits."
+        },
+        {
+          tag: "concept",
+          title: "Z-score entry/exit threshold calibration",
+          sub: "Standard entry at z > 2.0. But what's optimal given your holding constraint? Run a sweep over entry thresholds in your backtest harness."
+        }
+      ],
+      do: [
+        {
+          tag: "code",
+          title: "Test BTC/ETH cointegration using statsmodels",
+          sub: "from statsmodels.tsa.stattools import coint. Load both from ArcticDB (1H). Test the spread is I(0). If cointegrated, the spread is your signal."
+        },
+        {
+          tag: "code",
+          title: "Estimate OU half-life and fit spread mean-reversion speed",
+          sub: "Regress spread_t on spread_{t-1} using OLS. Compute half-life. If it's 2-8 bars (2-8h), it's tradeable with your ≤4h constraint."
+        },
+        {
+          tag: "code",
+          title: "Write a pairs strategy in strategies/base.py format",
+          sub: "Signal = -zscore(spread). Long pair when z < -2, short when z > 2. Exit at z = 0. Wrap in generate_signals() returning pd.Series of {-1,0,1}."
+        }
+      ]
+    },
+    "10": {
+      priority: 4,
+      read: [
+        {
+          tag: "paper",
+          title: "Almgren & Chriss 2001 — Optimal Execution of Portfolio Transactions",
+          url: "https://cims.nyu.edu/~almgren/papers/optliq.pdf",
+          sub: "Journal of Risk. Free PDF. The canonical market impact model. Derives optimal trade schedule balancing market impact vs timing risk. Read §1-3."
+        },
+        {
+          tag: "book",
+          title: "Harris — Trading and Exchanges, ch 1-4",
+          sub: "The microstructure bible. Ch 1-4 cover bid-ask spread mechanics, adverse selection, and why the spread exists. Directly applicable to your Alpaca fills."
+        },
+        {
+          tag: "paper",
+          title: "Kissell & Glantz 2003 — Optimal Trading Strategies, ch 2",
+          sub: "Transaction cost models. The IS (Implementation Shortfall) framework — compare your achieved price vs decision price. Quantifies execution quality."
+        }
+      ],
+      explore: [
+        {
+          tag: "concept",
+          title: "Bid-ask spread estimation from OHLCV",
+          sub: "You don't have tick data, but Roll's measure estimates spread from close-to-close returns: 2 * sqrt(-cov(r_t, r_{t-1})). Run it on BTC/USD 1H."
+        },
+        {
+          tag: "concept",
+          title: "Market impact vs your typical trade size",
+          sub: "What % of CL daily volume is your typical position? At 1 contract (~1000 bbl), what's the expected price impact? Below 1% ADV = minimal impact."
+        },
+        {
+          tag: "concept",
+          title: "Slippage sensitivity: where does your champion break?",
+          sub: "Your CL champion Sharpe was 27.9 IS (4 trades — likely inflated). At what slippage per trade does Sharpe < 2.0? This is your execution tolerance."
+        }
+      ],
+      do: [
+        {
+          tag: "code",
+          title: "Add a slippage model to research/experiments/evaluator.py",
+          sub: "Per-trade cost = slippage_bps * abs(position_change). Subtract from PnL. Run sweep: 0, 5, 10, 20, 50 bps. Plot Sharpe vs slippage — find the break-even."
+        },
+        {
+          tag: "code",
+          title: "Compute Roll's spread estimate from ArcticDB BTC/USD 1H",
+          sub: "returns = close.pct_change(). roll_spread = 2 * np.sqrt(max(-returns.autocorr(lag=1) * returns.var(), 0)). Compare to Alpaca's quoted spread."
+        },
+        {
+          tag: "code",
+          title: "Add turnover cost to your walk-forward harness",
+          sub: "Count round-trips in each walk-forward window. Multiply by 2 * slippage. Deduct from gross Sharpe. This makes OOS numbers more realistic."
+        }
+      ]
+    },
+    "4": {
+      priority: 5,
+      read: [
+        {
+          tag: "paper",
+          title: "Qian 2005 — Risk Parity Portfolios: Efficient Portfolios Through True Diversification",
+          url: "https://ssrn.com/abstract=871912",
+          sub: "PanAgora Asset Management white paper. Free on SSRN. Short and clear. Introduces the idea that equal risk contribution != equal weight."
+        },
+        {
+          tag: "book",
+          title: "Grinold & Kahn — Active Portfolio Management, ch 6",
+          sub: "The quant PM bible. Chapter 6: portfolio construction and weighting. Covers the Sharpe ratio weighting formula and information ratio framework."
+        },
+        {
+          tag: "book",
+          title: "Lopez de Prado — Advances in Financial ML, ch 16",
+          sub: "Ensemble methods for combining ML models. Directly applicable: how to combine multiple champion strategies using correlation-adjusted weighting."
+        }
+      ],
+      explore: [
+        {
+          tag: "concept",
+          title: "Inverse-volatility vs equal-weight vs Sharpe-weight",
+          sub: "On your 2-3 champions: compute all three weighting schemes. The weights diverge when strategies have very different volatility profiles."
+        },
+        {
+          tag: "concept",
+          title: "Ledoit-Wolf covariance shrinkage",
+          sub: "Sample covariance with N=90 days and K=3 strategies is noisy. Shrinkage toward identity matrix stabilizes the estimates. sklearn.covariance.LedoitWolf."
+        },
+        {
+          tag: "concept",
+          title: "Breadth and the Fundamental Law",
+          sub: "IR = IC * sqrt(N). If you have 3 champions with IC=0.05, adding a 4th uncorrelated champion increases IR by sqrt(4/3) = 1.15. Breadth matters."
+        }
+      ],
+      do: [
+        {
+          tag: "code",
+          title: "Implement inverse-volatility weighting for your champion ensemble",
+          sub: "w_i = (1/vol_i) / sum(1/vol_j). Use 60-day rolling volatility from ArcticDB returns. Compare portfolio Sharpe vs best individual champion Sharpe."
+        },
+        {
+          tag: "code",
+          title: "Apply Ledoit-Wolf shrinkage to your covariance matrix",
+          sub: "from sklearn.covariance import LedoitWolf; cov = LedoitWolf().fit(returns).covariance_. Compare shrunk vs sample covariance — eigenvalue spread drops."
+        },
+        {
+          tag: "code",
+          title: "Build a risk-parity portfolio using scipy.optimize",
+          sub: "Objective: each strategy contributes equal risk. Risk contribution_i = w_i * (Sigma @ w)_i / portfolio_vol. Solve with scipy.optimize.minimize."
+        }
+      ]
+    },
+    "5": {
+      priority: 6,
+      read: [
+        {
+          tag: "paper",
+          title: "Jegadeesh & Titman 1993 — Returns to Buying Winners and Selling Losers",
+          url: "https://doi.org/10.1111/j.1540-6261.1993.tb04702.x",
+          sub: "Wiley/JF — campus access. The original momentum paper. Read the results table first. Directly relevant to your momentum strategies on futures."
+        },
+        {
+          tag: "paper",
+          title: "Moskowitz, Ooi & Pedersen 2012 — Time Series Momentum",
+          url: "https://www.aqr.com/Insights/Research/Journal-Article/Time-Series-Momentum",
+          sub: "Free PDF (AQR). TS vs XS momentum distinction. Your current strategies are all time-series — this paper explains when that outperforms XS."
+        },
+        {
+          tag: "book",
+          title: "Grinold & Kahn — Active Portfolio Management, ch 14",
+          sub: "Portfolio construction in practice. Signal transformation pipeline: alpha -> IC -> optimal weights. The z-scoring section is the most practical part."
+        }
+      ],
+      explore: [
+        {
+          tag: "concept",
+          title: "Cross-sectional vs time-series momentum on BTC + CL",
+          sub: "TS momentum: is BTC return positive over last 20 bars? XS momentum: is BTC return > CL return? Test both signals in your harness."
+        },
+        {
+          tag: "concept",
+          title: "Signal z-scoring and rank normalization",
+          sub: "Raw signal -> rank -> z-score. Rank transform makes the distribution uniform, removing outlier sensitivity. Critical for cross-sectional models."
+        },
+        {
+          tag: "concept",
+          title: "Signal decay: how fast does your alpha decay?",
+          sub: "Plot autocorrelation of your signal at lag 1, 2, 4, 8 bars. Half-life of signal autocorrelation determines optimal holding period."
+        }
+      ],
+      do: [
+        {
+          tag: "code",
+          title: "Add cross-sectional z-score transform to strategies/base.py",
+          sub: "For a universe of instruments: signal_cs = (signal - signal.mean()) / signal.std(). Test on BTC vs ETH vs SOL. Does XS outperform TS signal?"
+        },
+        {
+          tag: "code",
+          title: "Implement signal decay analysis in research/experiments/",
+          sub: "Compute autocorrelation of raw signal at lags 1-24. Plot it. Optimal holding period is roughly when autocorrelation crosses 0.5 * lag-1 value."
+        },
+        {
+          tag: "code",
+          title: "Compare TS vs XS momentum signal on futures (CL + MES)",
+          sub: "Run both signal types through your backtest harness on the same period. Which produces higher Sharpe? Which has lower drawdown? Log as a trial."
+        }
+      ]
+    }
+  };
+
+  // Covered topics curriculum (advanced extensions — you've built the basics)
+  CURRICULUM["3"] = {
+    priority: null,
+    read: [
+      { tag: "paper", title: "Bailey et al. 2014 — The Deflated Sharpe Ratio", url: "https://ssrn.com/abstract=2460551", sub: "Journal of Portfolio Management. Accounts for multiple testing and non-normality. Your Sharpe of 2.0 means less if you tested 50 strategies to find it." },
+      { tag: "paper", title: "Lo 2002 — The Statistics of Sharpe Ratios", url: "https://doi.org/10.2469/faj.v58.n4.2453", sub: "CFA Institute — campus access. Derives the standard error of Sharpe estimates. For 4 trades, your IS Sharpe has a huge confidence interval." },
+      { tag: "book", title: "Lopez de Prado — Advances in Financial ML, ch 14-15", sub: "Backtest overfitting via combinatorial methods. Directly applicable to evaluating your champion's statistical significance." }
+    ],
+    explore: [
+      { tag: "concept", title: "Calmar vs Sharpe disagreement", sub: "When do your champions rank differently under Sharpe vs Calmar? A strategy with few deep drawdowns but low Sharpe might rank better under Calmar." },
+      { tag: "concept", title: "Minimum track record length for your Sharpe target", sub: "Using Lo's formula: how many trades do you need to statistically confirm Sharpe >= 2.0 at 95% confidence? Spoiler: more than 4." },
+      { tag: "concept", title: "Probabilistic Sharpe Ratio (PSR)", sub: "Bailey & Lopez de Prado: PSR = probability that true Sharpe > benchmark given observed Sharpe and N. Add this to evaluator.py." }
+    ],
+    do: [
+      { tag: "code", title: "Add Deflated Sharpe Ratio to research/experiments/evaluator.py", sub: "DSR accounts for skewness, kurtosis, and multiple testing. It's a probability, not a ratio. Replace raw Sharpe in your reporting." },
+      { tag: "code", title: "Compute minimum track record length for each champion", sub: "from pyfolio or manually: N_min = (z_alpha * sigma / (Sharpe - Sharpe_benchmark))^2. Flag champions with N < N_min as unconfirmed." },
+      { tag: "code", title: "Add t-stat on alpha to your OOS reports", sub: "Sharpe without a t-stat is anecdote. For each walk-forward window, report t-stat on the intercept from OLS regression of returns on 1." }
+    ]
+  };
+
+  CURRICULUM["6"] = {
+    priority: null,
+    read: [
+      { tag: "paper", title: "Lopez de Prado 2018 — Advances in Financial ML, ch 7: Cross-Validation in Finance", sub: "Why standard K-fold CV leaks in financial data. Purged cross-validation removes training samples that overlap the test window." },
+      { tag: "paper", title: "Bailey & Lopez de Prado 2014 — The Backtest Overfitting Problem", url: "https://ssrn.com/abstract=2308659", sub: "Journal of Computational Finance. Derives how many strategy configurations give a false discovery at a given Sharpe threshold." },
+      { tag: "book", title: "Chan — Algorithmic Trading, ch 6: Money and Risk Management", sub: "How position sizing interacts with backtest results. Your walk-forward IS results change significantly with Kelly vs fixed sizing." }
+    ],
+    explore: [
+      { tag: "concept", title: "Walk-forward window size sensitivity", sub: "Does 90-day IS + 30-day OOS vs 60-day IS + 20-day OOS change your champion rankings? Sensitivity to window choice is a sign of overfitting." },
+      { tag: "concept", title: "Combinatorial Purged Cross-Validation (CPCV)", sub: "More statistically rigorous than WF. Uses C(T,k) combinations of paths. Eliminates look-ahead bias in a way WF doesn't." },
+      { tag: "concept", title: "Walk-forward efficiency ratio", sub: "OOS Sharpe / IS Sharpe. Should be near 1.0 for robust strategies. Your CL champion at 27.9 IS had OOS fail — ratio was nearly 0." }
+    ],
+    do: [
+      { tag: "code", title: "Add walk-forward efficiency ratio to sweep output", sub: "efficiency = oos_sharpe / is_sharpe. Log it as a column in your results. Filter: reject strategies where efficiency < 0.5." },
+      { tag: "code", title: "Run window-size sensitivity analysis on a champion", sub: "Loop IS=[30,60,90,120] days, OOS=[10,20,30] days. Plot heatmap of OOS Sharpe. If results are stable across windows, the strategy is robust." },
+      { tag: "code", title: "Implement purged K-fold CV for signal evaluation", sub: "Split time series without overlap. Embargo period = holding_period bars after each test fold ends. Use mlfinlab or implement manually." }
+    ]
+  };
+
+  CURRICULUM["13"] = {
+    priority: null,
+    read: [
+      { tag: "book", title: "Aldridge — High-Frequency Trading, ch 4: Order Management Systems", sub: "Covers order lifecycle, fill rates, partial fills, and cancel/replace logic. Even for 4h strategies, OMS design determines slippage." },
+      { tag: "book", title: "Leshik & Cralle — An Introduction to Algorithmic Trading, ch 8", sub: "Production system monitoring, alerting, and circuit breakers. Your TradingState machine covers some of this — ch 8 covers the rest." },
+      { tag: "paper", title: "Kissell 2014 — Algorithmic Trading and DMA, ch 12", sub: "Order routing and smart order routing (SOR) for futures. How IBKR routes MES orders and what that means for your fill quality." }
+    ],
+    explore: [
+      { tag: "concept", title: "Your OMS round-trip latency", sub: "Time from signal generation to fill confirmation. For IBKR futures: typically 50-200ms. Does your 4h holding constraint make this irrelevant?" },
+      { tag: "concept", title: "Order fill rate tracking", sub: "What % of your limit orders fill vs expire? If low, you're generating signals that never execute — your backtest results are unreachable." },
+      { tag: "concept", title: "Position reconciliation between OMS and broker", sub: "Your OMS tracks notional targets. IB tracks actual contracts. Add a reconciliation check: flag when they diverge by > 1 contract." }
+    ],
+    do: [
+      { tag: "code", title: "Add fill rate logging to execution/oms.py", sub: "For each order: track submitted, filled, cancelled. Log fill_rate = filled / submitted. Expose via qw query. Low fill rate invalidates live results." },
+      { tag: "code", title: "Add position reconciliation check to scheduler", sub: "On each bar: compare OMS.positions vs broker.positions. If drift > threshold, halt trading and alert. Prevents silent position divergence." },
+      { tag: "code", title: "Add circuit breaker for consecutive losses", sub: "Your risk.py has daily loss limit. Add: if N consecutive losing trades >= 5, pause strategy for 24h. Log to Neo4j as a risk event." }
+    ]
+  };
+
+  CURRICULUM["7"] = {
+    priority: null,
+    read: [
+      { tag: "paper", title: "Harvey, Liu & Zhu 2016 — ...and the Cross-Section of Expected Returns", url: "https://arxiv.org/pdf/1402.0351.pdf", sub: "Free PDF (arXiv). 316 factors published, most are false discoveries. The t-stat threshold for a new factor should be 3.0, not 2.0." },
+      { tag: "paper", title: "Lopez de Prado 2019 — A Data Science Solution to the Multiple-Testing Crisis", url: "https://doi.org/10.3905/jfds.2019.1.065", sub: "JFDS — campus access. Bayesian approach to selecting strategies that avoids data-snooping bias. Maps directly to your hypothesis graph." },
+      { tag: "book", title: "Gelman et al. — Bayesian Data Analysis, ch 2-3", url: "http://www.stat.columbia.edu/~gelman/book/", sub: "Free PDF. Bayesian updating of prior beliefs with evidence. Relevant for setting research priors before running a trial — not just OOS testing after." }
+    ],
+    explore: [
+      { tag: "concept", title: "How many trials before your CL champion? What's the FDR?", sub: "Count all hypotheses in your graph (aborted + champions). If you tested 20 strategies to find 1 with Sharpe > 2.0, the expected false discovery rate is high." },
+      { tag: "concept", title: "Selecting priors for entry/exit parameters", sub: "Before sweeping ATR multipliers, what's your prior belief about the range? A tight prior (1.5-2.5x) reduces overfitting vs sweeping 0.5-5.0x." },
+      { tag: "concept", title: "Sharpe ratio under non-normality (fat tails)", sub: "Crypto returns have fat tails. Standard Sharpe assumes normality. The Modified Sharpe uses Cornish-Fisher expansion to adjust for skewness/kurtosis." }
+    ],
+    do: [
+      { tag: "code", title: "Add Benjamini-Hochberg correction to your evaluator", sub: "For a batch of strategy tests: BH controls FDR at level q. From scipy.stats import false_discovery_control. Flag which strategies survive at q=0.10." },
+      { tag: "code", title: "Log your research prior before each trial", sub: "Add a prior field to bundle.json: expected_sharpe_range, expected_n_trades, rationale. Compare prior to outcome — calibrate your intuition over time." },
+      { tag: "code", title: "Add Modified Sharpe to research/experiments/metrics.py", sub: "Use Cornish-Fisher expansion: adjust z-score for skewness (S) and kurtosis (K). Modified_z = z - (z^2-1)*S/6 - (z^3-3z)*K/24 + (2z^3-5z)*S^2/36." }
+    ]
+  };
+
+  CURRICULUM["9"] = {
+    priority: null,
+    read: [
+      { tag: "paper", title: "Avellaneda & Lee 2010 — Statistical Arbitrage in the U.S. Equities Market", url: "https://doi.org/10.1080/14697680903124632", sub: "Taylor & Francis — campus access. PCA-based stat arb — systematic approach to finding mean-reverting residuals. Directly translatable to crypto pairs." },
+      { tag: "paper", title: "Gatev, Goetzmann & Rouwenhorst 2006 — Pairs Trading: Performance of a Relative Value Arbitrage Rule", url: "https://ssrn.com/abstract=141615", sub: "Free PDF (SSRN). The academic benchmark for pairs trading. Distance method vs cointegration method comparison." },
+      { tag: "book", title: "Chan — Quantitative Trading, ch 7: Mean-Reverting Strategies", sub: "Practical implementation guide with Python examples. Covers the full pipeline: pair selection → signal → position sizing → exit." }
+    ],
+    explore: [
+      { tag: "concept", title: "Apply PCA to BTC/ETH/SOL/BNB returns", sub: "Factor 1 is usually 'crypto market'. The residuals from projecting each coin onto factor 1 are the mean-reverting components — your trading signals." },
+      { tag: "concept", title: "Universe selection for crypto stat arb", sub: "Which crypto pairs are cointegrated? Run Engle-Granger on all pairs in your Alpaca universe. The passing pairs are your tradeable universe." },
+      { tag: "concept", title: "Regime conditioning for stat arb", sub: "Stat arb breaks down in trending regimes. Add a regime filter: pause when 20-day trend strength > threshold. Connect to your Neo4j regime data." }
+    ],
+    do: [
+      { tag: "code", title: "Run cointegration screen on all Alpaca crypto pairs", sub: "Loop over all symbol pairs in your ArcticDB crypto lib. statsmodels.tsa.stattools.coint(). Store passing pairs (p < 0.05) as new Hypotheses in the graph." },
+      { tag: "code", title: "Build the full stat arb pipeline as a trial script", sub: "Pair selection → spread estimation → z-score signal → generate_signals() output. This is literally the course project — you have the infrastructure." },
+      { tag: "code", title: "Log this as a hypothesis in your research graph", sub: "qw record --hypothesis 'BTC/ETH 1H cointegration stat arb with OU z-score signal, bear regime filter' --source user. Then hand to trial-engineer." }
+    ]
+  };
+
+  CURRICULUM["1"] = {
+    priority: null,
+    read: [
+      { tag: "book", title: "Pedersen — Efficiently Inefficient, ch 1-3", sub: "How quant hedge funds think about strategy development, capacity, and edge decay. Best overview of the quant landscape written for practitioners." },
+      { tag: "book", title: "Schwager — Market Wizards (quant interviews)", sub: "Read the quantitative trader interviews specifically. How Simons, Tudor Jones, and others think about alpha generation is different from textbooks." },
+      { tag: "paper", title: "Asness, Moskowitz & Pedersen 2013 — Value and Momentum Everywhere", url: "https://www.aqr.com/Insights/Research/Journal-Article/Value-and-Momentum-Everywhere", sub: "Free PDF (AQR). Cross-asset value + momentum. Shows how the same return premia exist across equities, bonds, currencies, and commodities." }
+    ],
+    explore: [
+      { tag: "concept", title: "Capacity constraints: why does alpha decay?", sub: "As more capital chases a signal, prices adjust and the edge disappears. Your 4h futures strategies have more capacity than HFT but less than trend following." },
+      { tag: "concept", title: "Where does your strategy fit in the quant taxonomy?", sub: "Is your CL bear liquidity sweep: momentum, mean-reversion, stat arb, or macro? Understanding the category predicts how it will behave in different regimes." },
+      { tag: "concept", title: "Renaissance Technologies' Medallion fund edge", sub: "Read everything public about it. The key insight: they combined signal research, execution, and risk management as one system — not three separate problems." }
+    ],
+    do: [
+      { tag: "code", title: "Write a 1-page strategy thesis for your best champion", sub: "Format: hypothesis, evidence (IS/OOS metrics), failure modes, capacity estimate, regime dependency. This is what you'd present to a PM at a quant fund." },
+      { tag: "concept", title: "Map your champions to the Asness factor taxonomy", sub: "Which of your strategies are: momentum? value? carry? mean-reversion? Diversified strategies that span different factors have better portfolio properties." },
+      { tag: "concept", title: "Research the top quant firms' strategy focus", sub: "Two Sigma (ML-heavy, diversified), DE Shaw (stat arb + global macro), Citadel (high-frequency + fundamental), Man AHL (systematic macro). Know these before interviews." }
+    ]
+  };
+
+  CURRICULUM["2"] = {
+    priority: null,
+    read: [
+      { tag: "book", title: "Lopez de Prado — Advances in Financial ML, ch 2: Financial Data Structures", sub: "Dollar bars vs time bars vs tick bars. Your ArcticDB uses 1H time bars. Dollar bars are statistically better for ML signals — worth understanding why." },
+      { tag: "book", title: "McKinney — Python for Data Analysis, ch 11: Time Series", sub: "pandas time series internals. Resampling, rolling windows, timezone handling. You use these daily but there are edge cases worth knowing explicitly." },
+      { tag: "paper", title: "Numerical Stability in Financial Calculations", sub: "Float precision errors compound in PnL calculations. Review numpy float64 behavior and when to use Decimal. Relevant when your equity curve calculations diverge from broker." }
+    ],
+    explore: [
+      { tag: "concept", title: "Profiling your generate_signals() bottleneck", sub: "python -m cProfile research/runner.py. Where does most time go? Numba JIT on numpy-heavy loops can give 10-100x speedup for signal generation." },
+      { tag: "concept", title: "Dollar bars from your ArcticDB OHLCV data", sub: "Resample your 1H CL data into dollar bars (each bar = $X notional traded). Volume data needed. Check if Alpaca or IBKR provides tick/volume data." },
+      { tag: "concept", title: "Vectorized vs loop-based signal generation", sub: "Your generate_signals() returns a pd.Series. Is it fully vectorized? Loops over rows are 100-1000x slower than pandas vectorized operations." }
+    ],
+    do: [
+      { tag: "code", title: "Profile your slowest strategy and optimize it", sub: "cProfile + snakeviz for visualization. Identify the top-3 hotspots. Apply vectorization or numba @jit. Measure before/after. Log the speedup." },
+      { tag: "code", title: "Add type hints and mypy to strategies/base.py", sub: "generate_signals() should be typed: def generate_signals(self, data: pd.DataFrame) -> pd.Series[int]. Run mypy --strict. Fix every warning." },
+      { tag: "code", title: "Implement dollar bar resampler for ArcticDB data", sub: "If you have volume data: group rows until cumulative(volume * close) >= target_dollars. Reset. Each group becomes one dollar bar. Smoother signal properties." }
+    ]
+  };
+
+  // ---- Topic detail modal ----
+
+  function openTopicDetail(topicId) {
+    const topic = (appData.topics || []).find(t => t.id === topicId);
+    const cur = CURRICULUM[topicId];
+    if (!topic || !cur) return;
+
+    const depth = appData.topic_depth[topicId] || 'none';
+    const count = appData.sessions.filter(s => s.topic_id === topicId).length;
+
+    const STATUS_CYCLE = ['unread', 'done', 'campus'];
+    const STATUS_LABEL = { unread: 'unread', done: '✓ done', campus: '⬇ get at campus' };
+    const inSession = activeSession?.topicId === topicId;
+
+    function section(type, label, items) {
+      const rows = items.map(item => {
+        const key = `${topicId}::${item.title}`;
+        const status = (appData.resource_status || {})[key] || 'unread';
+        const isChecked = inSession && activeSession.checkedItems.has(key);
+        return `
+        <div class="curriculum-item${inSession ? ' session-checkable' : ''}${isChecked ? ' item-checked' : ''}" ${inSession ? `onclick="toggleSessionItem('${key.replace(/'/g, "\\'")}', this)"` : ''}>
+          ${inSession
+            ? `<button class="session-check${isChecked ? ' checked' : ''}" onclick="event.stopPropagation();toggleSessionItem('${key.replace(/'/g, "\\'")}', this.closest('.curriculum-item'))"></button>`
+            : `<div class="item-dot"></div>`
+          }
+          <div class="item-body">
+            <div><span class="item-tag tag-${item.tag}">${item.tag}</span></div>
+            <div class="item-title" id="title-${key.replace(/[^a-z0-9]/gi,'_')}">${(() => {
+              const resolvedUrl = (appData.resource_urls || {})[key] || item.url;
+              const link = resolvedUrl ? `<a href="${resolvedUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,0.25)">${item.title}</a>` : item.title;
+              const editBtn = !inSession ? `<button class="url-edit-btn" onclick="event.stopPropagation();editResourceUrl('${key.replace(/'/g,"\\'")}')" title="Edit URL">&#9998;</button>` : '';
+              return link + editBtn;
+            })()}</div>
+            <div class="item-sub">${item.sub}</div>
+          </div>
+          ${!inSession && ['paper','book','dataset'].includes(item.tag) ? `<div class="item-status"><button class="status-btn ${status}" onclick="cycleStatus(this, ${JSON.stringify(key)})">${STATUS_LABEL[status]}</button></div>` : ''}
+        </div>`;
+      }).join('');
+      return `
+        <div class="curriculum-section ${type}">
+          <div class="curriculum-section-title ${type}">${label}</div>
+          ${rows}
+        </div>`;
+    }
+
+    const DEPTH_ORDER_M = ['none', 'awareness', 'working', 'applied', 'mastered'];
+    function modalDepthBar(d) {
+      const idx = DEPTH_ORDER_M.indexOf(d);
+      return `<div class="depth-bar" style="margin-top:0;margin-left:8px;width:60px;flex-shrink:0">${[1,2,3,4].map(i =>
+        `<div class="depth-seg${idx >= i ? ' filled' : ''}"></div>`
+      ).join('')}</div>`;
+    }
+
+    document.getElementById('topic-modal-body').innerHTML = `
+      <div class="topic-modal-header">
+        <h2>${topic.name}</h2>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="depth-badge depth-${depth}">${depth}</span>
+          ${modalDepthBar(depth)}
+        </div>
+      </div>
+      <div class="topic-modal-desc">${topic.desc} &mdash; ${count} session${count !== 1 ? 's' : ''} logged</div>
+      ${inSession ? `<div class="session-banner"><span class="session-banner-label">Session in progress — check off items as you cover them</span><span class="session-timer" id="session-timer-display">0:00</span></div>` : ''}
+      ${section('read', 'Read', cur.read)}
+      ${section('explore', 'Explore', cur.explore)}
+      ${section('do', 'Do', cur.do)}
+      ${inSession ? `
+        <div class="session-notes-section">
+          <div class="session-notes-label">Session notes</div>
+          <textarea class="session-notes-input" id="session-notes-input" placeholder="What did you learn? Questions that came up? Connections to your platform?"></textarea>
+        </div>` : ''}
+      <div class="topic-modal-footer">
+        <button class="btn btn-ghost" onclick="closeTopicModal()">Close</button>
+        ${inSession
+          ? `<button class="btn btn-ghost" onclick="submitSessionNotes('${topicId}', '${topic.name.replace(/'/g, "\\'")}')">Submit to Companion</button>
+             <button class="btn" onclick="endSession('${topicId}')">End &amp; Log Session</button>`
+          : `<button class="btn" onclick="startSession('${topicId}')">Start Session</button>
+             <button class="btn btn-ghost" onclick="askAboutTopic('${topic.name.replace(/'/g, "\\'")}')">Ask companion</button>`
+        }
+        ${cur.priority != null ? `<span class="priority-badge">Priority ${cur.priority} of 6</span>` : `<span class="priority-badge" style="color:var(--muted)">Covered in QuantWorkstation</span>`}
+      </div>`;
+
+    document.getElementById('topic-overlay').classList.add('open');
+
+    if (inSession) {
+      if (activeSession.timerInterval) clearInterval(activeSession.timerInterval);
+      activeSession.timerInterval = setInterval(() => {
+        const el = document.getElementById('session-timer-display');
+        if (!el) { clearInterval(activeSession.timerInterval); return; }
+        const secs = Math.floor((Date.now() - activeSession.startTime) / 1000);
+        el.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+      }, 1000);
+    }
+  }
+
+  function closeTopicModal() {
+    if (activeSession?.timerInterval) {
+      clearInterval(activeSession.timerInterval);
+      activeSession.timerInterval = null;
+    }
+    document.getElementById('topic-overlay').classList.remove('open');
+  }
+
+  function closeTopicIfOutside(e) {
+    if (e.target === e.currentTarget) closeTopicModal();
+  }
+
+  // ---- Session ----
+
+  function startSession(topicId) {
+    if (activeSession?.timerInterval) clearInterval(activeSession.timerInterval);
+    activeSession = { topicId, startTime: Date.now(), checkedItems: new Set(), timerInterval: null };
+    openTopicDetail(topicId);
+  }
+
+  function toggleSessionItem(key, itemEl) {
+    if (!activeSession) return;
+    const check = itemEl.querySelector('.session-check');
+    if (activeSession.checkedItems.has(key)) {
+      activeSession.checkedItems.delete(key);
+      itemEl.classList.remove('item-checked');
+      if (check) check.classList.remove('checked');
+    } else {
+      activeSession.checkedItems.add(key);
+      itemEl.classList.add('item-checked');
+      if (check) check.classList.add('checked');
+    }
+  }
+
+  function submitSessionNotes(topicId, topicName) {
+    const notes = (document.getElementById('session-notes-input')?.value || '').trim();
+    const checked = Array.from(activeSession?.checkedItems || [])
+      .map(k => k.replace(`${topicId}::`, ''));
+
+    let msg = `Study session — ${topicName}`;
+    if (checked.length) {
+      msg += `\n\nItems I covered:\n${checked.map(t => `• ${t}`).join('\n')}`;
+    }
+    if (notes) msg += `\n\nMy notes: ${notes}`;
+    msg += `\n\nBased on what I covered, give me: (1) the key thing to remember from each item I checked, and (2) the single most important thing to tackle next session.`;
+
+    closeTopicModal();
+    const input = document.getElementById('chat-input');
+    input.value = msg;
+    document.querySelector('.chat-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    sendMessage();
+  }
+
+  function endSession(topicId) {
+    if (activeSession?.timerInterval) clearInterval(activeSession.timerInterval);
+    const durationMin = Math.max(1, Math.round((Date.now() - (activeSession?.startTime || Date.now())) / 60000));
+    activeSession = null;
+    closeTopicModal();
+    // Pre-fill and open log modal
+    const topicSel = document.getElementById('log-topic');
+    const durInput = document.getElementById('log-duration');
+    if (topicSel) topicSel.value = topicId;
+    if (durInput) durInput.value = durationMin;
+    openModal();
+  }
+
+  function editResourceUrl(key) {
+    const safeId = 'title-' + key.replace(/[^a-z0-9]/gi, '_');
+    const titleDiv = document.getElementById(safeId);
+    if (!titleDiv) return;
+    const current = (appData.resource_urls || {})[key] || '';
+    const input = document.createElement('input');
+    input.className = 'url-inline-input';
+    input.type = 'url';
+    input.placeholder = 'https://arxiv.org/pdf/...';
+    input.value = current;
+    titleDiv.appendChild(input);
+    input.focus();
+    input.select();
+    async function save() {
+      const url = input.value.trim();
+      if (!appData.resource_urls) appData.resource_urls = {};
+      if (url) appData.resource_urls[key] = url; else delete appData.resource_urls[key];
+      await fetch('/api/resource-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, url }),
+      });
+      // Re-open current topic to refresh link
+      const topicId = key.split('::')[0];
+      openTopicDetail(topicId);
+    }
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } if (e.key === 'Escape') { input.removeEventListener('blur', save); titleDiv.removeChild(input); } });
+  }
+
+  async function cycleStatus(btn, key) {
+    const cycle = ['unread', 'done', 'campus'];
+    const labels = { unread: 'unread', done: '✓ done', campus: '⬇ get at campus' };
+    const current = btn.dataset.status || cycle.find(s => btn.classList.contains(s)) || 'unread';
+    const next = cycle[(cycle.indexOf(current) + 1) % cycle.length];
+    btn.classList.remove(...cycle);
+    btn.classList.add(next);
+    btn.dataset.status = next;
+    btn.textContent = labels[next];
+    if (!appData.resource_status) appData.resource_status = {};
+    appData.resource_status[key] = next;
+    await fetch('/api/resource-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, status: next }),
+    });
+  }
+
+  function askAboutTopic(topicName) {
+    closeTopicModal();
+    const input = document.getElementById('chat-input');
+    input.value = `What should I focus on first for ${topicName}? Give me a concrete starting point given my current depth.`;
+    input.focus();
+  }
+
+  // ---- Session Log ----
+
+  function openSessionLog() {
+    const sessions = [...(appData?.sessions || [])].reverse();
+    const body = document.getElementById('session-log-body');
+
+    if (sessions.length === 0) {
+      body.innerHTML = '<div style="color:var(--muted);padding:16px 0">No sessions logged yet.</div>';
+    } else {
+      body.innerHTML = sessions.map(s => `
+        <div style="border-bottom:1px solid var(--border);padding:12px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+            <span style="font-weight:600">${s.topic_name}</span>
+            <span style="color:var(--muted);font-size:12px">${s.date}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:${s.notes ? '6px' : '0'}">
+            ${s.duration_min}min &middot; <span class="depth-badge depth-${s.depth_after}" style="font-size:11px;padding:1px 6px">${s.depth_after}</span>
+          </div>
+          ${s.notes ? `<div style="font-size:13px;color:var(--text);white-space:pre-wrap">${escHtml(s.notes)}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('session-log-overlay').classList.add('open');
+  }
+
+  function closeSessionLog() {
+    document.getElementById('session-log-overlay').classList.remove('open');
+  }
+
+  function closeSessionLogIfOutside(e) {
+    if (e.target === e.currentTarget) closeSessionLog();
+  }
+
+  function escHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+  }
+
+  boot();
+</script>
+</body>
+</html>

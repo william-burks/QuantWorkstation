@@ -15,8 +15,6 @@ import json
 import subprocess
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).parent.parent.parent.parent
 AGENT_FILE = REPO_ROOT / ".claude/agents/research-navigator.md"
 GUARD_SCRIPT = REPO_ROOT / ".claude/scripts/agent-research-guard.sh"

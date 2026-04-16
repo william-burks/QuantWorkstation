@@ -157,13 +157,10 @@
         "Bash(cp *.py *)",
         "Bash(cp */*.py *)",
         "Bash(cp */**/*.py *)",
-        "Bash(python3 /tmp/*)",
-        "Bash(python /tmp/*)",
         "Bash(python3 - *)",
         "Bash(python - *)",
         "Bash(python3 <<*)",
-        "Bash(python <<*)",
-        "Write(/tmp/*.py)"
+        "Bash(python <<*)"
       ]
     },
     "hooks": {
@@ -256,15 +253,6 @@
             {
               "type": "command",
               "command": ".claude/scripts/agent-discovery-guard.sh"
-            }
-          ]
-        },
-        {
-          "matcher": "Bash",
-          "hooks": [
-            {
-              "type": "command",
-              "command": ".claude/scripts/agent-bash-grep-guard.sh"
             }
           ]
         }

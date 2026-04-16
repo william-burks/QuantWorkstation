@@ -1,17 +1,22 @@
 """
-USDA NASS Crop Progress collector.
+USDA NASS Crop Progress and Condition collector.
 
-Fetches weekly planting and development stage percentages for corn and soybeans
-via the NASS Quick Stats API and writes them into the ``macro`` ArcticDB library
-via ``store.write_series()``.
+Fetches weekly planting/development stage percentages AND crop condition ratings
+for corn and soybeans via the NASS Quick Stats API, writing into the ``macro``
+ArcticDB library via ``store.write_series()``.
 
-Series collected (ArcticDB key pattern: ``USDA_{CROP}_{STAGE}_{REGION}``):
+Progress series (ArcticDB key pattern: ``USDA_{CROP}_{STAGE}_{REGION}``):
   Crops: CORN, SOYBEANS
   Stages (corn): PLANTED, EMERGED, SILKING, DOUGH, DENT, MATURE, HARVESTED
   Stages (soybeans): PLANTED, EMERGED, BLOOMING, SETTING_PODS, DROPPING_LEAVES, HARVESTED
   Regions: NATL, IL, IA, IN, NE, MN
 
-  Example: USDA_CORN_PLANTED_NATL, USDA_SOYBEANS_PLANTED_IL
+Condition series (ArcticDB key pattern: ``USDA_{CROP}_COND_{RATING}_{REGION}``):
+  Crops: CORN, SOYBEANS
+  Ratings: EXCELLENT, GOOD, FAIR, POOR, VERY_POOR
+  Regions: NATL, IL, IA, IN, NE, MN
+
+  Example: USDA_CORN_COND_EXCELLENT_NATL, USDA_SOYBEANS_COND_GOOD_IL
 
 Columns: ``pct`` (float, 0–100)
 Index: UTC DatetimeIndex (weekly, Monday release)
@@ -26,6 +31,7 @@ Run via: ``python -m data.collectors.usda_crop``
 """
 
 import logging
+import time
 from datetime import timedelta
 
 import pandas as pd
@@ -61,7 +67,7 @@ CORN_STAGES: dict[str, str] = {
     "EMERGED": "PCT EMERGED",
     "SILKING": "PCT SILKING",
     "DOUGH": "PCT DOUGH",
-    "DENT": "PCT DENT",
+    "DENT": "PCT DENTED",
     "MATURE": "PCT MATURE",
     "HARVESTED": "PCT HARVESTED",
 }
@@ -102,6 +108,49 @@ DEFAULT_SERIES: list[str] = [arc_key for arc_key, _, _, _ in USDA_SERIES]
 
 
 # ---------------------------------------------------------------------------
+# Condition series
+# ---------------------------------------------------------------------------
+
+CORN_CONDITIONS: dict[str, str] = {
+    "EXCELLENT": "PCT EXCELLENT",
+    "GOOD": "PCT GOOD",
+    "FAIR": "PCT FAIR",
+    "POOR": "PCT POOR",
+    "VERY_POOR": "PCT VERY POOR",
+}
+
+SOYBEAN_CONDITIONS: dict[str, str] = {
+    "EXCELLENT": "PCT EXCELLENT",
+    "GOOD": "PCT GOOD",
+    "FAIR": "PCT FAIR",
+    "POOR": "PCT POOR",
+    "VERY_POOR": "PCT VERY POOR",
+}
+
+
+def _build_condition_series_list() -> list[tuple[str, str, str, str | None]]:
+    series: list[tuple[str, str, str, str | None]] = []
+    for region in REGIONS:
+        state = _STATE_MAP[region]
+        for rating_key, unit_desc in CORN_CONDITIONS.items():
+            arc_key = f"USDA_CORN_COND_{rating_key}_{region}"
+            series.append((arc_key, "CORN", unit_desc, state))
+        for rating_key, unit_desc in SOYBEAN_CONDITIONS.items():
+            arc_key = f"USDA_SOYBEANS_COND_{rating_key}_{region}"
+            series.append((arc_key, "SOYBEANS", unit_desc, state))
+    return series
+
+
+USDA_CONDITION_SERIES: list[tuple[str, str, str, str | None]] = _build_condition_series_list()
+
+_CONDITION_SERIES_MAP: dict[str, tuple[str, str, str | None]] = {
+    arc_key: (commodity, unit, state) for arc_key, commodity, unit, state in USDA_CONDITION_SERIES
+}
+
+DEFAULT_CONDITION_SERIES: list[str] = [arc_key for arc_key, _, _, _ in USDA_CONDITION_SERIES]
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -110,21 +159,27 @@ def _fetch_series(
     api_key: str,
     arc_key: str,
     start_year: int | None,
+    series_map: dict[str, tuple[str, str, str | None]] | None = None,
+    statisticcat_desc: str = "PROGRESS",
 ) -> pd.DataFrame:
-    """Fetch a single USDA NASS crop progress series.
+    """Fetch a single USDA NASS crop progress or condition series.
 
     Args:
         api_key: USDA NASS API key (from USDA_API_KEY env var).
-        arc_key: ArcticDB key identifying which series to fetch
-            (must be a key in ``_SERIES_MAP``).
+        arc_key: ArcticDB key identifying which series to fetch.
         start_year: Year (int) for incremental fetch, or None for full history
             (last 5 years).
+        series_map: Lookup dict for arc_key → (commodity, unit_desc, state_alpha).
+            Defaults to ``_SERIES_MAP`` (progress series).
+        statisticcat_desc: NASS category (``"PROGRESS"`` or ``"CONDITION"``).
 
     Returns:
         DataFrame with UTC DatetimeIndex and column ``pct`` (float, 0–100).
         Empty DataFrame (with ``pct`` column) if no results (off-season).
     """
-    commodity, unit_desc, state_alpha = _SERIES_MAP[arc_key]
+    if series_map is None:
+        series_map = _SERIES_MAP
+    commodity, unit_desc, state_alpha = series_map[arc_key]
 
     current_year = pd.Timestamp.now(tz="UTC").year
     if start_year is None:
@@ -133,7 +188,7 @@ def _fetch_series(
     params: dict[str, str] = {
         "key": api_key,
         "commodity_desc": commodity,
-        "statisticcat_desc": "PROGRESS",
+        "statisticcat_desc": statisticcat_desc,
         "unit_desc": unit_desc,
         "freq_desc": "WEEKLY",
         "year__GE": str(start_year),
@@ -143,8 +198,17 @@ def _fetch_series(
     if state_alpha is not None:
         params["state_alpha"] = state_alpha
 
-    response = requests.get(NASS_ENDPOINT, params=params, timeout=30)
-    response.raise_for_status()
+    for attempt in range(3):
+        response = requests.get(NASS_ENDPOINT, params=params, timeout=30)
+        if response.status_code == 403:
+            wait = 60 * (attempt + 1)
+            log.warning("NASS rate limit (403) — waiting %ds before retry %d/3", wait, attempt + 1)
+            time.sleep(wait)
+            continue
+        response.raise_for_status()
+        break
+    else:
+        response.raise_for_status()
 
     payload = response.json()
     rows = payload.get("data", [])
@@ -206,6 +270,7 @@ def collect(series: list[str] | None = None) -> None:
             log.info("Series %s: no existing data, fetching full history", arc_key)
 
         df = _fetch_series(api_key, arc_key, start_year)
+        time.sleep(1.5)  # stay well under NASS rate limit (~40 req/min)
 
         if df.empty:
             log.info("Series %s: no new data (off-season or empty response)", arc_key)
@@ -230,6 +295,74 @@ def collect(series: list[str] | None = None) -> None:
     log.info("USDA crop progress collection complete")
 
 
+def collect_condition(series: list[str] | None = None) -> None:
+    """Fetch USDA NASS crop condition ratings and write to ArcticDB ``macro`` library.
+
+    Collects weekly Good/Excellent/Fair/Poor/Very Poor percentages for corn and
+    soybeans. These are the market-moving condition numbers watched by grain traders.
+
+    Args:
+        series: List of ArcticDB keys to collect. Defaults to all condition
+            series for corn and soybeans across national and top-5 states.
+    """
+    settings = get_settings()
+    if series is None:
+        series = list(DEFAULT_CONDITION_SERIES)
+
+    api_key = settings.usda_api_key
+    store = get_store()
+
+    for arc_key in series:
+        if arc_key not in _CONDITION_SERIES_MAP:
+            log.warning("Unknown USDA condition series key %s — skipping", arc_key)
+            continue
+
+        start_year: int | None = None
+        try:
+            existing = store.read_series("macro", arc_key)
+            if not existing.empty:
+                last_date = existing.index.max()
+                start_year = (last_date - timedelta(days=7)).year
+                log.info(
+                    "Condition %s: last stored %s, fetching from year %s",
+                    arc_key,
+                    last_date.date(),
+                    start_year,
+                )
+        except Exception:
+            log.info("Condition %s: no existing data, fetching full history", arc_key)
+
+        df = _fetch_series(
+            api_key,
+            arc_key,
+            start_year,
+            series_map=_CONDITION_SERIES_MAP,
+            statisticcat_desc="CONDITION",
+        )
+        time.sleep(1.5)
+
+        if df.empty:
+            log.info("Condition %s: no new data (off-season or empty response)", arc_key)
+            continue
+
+        try:
+            existing = store.read_series("macro", arc_key)
+            if not existing.empty:
+                last_stored = existing.index.max()
+                df = df[df.index > last_stored]
+        except Exception:
+            pass
+
+        if df.empty:
+            log.info("Condition %s: no new rows after dedup", arc_key)
+            continue
+
+        store.write_series("macro", arc_key, df)
+        log.info("Wrote %d rows to macro/%s", len(df), arc_key)
+
+    log.info("USDA crop condition collection complete")
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -237,3 +370,4 @@ def collect(series: list[str] | None = None) -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     collect()
+    collect_condition()
