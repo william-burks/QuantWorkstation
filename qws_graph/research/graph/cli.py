@@ -1586,6 +1586,7 @@ def cmd_degrade(args: argparse.Namespace) -> int:
     """Demote a Champion to FormerChampion: qw degrade <champion_id> --reason "..."."""
     champion_id: str = args.champion_id
     reason: str | None = args.reason
+    degrade_reason: str | None = getattr(args, "degrade_reason", None)
 
     if not reason:
         print("error: --reason is required for qw degrade", file=sys.stderr)
@@ -1601,12 +1602,16 @@ def cmd_degrade(args: argparse.Namespace) -> int:
 
     from .store import GraphStore, StoreError, StoreInfraError
 
+    resolved_degrade_reason = (
+        degrade_reason.strip() if degrade_reason and degrade_reason.strip() else None
+    )
+
     try:
         store = GraphStore.from_env(timeout_seconds=args.timeout_seconds)
-        former_champion_id = store.degrade_champion(
-            champion_id=champion_id,
-            oos_reason=reason,
-        )
+        kwargs: dict[str, Any] = {"champion_id": champion_id, "oos_reason": reason}
+        if resolved_degrade_reason is not None:
+            kwargs["degrade_reason"] = resolved_degrade_reason
+        former_champion_id = store.degrade_champion(**kwargs)
         print(f"degraded: {champion_id} → FormerChampion {former_champion_id}")
         return 0
     except ValueError as exc:
@@ -1704,6 +1709,11 @@ def cmd_monitor(args: argparse.Namespace) -> int:
         print("error: Neo4j is unavailable", file=sys.stderr)
         return 1
 
+    audit_lineage: bool = getattr(args, "audit_lineage", False)
+
+    if audit_lineage:
+        return _cmd_monitor_audit_lineage(connector)
+
     repo_root_str: str | None = getattr(args, "repo_root", None)
     repo_root = Path(repo_root_str) if repo_root_str else None
 
@@ -1735,6 +1745,40 @@ def cmd_monitor(args: argparse.Namespace) -> int:
         f"Summary: {len(results)} evaluated — "
         f"{len(degraded)} degraded, {len(ok)} ok, {len(skipped)} skipped"
     )
+
+    return 0
+
+
+def _cmd_monitor_audit_lineage(connector: NeoConnector) -> int:
+    """Run lineage audit — no graph writes. Advisory output only."""
+    from .cypher import AUDIT_LINEAGE_QUERY
+    from .store import GraphStore, StoreInfraError
+
+    try:
+        store = GraphStore.from_env(timeout_seconds=connector.timeout_seconds)
+        try:
+            rows = store.run_adhoc_cypher(AUDIT_LINEAGE_QUERY)
+        finally:
+            store.close()
+    except (StoreInfraError, ValueError) as exc:
+        print(f"error: lineage audit failed: {exc}", file=sys.stderr)
+        return 1
+
+    if not rows:
+        return 0
+
+    for row in rows:
+        champion_id = row.get("champion_id", "unknown")
+        name = row.get("name") or champion_id
+        hypothesis_id = row.get("hypothesis_id", "unknown")
+        trades = row.get("metrics_total_trades", "?")
+        oos = row.get("oos_status", "unknown")
+        print(
+            f"ADVISORY: Champion {champion_id} ({name})\n"
+            f"  Source hypothesis: {hypothesis_id} — status=rejected\n"
+            f"  IS trades: {trades} | OOS: {oos}\n"
+            f"  Action: qw degrade {champion_id} --reason lineage_rejected"
+        )
 
     return 0
 
@@ -2134,6 +2178,13 @@ def main() -> int:
         help="Mandatory cause-of-death (must be non-empty)",
     )
     degrade_parser.add_argument(
+        "--degrade-reason",
+        default=None,
+        metavar="DEGRADE_REASON",
+        dest="degrade_reason",
+        help="Optional researcher-supplied reason stored as degrade_reason on FormerChampion",
+    )
+    degrade_parser.add_argument(
         "--timeout-seconds",
         type=int,
         default=3,
@@ -2194,6 +2245,16 @@ def main() -> int:
         action="store_true",
         dest="dry_run",
         help="Report drift without writing any graph edges",
+    )
+    monitor_parser.add_argument(
+        "--audit-lineage",
+        action="store_true",
+        dest="audit_lineage",
+        help=(
+            "Traverse Champion -> PIVOTED_FROM -> Run <- HAS_RUN <- Strategy <- TESTED_AS"
+            " <- Hypothesis and warn when hypothesis rejected AND champion has low trade"
+            " count AND OOS is pending. Advisory only — no graph writes."
+        ),
     )
     monitor_parser.add_argument(
         "--champion-id",

@@ -914,6 +914,7 @@ class GraphStore:
         champion_id: str,
         oos_reason: str,
         metrics_sharpe_at_degradation: float | None = None,
+        degrade_reason: str | None = None,
     ) -> str:
         """Demote a Champion to FormerChampion with mandatory cause-of-death.
 
@@ -924,6 +925,7 @@ class GraphStore:
             champion_id: Source Champion node ID.
             oos_reason: Mandatory cause-of-death (must be non-empty).
             metrics_sharpe_at_degradation: Optional Sharpe at demotion time.
+            degrade_reason: Optional researcher-supplied reason (e.g. "lineage_rejected").
 
         Returns:
             former_champion_id of the created FormerChampion node.
@@ -965,6 +967,7 @@ class GraphStore:
                         strategy_id=strategy_id,
                         degraded_at=degraded_at,
                         oos_reason=oos_reason.strip(),
+                        degrade_reason=degrade_reason,
                         metrics_sharpe_at_degradation=metrics_sharpe_at_degradation,
                     ).single()
                     return result

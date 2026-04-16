@@ -679,11 +679,25 @@ MERGE (fc:FormerChampion {former_champion_id: $former_champion_id})
       fc.champion_id     = $champion_id,
       fc.degraded_at     = datetime($degraded_at),
       fc.oos_reason      = $oos_reason,
+      fc.degrade_reason  = $degrade_reason,
       fc.metrics_sharpe_at_degradation = $metrics_sharpe_at_degradation,
       fc.updated_at      = datetime()
 MERGE (c)-[e:DEGRADED_TO]->(fc)
   SET e.detected_at = datetime($degraded_at)
 RETURN fc.former_champion_id AS former_champion_id
+"""
+
+AUDIT_LINEAGE_QUERY = """
+MATCH (c:Champion)-[:PIVOTED_FROM]->(r:Run)<-[:HAS_RUN]-(s:Strategy)<-[:TESTED_AS]-(h:Hypothesis)
+WHERE h.status = 'rejected'
+  AND c.metrics_total_trades < 10
+  AND c.oos_status = 'oos_pending'
+RETURN c.champion_id   AS champion_id,
+       c.name          AS name,
+       c.metrics_total_trades AS metrics_total_trades,
+       c.oos_status    AS oos_status,
+       h.hypothesis_id AS hypothesis_id,
+       h.status        AS hypothesis_status
 """
 
 GET_FORMER_CHAMPION_BY_ID_QUERY = """
