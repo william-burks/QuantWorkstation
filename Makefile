@@ -7,7 +7,7 @@ REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
 
-.PHONY: to-release to-master check-clean done-with-feature test test-unit test-integration test-all lint typecheck check verify commit-impl commit-test commit-push-qa commit-close-story prime-agent prime-lint-mechanic feature-branch arm-verify-gate arm-qa-gate arm-close-epic-gate
+.PHONY: to-release to-master check-clean done-with-feature test test-unit test-integration test-all lint typecheck check verify check-story commit-impl commit-test commit-push-qa commit-close-story prime-agent prime-lint-mechanic feature-branch arm-verify-gate arm-qa-gate arm-close-epic-gate
 
 
 # --- QUALITY ---
@@ -32,6 +32,14 @@ typecheck:
 check: lint typecheck test-all
 
 verify: lint typecheck test-all
+
+# For use by lead-engineer during story implementation: typecheck + both test suites, output teed.
+# Read results from /tmp/check-story-output.txt — do NOT re-run to filter output.
+check-story:
+	source .venv/bin/activate && \
+	mypy --strict data/ research/ strategies/ execution/ qws_graph/research/ 2>&1 | tee /tmp/check-story-output.txt | tail -5; \
+	pytest tests/unit/ -v --tb=short 2>&1 | tee -a /tmp/check-story-output.txt | tail -5; \
+	pytest qws_graph/tests/unit/ -v --tb=short 2>&1 | tee -a /tmp/check-story-output.txt | tail -5
 
 # --- GIT WORKFLOW ---
 

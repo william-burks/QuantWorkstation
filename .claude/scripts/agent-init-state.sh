@@ -27,8 +27,16 @@ rm -f /tmp/agent-discovery-tracker/* 2>/dev/null; mkdir -p /tmp/agent-discovery-
 rm -f /tmp/circuit-breaker/* 2>/dev/null; mkdir -p /tmp/circuit-breaker
 rm -f /tmp/agent-*-done.txt 2>/dev/null || true
 
-# Build symbol index (functions + classes across graph module)
-grep -rn 'def \|class ' qws_graph/research/graph/*.py 2>/dev/null > /tmp/symbol-index.txt || true
+# Build symbol index (functions + classes across all project modules)
+grep -rn 'def \|class ' \
+  qws_graph/research/graph/*.py \
+  research/regimes/*.py \
+  research/experiments/*.py \
+  data/store.py \
+  data/collectors/*.py \
+  strategies/*.py \
+  execution/*.py \
+  2>/dev/null > /tmp/symbol-index.txt || true
 
 # Build schema index (node/edge names from data dictionary)
 grep -n '^nodes:\|^relationships:\|^  [A-Z][A-Za-z_]*:' qws_graph/docs/data_dictionary.yaml 2>/dev/null > /tmp/schema-index.txt || true

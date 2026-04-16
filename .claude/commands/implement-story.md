@@ -84,11 +84,12 @@ If `/tmp/ruling_$ARGUMENTS.txt` exists → read it before reporting blocked. App
 Work ACs one by one. After each:
 1. Story checkboxes — do NOT edit story file during Step 4. Wait until Step 5 (test plan) and batch ALL checkbox updates + test plan into ONE Edit call. If Step 7 finds failures, that's the 2nd allowed edit. **Max 2 Edit calls to story file total.**
 2. `git add` each changed file (never `-A` or `.`)
-3. `make test 2>&1 | tee /tmp/test-output.txt | tail -60` after any **source** Python change — if failures need detail, `cat /tmp/test-output.txt`. Do NOT re-run pytest separately.
-   - `make test` runs ONLY `qws_graph/tests/unit/`. Integration tests are EXCLUDED — this is expected, not a bug.
-   - If you **only edited integration test files** (no source .py changes), **skip `make test`** — it will show 0 new tests and that is correct. Run integration tests at Step 7 only.
-   - If you wrote integration tests, they will NOT appear in `make test` output. Run them at Step 7 via direct pytest. Do NOT search for pytest config to explain missing tests — the Makefile hardcodes the path.
-4. Run `make typecheck` on the project. Baseline is **0 errors** — any failure = you introduced it. Read ALL errors, fix ALL in one pass, re-run once. Max 2 cycles.
+3. After any **source** Python change: `make check-story 2>&1 | tee /tmp/check-story-output.txt | tail -30`
+   - This runs mypy + both test suites (`tests/unit/` and `qws_graph/tests/unit/`) in one pass.
+   - Output is teed to `/tmp/check-story-output.txt`. To filter: `grep 'error:\|FAILED\|ERROR' /tmp/check-story-output.txt` — do NOT re-run `make check-story` or any subset target to filter.
+   - Baseline: **0 mypy errors, 0 test failures** — any failure = you introduced it.
+   - Fix ALL failures in one pass, re-run once. Max 2 cycles. If clean → STOP. Do NOT re-run a clean result.
+   - If you **only edited integration test files** (no source .py changes), skip `make check-story` — run integration tests at Step 7 only.
 
 **data_dictionary.yaml edits:** Use `grep 'NodeOrEdgeName' /tmp/schema-index.txt` → get line N → `Read offset=N limit=40`. Compose the ENTIRE node or edge block (all properties) in ONE `new_string`. Max 2 Edit calls total for this file — one for nodes section, one for relationships section.
 
@@ -98,7 +99,7 @@ Do NOT read whole files in sequential chunks.
 **Edit = verified. Do NOT grep a file after editing it to confirm the change — the Edit tool confirms success.**
 
 **Lint is handled at QA phase — do NOT run ruff during implementation.**
-`ruff`, `make lint`, and `make check` are structurally blocked by agent-guard.sh. Type check only: `make typecheck`.
+`ruff`, `make lint`, and `make check` are structurally blocked by agent-guard.sh. Use `make check-story` for the combined typecheck + test pass.
 
 **4b — Demo seed.** If this story adds or modifies nodes, edges, or properties:
 update `DEMO_SEED_CYPHER` and `DEMO_TEARDOWN_CYPHER` in `qws_graph/research/graph/cypher.py`.

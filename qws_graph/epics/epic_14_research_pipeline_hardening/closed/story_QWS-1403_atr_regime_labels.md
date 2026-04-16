@@ -4,7 +4,7 @@
 QWS-1403
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -89,7 +89,7 @@ Prefix `regime_atr_` — must not collide with Epic 12 HMM output (`regime_hmm_`
 - [x] `research/regimes/atr_trend_classifier.py` written
 - [PARTIAL] All 3 symbols seeded in ArcticDB — CL_1H + BTC/USD_1H seeded; MES_1H blocked on IBKR gateway (data not collected yet)
 - [x] Unit tests pass (19/19)
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 

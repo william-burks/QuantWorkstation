@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 
 import pandas as pd
 import requests  # type: ignore[import-untyped]
-from bs4 import BeautifulSoup  # type: ignore[import-untyped]
+from bs4 import BeautifulSoup
 
 from data.store import get_store
 

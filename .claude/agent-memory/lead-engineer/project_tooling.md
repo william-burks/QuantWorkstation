@@ -91,6 +91,42 @@ Use `make commit-story-status STORY=$ID` — stages all modified tracked files, 
 Optional custom message: `make commit-story-status STORY=$ID MSG="custom message"`.
 Do NOT run git add or echo the sentinel separately — the make target handles both.
 
+## ArcticDB Inspection
+
+When a story writes bars, signals, or regime labels to ArcticDB, verify with **one command**:
+```bash
+python util/inspectAllLibs.py 2>&1 | grep '<symbol_prefix>'
+```
+For example, after writing regime labels: `python util/inspectAllLibs.py 2>&1 | grep 'regime'`
+
+Do NOT:
+- Read `util/inspectDb.py`, `util/inspectFutures.py`, or `util/inspectAllLibs.py` source
+- Run multiple inspect scripts
+- `ls util/` to discover inspection tools — the command above is the canonical check
+
+If `inspectAllLibs.py` shows the symbol with a non-zero row count, the AC is met.
+
+## Test Target Selection
+
+Story test files live in one of two locations — pick the right `make` target:
+
+| Test file location | Make target |
+|--------------------|-------------|
+| `qws_graph/tests/unit/` | `make test` |
+| `tests/unit/` | `make test-unit` |
+| Both | `make test-all` |
+
+Check the story's **Repo Touchpoints** to determine which location the test file is in.
+Do NOT run both targets unless the story explicitly touches both test trees.
+
+## check-story — Combined Verify Target
+
+Run `make check-story 2>&1 | tee /tmp/check-story-output.txt | tail -30` for the post-implementation check.
+This runs typecheck + the correct test suite in one pass and tees output to `/tmp/check-story-output.txt`.
+- To filter errors after: `grep 'error:\|FAILED\|ERROR' /tmp/check-story-output.txt`
+- Do NOT re-run `make check-story`, `make typecheck`, or `make test*` after a clean pass.
+- Max 2 cycles: run → fix ALL failures → run once more. If clean on second run → STOP.
+
 ## Integration Tests
 
 Pre-existing failures may exist in `qws_graph/tests/integration/`. Do not git stash to check baseline —
