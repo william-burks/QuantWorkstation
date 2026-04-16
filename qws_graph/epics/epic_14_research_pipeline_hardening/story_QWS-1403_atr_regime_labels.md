@@ -4,7 +4,7 @@
 QWS-1403
 
 ## Status
-READY
+TESTING
 
 ## Type
 code
@@ -83,12 +83,12 @@ Prefix `regime_atr_` — must not collide with Epic 12 HMM output (`regime_hmm_`
 - [x] CLI exits 0 for all 3 symbols with distribution printout
 - [x] Naming: keys use `regime_atr_` prefix — confirmed no collision with `regime_hmm_` namespace
 - [x] Unit tests pass for label assignment and 80% guard
-- [ ] `make verify` passes with no new violations
+- [x] `make verify` passes with no new violations
 
 ## Definition of Done
 - [x] `research/regimes/atr_trend_classifier.py` written
-- [ ] All 3 symbols seeded in ArcticDB
-- [x] Unit tests pass
+- [PARTIAL] All 3 symbols seeded in ArcticDB — CL_1H + BTC/USD_1H seeded; MES_1H blocked on IBKR gateway (data not collected yet)
+- [x] Unit tests pass (19/19)
 - [ ] Story marked CLOSED
 
 ## Acceptance Test Plan
