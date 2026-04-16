@@ -4,7 +4,7 @@
 QWS-1404
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -106,7 +106,7 @@ Use Option A. Read actual query at `qws_graph/research/graph/query.py:513` (`GET
 - [x] `query.py` Cypher fixed
 - [x] Seed script written
 - [x] New unit test passes
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
