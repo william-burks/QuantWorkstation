@@ -180,6 +180,18 @@ story is marked COMPLETE in `BACKLOG_ALIGNMENT.md`.
 | `first_trade_ts` | datetime | Required CSV column; sourced from trade log | Timestamp of first closed trade. Required — parse fails if absent. Anchor for active-window calculation. |
 | `last_trade_ts` | datetime | Required CSV column; sourced from trade log | Timestamp of last closed trade. Required — parse fails if absent. Anchor for active-window calculation. |
 
+### FormerChampion — key properties
+
+| Property | Type | Description |
+|---|---|---|
+| `former_champion_id` | str | `hash12(champion_id \| degraded_at_iso)` |
+| `strategy_id` | str | Parent Strategy node ID |
+| `champion_id` | str | Source Champion node ID |
+| `degraded_at` | datetime | Timestamp of demotion |
+| `oos_reason` | str | Mandatory cause-of-death. Cannot be empty. |
+| `degrade_reason` | str \| null | Optional reason set by researcher via `qw degrade --reason`. Not auto-populated. |
+| `metrics_sharpe_at_degradation` | float \| null | Sharpe at time of demotion, if available |
+
 ### Champion — key query properties
 
 | Property | Type | Description |

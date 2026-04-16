@@ -4,10 +4,17 @@ Format: `/run-epic <epic_number>` or `/run-epic <epic_number> <story_id>` to res
 Format: `/run-epic <epic_number> qa` to skip to Step 5 (post-epic QA only).
 Format: `/run-epic <epic_number> qa audit` to run QA with full audit report (verbose categorization).
 Format: `/run-epic <story_id> audit` to run single story + verbose lead-engineer audit (e.g. `/run-epic QWS-0801 audit`).
+Format: `/run-epic <epic_number> audit` to run full epic with verbose lead-engineer audit after every story (investigate/retry/close loop per story).
 
 This skill runs in the **main session** as orchestrator. Spawn a fresh lead-engineer agent per story.
 
 ## Step 0 — Check for resume
+
+**If first argument is a plain epic number and second argument is `audit`** (e.g. `/run-epic 14 audit`):
+1. Set EPIC = first argument, AUDIT_MODE_LE = verbose
+2. Proceed through Steps 0a, 1, 2, 3 as normal
+3. In Step 4c-audit — after every story reaches TESTING, run the full verbose audit loop (4-audit-d through 4-audit-f) before proceeding to the next story
+4. The investigate/retry/close prompt fires after every story — user must choose before the loop continues
 
 **If first argument matches `QWS-\d+` and second argument is `audit`** (e.g. `/run-epic QWS-0801 audit`):
 1. Set STORY_ID = first argument, AUDIT_MODE_LE = verbose
@@ -147,6 +154,11 @@ Full detail lives in git commits. Do not return test output or diffs.
 - **BLOCKED/FAILED** → add to needs-attention list, mark dependent stories skipped
 
 ### 4c-audit — Capture lead-engineer trace (runs after every TESTING outcome)
+
+**If AUDIT_MODE_LE=verbose** (set when invoked as `/run-epic <epic> audit`):
+→ Skip steps 2-7 below. Instead run the full verbose audit loop: **4-audit-d → 4-audit-e → 4-audit-f**. User must choose Close/Investigate/Retry before the story loop continues to the next story.
+
+**If AUDIT_MODE_LE=quiet (default):**
 1. Find trace:
 ```
 ls /tmp/agent-trace-lead-engineer-*.jsonl 2>/dev/null

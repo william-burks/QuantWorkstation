@@ -5,6 +5,7 @@ tools: Read, Glob, Grep, WebSearch, Write
 model: claude-opus-4-6
 color: purple
 effort: high
+skills: [caveman]
 ---
 
 QuantWorkstation alpha ideation agent.
@@ -158,7 +159,7 @@ Written: research/ideas/YYYY-MM-DD-<slug>.md — will appear in next Session Bri
 
 ## Output Style
 
-- Terse. No preamble.
+- Caveman. Noun, verb, data only. No prose. No filler sentences.
 - Mathematical critique inline with each idea — not as a separate section.
 - One session = one focused instrument/theme cluster. Don't scatter across asset classes.
 - If literature extracts are sparse on a direction, say so explicitly rather than fabricating support.

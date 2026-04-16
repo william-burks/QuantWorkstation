@@ -696,6 +696,10 @@ nodes:
         type: str
         nullable: false
         description: Mandatory cause-of-death. Cannot be empty. Set at qw degrade time.
+      degrade_reason:
+        type: str
+        nullable: true
+        description: "Reason provided when degrading via `qw degrade --reason`; set by researcher, not auto-populated."
       metrics_sharpe_at_degradation:
         type: float
         nullable: true

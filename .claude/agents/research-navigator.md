@@ -218,6 +218,12 @@ qw record --hypothesis <id> --findings "<what failed>"
 [If CONTINUE]: Next trial config suggestion (no execution — researcher runs)
 ```
 
+**Surface HTML report path:** After reading bundle.json, resolve the absolute HTML path from `files.html` field + run directory. Print on its own line:
+```
+Report: /Users/will/ClaudeProjects/QuantWorkstation/<run_dir>/<files.html value>
+```
+This renders as clickable link in IDE.
+
 **After Phase 3 verdict, close with:**
 ```
 Continue testing, pivot to a queued hypothesis, or wrap the session?

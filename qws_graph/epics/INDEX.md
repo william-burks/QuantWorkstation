@@ -24,7 +24,8 @@ Navigation and execution index for `qws_graph/epics`.
 13. **Epic 10b — Commodity Regime Data** — `COMPLETE`
 14. **Epic 11 — Production Tracking** — `PLANNED`
 14. **Epic 13 — Agent Design** — `IN PROGRESS` (QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303 CLOSED; QWS-1304 BLOCKED)
-15. **Epic 12 — ML Research Layer** — `PLANNED`
+15. **Epic 14 — Research Pipeline Hardening** — `READY`
+16. **Epic 12 — ML Research Layer** — `PLANNED`
 
 ## Dependency Notes
 - Epics 1–8 COMPLETE. Epic 9 in progress — QWS-0903 READY.
@@ -34,6 +35,7 @@ Navigation and execution index for `qws_graph/epics`.
 - Epic 10b: all 4 stories READY, no mutual deps — implement in parallel.
 - Epic 12 entry blocked on QWS-0803 CLOSED (satisfied). QWS-0907 (trial_metadata) must land before QWS-1204.
 - Epic 13: QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303 CLOSED; QWS-1304 BLOCKED (~~QWS-1303~~ satisfied).
+- Epic 14: QWS-1401 READY; QWS-1402 blocked on QWS-1401; QWS-1403/1404/1405/1406 independent. Execute before Epic 12.
 - Epic 9HF stories live in `qws_graph/epics/epic_9hf_bugs_and_hotfixes/`. Future one-off hotfixes go in `qws_graph/epics/hotfix/` (currently empty).
 
 ---
@@ -278,6 +280,20 @@ Stories (no order):
 
 ---
 
+## Epic 14 — Research Pipeline Hardening [READY]
+- Epic README: `epic_14_research_pipeline_hardening/README.md`
+- Objective: eliminate regime-concentration blind spot; add upstream quality gates; fix Cypher bug; seed literature library
+
+Execution order: QWS-1404 → QWS-1401 ∥ QWS-1406 → QWS-1402 → QWS-1403 ∥ QWS-1405
+- `QWS-1401` `epic_14_research_pipeline_hardening/story_QWS-1401_year_by_year_pnl.md` — `READY`
+- `QWS-1402` `epic_14_research_pipeline_hardening/story_QWS-1402_regime_diversity_gate.md` — `READY` (~~QWS-1401~~)
+- `QWS-1403` `epic_14_research_pipeline_hardening/story_QWS-1403_atr_regime_labels.md` — `READY`
+- `QWS-1404` `epic_14_research_pipeline_hardening/story_QWS-1404_fix_redundancy_gate_cypher.md` — `READY`
+- `QWS-1405` `epic_14_research_pipeline_hardening/story_QWS-1405_champion_degradation_advisory.md` — `READY`
+- `QWS-1406` `epic_14_research_pipeline_hardening/story_QWS-1406_seed_literature_pipeline.md` — `READY`
+
+---
+
 ## Epic 12 — ML Research Layer [PLANNED]
 - Epic README: [`epic_12_ml_research_layer/README.md`](epic_12_ml_research_layer/README.md)
 - Objective: extend research pipeline with ML regime classification and feature-engineered
@@ -307,6 +323,7 @@ promotion).
 - **Epic 9.5 COMPLETE** — all 4 stories CLOSED.
 - **Epic 10 COMPLETE** — all stories CLOSED (QWS-1005, QWS-1006, QWS-1011 moved to Epic 10b).
 - **Epic 10b COMPLETE** — all 4 stories CLOSED (QWS-1005, QWS-1006, QWS-1011, QWS-1013).
-- **Immediate:** Epic 13 Agent Design (QWS-1303 CLOSED; QWS-1304 now unblocked).
-- **After 1304:** Epic 12 (ML research).
+- **Immediate:** Epic 13 Agent Design (QWS-1303 CLOSED; QWS-1304 BLOCKED on live session run).
+- **Next after 1304:** Epic 14 Research Pipeline Hardening (6 stories READY).
+- **After Epic 14:** Epic 12 (ML research).
 

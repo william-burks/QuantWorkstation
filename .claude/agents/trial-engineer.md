@@ -61,8 +61,23 @@ N Trades: <value>
 Active Window Freq: <value>
 Calmar: <value>
 Passed dual-hurdle gate: yes/no
+
+Report: /Users/will/ClaudeProjects/QuantWorkstation/research/results/<instrument>/<strategy>/runs/<timestamp>/<name>.html
 ```
 STOP. Do NOT interpret. Do NOT recommend promotion. Will and navigator decide.
+
+## Surfacing HTML Report Path
+
+After trial execution, find and print the absolute path to the generated HTML report. Two methods, in order:
+
+1. **From bundle.json** — Read `bundle.json` in the run directory. The `files.html` field has the filename. Combine with the run directory absolute path:
+   ```
+   /Users/will/ClaudeProjects/QuantWorkstation/<run_dir>/<files.html value>
+   ```
+
+2. **From stdout** — Trial scripts print `Wrote <path>` lines. The HTML path is in stdout. Extract it.
+
+Print the absolute path on its own line in the output block above. This renders as a clickable link in the IDE.
 
 ## Before Writing Any Trial
 

@@ -7,7 +7,7 @@
 >   2. Check "Not Yet Implemented" — do not reference these nodes, properties, or tools in Cypher
 >   3. New story candidates at the bottom are proposals only — Will decides before scoping
 >
-> Current sprint: Epic 13 Agent Design (QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303 CLOSED; QWS-1304 BLOCKED — now unblocked). Epic 10 Macro Data COMPLETE. Epic 10b Commodity Regime Data COMPLETE. After Epic 13: Epic 12 ML Research.
+> Current sprint: Epic 13 Agent Design (QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303 CLOSED; QWS-1304 BLOCKED — now unblocked). Epic 10 Macro Data COMPLETE. Epic 10b Commodity Regime Data COMPLETE. After Epic 13: Epic 14 Research Pipeline Hardening (6 stories READY). After Epic 14: Epic 12 ML Research.
 > ```
 
 ---
@@ -32,6 +32,7 @@
 | Epic 11 — Production Tracking | **PLANNED** | MLflow Champion registration + OOS sync; split production results from research results |
 | Epic 12 — ML Research Layer | **PLANNED** | HMM regime classifier, feature engineering, LightGBM signal model, results interpreter, hypothesis miner |
 | Epic 13 — Agent Design | **IN PROGRESS** | Research Navigator, Trial Engineer, Research Ideas Layer, Session Command Rewrite (QWS-1301/1302/1303 CLOSED; QWS-1304 BLOCKED) |
+| Epic 14 — Research Pipeline Hardening | **READY** | Annual P&L breakdown, regime diversity gate, ATR regime labels, Cypher bugfix, champion degradation advisory, literature seed |
 | Backlog | **UNSCHEDULED** | QWS-0701, 0702 |
 
 ---
@@ -116,6 +117,17 @@
 | Trial Engineer Agent | QWS-1303 (**CLOSED**) | `trial-engineer` agent; generates trial script + bundle.json from hypothesis context; stops before run | ~~QWS-1302~~ |
 | Research Session Command Rewrite | QWS-1304 (**BLOCKED**) | `/research-session` orchestrates navigator + trial-engineer; handoff contract defined | ~~QWS-1302~~, ~~QWS-1303~~ |
 
+### Epic 14 — Research Pipeline Hardening
+
+| Story | ID | Capabilities Unlocked | Blocked On |
+|---|---|---|---|
+| Year-by-Year P&L | QWS-1401 (**READY**) | `annual_pnl_breakdown()` in metrics.py; annual table in evaluator.report(); regime concentration warning | — |
+| Regime Diversity Gate | QWS-1402 (**READY**) | `diversity_score()` in metrics.py; diversity block in evaluator.report(); `diversity_score`, `diversity_years_positive`, `diversity_distinct_years` in `trial_metadata` on Run node | ~~QWS-1401~~ |
+| ATR Regime Pre-Labels | QWS-1403 (**READY**) | `research/regimes/atr_trend_classifier.py`; `regime_atr_{symbol}_{tf}` series in ArcticDB signals lib for CL_1H, MES_1H, BTC/USD_1H | — |
+| Fix Redundancy Gate Cypher | QWS-1404 (**READY**) | `check_redundancy` returns correct results (no cartesian product duplicates) | — |
+| Champion Degradation Advisory | QWS-1405 (**READY**) | `qw monitor --audit-lineage`; advisory output for lineage-rejected Champions; `qw degrade --reason`; `degrade_reason` on FormerChampion | — |
+| Seed Literature Pipeline | QWS-1406 (**READY**) | ≥5 papers in `qws_researcher/data/extracts/`; `search_library()` returns hits for mean reversion and regime switching queries | — |
+
 ### Epic 12 — ML Research Layer
 
 | Story | ID | Capabilities Unlocked | Blocked On |
@@ -196,6 +208,7 @@ _(None pending — FormerChampion implemented in QWS-0801)_
 ### Properties
 | Property | Node | Story |
 |---|---|---|
+| `degrade_reason` | FormerChampion | QWS-1405 |
 | `embedding` | Hypothesis | QWS-0604 (**IMPLEMENTED**) |
 | `promotion_rationale` | Champion | QWS-0805 (**IMPLEMENTED**) |
 | `status = ARCHIVED` | Strategy | QWS-0406 amendment (ABORTED exists; ARCHIVED is new) |
