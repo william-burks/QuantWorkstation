@@ -233,12 +233,16 @@ def _fetch_series(
 # ---------------------------------------------------------------------------
 
 
-def collect(series: list[str] | None = None) -> None:
+def collect(series: list[str] | None = None, force_start_year: int | None = None) -> None:
     """Fetch USDA NASS crop progress series and write to ArcticDB ``macro`` library.
 
     Args:
         series: List of ArcticDB keys to collect. Defaults to all corn and soybean
             progress series for national and top-5 states.
+        force_start_year: If set, fetch from this year regardless of existing data.
+            Use for historical backfills (e.g. force_start_year=2019). Only rows
+            before the existing data start are written; existing data is never
+            overwritten.
     """
     settings = get_settings()
     if series is None:
@@ -252,20 +256,26 @@ def collect(series: list[str] | None = None) -> None:
             log.warning("Unknown USDA series key %s — skipping", arc_key)
             continue
 
-        # Incremental: find last stored year
+        # Determine fetch start year and existing data bounds
         start_year: int | None = None
+        existing_start: pd.Timestamp | None = None
+        existing_end: pd.Timestamp | None = None
         try:
             existing = store.read_series("macro", arc_key)
             if not existing.empty:
-                last_date = existing.index.max()
-                # Re-fetch from the year of last stored date (NASS weekly data; week boundaries)
-                start_year = (last_date - timedelta(days=7)).year
-                log.info(
-                    "Series %s: last stored %s, fetching from year %s",
-                    arc_key,
-                    last_date.date(),
-                    start_year,
-                )
+                existing_start = existing.index.min()
+                existing_end = existing.index.max()
+                if force_start_year is not None:
+                    start_year = force_start_year
+                    log.info("Series %s: force backfill from %s", arc_key, force_start_year)
+                else:
+                    start_year = (existing_end - timedelta(days=7)).year
+                    log.info(
+                        "Series %s: last stored %s, fetching from year %s",
+                        arc_key,
+                        existing_end.date(),
+                        start_year,
+                    )
         except Exception:
             log.info("Series %s: no existing data, fetching full history", arc_key)
 
@@ -276,14 +286,13 @@ def collect(series: list[str] | None = None) -> None:
             log.info("Series %s: no new data (off-season or empty response)", arc_key)
             continue
 
-        # Idempotent merge: if existing data, drop rows already stored
-        try:
-            existing = store.read_series("macro", arc_key)
-            if not existing.empty:
-                last_stored = existing.index.max()
-                df = df[df.index > last_stored]
-        except Exception:
-            pass  # no existing data — write full fetch
+        # Trim to relevant rows only
+        if force_start_year is not None and existing_start is not None:
+            # Backfill: only prepend rows before existing data (existing wins on overlap)
+            df = df[df.index < existing_start]
+        elif existing_end is not None:
+            # Incremental: only keep rows after last stored
+            df = df[df.index > existing_end]
 
         if df.empty:
             log.info("Series %s: no new rows after dedup", arc_key)
@@ -295,7 +304,7 @@ def collect(series: list[str] | None = None) -> None:
     log.info("USDA crop progress collection complete")
 
 
-def collect_condition(series: list[str] | None = None) -> None:
+def collect_condition(series: list[str] | None = None, force_start_year: int | None = None) -> None:
     """Fetch USDA NASS crop condition ratings and write to ArcticDB ``macro`` library.
 
     Collects weekly Good/Excellent/Fair/Poor/Very Poor percentages for corn and
@@ -304,6 +313,8 @@ def collect_condition(series: list[str] | None = None) -> None:
     Args:
         series: List of ArcticDB keys to collect. Defaults to all condition
             series for corn and soybeans across national and top-5 states.
+        force_start_year: If set, fetch from this year regardless of existing data.
+            Only rows before the existing data start are written.
     """
     settings = get_settings()
     if series is None:
@@ -318,17 +329,24 @@ def collect_condition(series: list[str] | None = None) -> None:
             continue
 
         start_year: int | None = None
+        existing_start: pd.Timestamp | None = None
+        existing_end: pd.Timestamp | None = None
         try:
             existing = store.read_series("macro", arc_key)
             if not existing.empty:
-                last_date = existing.index.max()
-                start_year = (last_date - timedelta(days=7)).year
-                log.info(
-                    "Condition %s: last stored %s, fetching from year %s",
-                    arc_key,
-                    last_date.date(),
-                    start_year,
-                )
+                existing_start = existing.index.min()
+                existing_end = existing.index.max()
+                if force_start_year is not None:
+                    start_year = force_start_year
+                    log.info("Condition %s: force backfill from %s", arc_key, force_start_year)
+                else:
+                    start_year = (existing_end - timedelta(days=7)).year
+                    log.info(
+                        "Condition %s: last stored %s, fetching from year %s",
+                        arc_key,
+                        existing_end.date(),
+                        start_year,
+                    )
         except Exception:
             log.info("Condition %s: no existing data, fetching full history", arc_key)
 
@@ -345,13 +363,10 @@ def collect_condition(series: list[str] | None = None) -> None:
             log.info("Condition %s: no new data (off-season or empty response)", arc_key)
             continue
 
-        try:
-            existing = store.read_series("macro", arc_key)
-            if not existing.empty:
-                last_stored = existing.index.max()
-                df = df[df.index > last_stored]
-        except Exception:
-            pass
+        if force_start_year is not None and existing_start is not None:
+            df = df[df.index < existing_start]
+        elif existing_end is not None:
+            df = df[df.index > existing_end]
 
         if df.empty:
             log.info("Condition %s: no new rows after dedup", arc_key)
@@ -368,6 +383,17 @@ def collect_condition(series: list[str] | None = None) -> None:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    import argparse
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    collect()
-    collect_condition()
+    parser = argparse.ArgumentParser(description="USDA NASS crop progress + condition collector")
+    parser.add_argument(
+        "--start-year",
+        type=int,
+        default=None,
+        metavar="YEAR",
+        help="Force backfill from this year (e.g. 2019). Prepends rows before existing data.",
+    )
+    args = parser.parse_args()
+    collect(force_start_year=args.start_year)
+    collect_condition(force_start_year=args.start_year)

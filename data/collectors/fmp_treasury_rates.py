@@ -39,8 +39,8 @@ RATE_COLUMNS = [
     "year1", "year2", "year3", "year5",
     "year7", "year10", "year20", "year30",
 ]
-# Starter plan: 5 years of history
-HISTORY_YEARS = 5
+# FMP treasury data available back to 2010+; 7yr covers 2019 for regime conditioning
+HISTORY_YEARS = 7
 
 
 def _fetch_chunk(api_key: str, from_date: str, to_date: str) -> pd.DataFrame:
@@ -66,8 +66,14 @@ def _fetch_chunk(api_key: str, from_date: str, to_date: str) -> pd.DataFrame:
     return df[RATE_COLUMNS]
 
 
-def collect() -> None:
-    """Fetch full yield curve and write to ArcticDB ``macro`` library."""
+def collect(force_backfill: bool = False) -> None:
+    """Fetch full yield curve and write to ArcticDB ``macro`` library.
+
+    Args:
+        force_backfill: If True, ignore the last-stored date and fetch from
+            ``today - HISTORY_YEARS * 365``. Use once to extend historical depth.
+            ``write_series`` handles the upsert so existing rows are not duplicated.
+    """
     settings = get_settings()
     api_key = settings.fmp_api_key
     store = get_store()
@@ -76,14 +82,20 @@ def collect() -> None:
 
     # Determine start date
     start_date = today - timedelta(days=HISTORY_YEARS * 365)
-    try:
-        existing = store.read_series(ARC_LIB, ARC_KEY)
-        if not existing.empty:
-            last = existing.index.max().date()
-            start_date = last + timedelta(days=1)
-            log.info("TREASURY_RATES: last stored %s, fetching from %s", last, start_date)
-    except Exception:
-        log.info("TREASURY_RATES: no existing data, fetching %d years of history", HISTORY_YEARS)
+    if not force_backfill:
+        try:
+            existing = store.read_series(ARC_LIB, ARC_KEY)
+            if not existing.empty:
+                last = existing.index.max().date()
+                # Only fetch forward from last stored date
+                incremental_start = last + timedelta(days=1)
+                if incremental_start > start_date:
+                    start_date = incremental_start
+                log.info("TREASURY_RATES: last stored %s, fetching from %s", last, start_date)
+        except Exception:
+            log.info("TREASURY_RATES: no existing data, fetching %d years of history", HISTORY_YEARS)
+    else:
+        log.info("TREASURY_RATES: force backfill from %s (%d years)", start_date, HISTORY_YEARS)
 
     if start_date > today:
         log.info("TREASURY_RATES: already up to date")
@@ -112,5 +124,14 @@ def collect() -> None:
 
 
 if __name__ == "__main__":
+    import argparse
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    collect()
+    parser = argparse.ArgumentParser(description="FMP Treasury rates collector")
+    parser.add_argument(
+        "--force-backfill",
+        action="store_true",
+        help=f"Ignore last-stored date and fetch full {HISTORY_YEARS}yr history from FMP.",
+    )
+    args = parser.parse_args()
+    collect(force_backfill=args.force_backfill)
