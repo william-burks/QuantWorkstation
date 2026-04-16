@@ -515,15 +515,17 @@ MATCH (h:Hypothesis {hypothesis_id: $hypothesis_id})
 OPTIONAL MATCH (active_s:Strategy)-[:PRODUCED_CHAMPION]->(active_ch:Champion)
   WHERE coalesce(active_s.status, '') <> 'ABORTED'
     AND toLower(active_s.strategy_id) CONTAINS toLower(h.title)
+WITH h, collect(DISTINCT active_ch.champion_id) AS active_champion_matches
 OPTIONAL MATCH (aborted_s:Strategy)
   WHERE aborted_s.status = 'ABORTED'
     AND toLower(aborted_s.strategy_id) CONTAINS toLower(h.title)
+WITH h, active_champion_matches, collect(DISTINCT aborted_s.strategy_id) AS aborted_strategy_matches
 OPTIONAL MATCH (h)-[sem:SEMANTICALLY_RELATED]->(sem_h:Hypothesis)
 RETURN {
   hypothesis_id: h.hypothesis_id,
   title: h.title,
-  active_champion_matches: collect(DISTINCT active_ch.champion_id),
-  aborted_strategy_matches: collect(DISTINCT aborted_s.strategy_id),
+  active_champion_matches: active_champion_matches,
+  aborted_strategy_matches: aborted_strategy_matches,
   semantic_matches: collect(DISTINCT {
     hypothesis_id: sem_h.hypothesis_id,
     title: sem_h.title,
