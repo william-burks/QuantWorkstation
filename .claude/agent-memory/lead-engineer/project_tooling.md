@@ -127,6 +127,31 @@ This runs typecheck + the correct test suite in one pass and tees output to `/tm
 - Do NOT re-run `make check-story`, `make typecheck`, or `make test*` after a clean pass.
 - Max 2 cycles: run → fix ALL failures → run once more. If clean on second run → STOP.
 
+## Test Infrastructure (do NOT explore)
+
+Test discovery and import resolution is handled by `make` targets. Do NOT:
+- Read any `conftest.py` file (structurally blocked) — fixtures configure the runner; irrelevant to story work
+- Read or grep `pyproject.toml` for package/pythonpath config — resolved by the venv and make targets
+- `ls tests/` or `ls qws_graph/tests/` to discover test layout
+- Read unrelated test files to understand patterns — write tests directly from ACs
+
+**Import patterns:**
+```python
+# qws_graph tests (qws_graph/tests/unit/)
+from qws_graph.research.graph.store import GraphStore
+from qws_graph.research.graph.cli import main as cli_main
+
+# root tests (tests/unit/)
+from data.store import read_bars, get_store
+from strategies.base import BaseStrategy
+from research.experiments.metrics import annual_pnl_breakdown
+```
+
+If `make check-story` fails with `ImportError` or `ModuleNotFoundError`:
+- Missing `__init__.py` in a new package directory → `touch research/newmodule/__init__.py`
+- Wrong relative import → change to absolute from project root
+- Do NOT read conftest.py or pyproject.toml to diagnose — those are not the cause
+
 ## Integration Tests
 
 Pre-existing failures may exist in `qws_graph/tests/integration/`. Do not git stash to check baseline —

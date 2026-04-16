@@ -289,7 +289,7 @@ Execution order: QWS-1404 → QWS-1401 ∥ QWS-1406 → QWS-1402 → QWS-1403 �
 - `QWS-1402` `epic_14_research_pipeline_hardening/closed/story_QWS-1402_regime_diversity_gate.md` — `CLOSED` (~~QWS-1401~~)
 - `QWS-1403` `epic_14_research_pipeline_hardening/closed/story_QWS-1403_atr_regime_labels.md` — `CLOSED`
 - `QWS-1404` `epic_14_research_pipeline_hardening/closed/story_QWS-1404_fix_redundancy_gate_cypher.md` — `CLOSED`
-- `QWS-1405` `epic_14_research_pipeline_hardening/story_QWS-1405_champion_degradation_advisory.md` — `TESTING`
+- `QWS-1405` `epic_14_research_pipeline_hardening/closed/story_QWS-1405_champion_degradation_advisory.md` — `CLOSED`
 - `QWS-1406` `epic_14_research_pipeline_hardening/story_QWS-1406_seed_literature_pipeline.md` — `READY`
 
 ---

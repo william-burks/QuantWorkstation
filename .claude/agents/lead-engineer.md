@@ -49,6 +49,8 @@ hooks:
       hooks:
         - type: command
           command: ".claude/scripts/agent-phase-gate.sh"
+        - type: command
+          command: ".claude/scripts/agent-discovery-guard.sh"
 ---
 
 QuantWorkstation lead engineer.

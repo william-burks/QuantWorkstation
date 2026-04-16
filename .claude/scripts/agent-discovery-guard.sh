@@ -1,11 +1,12 @@
 #!/bin/bash
-# Guard for mcp__codebase-memory-mcp__search_code PreToolUse hook.
-# Caps total search_code calls per story run to enforce discovery budget.
+# Unified discovery budget guard for search_code AND search_graph PreToolUse hooks.
+# Both tools share a single counter — prevents tool-switching to evade per-tool caps.
+# Cap: 10 total discovery MCP calls per story run.
 # Exit 0 = allow, Exit 2 = block.
 #
 # Cap rationale: stories have 2-4 Repo Touchpoints × 2 calls each = 4-8 necessary.
 # Cap of 10 allows 5 touchpoints at full budget before blocking bleed.
-# Reset by implement-story.md Step 0.
+# Reset by agent-init-state.sh Step 0 (clears /tmp/agent-discovery-tracker/).
 
 # Only enforce inside a lead-engineer run.
 if [ ! -f "/tmp/agent-current-command.txt" ]; then
@@ -15,13 +16,13 @@ fi
 TRACK_DIR="/tmp/agent-discovery-tracker"
 mkdir -p "$TRACK_DIR" 2>/dev/null || true
 
-COUNT_FILE="$TRACK_DIR/search_code_count"
+COUNT_FILE="$TRACK_DIR/discovery_total_count"
 CAP=10
 
 if [ -f "$COUNT_FILE" ]; then
   COUNT=$(cat "$COUNT_FILE")
   if [ "$COUNT" -ge "$CAP" ]; then
-    echo "Blocked: search_code called ${COUNT}x — discovery budget exhausted (cap=$CAP). Read known file directly or use context." >&2
+    echo "Blocked: discovery MCP called ${COUNT}x — budget exhausted (cap=$CAP). Use context or read file directly." >&2
     exit 2
   fi
   echo "$((COUNT + 1))" > "$COUNT_FILE"

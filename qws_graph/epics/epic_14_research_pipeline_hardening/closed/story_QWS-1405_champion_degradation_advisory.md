@@ -4,7 +4,7 @@
 QWS-1405
 
 ## Status
-TESTING
+CLOSED
 
 ## Type
 code
@@ -87,7 +87,7 @@ ADVISORY: Champion {c.id} ({c.name})
 - [x] `monitor.py` updated with `--audit-lineage`
 - [x] `degrade.py` updated with `--reason`
 - [x] Unit tests pass
-- [ ] Story marked CLOSED
+- [x] Story marked CLOSED
 
 ## Acceptance Test Plan
 
