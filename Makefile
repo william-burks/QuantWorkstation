@@ -5,9 +5,9 @@ CURRENT_BRANCH := $(shell git symbolic-ref --short HEAD)
 REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 
 RELEASE_BRANCH = release/$(REL_VER)
-MASTER_BRANCH = master
+MASTER_BRANCH = main
 
-.PHONY: to-release to-master check-clean done-with-feature test test-unit test-integration test-all lint typecheck check verify check-story show-discovery commit-impl commit-test commit-push-qa commit-close-story prime-agent prime-lint-mechanic feature-branch arm-verify-gate arm-qa-gate arm-close-epic-gate neo4j-up neo4j-down neo4j-restart neo4j-logs neo4j-status seed
+.PHONY: to-release to-main check-clean done-with-feature test test-unit test-integration test-all lint typecheck check verify check-story show-discovery commit-impl commit-test commit-push-qa commit-close-story prime-agent prime-lint-mechanic feature-branch arm-verify-gate arm-qa-gate arm-close-epic-gate neo4j-up neo4j-down neo4j-restart neo4j-logs neo4j-status seed
 
 COMPOSE_FILE := infra/docker-compose.neo4j.yml
 NEO4J_SERVICE := qws-neo4j
@@ -88,9 +88,9 @@ to-release: check-clean
 	@echo "Done! Returning to $(CURRENT_BRANCH)..."
 	git checkout $(CURRENT_BRANCH)
 
-# 2. Merge Release into Master
-to-master: check-clean
-	@echo "Finalizing Release $(REL_VER) into Master..."
+# 2. Merge Release into Main
+to-main: check-clean
+	@echo "Finalizing Release $(REL_VER) into Main..."
 	git checkout $(MASTER_BRANCH)
 	git pull origin $(MASTER_BRANCH)
 	git merge $(RELEASE_BRANCH)
