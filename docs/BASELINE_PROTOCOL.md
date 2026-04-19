@@ -7,7 +7,7 @@ make test-all
 ```
 
 This runs both test suites in sequence:
-- `qws_graph/tests/unit/` — graph module unit tests
+- `tests/unit/` — graph module unit tests
 - `tests/unit/` — data/execution/strategy unit tests
 
 ## Rules

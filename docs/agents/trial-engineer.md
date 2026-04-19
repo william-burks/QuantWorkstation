@@ -98,7 +98,7 @@ Guard blocks write if proposed N ≠ max + 1.
 
 | Can | Cannot |
 |---|---|
-| Write to `research/trials/` | Write to `execution/`, `data/collectors/`, `util/` |
+| Write to `research/trials/` | Write to `execution/`, `data/collectors/`, `scripts/` |
 | Write to `research/results/` | Modify `research/experiments/*.py` |
 | Execute trial scripts (after "run it") | Execute without explicit "run it" |
 | `qw record --bundle` (after run, with hypothesis_id) | `qw record --bundle` without `hypothesis_id` in bundle |

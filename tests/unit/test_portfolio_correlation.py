@@ -286,22 +286,22 @@ class TestWriteEdges:
 
 class TestPortfolioAlphaCypher:
     def test_cypher_contains_is_oos_drift(self) -> None:
-        from qws_graph.research.graph.query import GET_PORTFOLIO_ALPHA_V1_CYPHER  # noqa: PLC0415
+        from research.graph.query import GET_PORTFOLIO_ALPHA_V1_CYPHER  # noqa: PLC0415
 
         assert "is_oos_drift" in GET_PORTFOLIO_ALPHA_V1_CYPHER
 
     def test_cypher_contains_calmar(self) -> None:
-        from qws_graph.research.graph.query import GET_PORTFOLIO_ALPHA_V1_CYPHER  # noqa: PLC0415
+        from research.graph.query import GET_PORTFOLIO_ALPHA_V1_CYPHER  # noqa: PLC0415
 
         assert "calmar" in GET_PORTFOLIO_ALPHA_V1_CYPHER
 
     def test_cypher_contains_metrics_max_drawdown_r(self) -> None:
-        from qws_graph.research.graph.query import GET_PORTFOLIO_ALPHA_V1_CYPHER  # noqa: PLC0415
+        from research.graph.query import GET_PORTFOLIO_ALPHA_V1_CYPHER  # noqa: PLC0415
 
         assert "metrics_max_drawdown_r" in GET_PORTFOLIO_ALPHA_V1_CYPHER
 
     def test_cypher_contains_artifact_path(self) -> None:
-        from qws_graph.research.graph.query import GET_PORTFOLIO_ALPHA_V1_CYPHER  # noqa: PLC0415
+        from research.graph.query import GET_PORTFOLIO_ALPHA_V1_CYPHER  # noqa: PLC0415
 
         assert "artifact_path" in GET_PORTFOLIO_ALPHA_V1_CYPHER
 
@@ -313,7 +313,7 @@ class TestPortfolioAlphaCypher:
 
 class TestCorrelationGateCli:
     def test_gate_constant_defined(self) -> None:
-        from qws_graph.research.graph.cli import _CORRELATION_GATE_THRESHOLD  # noqa: PLC0415
+        from research.graph.cli import _CORRELATION_GATE_THRESHOLD  # noqa: PLC0415
 
         assert isinstance(_CORRELATION_GATE_THRESHOLD, float)
         assert _CORRELATION_GATE_THRESHOLD == pytest.approx(0.60)
@@ -322,7 +322,7 @@ class TestCorrelationGateCli:
         """Store method exists and accepts required parameters."""
         import inspect  # noqa: PLC0415
 
-        from qws_graph.research.graph.store import GraphStore  # noqa: PLC0415
+        from research.graph.store import GraphStore  # noqa: PLC0415
 
         sig = inspect.signature(GraphStore.write_correlated_with)
         param_names = set(sig.parameters.keys())
@@ -334,7 +334,7 @@ class TestCorrelationGateCli:
     def test_check_correlated_with_method_signature(self) -> None:
         import inspect  # noqa: PLC0415
 
-        from qws_graph.research.graph.store import GraphStore  # noqa: PLC0415
+        from research.graph.store import GraphStore  # noqa: PLC0415
 
         sig = inspect.signature(GraphStore.check_correlated_with_active_champions)
         param_names = set(sig.parameters.keys())
@@ -349,15 +349,13 @@ class TestCorrelationGateCli:
 
 class TestSchemaDocs:
     def test_data_dictionary_has_correlated_with(self) -> None:
-        dd = Path(__file__).parent.parent.parent / "qws_graph" / "docs" / "data_dictionary.yaml"
+        dd = Path(__file__).parent.parent.parent / "docs" / "graph" / "data_dictionary.yaml"
         assert dd.exists()
         content = dd.read_text(encoding="utf-8")
         assert "CORRELATED_WITH" in content
 
     def test_graph_contract_has_correlated_with(self) -> None:
-        contract = (
-            Path(__file__).parent.parent.parent / "qws_graph" / "docs" / "graph_v1_contract.md"
-        )
+        contract = Path(__file__).parent.parent.parent / "docs" / "graph" / "graph_v1_contract.md"
         assert contract.exists()
         content = contract.read_text(encoding="utf-8")
         assert "CORRELATED_WITH" in content
@@ -370,19 +368,19 @@ class TestSchemaDocs:
 
 class TestDemoSeed:
     def test_demo_seed_contains_correlated_with(self) -> None:
-        from qws_graph.research.graph.cypher import DEMO_SEED_CYPHER  # noqa: PLC0415
+        from research.graph.cypher import DEMO_SEED_CYPHER  # noqa: PLC0415
 
         assert "CORRELATED_WITH" in DEMO_SEED_CYPHER
 
     def test_demo_seed_has_correlated_with_properties(self) -> None:
-        from qws_graph.research.graph.cypher import DEMO_SEED_CYPHER  # noqa: PLC0415
+        from research.graph.cypher import DEMO_SEED_CYPHER  # noqa: PLC0415
 
         assert "coefficient" in DEMO_SEED_CYPHER
         assert "pair_key" in DEMO_SEED_CYPHER
         assert "is_demo" in DEMO_SEED_CYPHER
 
     def test_correlated_with_cypher_constants_exist(self) -> None:
-        from qws_graph.research.graph.cypher import (  # noqa: PLC0415
+        from research.graph.cypher import (  # noqa: PLC0415
             CORRELATED_WITH_CHAMPION_QUERY,
             CORRELATED_WITH_STRATEGY_QUERY,
             GET_PORTFOLIO_ALPHA_CHAMPIONS_QUERY,

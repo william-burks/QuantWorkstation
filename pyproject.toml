@@ -34,12 +34,21 @@ dependencies = [
     # Utilities
     "pandas>=2.2",
     "numpy>=1.26",
+    # Graph store (Neo4j)
+    "neo4j>=5,<6",
 ]
+
+[project.scripts]
+qw = "research.graph.cli:main"
 
 [project.optional-dependencies]
 macro = [
     # Google Trends retail sentiment (unofficial library — best-effort)
     "pytrends>=4.9",
+]
+graph = [
+    # Local embedding model for `qw backfill --embeddings` semantic hypothesis dedup
+    "sentence-transformers>=2.7",
 ]
 dev = [
     "pytest>=8",

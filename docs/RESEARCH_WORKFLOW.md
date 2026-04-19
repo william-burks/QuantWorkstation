@@ -267,7 +267,7 @@ navigator cannot run trials; the trial-engineer cannot touch champion lifecycle.
 
 ## [CURRENT] qw CLI Reference
 
-All commands are graph-side. Data-side ingestion lives in `data/collectors/` + `util/`.
+All commands are graph-side. Data-side ingestion lives in `data/collectors/` + `scripts/`.
 
 | Command | Purpose |
 |---|---|
@@ -294,4 +294,4 @@ Run `qw <command> --help` for full flag list.
 - `docs/PROVENANCE_ENGINE.md` — graph schema, MCP tools, promotion gate logic
 - `docs/SIGNALS_LIBRARY.md` — ArcticDB `signals` lib reference (strategies + regime classifiers)
 - `docs/BACKLOG_ALIGNMENT.md` — what is built vs. what is planned
-- `qws_graph/docs/IS_RESEARCH_SOP.md` — 5-phase research methodology (Baseline → OOS Preparation)
+- `docs/graph/IS_RESEARCH_SOP.md` — 5-phase research methodology (Baseline → OOS Preparation)

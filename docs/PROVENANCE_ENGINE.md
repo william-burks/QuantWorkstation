@@ -91,7 +91,7 @@ provenance in the graph.
 
 | Property | Type | Description |
 |---|---|---|
-| `strategy_class` | str | Taxonomy label grouping strategies by logic family (e.g. `trend_following`, `mean_reversion`, `liquidity_sweep`). Drives `portfolio_by_class` preset. Authoritative values defined in `qws_graph/docs/data_dictionary.yaml`. |
+| `strategy_class` | str | Taxonomy label grouping strategies by logic family (e.g. `trend_following`, `mean_reversion`, `liquidity_sweep`). Drives `portfolio_by_class` preset. Authoritative values defined in `docs/graph/data_dictionary.yaml`. |
 
 ### [NEW — QWS-0502] — Regime Context
 
@@ -371,7 +371,7 @@ MATCH (h:Hypothesis)-[:BRANCHED_FROM*]->(fc:FormerChampion) WHERE fc.strategy_id
 
 ## Reference Files
 
-- `qws_graph/docs/data_dictionary.yaml` — authoritative current schema (all properties)
-- `qws_graph/docs/graph_v1_contract.md` — implementation contract
-- `qws_graph/docs/qws_graph_runbook.md` — operational procedures
+- `docs/graph/data_dictionary.yaml` — authoritative current schema (all properties)
+- `docs/graph/graph_v1_contract.md` — implementation contract
+- `docs/graph/qws_graph_runbook.md` — operational procedures
 - `docs/BACKLOG_ALIGNMENT.md` — which stories implement which target nodes

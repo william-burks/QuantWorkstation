@@ -1,7 +1,7 @@
 # ROADMAP — Deferred Capabilities
 
 Capabilities we intend to build but have not scheduled yet. Items here are **not in
-the active backlog** (`qws_graph/epics/INDEX.md`) and have **no code in the tree**.
+the active backlog** (`epics/INDEX.md`) and have **no code in the tree**.
 When work begins, create an epic/story and move the item to `BACKLOG_ALIGNMENT.md`.
 
 Each entry records what was removed, when, and the commit SHA so the previous

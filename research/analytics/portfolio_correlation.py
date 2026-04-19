@@ -310,7 +310,7 @@ def main(argv: list[str] | None = None) -> int:
     # Attempt graph connection
     store_instance = None
     try:
-        from qws_graph.research.graph.store import GraphStore  # noqa: PLC0415
+        from research.graph.store import GraphStore  # noqa: PLC0415
 
         store_instance = GraphStore.from_env()
         store_instance.ping()

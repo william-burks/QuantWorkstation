@@ -4,7 +4,7 @@ Baltic Dirty Tanker Index (BDTI) collector.
 Scrapes the current BDTI value from StockQ and appends it to the ``macro``
 ArcticDB library via ``store.write_series()``.
 
-Historical seed: run ``python util/seed_bdti_history.py`` once to load the
+Historical seed: run ``python scripts/seed_bdti_history.py`` once to load the
 Investing.com CSV export (Apr 2016 onward).
 
 ArcticDB key: ``BDTI_1D``

@@ -115,7 +115,9 @@ class TestDiversityScoreMetric:
 
 
 class TestReportDiversityBlock:
-    def test_diversity_block_printed_when_trades_provided(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_diversity_block_printed_when_trades_provided(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         trades = _make_trades_df([2022, 2023, 2024], [1000.0, 2000.0, 500.0])
         results = _make_results_df()
         bh = {"sharpe": 0.5, "return": 0.10, "max_drawdown": -0.15, "calmar": 0.5}
@@ -217,13 +219,15 @@ class TestBundleCliDiversityWarning:
         )
         (tmp_path / "baseline_results.csv").write_text(csv_content)
 
-    def test_bundle_reads_diversity_fields_no_recompute(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_bundle_reads_diversity_fields_no_recompute(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """_cmd_bundle reads pre-computed diversity from bundle.json, writes to trial_metadata."""
         import argparse
         from unittest.mock import patch
 
-        from qws_graph.research.graph.cli import _cmd_bundle
-        from qws_graph.research.graph.store import GraphStore
+        from research.graph.cli import _cmd_bundle
+        from research.graph.store import GraphStore
 
         diversity = {
             "diversity_score": "0.3333",
@@ -253,8 +257,8 @@ class TestBundleCliDiversityWarning:
             rationale=None,
         )
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_conn,
-            patch("qws_graph.research.graph.cli.GraphStore.from_env", return_value=mock_store),
+            patch("research.graph.cli.NeoConnector") as mock_conn,
+            patch("research.graph.cli.GraphStore.from_env", return_value=mock_store),
         ):
             mock_conn.return_value.is_available.return_value = True
             rc = _cmd_bundle(args)
@@ -333,8 +337,8 @@ class TestBundleDoesNotRecompute:
         import argparse
         from unittest.mock import patch
 
-        from qws_graph.research.graph.cli import _cmd_bundle
-        from qws_graph.research.graph.store import GraphStore
+        from research.graph.cli import _cmd_bundle
+        from research.graph.store import GraphStore
 
         manifest = {
             "trial": "test",
@@ -379,8 +383,8 @@ class TestBundleDoesNotRecompute:
             rationale=None,
         )
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_conn,
-            patch("qws_graph.research.graph.cli.GraphStore.from_env", return_value=mock_store),
+            patch("research.graph.cli.NeoConnector") as mock_conn,
+            patch("research.graph.cli.GraphStore.from_env", return_value=mock_store),
         ):
             mock_conn.return_value.is_available.return_value = True
             rc = _cmd_bundle(args)
@@ -406,8 +410,8 @@ class TestTrialMetadataOnRunNode:
         import argparse
         from unittest.mock import patch
 
-        from qws_graph.research.graph.cli import _cmd_bundle
-        from qws_graph.research.graph.store import GraphStore
+        from research.graph.cli import _cmd_bundle
+        from research.graph.store import GraphStore
 
         manifest = {
             "trial": "test",
@@ -451,8 +455,8 @@ class TestTrialMetadataOnRunNode:
             rationale=None,
         )
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_conn,
-            patch("qws_graph.research.graph.cli.GraphStore.from_env", return_value=mock_store),
+            patch("research.graph.cli.NeoConnector") as mock_conn,
+            patch("research.graph.cli.GraphStore.from_env", return_value=mock_store),
         ):
             mock_conn.return_value.is_available.return_value = True
             _cmd_bundle(args)
@@ -477,8 +481,8 @@ class TestNoAutoRejection:
         import argparse
         from unittest.mock import patch
 
-        from qws_graph.research.graph.cli import _cmd_bundle
-        from qws_graph.research.graph.store import GraphStore
+        from research.graph.cli import _cmd_bundle
+        from research.graph.store import GraphStore
 
         # diversity_distinct_years=1, diversity_years_positive=0 — worst possible
         manifest = {
@@ -523,8 +527,8 @@ class TestNoAutoRejection:
             rationale=None,
         )
         with (
-            patch("qws_graph.research.graph.cli.NeoConnector") as mock_conn,
-            patch("qws_graph.research.graph.cli.GraphStore.from_env", return_value=mock_store),
+            patch("research.graph.cli.NeoConnector") as mock_conn,
+            patch("research.graph.cli.GraphStore.from_env", return_value=mock_store),
         ):
             mock_conn.return_value.is_available.return_value = True
             rc = _cmd_bundle(args)

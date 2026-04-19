@@ -45,6 +45,13 @@ research/trials/futures/liquidity_sweep/*.csv
 research/trials/futures/liquidity_sweep/*.json
 results/
 
+# Agent tuning metrics (internal — waste %, run analytics)
+docs/agent-metrics/
+
+# Test fixture artifacts with real champion params / Sharpe values
+tests/fixtures/artifacts/champion/
+tests/fixtures/artifacts/tracker/
+
 # Misc local docs
 .qws_misc_docs/
 .rvry/

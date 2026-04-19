@@ -84,4 +84,4 @@ python -m research.regimes.atr_trend_classifier --symbol CL
 
 - `data/store.py` — Store class, library list, read/write API
 - `research/regimes/atr_trend_classifier.py` — current regime producer
-- `qws_graph/epics/epic_14_research_pipeline_hardening/closed/story_QWS-1403_atr_regime_labels.md` — regime classifier acceptance criteria
+- `epics/epic_14_research_pipeline_hardening/closed/story_QWS-1403_atr_regime_labels.md` — regime classifier acceptance criteria

@@ -95,7 +95,7 @@ Key pattern: `{strategy}_{symbol}_{tf}`
 | Source | How to refresh | Frequency |
 |--------|---------------|-----------|
 | Futures Tier 1 | `python -m data.collectors.ibkr_futures` (IB Gateway required) | Monthly |
-| Crypto | `python util/ingest_coinbase_crypto.py` | Monthly |
+| Crypto | `python scripts/ingest_coinbase_crypto.py` | Monthly |
 | FRED / EIA / BHI | `python -m data.collectors.fred` / `eia` / `baker_hughes` | Weekly |
 | COT | `python -m data.collectors.cot` | Weekly (Fridays) |
 | USDA | `python -m data.collectors.usda_nass` | Weekly (in-season) |

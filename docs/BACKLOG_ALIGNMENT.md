@@ -272,4 +272,4 @@ QWS-0803 (decay monitor) — CLOSED — Epic 8 gate for Epic 12 satisfied
 - `docs/MANIFESTO.md` — mission, targets, philosophy
 - `docs/PROVENANCE_ENGINE.md` — authoritative schema and MCP tool reference
 - `docs/RESEARCH_WORKFLOW.md` — research loop, interaction modes, pivot tracking
-- `qws_graph/epics/INDEX.md` — canonical story status (source of truth for COMPLETE/PLANNED)
+- `epics/INDEX.md` — canonical story status (source of truth for COMPLETE/PLANNED)

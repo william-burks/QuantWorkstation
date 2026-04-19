@@ -7,21 +7,23 @@ REL_VER := $(shell echo $(CURRENT_BRANCH) | cut -d'/' -f2)
 RELEASE_BRANCH = release/$(REL_VER)
 MASTER_BRANCH = master
 
-.PHONY: to-release to-master check-clean done-with-feature test test-unit test-integration test-all lint typecheck check verify check-story show-discovery commit-impl commit-test commit-push-qa commit-close-story prime-agent prime-lint-mechanic feature-branch arm-verify-gate arm-qa-gate arm-close-epic-gate
+.PHONY: to-release to-master check-clean done-with-feature test test-unit test-integration test-all lint typecheck check verify check-story show-discovery commit-impl commit-test commit-push-qa commit-close-story prime-agent prime-lint-mechanic feature-branch arm-verify-gate arm-qa-gate arm-close-epic-gate neo4j-up neo4j-down neo4j-restart neo4j-logs neo4j-status seed
+
+COMPOSE_FILE := infra/docker-compose.neo4j.yml
+NEO4J_SERVICE := qws-neo4j
 
 
 # --- QUALITY ---
 
 test:
-	source .venv/bin/activate && pytest qws_graph/tests/unit/ -v --tb=long
-
-test-unit:
 	source .venv/bin/activate && pytest tests/unit/ -v --tb=long
 
-test-integration:
-	source .venv/bin/activate && pytest qws_graph/tests/integration/ -v --tb=long
+test-unit: test
 
-test-all: test test-unit
+test-integration:
+	source .venv/bin/activate && pytest tests/integration/ -v --tb=long
+
+test-all: test test-integration
 
 lint:
 	source .venv/bin/activate && ruff check . --fix && ruff format
@@ -29,22 +31,41 @@ lint:
 typecheck:
 	source .venv/bin/activate && mypy --strict .
 
-check: lint typecheck test-all
+check: lint typecheck test
 
-verify: lint typecheck test-all
+verify: lint typecheck test
+
+
+# --- NEO4J LIFECYCLE ---
+
+neo4j-up:
+	docker compose -f $(COMPOSE_FILE) up -d --wait $(NEO4J_SERVICE)
+
+neo4j-down:
+	docker compose -f $(COMPOSE_FILE) down
+
+neo4j-restart: neo4j-down neo4j-up
+
+neo4j-logs:
+	docker compose -f $(COMPOSE_FILE) logs --tail=200 $(NEO4J_SERVICE)
+
+neo4j-status:
+	docker compose -f $(COMPOSE_FILE) ps $(NEO4J_SERVICE)
+
+seed: neo4j-up
+	source .venv/bin/activate && qw seed --demo && qw seed --targets
 
 # Show how many discovery MCP calls the current/last agent run consumed
 show-discovery:
 	@echo "Discovery budget (cap=10):"
 	@cat /tmp/agent-discovery-tracker/discovery_total_count 2>/dev/null | xargs -I{} echo "  used: {}/10" || echo "  no active run (counter not found)"
 
-# For use by lead-engineer during story implementation: typecheck + both test suites, output teed.
+# For use by lead-engineer during story implementation: typecheck + tests, output teed.
 # Read results from /tmp/check-story-output.txt — do NOT re-run to filter output.
 check-story:
 	source .venv/bin/activate && \
-	mypy --strict data/ research/ strategies/ execution/ qws_graph/research/ 2>&1 | tee /tmp/check-story-output.txt | tail -5; \
-	pytest tests/unit/ -v --tb=short 2>&1 | tee -a /tmp/check-story-output.txt | tail -5; \
-	pytest qws_graph/tests/unit/ -v --tb=short 2>&1 | tee -a /tmp/check-story-output.txt | tail -5
+	mypy --strict data/ research/ strategies/ execution/ 2>&1 | tee /tmp/check-story-output.txt | tail -5; \
+	pytest tests/unit/ -v --tb=short 2>&1 | tee -a /tmp/check-story-output.txt | tail -5
 
 # --- GIT WORKFLOW ---
 

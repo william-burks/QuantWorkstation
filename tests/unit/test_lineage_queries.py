@@ -1,0 +1,802 @@
+# mypy: ignore-errors
+"""Unit tests for Story 4 lineage and pivot queries.
+
+Covers:
+- Strategy lineage ordered chain (AC1)
+- Pivot query empty list when no explicit edges (AC2)
+- Multi-hop traversal bounded at depth=1 (AC3)
+- Cross-artifact correlation through shared Strategy anchors (AC4)
+"""
+
+from __future__ import annotations
+
+import json
+from typing import Any
+
+import pytest
+
+from research.graph.query import (
+    GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER,
+    GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER,
+    GET_STRATEGY_LINEAGE_V1_CYPHER,
+    QUERY_VIEW_REGISTRY,
+    _build_downstream_cypher,
+    _build_lineage_cypher,
+    get_cross_artifact_correlation_v1,
+    get_downstream_champions_v1,
+    get_strategy_lineage_v1,
+)
+from research.graph.query_models import CrossArtifactRowV1
+from research.graph.query_presets import (
+    PRESET_CATALOG,
+    resolve_preset,
+    run_preset,
+    validate_params,
+)
+
+# ---------------------------------------------------------------------------
+# Fake session helpers (same pattern as test_graph_query_models.py)
+# ---------------------------------------------------------------------------
+
+
+class FakeRecord:
+    def __init__(self, payload: dict[str, object]) -> None:
+        self._payload = payload
+
+    def data(self) -> dict[str, object]:
+        return self._payload
+
+
+class FakeSession:
+    def __init__(self, responses: dict[str, list[dict[str, object]]]) -> None:
+        self._responses = responses
+        self.calls: list[tuple[str, dict[str, object]]] = []
+
+    def run(self, query: str, **parameters: object):
+        self.calls.append((query, parameters))
+        return [FakeRecord(row) for row in self._responses.get(query, [])]
+
+
+def _lineage_record(
+    strategy_id: str,
+    champion_id: str,
+    freeze_date: str,
+    oos_status: str = "pending",
+    pivot_from_run_id: str | None = None,
+    pivot_run_timestamp: str | None = None,
+    pivot_run_artifact_path: str | None = None,
+    pivot_config_id: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "result": {
+            "strategy_id": strategy_id,
+            "champion_id": champion_id,
+            "freeze_date": freeze_date,
+            "oos_status": oos_status,
+            "pivot_from_run_id": pivot_from_run_id,
+            "pivot_run_timestamp": pivot_run_timestamp,
+            "pivot_run_artifact_path": pivot_run_artifact_path,
+            "pivot_config_id": pivot_config_id,
+        }
+    }
+
+
+def _champion_record(
+    champion_id: str,
+    strategy_id: str,
+    freeze_date: str,
+    oos_status: str = "pending",
+    pivot_from_run_id: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "result": {
+            "champion_id": champion_id,
+            "strategy_id": strategy_id,
+            "freeze_date": freeze_date,
+            "oos_status": oos_status,
+            "fragilities": [],
+            "artifact_path": f"results/{champion_id}.md",
+            "pivot_from_run_id": pivot_from_run_id,
+            "metrics_summary": None,
+        }
+    }
+
+
+def _correlation_record(
+    anchor_strategy_id: str,
+    related_strategy_id: str,
+    instrument: str,
+    timeframe: str,
+    direction: str,
+    logic_type: str,
+    run_count: int = 0,
+    champion_count: int = 0,
+    latest_champion_id: str | None = None,
+    latest_champion_freeze_date: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "result": {
+            "anchor_strategy_id": anchor_strategy_id,
+            "related_strategy_id": related_strategy_id,
+            "instrument": instrument,
+            "timeframe": timeframe,
+            "direction": (
+                related_strategy_id.split("-")[2] if "-" in related_strategy_id else direction
+            ),
+            "logic_type": logic_type,
+            "run_count": run_count,
+            "champion_count": champion_count,
+            "latest_champion_id": latest_champion_id,
+            "latest_champion_freeze_date": latest_champion_freeze_date,
+        }
+    }
+
+
+class FakeGraphQueryService:
+    """Minimal duck-type for GraphQueryService."""
+
+    def __init__(
+        self,
+        downstream_champions: list[dict[str, Any]] | None = None,
+        cross_artifact: list[dict[str, Any]] | None = None,
+        strategy_lineage: list[dict[str, Any]] | None = None,
+    ) -> None:
+        self._downstream = downstream_champions or []
+        self._cross_artifact = cross_artifact or []
+        self._strategy_lineage = strategy_lineage or []
+        self.calls: list[tuple[str, dict[str, Any]]] = []
+
+    def get_downstream_champions_v1(
+        self,
+        run_id: str,
+        depth: int = 1,
+        include_retired: bool = False,
+    ) -> list[dict[str, Any]]:
+        self.calls.append(
+            (
+                "get_downstream_champions_v1",
+                {"run_id": run_id, "depth": depth, "include_retired": include_retired},
+            )
+        )
+        return self._downstream
+
+    def get_cross_artifact_correlation_v1(
+        self,
+        strategy_id: str | None = None,
+        family_id: str | None = None,
+    ) -> list[dict[str, Any]]:
+        self.calls.append(
+            (
+                "get_cross_artifact_correlation_v1",
+                {"strategy_id": strategy_id, "family_id": family_id},
+            )
+        )
+        return self._cross_artifact
+
+    def get_strategy_lineage_v1(self, strategy_id: str, depth: int = 1) -> list[dict[str, Any]]:
+        self.calls.append(("get_strategy_lineage_v1", {"strategy_id": strategy_id, "depth": depth}))
+        return self._strategy_lineage
+
+    def get_recent_champions_v1(self, limit: int = 20) -> list[dict[str, Any]]:
+        return []
+
+    def close(self) -> None:
+        pass
+
+
+# ---------------------------------------------------------------------------
+# AC1 — Strategy lineage query returns ordered chain
+# ---------------------------------------------------------------------------
+
+
+class TestStrategyLineageOrderedChain:
+    def test_single_champion_returns_one_row(self) -> None:
+        session = FakeSession(
+            {
+                GET_STRATEGY_LINEAGE_V1_CYPHER: [
+                    _lineage_record(
+                        "es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id="run-001"
+                    ),
+                ]
+            }
+        )
+        rows = get_strategy_lineage_v1(session, "es-1h-bear-sweep")
+        assert len(rows) == 1
+        assert rows[0]["champion_id"] == "champ-001"
+        assert rows[0]["pivot_from_run_id"] == "run-001"
+
+    def test_multiple_champions_ordered_by_freeze_date_desc(self) -> None:
+        session = FakeSession(
+            {
+                GET_STRATEGY_LINEAGE_V1_CYPHER: [
+                    _lineage_record("es-1h-bear-sweep", "champ-002", "2026-03-01"),
+                    _lineage_record("es-1h-bear-sweep", "champ-003", "2026-04-01"),
+                    _lineage_record("es-1h-bear-sweep", "champ-001", "2026-02-01"),
+                ]
+            }
+        )
+        rows = get_strategy_lineage_v1(session, "es-1h-bear-sweep")
+        freeze_dates = [r["freeze_date"] for r in rows]
+        assert freeze_dates == sorted(freeze_dates, reverse=True)
+
+    def test_champion_without_pivot_edge_included(self) -> None:
+        session = FakeSession(
+            {
+                GET_STRATEGY_LINEAGE_V1_CYPHER: [
+                    _lineage_record(
+                        "es-1h-bear-sweep", "champ-001", "2026-04-01", pivot_from_run_id=None
+                    ),
+                ]
+            }
+        )
+        rows = get_strategy_lineage_v1(session, "es-1h-bear-sweep")
+        assert len(rows) == 1
+        assert rows[0]["pivot_from_run_id"] is None
+
+    def test_empty_strategy_returns_empty_list(self) -> None:
+        session = FakeSession({GET_STRATEGY_LINEAGE_V1_CYPHER: []})
+        rows = get_strategy_lineage_v1(session, "es-1h-bear-sweep")
+        assert rows == []
+
+    def test_output_has_stable_keys(self) -> None:
+        session = FakeSession(
+            {
+                GET_STRATEGY_LINEAGE_V1_CYPHER: [
+                    _lineage_record("es-1h-bear-sweep", "champ-001", "2026-04-01"),
+                ]
+            }
+        )
+        row = get_strategy_lineage_v1(session, "es-1h-bear-sweep")[0]
+        expected_keys = {
+            "version",
+            "strategy_id",
+            "champion_id",
+            "freeze_date",
+            "oos_status",
+            "pivot_from_run_id",
+            "pivot_run_timestamp",
+            "pivot_run_artifact_path",
+            "pivot_config_id",
+        }
+        assert set(row) == expected_keys
+
+    def test_strategy_lineage_registered_in_query_view_registry(self) -> None:
+        assert "get_strategy_lineage_v1" in QUERY_VIEW_REGISTRY
+
+    def test_strategy_lineage_preset_exists(self) -> None:
+        spec = resolve_preset("strategy_lineage")
+        assert spec.name == "strategy_lineage"
+
+
+# ---------------------------------------------------------------------------
+# AC2 — Pivot query returns empty list when no explicit pivot edges exist
+# ---------------------------------------------------------------------------
+
+
+class TestDownstreamChampionsNoPivotEdge:
+    def test_no_pivot_edges_returns_empty_list(self) -> None:
+        session = FakeSession({GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: []})
+        rows = get_downstream_champions_v1(session, "run-001")
+        assert rows == []
+
+    def test_run_id_passed_as_parameter(self) -> None:
+        session = FakeSession({GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: []})
+        get_downstream_champions_v1(session, "run-abc")
+        assert session.calls[0][1] == {"run_id": "run-abc"}
+
+    def test_champions_with_pivot_returned(self) -> None:
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record(
+                        "champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"
+                    ),
+                ]
+            }
+        )
+        rows = get_downstream_champions_v1(session, "run-001")
+        assert len(rows) == 1
+        assert rows[0]["champion_id"] == "champ-001"
+        assert rows[0]["pivot_from_run_id"] == "run-001"
+
+    def test_multiple_downstream_champions_ordered(self) -> None:
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record(
+                        "champ-002", "nq-1h-bear-sweep", "2026-03-15", pivot_from_run_id="run-001"
+                    ),
+                    _champion_record(
+                        "champ-001", "es-1h-bear-sweep", "2026-04-01", pivot_from_run_id="run-001"
+                    ),
+                ]
+            }
+        )
+        rows = get_downstream_champions_v1(session, "run-001")
+        # Both returned; freeze_date ordering is delegated to Cypher ORDER BY
+        assert len(rows) == 2
+        champion_ids = {r["champion_id"] for r in rows}
+        assert champion_ids == {"champ-001", "champ-002"}
+
+    def test_reuses_champion_details_v1_dto(self) -> None:
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+                ]
+            }
+        )
+        row = get_downstream_champions_v1(session, "run-001")[0]
+        assert row["version"] == "v1"
+        assert "fragilities" in row
+        assert "metrics_summary" in row
+
+    def test_registered_in_query_view_registry(self) -> None:
+        assert "get_downstream_champions_v1" in QUERY_VIEW_REGISTRY
+
+    def test_downstream_champions_preset_exists(self) -> None:
+        spec = resolve_preset("downstream_champions")
+        assert spec.name == "downstream_champions"
+        assert spec.requires_graph is True
+
+    def test_downstream_champions_preset_requires_run_id(self) -> None:
+        spec = resolve_preset("downstream_champions")
+        errors = validate_params(spec, {})
+        assert any("run_id" in e for e in errors)
+
+    def test_downstream_champions_preset_routes_to_view(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[{"champion_id": "c1"}])
+        results = run_preset("downstream_champions", {"run_id": "run-001"}, service=service)
+        assert service.calls[0][0] == "get_downstream_champions_v1"
+        assert results == [{"champion_id": "c1"}]
+
+    def test_downstream_champions_preset_empty_when_no_edges(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[])
+        results = run_preset("downstream_champions", {"run_id": "run-no-pivots"}, service=service)
+        assert results == []
+
+
+# ---------------------------------------------------------------------------
+# AC3 — Multi-hop lineage traversal bounded and documented
+# ---------------------------------------------------------------------------
+
+
+class TestTraversalDepthBounded:
+    def test_get_strategy_lineage_cypher_uses_bounded_variable_length(self) -> None:
+        # QWS-0504: Cypher must use variable-length path with depth inlined as literal.
+        # The exported constant is the depth=1 form.
+        assert "PIVOTED_FROM*1..1" in GET_STRATEGY_LINEAGE_V1_CYPHER
+        assert "PIVOTED_FROM" in GET_STRATEGY_LINEAGE_V1_CYPHER
+        # depth=3 form uses *1..3
+        assert "PIVOTED_FROM*1..3" in _build_lineage_cypher(3)
+        # Must NOT use unbounded [*]
+        import re
+
+        unbounded = re.search(r"\[:\w+\s*\*\s*]", GET_STRATEGY_LINEAGE_V1_CYPHER)
+        assert unbounded is None, "Cypher must not contain unbounded variable-length paths"
+
+    def test_get_downstream_champions_cypher_uses_bounded_variable_length(self) -> None:
+        assert "PIVOTED_FROM*1..1" in GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER
+        assert "PIVOTED_FROM" in GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER
+        assert "PIVOTED_FROM*1..5" in _build_downstream_cypher(5)
+        import re
+
+        unbounded = re.search(r"\[:\w+\s*\*\s*]", GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER)
+        assert unbounded is None, "Cypher must not contain unbounded variable-length paths"
+
+    def test_get_cross_artifact_cypher_is_single_hop(self) -> None:
+        assert "[*" not in GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER
+
+    def test_get_downstream_champions_docstring_documents_depth(self) -> None:
+        doc = get_downstream_champions_v1.__doc__ or ""
+        assert "depth" in doc.lower()
+
+    def test_get_cross_artifact_docstring_documents_depth(self) -> None:
+        doc = get_cross_artifact_correlation_v1.__doc__ or ""
+        assert "depth" in doc.lower()
+
+    def test_lineage_view_only_traverses_explicit_pivot_edges(self) -> None:
+        # Verify docstring states explicit-pivot-only policy.
+        doc = get_downstream_champions_v1.__doc__ or ""
+        assert "explicit" in doc.lower() or "PIVOTED_FROM" in doc
+
+
+# ---------------------------------------------------------------------------
+# QWS-0504 — depth param, include_retired, validation
+# ---------------------------------------------------------------------------
+
+
+class TestDepthParameter:
+    """AC coverage for QWS-0504: depth param + include_retired on downstream_champions
+    and depth param on strategy_lineage."""
+
+    # --- get_downstream_champions_v1 depth validation ---
+    # depth is inlined in the Cypher string (not a session parameter), so we
+    # check the query string content rather than session.calls[*][1]["depth"].
+
+    def test_depth_1_is_default(self) -> None:
+        session = FakeSession({GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: []})
+        get_downstream_champions_v1(session, "run-001")
+        assert "*1..1" in session.calls[0][0]
+
+    def test_depth_passed_to_cypher(self) -> None:
+        cypher = _build_downstream_cypher(3)
+        session = FakeSession({cypher: []})
+        get_downstream_champions_v1(session, "run-001", depth=3)
+        assert "*1..3" in session.calls[0][0]
+
+    def test_depth_10_accepted(self) -> None:
+        cypher = _build_downstream_cypher(10)
+        session = FakeSession({cypher: []})
+        get_downstream_champions_v1(session, "run-001", depth=10)
+        assert "*1..10" in session.calls[0][0]
+
+    def test_depth_0_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_downstream_champions_v1(session, "run-001", depth=0)
+
+    def test_depth_11_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_downstream_champions_v1(session, "run-001", depth=11)
+
+    def test_depth_negative_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_downstream_champions_v1(session, "run-001", depth=-1)
+
+    # --- include_retired ---
+
+    def test_include_retired_false_no_node_type(self) -> None:
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+                ]
+            }
+        )
+        rows = get_downstream_champions_v1(session, "run-001", include_retired=False)
+        assert len(rows) == 1
+        assert "node_type" not in rows[0]
+
+    def test_include_retired_true_adds_node_type_champion(self) -> None:
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+                    _champion_record("champ-002", "nq-1h-bear-sweep", "2026-03-01"),
+                ]
+            }
+        )
+        rows = get_downstream_champions_v1(session, "run-001", include_retired=True)
+        assert len(rows) == 2
+        assert all(r["node_type"] == "champion" for r in rows)
+
+    def test_include_retired_false_is_default(self) -> None:
+        session = FakeSession(
+            {
+                GET_DOWNSTREAM_CHAMPIONS_V1_CYPHER: [
+                    _champion_record("champ-001", "es-1h-bear-sweep", "2026-04-01"),
+                ]
+            }
+        )
+        rows = get_downstream_champions_v1(session, "run-001")
+        assert "node_type" not in rows[0]
+
+    # --- get_strategy_lineage_v1 depth validation ---
+
+    def test_lineage_depth_1_is_default(self) -> None:
+        session = FakeSession({GET_STRATEGY_LINEAGE_V1_CYPHER: []})
+        get_strategy_lineage_v1(session, "es-1h-bear-sweep")
+        assert "*1..1" in session.calls[0][0]
+
+    def test_lineage_depth_passed_to_cypher(self) -> None:
+        cypher = _build_lineage_cypher(3)
+        session = FakeSession({cypher: []})
+        get_strategy_lineage_v1(session, "es-1h-bear-sweep", depth=3)
+        assert "*1..3" in session.calls[0][0]
+
+    def test_lineage_depth_11_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_strategy_lineage_v1(session, "es-1h-bear-sweep", depth=11)
+
+    def test_lineage_depth_0_raises_value_error(self) -> None:
+        session = FakeSession({})
+        with pytest.raises(ValueError, match="depth"):
+            get_strategy_lineage_v1(session, "es-1h-bear-sweep", depth=0)
+
+    # --- preset routing ---
+
+    def test_downstream_preset_passes_depth_to_service(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[])
+        run_preset("downstream_champions", {"run_id": "run-001", "depth": "3"}, service=service)
+        assert service.calls[0][1]["depth"] == 3
+
+    def test_downstream_preset_default_depth_1(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[])
+        run_preset("downstream_champions", {"run_id": "run-001"}, service=service)
+        assert service.calls[0][1]["depth"] == 1
+
+    def test_downstream_preset_include_retired_true(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[])
+        run_preset(
+            "downstream_champions",
+            {"run_id": "run-001", "include_retired": "true"},
+            service=service,
+        )
+        assert service.calls[0][1]["include_retired"] is True
+
+    def test_downstream_preset_include_retired_default_false(self) -> None:
+        service = FakeGraphQueryService(downstream_champions=[])
+        run_preset("downstream_champions", {"run_id": "run-001"}, service=service)
+        assert service.calls[0][1]["include_retired"] is False
+
+    def test_strategy_lineage_preset_passes_depth(self) -> None:
+        service = FakeGraphQueryService(strategy_lineage=[])
+        run_preset(
+            "strategy_lineage", {"strategy_id": "es-1h-bear-sweep", "depth": "2"}, service=service
+        )
+        assert service.calls[0][1]["depth"] == 2
+
+    def test_strategy_lineage_preset_default_depth_1(self) -> None:
+        service = FakeGraphQueryService(strategy_lineage=[])
+        run_preset("strategy_lineage", {"strategy_id": "es-1h-bear-sweep"}, service=service)
+        assert service.calls[0][1]["depth"] == 1
+
+
+# ---------------------------------------------------------------------------
+# AC4 — Cross-artifact correlation through shared Strategy anchors
+# ---------------------------------------------------------------------------
+
+
+class TestCrossArtifactCorrelation:
+    def test_no_related_strategies_returns_empty_list(self) -> None:
+        session = FakeSession({GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: []})
+        rows = get_cross_artifact_correlation_v1(session, "es-1h-bear-sweep")
+        assert rows == []
+
+    def test_related_strategy_returned(self) -> None:
+        session = FakeSession(
+            {
+                GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: [
+                    {
+                        "result": {
+                            "anchor_strategy_id": "es-1h-bear-sweep",
+                            "related_strategy_id": "nq-1h-bear-sweep",
+                            "instrument": "NQ",
+                            "timeframe": "1H",
+                            "direction": "bear",
+                            "logic_type": "sweep",
+                            "run_count": 3,
+                            "champion_count": 1,
+                            "latest_champion_id": "champ-nq-001",
+                            "latest_champion_freeze_date": "2026-04-01",
+                        }
+                    }
+                ]
+            }
+        )
+        rows = get_cross_artifact_correlation_v1(session, "es-1h-bear-sweep")
+        assert len(rows) == 1
+        assert rows[0]["anchor_strategy_id"] == "es-1h-bear-sweep"
+        assert rows[0]["related_strategy_id"] == "nq-1h-bear-sweep"
+        assert rows[0]["instrument"] == "NQ"
+
+    def test_anchor_strategy_not_in_results(self) -> None:
+        # The Cypher WHERE clause excludes anchor from related set.
+        assert "strategy_id <> anchor.strategy_id" in GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER
+
+    def test_anchors_on_logic_type_and_direction(self) -> None:
+        # The correlation axis must be logic_type AND direction.
+        assert "logic_type = anchor.logic_type" in GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER
+        assert "direction = anchor.direction" in GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER
+
+    def test_output_has_stable_keys(self) -> None:
+        session = FakeSession(
+            {
+                GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: [
+                    {
+                        "result": {
+                            "anchor_strategy_id": "es-1h-bear-sweep",
+                            "related_strategy_id": "nq-1h-bear-sweep",
+                            "instrument": "NQ",
+                            "timeframe": "1H",
+                            "direction": "bear",
+                            "logic_type": "sweep",
+                            "run_count": 0,
+                            "champion_count": 0,
+                            "latest_champion_id": None,
+                            "latest_champion_freeze_date": None,
+                        }
+                    }
+                ]
+            }
+        )
+        row = get_cross_artifact_correlation_v1(session, "es-1h-bear-sweep")[0]
+        expected_keys = {
+            "version",
+            "anchor_strategy_id",
+            "related_strategy_id",
+            "instrument",
+            "timeframe",
+            "direction",
+            "logic_type",
+            "family_id",
+            "run_count",
+            "champion_count",
+            "latest_champion_id",
+            "latest_champion_freeze_date",
+        }
+        assert set(row) == expected_keys
+
+    def test_output_is_json_serializable(self) -> None:
+        session = FakeSession(
+            {
+                GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: [
+                    {
+                        "result": {
+                            "anchor_strategy_id": "es-1h-bear-sweep",
+                            "related_strategy_id": "nq-1h-bear-sweep",
+                            "instrument": "NQ",
+                            "timeframe": "1H",
+                            "direction": "bear",
+                            "logic_type": "sweep",
+                            "run_count": 2,
+                            "champion_count": 1,
+                            "latest_champion_id": "champ-001",
+                            "latest_champion_freeze_date": "2026-04-01",
+                        }
+                    }
+                ]
+            }
+        )
+        rows = get_cross_artifact_correlation_v1(session, "es-1h-bear-sweep")
+        # Must not raise
+        json.dumps(rows)
+
+    def test_no_file_system_reads(self) -> None:
+        # Prove no fallback: when session returns empty, result is empty (not file read).
+        session = FakeSession({GET_CROSS_ARTIFACT_CORRELATION_V1_CYPHER: []})
+        rows = get_cross_artifact_correlation_v1(session, "es-1h-bear-sweep")
+        assert rows == []
+
+    def test_registered_in_query_view_registry(self) -> None:
+        assert "get_cross_artifact_correlation_v1" in QUERY_VIEW_REGISTRY
+
+    def test_cross_artifact_preset_exists(self) -> None:
+        spec = resolve_preset("cross_artifact_correlation")
+        assert spec.name == "cross_artifact_correlation"
+        assert spec.requires_graph is True
+
+    def test_cross_artifact_preset_requires_at_least_one_param(self) -> None:
+        # validate_params allows empty (both optional); run_preset enforces at-least-one
+        service = FakeGraphQueryService(cross_artifact=[])
+        with pytest.raises(ValueError, match="requires family_id"):
+            run_preset("cross_artifact_correlation", {}, service=service)
+
+    def test_cross_artifact_preset_routes_to_view_via_strategy_id(self) -> None:
+        result_row = {
+            "anchor_strategy_id": "es-1h-bear-sweep",
+            "related_strategy_id": "nq-1h-bear-sweep",
+        }
+        service = FakeGraphQueryService(cross_artifact=[result_row])
+        results = run_preset(
+            "cross_artifact_correlation",
+            {"strategy_id": "es-1h-bear-sweep"},
+            service=service,
+        )
+        assert service.calls[0][0] == "get_cross_artifact_correlation_v1"
+        assert service.calls[0][1] == {"strategy_id": "es-1h-bear-sweep", "family_id": None}
+        assert results == [result_row]
+
+    def test_cross_artifact_preset_routes_to_view_via_family_id(self) -> None:
+        result_row = {
+            "anchor_strategy_id": "abc123def456",
+            "related_strategy_id": "nq-1h-bear-sweep",
+        }
+        service = FakeGraphQueryService(cross_artifact=[result_row])
+        results = run_preset(
+            "cross_artifact_correlation",
+            {"family_id": "abc123def456"},
+            service=service,
+        )
+        assert service.calls[0][0] == "get_cross_artifact_correlation_v1"
+        assert service.calls[0][1] == {"strategy_id": None, "family_id": "abc123def456"}
+        assert results == [result_row]
+
+    def test_cross_artifact_preset_family_id_takes_precedence(self) -> None:
+        service = FakeGraphQueryService(cross_artifact=[])
+        run_preset(
+            "cross_artifact_correlation",
+            {"strategy_id": "es-1h-bear-sweep", "family_id": "abc123def456"},
+            service=service,
+        )
+        # family_id is passed through; query layer decides precedence
+        assert service.calls[0][1]["family_id"] == "abc123def456"
+
+    def test_cross_artifact_preset_empty_when_no_related_strategies(self) -> None:
+        service = FakeGraphQueryService(cross_artifact=[])
+        results = run_preset(
+            "cross_artifact_correlation",
+            {"strategy_id": "unique-strategy"},
+            service=service,
+        )
+        assert results == []
+
+
+# ---------------------------------------------------------------------------
+# CrossArtifactRowV1 DTO
+# ---------------------------------------------------------------------------
+
+
+class TestCrossArtifactRowV1:
+    def test_stable_json_keys(self) -> None:
+        model = CrossArtifactRowV1(
+            anchor_strategy_id="es-1h-bear-sweep",
+            related_strategy_id="nq-1h-bear-sweep",
+            instrument="NQ",
+            timeframe="1H",
+            direction="bear",
+            logic_type="sweep",
+            run_count=3,
+            champion_count=1,
+            latest_champion_id="champ-001",
+            latest_champion_freeze_date="2026-04-01",
+        )
+        d = model.model_dump(mode="json")
+        assert d["version"] == "v1"
+        assert d["anchor_strategy_id"] == "es-1h-bear-sweep"
+        assert d["related_strategy_id"] == "nq-1h-bear-sweep"
+
+    def test_optional_fields_default_to_none(self) -> None:
+        model = CrossArtifactRowV1(
+            anchor_strategy_id="es-1h-bear-sweep",
+            related_strategy_id="nq-1h-bear-sweep",
+            instrument="NQ",
+            timeframe="1H",
+            direction="bear",
+            logic_type="sweep",
+        )
+        d = model.model_dump(mode="json")
+        assert d["latest_champion_id"] is None
+        assert d["latest_champion_freeze_date"] is None
+        assert d["run_count"] == 0
+        assert d["champion_count"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Preset catalog completeness
+# ---------------------------------------------------------------------------
+
+
+class TestPresetCatalogStory4:
+    def test_five_presets_exist(self) -> None:
+        assert set(PRESET_CATALOG) == {
+            "recent_champions",
+            "strategy_lineage",
+            "run_history",
+            "pending_offline",
+            "downstream_champions",
+            "cross_artifact_correlation",
+            "portfolio_alpha",
+            "fragility_report",
+            "staleness_report",
+            "instrument_concentration",
+            "list_oos_pending",
+            "list_aborted",
+            "promotion_candidates",
+            "research_targets",
+            "runs_by_regime",
+            "regime_performance",
+            "list_hypotheses",
+            "hypothesis_audit",
+            "check_redundancy",
+            "similar_hypotheses",
+            "former_champions",
+            "hypotheses_by_status",
+            "hypothesis_search",
+            "portfolio_by_class",
+            "queued_hypotheses",
+        }

@@ -48,9 +48,6 @@ class Settings(BaseSettings):
     # Cash index symbols to collect (secType=IND, daily/weekly/monthly only)
     index_symbols: list[str] = ["VIX", "VIX9D", "VIX3M", "VIX6M", "SKEW"]
 
-    # COT symbols to collect (must be keys in CFTC_SYMBOL_MAP in data/collectors/cot.py)
-    cot_symbols: list[str] = ["GC", "MGC", "CL", "ES", "NQ", "ZN", "ZB", "6E"]
-
     # FRED macro series to collect (see data/collectors/fred.py)
     fred_api_key: str = ""
     fred_series: list[str] = [

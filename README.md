@@ -22,9 +22,16 @@ End-to-end algo trading workbench: data collection → research → strategy →
 data/           — collectors, schemas, arcticdb store
 execution/      — broker clients, OMS, risk engine, scheduler
 strategies/     — BaseStrategy ABC, adapters, signal implementations
-research/       — trials, experiments (sweep, walk-forward), results, ideas staging
-qws_graph/      — Neo4j research graph, qw CLI, MCP server
+research/       — trials, experiments (sweep, walk-forward), analytics; `research/graph/` holds the Neo4j CLI/store/MCP
+docs/           — manifesto, workflow, provenance spec; `docs/graph/` holds schema + runbook
+epics/          — sprint/story backlog
+infra/          — deployment scaffolds (docker-compose.neo4j.yml, launchd plists)
+scripts/        — one-off ingest/inspection/seed scripts
+tests/          — unit, integration, e2e (incl. graph tests)
 ```
+
+The `qw` CLI entry point lives at `research/graph/cli.py` (installed via `pip install -e .`).
+Neo4j lifecycle: `make neo4j-up / neo4j-down / seed`.
 
 Data + research flows:
 
