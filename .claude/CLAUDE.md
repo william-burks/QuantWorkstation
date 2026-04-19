@@ -40,7 +40,7 @@ shared brain. Any model with MCP access reads the same research history.
 2. **No direct lib writes** — always go through `store.write_bars()` / `store.write_signals()`.
 3. **Paper by default** — `alpaca_base_url=https://paper-api.alpaca.markets`, `ibkr_port=4002`. Verify `.env` before any live change.
 4. **Risk constants are fixed** — 5% daily loss, 10% trailing DD, 5% per-symbol, 40% total exposure. Do not change without explicit instruction.
-5. **Trial filenames are permanent** — `NN_description.py`; results reference by filename; do not renumber.
+5. **Trial filenames are permanent once ingested.** Format: `NN_description.py`. A trial is ingested when a Run node in the graph references it. Before first ingest: rename freely. After: locked — re-run with changes under a new name (e.g. `02b_*`) and use `--branched-from` to link. Verify with `qw query --cypher "MATCH (r:Run) WHERE r.trial_script CONTAINS '<filename>' RETURN r LIMIT 1"` before renaming.
 6. **Tests use mock brokers only** — no live connections in `tests/unit/`.
 7. **No auto-commit** — never `git commit` or `git push` without explicit instruction.
 
