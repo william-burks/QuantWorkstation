@@ -17,9 +17,6 @@ class Settings(BaseSettings):
     # arcticdb — override with ARCTIC_URI env var; store.py sets a local default if unset
     arctic_uri: str = ""
 
-    # UNUSED — reserved for execution state layer (signals relay, position cache)
-    redis_url: str = "redis://redis:6379/0"
-
     # Crypto symbols to collect
     crypto_symbols: list[str] = ["BTC/USD"]
 
@@ -112,7 +109,6 @@ class Settings(BaseSettings):
 
     # Risk / evaluation
     eval_profit_target: float = 3000.0  # evaluation profit goal (USD)
-    risk_per_trade_pct: float = 0.01  # 1% of balance per trade (range: 0.005–0.01)
 
 
 _settings: Settings | None = None
