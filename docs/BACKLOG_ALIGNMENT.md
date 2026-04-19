@@ -88,9 +88,9 @@
 
 | Story | ID | Deliverable | Blocked On |
 |---|---|---|---|
-| First Research Session | QWS-0901 (**CLOSED**) | `docs/research_sessions/session_0901.md` — observation log from 3 full-stack trials | — |
-| Strategy Screening Pass | QWS-0902 (**CLOSED**) | `docs/research_sessions/session_0902.md` — sweep results, redundancy check assessment | ~~QWS-0901~~ |
-| System Gap Audit | QWS-0903 (**CLOSED**) | `docs/epic_9_gap_audit.md` — tooling gaps, missing data, workflow friction, AI failures, backlog candidates | ~~QWS-0901~~, ~~QWS-0902~~ |
+| First Research Session | QWS-0901 (**CLOSED**) | Observation log from 3 full-stack trials (session notes live in private sibling repo — contain real champion IDs and performance) | — |
+| Strategy Screening Pass | QWS-0902 (**CLOSED**) | Sweep results + redundancy check assessment (session notes live in private sibling repo) | ~~QWS-0901~~ |
+| System Gap Audit | QWS-0903 (**CLOSED**) | Tooling gaps, missing data, workflow friction, AI failures, backlog candidates (lives in private sibling repo — names real hypothesis IDs) | ~~QWS-0901~~, ~~QWS-0902~~ |
 
 ### Epic 9HF — Bugs & Hotfixes
 

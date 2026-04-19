@@ -30,6 +30,12 @@ mlruns/
 # Generated research outputs (symlinked to ~/ClaudeProjects/QuantWorkstation-private/results)
 research/results
 research/results/registry.json
+
+# Session observation logs (symlinked to ~/ClaudeProjects/QuantWorkstation-private/research_sessions)
+docs/research_sessions/session_*.md
+
+# Epic 9 gap audit — contains real champion IDs + performance
+docs/epic_9_gap_audit.md
 research/trials/futures/liquidity_sweep/*.html
 research/trials/futures/liquidity_sweep/*.csv
 research/trials/futures/liquidity_sweep/*.json
