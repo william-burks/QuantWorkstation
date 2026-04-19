@@ -4,9 +4,11 @@ import asyncio
 import difflib
 import logging
 import os
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -48,7 +50,7 @@ def _dedup_by_title(papers: list[Paper], threshold: float = 0.85) -> list[Paper]
     unique: list[Paper] = []
 
     for paper in papers:
-        title_lower = paper.title.lower()
+        title_lower = (paper.title or "").lower()
         is_dup = any(
             difflib.SequenceMatcher(None, title_lower, seen).ratio() >= threshold
             for seen in seen_titles
@@ -60,13 +62,13 @@ def _dedup_by_title(papers: list[Paper], threshold: float = 0.85) -> list[Paper]
     return unique
 
 
-async def _run_in_executor(func, *args):
+async def _run_in_executor(func: Callable[..., Any], *args: Any) -> Any:
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(None, func, *args)
 
 
 @asynccontextmanager
-async def _lifespan(server):
+async def _lifespan(server: Any) -> AsyncIterator[None]:
     global _library
     _library = PaperLibrary(data_dir=_DATA_DIR)
     logger.info("PaperLibrary initialized at %s", _DATA_DIR)
@@ -89,12 +91,12 @@ mcp = FastMCP(
 )
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def search_papers(
     query: str,
     max_per_source: int = 10,
     save: bool = True,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Search for academic papers across multiple sources in parallel.
 
@@ -114,8 +116,11 @@ async def search_papers(
 
     lib = _get_library()
 
-    async def _search_semantic():
-        return await _run_in_executor(semantic_src.search, query, None, max_per_source, _DATA_DIR)
+    async def _search_semantic() -> list[Paper]:
+        results: list[Paper] = await _run_in_executor(
+            semantic_src.search, query, None, max_per_source, _DATA_DIR
+        )
+        return results
 
     results = await asyncio.gather(_search_semantic())
 
@@ -137,8 +142,8 @@ async def search_papers(
     return [StandardSearchResult.from_paper(p, i + 1).to_dict() for i, p in enumerate(unique)]
 
 
-@mcp.tool()
-async def fetch_paper(paper_id: str) -> dict:
+@mcp.tool()  # type: ignore[misc]
+async def fetch_paper(paper_id: str) -> dict[str, Any]:
     """
     Fetch a paper's full text by ID. Downloads PDF and extracts text if not cached.
 
@@ -154,11 +159,13 @@ async def fetch_paper(paper_id: str) -> dict:
 
     # Handle SSRN URLs passed as paper_id
     if paper_id.startswith("http") and "ssrn" in paper_id:
-        paper = await _run_in_executor(ssrn_src.fetch_by_url, paper_id, _DATA_DIR)
-        paper.fetched_at = _now()
-        if not lib.add(paper):
-            lib.update(paper)
-        return paper.to_dict()
+        paper: Paper | None = await _run_in_executor(ssrn_src.fetch_by_url, paper_id, _DATA_DIR)
+        if paper is not None:
+            paper.fetched_at = _now()
+            if not lib.add(paper):
+                lib.update(paper)
+            return paper.to_dict()
+        return {"error": f"Could not fetch SSRN paper: {paper_id}"}
 
     # Check local library first
     paper = lib.get(paper_id)
@@ -229,7 +236,7 @@ async def fetch_paper(paper_id: str) -> dict:
         paper.fetched_at = _now()
         if not lib.add(paper):
             lib.update(paper)
-        result = paper.to_dict()
+        result: dict[str, Any] = paper.to_dict()
         if not result.get("full_text"):
             if paper.doi:
                 doi_filename = paper.doi.replace("/", "_")
@@ -251,7 +258,7 @@ async def fetch_paper(paper_id: str) -> dict:
     return {"error": f"Could not fetch paper: {paper_id}"}
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def read_paper(paper_id: str) -> str:
     """
     Return the full text of a stored paper (capped at 50,000 characters).
@@ -285,8 +292,8 @@ async def read_paper(paper_id: str) -> str:
     return f"No text available for {paper_id}. Use fetch_paper to download it."
 
 
-@mcp.tool()
-async def find_similar(paper_id: str, n: int = 10) -> list[dict]:
+@mcp.tool()  # type: ignore[misc]
+async def find_similar(paper_id: str, n: int = 10) -> list[dict[str, Any]]:
     """
     Find papers similar to the given one, combining vector similarity and
     Semantic Scholar recommendations where available.
@@ -303,11 +310,15 @@ async def find_similar(paper_id: str, n: int = 10) -> list[dict]:
 
     lib = _get_library()
 
-    async def _vector_similar():
-        return await _run_in_executor(lib.search_similar, paper_id, n)
+    async def _vector_similar() -> list[Paper]:
+        results: list[Paper] = await _run_in_executor(lib.search_similar, paper_id, n)
+        return results
 
-    async def _s2_recommendations():
-        return await _run_in_executor(semantic_src.get_recommendations, paper_id, n, _DATA_DIR)
+    async def _s2_recommendations() -> list[Paper]:
+        results: list[Paper] = await _run_in_executor(
+            semantic_src.get_recommendations, paper_id, n, _DATA_DIR
+        )
+        return results
 
     vector_papers, s2_papers = await asyncio.gather(_vector_similar(), _s2_recommendations())
 
@@ -333,8 +344,8 @@ async def find_similar(paper_id: str, n: int = 10) -> list[dict]:
     return [StandardSearchResult.from_paper(p, i + 1).to_dict() for i, p in enumerate(combined[:n])]
 
 
-@mcp.tool()
-async def search_library(query: str, n: int = 10) -> list[dict]:
+@mcp.tool()  # type: ignore[misc]
+async def search_library(query: str, n: int = 10) -> list[dict[str, Any]]:
     """
     Semantic search across locally stored papers only. No network calls.
 
@@ -351,8 +362,8 @@ async def search_library(query: str, n: int = 10) -> list[dict]:
     return [StandardSearchResult.from_paper(p, i + 1).to_dict() for i, p in enumerate(papers)]
 
 
-@mcp.tool()
-async def list_library(source: str | None = None) -> list[dict]:
+@mcp.tool()  # type: ignore[misc]
+async def list_library(source: str | None = None) -> list[dict[str, Any]]:
     """
     List all papers in the local library, optionally filtered by source.
 
@@ -369,8 +380,8 @@ async def list_library(source: str | None = None) -> list[dict]:
     return [StandardSearchResult.from_paper(p, i + 1).to_dict() for i, p in enumerate(papers)]
 
 
-@mcp.tool()
-async def get_citations(paper_id: str) -> list[dict]:
+@mcp.tool()  # type: ignore[misc]
+async def get_citations(paper_id: str) -> list[dict[str, Any]]:
     """
     Get papers that cite the given paper, via Semantic Scholar.
 
@@ -393,8 +404,8 @@ async def get_citations(paper_id: str) -> list[dict]:
     return [StandardSearchResult.from_paper(p, i + 1).to_dict() for i, p in enumerate(papers)]
 
 
-@mcp.tool()
-async def fetch_ssrn(url: str) -> dict:
+@mcp.tool()  # type: ignore[misc]
+async def fetch_ssrn(url: str) -> dict[str, Any]:
     """
     Fetch an SSRN paper by URL. Stores metadata and abstract.
     PDF download is attempted but failure is silent.
@@ -405,7 +416,7 @@ async def fetch_ssrn(url: str) -> dict:
     from qws_researcher.sources import ssrn as ssrn_src  # noqa: PLC0415
 
     lib = _get_library()
-    paper = await _run_in_executor(ssrn_src.fetch_by_url, url, _DATA_DIR)
+    paper: Paper = await _run_in_executor(ssrn_src.fetch_by_url, url, _DATA_DIR)
     paper.fetched_at = _now()
 
     if not lib.add(paper):
@@ -414,13 +425,13 @@ async def fetch_ssrn(url: str) -> dict:
     return paper.to_dict()
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def ingest_pdf(
     file_path: str,
     paper_id: str | None = None,
     title: str | None = None,
     authors: list[str] | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """
     Ingest a locally downloaded PDF into the paper library.
     Use this when fetch_paper returns no full text due to a paywall.
@@ -480,15 +491,15 @@ async def ingest_pdf(
     return paper.to_dict()
 
 
-@mcp.tool()
-async def library_stats() -> dict:
+@mcp.tool()  # type: ignore[misc]
+async def library_stats() -> dict[str, Any]:
     """Return statistics about the local paper library."""
     lib = _get_library()
     return lib.stats()
 
 
-@mcp.tool()
-async def get_paper_metadata(paper_id: str) -> dict:
+@mcp.tool()  # type: ignore[misc]
+async def get_paper_metadata(paper_id: str) -> dict[str, Any]:
     """
     Return complete metadata for a paper without loading full text into context.
     Includes title, authors, abstract, DOI, citations, tags, notes, text_extractor,
@@ -521,7 +532,6 @@ async def get_paper_metadata(paper_id: str) -> dict:
         "notes": paper.notes,
         "github_repos": paper.github_repos,
         "text_extractor": paper.text_extractor,
-        "text_source": paper.text_source,
         "ingestion_status": paper.ingestion_status,
         "has_full_text": bool(
             paper.full_text or (paper.text_path and Path(paper.text_path).exists())
@@ -537,8 +547,8 @@ async def get_paper_metadata(paper_id: str) -> dict:
     }
 
 
-@mcp.tool()
-async def search_by_tag(tags: list[str]) -> list[dict]:
+@mcp.tool()  # type: ignore[misc]
+async def search_by_tag(tags: list[str]) -> list[dict[str, Any]]:
     """
     Filter the local library by tags. Returns papers that have ALL specified tags.
     Exact categorical filtering — complements search_library which is semantic.
@@ -558,7 +568,7 @@ async def search_by_tag(tags: list[str]) -> list[dict]:
     return [StandardSearchResult.from_paper(p, i + 1).to_dict() for i, p in enumerate(matching)]
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def export_campus_list() -> str:
     """
     Generate a markdown checklist of papers that need downloading on campus.
@@ -600,8 +610,8 @@ async def export_campus_list() -> str:
             "Save each PDF as the filename shown, drop in inbox/, run ingest.sh.",
             "",
         ]
-        for p in sorted(has_doi, key=lambda x: x.title):
-            doi_filename = p.doi.replace("/", "_") + ".pdf"
+        for p in sorted(has_doi, key=lambda x: x.title or ""):
+            doi_filename = (p.doi or "").replace("/", "_") + ".pdf"
             year = p.published_date[:4] if p.published_date else "?"
             authors_str = ", ".join(p.authors[:2]) + (" et al." if len(p.authors) > 2 else "")
             tags_str = f" `{'` `'.join(p.tags)}`" if p.tags else ""
@@ -622,7 +632,7 @@ async def export_campus_list() -> str:
             "Search by title, download, then run `ingest_pdf(file_path=..., paper_id=...)`.",
             "",
         ]
-        for p in sorted(no_doi, key=lambda x: x.title):
+        for p in sorted(no_doi, key=lambda x: x.title or ""):
             year = p.published_date[:4] if p.published_date else "?"
             authors_str = ", ".join(p.authors[:2]) + (" et al." if len(p.authors) > 2 else "")
             tags_str = f" `{'` `'.join(p.tags)}`" if p.tags else ""
@@ -644,7 +654,7 @@ async def export_campus_list() -> str:
     return str(out_path)
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def read_abstract(paper_id: str) -> str:
     """
     Return the abstract of a paper without loading full text.
@@ -687,7 +697,7 @@ async def read_abstract(paper_id: str) -> str:
     return f"{header}\n\n{paper.abstract}"
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def get_brief(paper_id: str) -> str:
     """
     Return the pre-computed 3-sentence intelligence brief for a paper.
@@ -708,8 +718,8 @@ async def get_brief(paper_id: str) -> str:
     return f"No content available for {paper_id}"
 
 
-@mcp.tool()
-async def get_regime_tags(paper_id: str) -> dict:
+@mcp.tool()  # type: ignore[misc]
+async def get_regime_tags(paper_id: str) -> dict[str, Any]:
     """
     Return the regime tags for a paper (asset class, frequency, time period, etc.).
     Returns empty dict if tags not yet generated.
@@ -724,14 +734,14 @@ async def get_regime_tags(paper_id: str) -> dict:
     return paper.regime_tags or {}
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def find_papers_by_regime(
     asset_class: str | None = None,
     frequency: str | None = None,
     time_period: str | None = None,
     market_cap: str | None = None,
     market_condition: str | None = None,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Find papers by market regime tags. All parameters are optional — combine any.
 
@@ -770,12 +780,12 @@ async def find_papers_by_regime(
     ]
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def bookmark_paper(
     paper_id: str,
     reason: str | None = None,
     tags: list[str] = [],
-) -> dict:
+) -> dict[str, Any]:
     """
     Save a paper to your library and add it to the campus trip list if no full text.
     Use this after search_papers to commit to a paper.
@@ -846,7 +856,7 @@ async def bookmark_paper(
         campus = _get_campus_list()
         entry = CampusEntry(
             paper_id=paper.id,
-            title=paper.title,
+            title=paper.title or "",
             authors=paper.authors,
             year=year_int,
             doi=paper.doi,
@@ -876,8 +886,8 @@ async def bookmark_paper(
     }
 
 
-@mcp.tool()
-async def list_needed(tags: list[str] | None = None) -> dict:
+@mcp.tool()  # type: ignore[misc]
+async def list_needed(tags: list[str] | None = None) -> dict[str, Any]:
     """
     List papers on your campus trip list. Optionally filter by tags.
 
@@ -911,8 +921,8 @@ async def list_needed(tags: list[str] | None = None) -> dict:
     }
 
 
-@mcp.tool()
-async def campus_list_stats() -> dict:
+@mcp.tool()  # type: ignore[misc]
+async def campus_list_stats() -> dict[str, Any]:
     """Summary of your campus trip list."""
     campus = _get_campus_list()
     entries = campus.list_all()
@@ -930,7 +940,7 @@ async def campus_list_stats() -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def remove_from_campus_list(paper_id: str) -> str:
     """
     Remove a paper from the campus trip list.
@@ -946,12 +956,12 @@ async def remove_from_campus_list(paper_id: str) -> str:
     return f"{paper_id} was not in campus list."
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def bulk_bookmark(
     paper_ids: list[str],
     reason: str | None = None,
     tags: list[str] = [],
-) -> dict:
+) -> dict[str, Any]:
     """
     Bookmark multiple papers at once with shared tags and an optional reason note.
 
@@ -964,7 +974,7 @@ async def bulk_bookmark(
     bookmarked = 0
     already_have_full_text = 0
     not_found = 0
-    details = []
+    details: list[dict[str, Any]] = []
 
     for pid in paper_ids:
         paper = lib.get(pid)
@@ -998,7 +1008,7 @@ async def bulk_bookmark(
     }
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def update_note(paper_id: str, note: str) -> str:
     """
     Replace the research note on a paper entirely. Use add_note to append instead.
@@ -1018,7 +1028,7 @@ async def update_note(paper_id: str, note: str) -> str:
     return f"Note updated for {paper_id} (old: {old_len} chars, new: {len(note)} chars)"
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def remove_tag(paper_id: str, tags: list[str]) -> str:
     """
     Remove one or more tags from a paper. Silently ignores tags that aren't present.
@@ -1038,8 +1048,8 @@ async def remove_tag(paper_id: str, tags: list[str]) -> str:
     return f"Tags updated for {paper_id}: {paper.tags}"
 
 
-@mcp.tool()
-async def reading_list() -> list[dict]:
+@mcp.tool()  # type: ignore[misc]
+async def reading_list() -> list[dict[str, Any]]:
     """
     Papers tagged 'to-read' sorted by citation count descending.
     Prioritizes most influential unread papers first.
@@ -1054,8 +1064,8 @@ async def reading_list() -> list[dict]:
     return [StandardSearchResult.from_paper(p, i + 1).to_dict() for i, p in enumerate(papers)]
 
 
-@mcp.tool()
-async def get_related_papers(paper_id: str, n: int = 15) -> list[dict]:
+@mcp.tool()  # type: ignore[misc]
+async def get_related_papers(paper_id: str, n: int = 15) -> list[dict[str, Any]]:
     """
     Combines three signals into one ranked list:
     1. Vector similarity from local library
@@ -1075,11 +1085,15 @@ async def get_related_papers(paper_id: str, n: int = 15) -> list[dict]:
 
     lib = _get_library()
 
-    async def _vector():
-        return await _run_in_executor(lib.search_similar, paper_id, n)
+    async def _vector() -> list[Paper]:
+        results: list[Paper] = await _run_in_executor(lib.search_similar, paper_id, n)
+        return results
 
-    async def _s2():
-        return await _run_in_executor(semantic_src.get_recommendations, paper_id, n, _DATA_DIR)
+    async def _s2() -> list[Paper]:
+        results: list[Paper] = await _run_in_executor(
+            semantic_src.get_recommendations, paper_id, n, _DATA_DIR
+        )
+        return results
 
     vector_papers, s2_papers = await asyncio.gather(_vector(), _s2())
 
@@ -1124,7 +1138,7 @@ async def get_related_papers(paper_id: str, n: int = 15) -> list[dict]:
     return results
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def cite(paper_id: str, format: str = "bibtex") -> str:
     """
     Generate a citation for a paper from stored metadata. No network calls.
@@ -1203,8 +1217,8 @@ async def cite(paper_id: str, format: str = "bibtex") -> str:
     return f"Unrecognized format '{format}'. Use: bibtex, apa, chicago"
 
 
-@mcp.tool()
-async def ingest_folder() -> dict:
+@mcp.tool()  # type: ignore[misc]
+async def ingest_folder() -> dict[str, Any]:
     """
     Process all PDFs in ~/ClaudeProjects/QuantResearcher/library/inbox/.
     PDFs named by DOI (e.g. 10.1016_j.najef.2026.102605.pdf) that match a library
@@ -1215,7 +1229,9 @@ async def ingest_folder() -> dict:
     inbox = str(Path.home() / "ClaudeProjects/QuantResearcher/library/inbox")
     ingested_dir = str(Path.home() / "ClaudeProjects/QuantResearcher/library/ingested")
     unmatched_dir = str(Path.home() / "ClaudeProjects/QuantResearcher/library/unmatched")
-    result = await _run_in_executor(_ingest_folder, inbox, ingested_dir, unmatched_dir, _DATA_DIR)
+    result: dict[str, Any] = await _run_in_executor(
+        _ingest_folder, inbox, ingested_dir, unmatched_dir, _DATA_DIR
+    )
 
     # Clear successfully ingested papers from campus trip list
     ingested_ids = [item["paper_id"] for item in result.get("ingested", [])]
@@ -1227,7 +1243,7 @@ async def ingest_folder() -> dict:
     return result
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def add_note(paper_id: str, note: str) -> str:
     """
     Append a research note to a paper in the local library.
@@ -1250,7 +1266,7 @@ async def add_note(paper_id: str, note: str) -> str:
     return f"Note added to {paper_id}"
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def tag_paper(paper_id: str, tags: list[str]) -> str:
     """
     Add tags to a paper in the local library. Existing tags are preserved.
@@ -1271,7 +1287,7 @@ async def tag_paper(paper_id: str, tags: list[str]) -> str:
     return f"Tags updated for {paper_id}: {paper.tags}"
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 async def add_repo(paper_id: str, repo: str, notes: str | None = None) -> str:
     """
     Link a GitHub repository to a paper in your library.
@@ -1295,8 +1311,8 @@ async def add_repo(paper_id: str, repo: str, notes: str | None = None) -> str:
     return f"Linked {repo}{note_suffix} to {paper_id}. Repos: {paper.github_repos}"
 
 
-@mcp.tool()
-async def fix_metadata(dry_run: bool = True) -> dict:
+@mcp.tool()  # type: ignore[misc]
+async def fix_metadata(dry_run: bool = True) -> dict[str, Any]:
     """
     Scan library for papers with bad metadata (title missing or set to a URL).
     dry_run=True (default): return affected papers without changing anything.

@@ -15,6 +15,8 @@ Usage:
     print(pf.stats())
 """
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 import vectorbt as vbt
@@ -107,7 +109,7 @@ def leveraged_to_margin(pf: "vbt.Portfolio", init_cash: float, leverage: float) 
 # --- Helpers ---
 
 
-def _time_exits(entries: np.ndarray, n_bars: int) -> np.ndarray:
+def _time_exits(entries: np.ndarray[Any, Any], n_bars: int) -> np.ndarray[Any, Any]:
     """Generate exit signals exactly n_bars after each entry."""
     exits = np.zeros(len(entries), dtype=bool)
     last_entry = -1
