@@ -627,7 +627,9 @@ def test_ingest_folder_invalid_filename(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _make_campus_entry(paper_id="s2:abc123", doi="10.1016/j.test.2026.001") -> CampusEntry:
+def _make_campus_entry(
+    paper_id: str = "s2:abc123", doi: str | None = "10.1016/j.test.2026.001"
+) -> CampusEntry:
     from qws_researcher.store.campus_list import CampusEntry
 
     return CampusEntry(
@@ -753,8 +755,8 @@ def test_campus_list_deduplicates(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _make_paper(**kwargs) -> Paper:
-    defaults = dict(
+def _make_paper(**kwargs: Any) -> Paper:
+    defaults: dict[str, Any] = dict(
         id="arxiv:2301.00001",
         title="A Fine Paper",
         authors=["Jane Smith"],
@@ -833,7 +835,7 @@ def test_standard_result_never_url_title() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _crossref_response(doi: str, score: float) -> dict:
+def _crossref_response(doi: str, score: float) -> dict[str, Any]:
     return {"message": {"items": [{"DOI": doi, "title": ["Some Paper Title"], "score": score}]}}
 
 
@@ -896,7 +898,7 @@ def test_crossref_returns_none_on_empty_title() -> None:
     from qws_researcher.sources import crossref as crossref_src
 
     assert crossref_src.lookup_doi("") is None
-    assert crossref_src.lookup_doi(None) is None
+    assert crossref_src.lookup_doi(None) is None  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
@@ -921,11 +923,11 @@ def test_add_repo_links_repo(tmp_path: Path) -> None:
     mock_lib = MagicMock()
     mock_lib.get.return_value = paper
 
-    async def run():
+    async def run() -> str:
         with patch("papers.server._get_library", return_value=mock_lib):
             from qws_researcher.server import add_repo
 
-            result = await add_repo("arxiv:2301.00001", "turboPutty/rBergomi")
+            result: str = await add_repo("arxiv:2301.00001", "turboPutty/rBergomi")
         return result
 
     result = asyncio.run(run())
@@ -952,7 +954,7 @@ def test_add_repo_deduplicates(tmp_path: Path) -> None:
     mock_lib = MagicMock()
     mock_lib.get.return_value = paper
 
-    async def run():
+    async def run() -> None:
         with patch("papers.server._get_library", return_value=mock_lib):
             from qws_researcher.server import add_repo
 
