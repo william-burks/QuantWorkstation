@@ -20,6 +20,10 @@ venv/
 qws_graph/.qws/
 qws_graph/node_modules/
 
+# Claude Code workspace (agent defs, memory, hooks, commands — private)
+.claude/
+qws_graph/.claude/
+
 # Local patch/diff scratch files
 *.diff
 

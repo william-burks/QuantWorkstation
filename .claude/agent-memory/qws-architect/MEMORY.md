@@ -1,9 +1,0 @@
-- [Epic 6 alignment gaps](project_epic6_alignment_gaps.md) — ALL RESOLVED after 3 rounds; stories implementation-ready
-- [Story quality validation rules](feedback_story_quality_rules.md) — 4 hard-fail checks: schema drift, dead touchpoints, vague AC, manifesto breach
-- [Config.params_json confirmed](project_config_params_json.md) — property exists in data_dictionary.yaml, used by QWS-0602
-- [Research agent architecture](project_research_agent_design.md) — Two-agent split: navigator (opus) + trial-engineer (sonnet), Epic 8
-- [MLflow integration architecture](project_mlflow_integration.md) — Epic 10; post-promotion only; explicit register command; filesystem mode
-- [Prefect scheduling architecture](project_prefect_architecture.md) — Data collection only; APScheduler kept for risk; data/flows/ dir; QWS-1100
-- [Signal lag vs holding mismatch](feedback_signal_lag_holding_mismatch.md) — Regime signals with lag >> hold need cheaper-signal-insufficient evidence first
-- [Epic 13 alignment audit](project_epic13_alignment_audit.md) — Prior findings resolved; 4 new (F1 must-fix: queued in PE without TARGET); sequence optimal
-- [Epic 14 alignment audit](project_epic14_audit.md) — ALL RESOLVED; 1 new advisory (QWS-1404 illustrative Cypher mismatch); epic implementation-ready
