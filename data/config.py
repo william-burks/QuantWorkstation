@@ -14,9 +14,6 @@ class Settings(BaseSettings):
     ibkr_port: int = 4002  # 4002=paper, 4001=live
     ibkr_client_id: int = 1
 
-    # arcticdb — override with ARCTIC_URI env var; store.py sets a local default if unset
-    arctic_uri: str = ""
-
     # Crypto symbols to collect
     crypto_symbols: list[str] = ["BTC/USD"]
 
