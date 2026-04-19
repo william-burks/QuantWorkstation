@@ -25,7 +25,7 @@ from datetime import UTC, datetime
 from typing import NamedTuple
 
 import pandas as pd
-import requests  # type: ignore[import-untyped]
+import requests
 
 from data.store import Store, get_store
 

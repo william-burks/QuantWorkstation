@@ -25,7 +25,7 @@ from datetime import timedelta
 from io import BytesIO
 
 import pandas as pd
-import requests  # type: ignore[import-untyped]
+import requests
 
 from data.store import get_store
 

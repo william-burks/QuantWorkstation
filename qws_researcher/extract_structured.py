@@ -16,6 +16,7 @@ import json
 import logging
 import re
 from pathlib import Path
+from typing import Any
 
 import anthropic
 
@@ -71,10 +72,10 @@ def _build_prompt(paper: Paper) -> str:
     )
 
 
-def _parse_response(text: str) -> dict:
-    # Strip markdown fences if model adds them despite instructions
+def _parse_response(text: str) -> dict[str, Any]:
     text = re.sub(r"```(?:json)?\s*", "", text).strip()
-    return json.loads(text)
+    result: dict[str, Any] = json.loads(text)
+    return result
 
 
 def extract_paper(paper: Paper, data_dir: str = "data") -> Path | None:
@@ -106,7 +107,11 @@ def extract_paper(paper: Paper, data_dir: str = "data") -> Path | None:
             system=_SYSTEM,
             messages=[{"role": "user", "content": prompt}],
         )
-        raw = response.content[0].text
+        block = response.content[0]
+        if not hasattr(block, "text"):
+            logger.error("Unexpected response block type for %s: %s", paper.id, type(block))
+            return None
+        raw = block.text
     except Exception as e:
         logger.error("Claude extraction failed for %s: %s", paper.id, e)
         return None

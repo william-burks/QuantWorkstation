@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import patch
 
 from qws_researcher.extract import MAX_TEXT_CHARS, extract_equations, extract_text
@@ -9,7 +10,7 @@ from qws_researcher.extract import MAX_TEXT_CHARS, extract_equations, extract_te
 _PAGE_SEP = "\n------\n"
 
 
-def test_extract_text_basic(tmp_path):
+def test_extract_text_basic(tmp_path: Path) -> None:
     fake_pdf = tmp_path / "test.pdf"
     fake_pdf.write_bytes(b"%PDF-1.4 fake content")
 
@@ -26,7 +27,7 @@ def test_extract_text_basic(tmp_path):
     assert "Main content" in result
 
 
-def test_extract_text_strips_repeated_headers(tmp_path):
+def test_extract_text_strips_repeated_headers(tmp_path: Path) -> None:
     fake_pdf = tmp_path / "test.pdf"
     fake_pdf.write_bytes(b"%PDF-1.4")
 
@@ -44,7 +45,7 @@ def test_extract_text_strips_repeated_headers(tmp_path):
     assert "Page content one" in result
 
 
-def test_extract_text_truncates_references(tmp_path):
+def test_extract_text_truncates_references(tmp_path: Path) -> None:
     fake_pdf = tmp_path / "test.pdf"
     fake_pdf.write_bytes(b"%PDF-1.4")
 
@@ -62,7 +63,7 @@ def test_extract_text_truncates_references(tmp_path):
     assert "BBBB" not in result
 
 
-def test_extract_text_caps_at_50k_chars(tmp_path):
+def test_extract_text_caps_at_50k_chars(tmp_path: Path) -> None:
     fake_pdf = tmp_path / "test.pdf"
     fake_pdf.write_bytes(b"%PDF-1.4")
 
@@ -75,7 +76,7 @@ def test_extract_text_caps_at_50k_chars(tmp_path):
     assert len(result) <= MAX_TEXT_CHARS
 
 
-def test_extract_text_returns_empty_on_unreadable_file(tmp_path):
+def test_extract_text_returns_empty_on_unreadable_file(tmp_path: Path) -> None:
     bad_pdf = tmp_path / "bad.pdf"
     bad_pdf.write_bytes(b"not a pdf")
 
@@ -85,26 +86,26 @@ def test_extract_text_returns_empty_on_unreadable_file(tmp_path):
     assert result == ""
 
 
-def test_extract_equations_finds_inline_math():
+def test_extract_equations_finds_inline_math() -> None:
     text = "The model is $\\sigma^2_t = \\alpha + \\beta r^2_{t-1}$ which is standard."
     equations = extract_equations(text)
     assert any("sigma" in eq or "alpha" in eq for eq in equations)
 
 
-def test_extract_equations_finds_display_math():
+def test_extract_equations_finds_display_math() -> None:
     text = "We derive:\n$$r_t = \\mu + \\sigma_t \\epsilon_t$$\nwhere epsilon is iid."
     equations = extract_equations(text)
     assert len(equations) >= 1
     assert any("mu" in eq or "epsilon" in eq for eq in equations)
 
 
-def test_extract_equations_deduplicates():
+def test_extract_equations_deduplicates() -> None:
     text = "$x = y$ and again $x = y$ appears twice."
     equations = extract_equations(text)
     assert equations.count("x = y") <= 1
 
 
-def test_extract_equations_returns_empty_for_plain_text():
+def test_extract_equations_returns_empty_for_plain_text() -> None:
     text = "This paper studies stock markets. We find that volatility is high."
     equations = extract_equations(text)
     # Should not pick up normal sentences

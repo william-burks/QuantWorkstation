@@ -28,11 +28,11 @@ class Paper:
     tags: list[str] = field(default_factory=list)
     github_repos: list[str] = field(default_factory=list)
     brief: str | None = None
-    regime_tags: dict | None = None  # {"asset_class": "futures", "frequency": "daily", ...}
-    method_summary: dict | None = None
-    results_snapshot: list | None = None
-    assumptions: list | None = None
-    constructs: list | None = None
+    regime_tags: dict[str, Any] | None = None  # {"asset_class": "futures", "frequency": "daily", ...}
+    method_summary: dict[str, Any] | None = None
+    results_snapshot: list[Any] | None = None
+    assumptions: list[str] | None = None
+    constructs: list[str] | None = None
     ingestion_status: str = "abstract_only"
     error_detail: str | None = None
 

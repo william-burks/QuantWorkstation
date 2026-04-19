@@ -20,10 +20,10 @@ def _make_paper(paper_id: str, title: str, abstract: str = "", source: str = "ar
 
 
 class TestPaperLibrary:
-    def setup_method(self):
+    def setup_method(self) -> None:
         self._tmpdir = tempfile.mkdtemp()
 
-    def test_add_and_get_roundtrip(self):
+    def test_add_and_get_roundtrip(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib = PaperLibrary(data_dir=self._tmpdir)
@@ -37,7 +37,7 @@ class TestPaperLibrary:
         assert retrieved.title == "Test Paper on Volatility"
         assert retrieved.source == "arxiv"
 
-    def test_add_dedup_returns_false_for_existing(self):
+    def test_add_dedup_returns_false_for_existing(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib = PaperLibrary(data_dir=self._tmpdir)
@@ -49,13 +49,13 @@ class TestPaperLibrary:
         assert first is True
         assert second is False
 
-    def test_get_returns_none_for_missing(self):
+    def test_get_returns_none_for_missing(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib = PaperLibrary(data_dir=self._tmpdir)
         assert lib.get("arxiv:nonexistent") is None
 
-    def test_list_all_returns_all_papers(self):
+    def test_list_all_returns_all_papers(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib = PaperLibrary(data_dir=self._tmpdir)
@@ -66,7 +66,7 @@ class TestPaperLibrary:
         all_papers = lib.list_all()
         assert len(all_papers) == 3
 
-    def test_delete_removes_paper(self):
+    def test_delete_removes_paper(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib = PaperLibrary(data_dir=self._tmpdir)
@@ -74,7 +74,7 @@ class TestPaperLibrary:
         lib.delete("arxiv:0001")
         assert lib.get("arxiv:0001") is None
 
-    def test_index_persists_across_instances(self):
+    def test_index_persists_across_instances(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib1 = PaperLibrary(data_dir=self._tmpdir)
@@ -85,7 +85,7 @@ class TestPaperLibrary:
         assert retrieved is not None
         assert retrieved.title == "Persistent Paper"
 
-    def test_stats_returns_correct_counts(self):
+    def test_stats_returns_correct_counts(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib = PaperLibrary(data_dir=self._tmpdir)
@@ -100,10 +100,10 @@ class TestPaperLibrary:
 
 
 class TestVectorSearch:
-    def setup_method(self):
+    def setup_method(self) -> None:
         self._tmpdir = tempfile.mkdtemp()
 
-    def test_vector_search_returns_relevant_results(self):
+    def test_vector_search_returns_relevant_results(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib = PaperLibrary(data_dir=self._tmpdir)
@@ -136,14 +136,14 @@ class TestVectorSearch:
         # The volatility paper should rank highest
         assert results[0].id == "arxiv:0001"
 
-    def test_vector_search_empty_library(self):
+    def test_vector_search_empty_library(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib = PaperLibrary(data_dir=self._tmpdir)
         results = lib.search_semantic("anything")
         assert results == []
 
-    def test_stats_includes_vector_chunk_count(self):
+    def test_stats_includes_vector_chunk_count(self) -> None:
         from qws_researcher.store.library import PaperLibrary
 
         lib = PaperLibrary(data_dir=self._tmpdir)

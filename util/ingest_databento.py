@@ -36,6 +36,7 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 
 import databento as db
 import pandas as pd
@@ -165,7 +166,7 @@ def _normalize_schema(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _write_with_merge(df_new: pd.DataFrame, store, arc_key: str) -> tuple[int, str]:
+def _write_with_merge(df_new: pd.DataFrame, store: Any, arc_key: str) -> tuple[int, str]:
     """Write Databento bars to ArcticDB, merging with any existing IBKR data.
 
     Strategy:

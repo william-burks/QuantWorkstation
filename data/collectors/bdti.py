@@ -21,7 +21,7 @@ import logging
 from datetime import UTC, datetime
 
 import pandas as pd
-import requests  # type: ignore[import-untyped]
+import requests
 from bs4 import BeautifulSoup
 
 from data.store import get_store

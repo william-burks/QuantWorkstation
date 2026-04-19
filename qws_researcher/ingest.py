@@ -4,6 +4,7 @@ import logging
 import re
 import shutil
 from pathlib import Path
+from typing import Any
 
 from qws_researcher import id_safe
 from qws_researcher.extract import extract_text
@@ -34,7 +35,7 @@ def ingest_folder(
     ingested_dir: str,
     unmatched_dir: str,
     data_dir: str,
-) -> dict:
+) -> dict[str, list[dict[str, Any]]]:
     """
     Process all PDFs in inbox/:
     - DOI filename + DOI in library → extract text, update record, move to ingested/
@@ -51,7 +52,7 @@ def ingest_folder(
         d.mkdir(parents=True, exist_ok=True)
 
     lib = PaperLibrary(data_dir=data_dir)
-    result: dict[str, list] = {"ingested": [], "unmatched": [], "errors": []}
+    result: dict[str, list[dict[str, Any]]] = {"ingested": [], "unmatched": [], "errors": []}
 
     pdf_files = sorted(inbox_path.glob("*.pdf"))
     if not pdf_files:

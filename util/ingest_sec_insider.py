@@ -23,6 +23,7 @@ import time
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import requests
@@ -77,14 +78,14 @@ def _load_ticker_cik_map(session: requests.Session) -> dict[str, str]:
     return {v["ticker"].upper(): str(v["cik_str"]).zfill(10) for v in data.values()}
 
 
-def _get_form4_filings(cik: str, session: requests.Session, start_date: datetime) -> list[dict]:
+def _get_form4_filings(cik: str, session: requests.Session, start_date: datetime) -> list[dict[str, Any]]:
     """Return list of {accession, filing_date, primary_doc} for all Form 4s since start_date."""
-    results = []
+    results: list[dict[str, Any]] = []
     url = f"{BASE_URL}/submissions/CIK{cik}.json"
     resp = _get(url, session)
     data = resp.json()
 
-    def _extract_filings(filings_block: dict) -> None:
+    def _extract_filings(filings_block: dict[str, Any]) -> None:
         forms = filings_block.get("form", [])
         dates = filings_block.get("filingDate", [])
         accessions = filings_block.get("accessionNumber", [])
@@ -123,7 +124,7 @@ def _get_form4_filings(cik: str, session: requests.Session, start_date: datetime
     return results
 
 
-def _parse_form4_xml(xml_bytes: bytes, ticker: str, filing_date: datetime) -> list[dict]:
+def _parse_form4_xml(xml_bytes: bytes, ticker: str, filing_date: datetime) -> list[dict[str, Any]]:
     """Parse Form 4 XML and return list of transaction dicts (P and S codes only)."""
     try:
         root = ET.fromstring(xml_bytes)
@@ -131,7 +132,7 @@ def _parse_form4_xml(xml_bytes: bytes, ticker: str, filing_date: datetime) -> li
         log.warning("XML parse error for %s: %s", ticker, exc)
         return []
 
-    def _text(el, path: str) -> str:
+    def _text(el: ET.Element, path: str) -> str:
         node = el.find(path)
         return node.text.strip() if node is not None and node.text else ""
 
@@ -206,8 +207,8 @@ def ingest(start_date: datetime) -> None:
         existing = pd.DataFrame()
         existing_end = pd.Timestamp.min.tz_localize("UTC")
 
-    all_txns: list[dict] = []
-    skipped_symbols = []
+    all_txns: list[dict[str, Any]] = []
+    skipped_symbols: list[str] = []
 
     for idx, symbol in enumerate(SYMBOLS):
         cik = ticker_cik.get(symbol.upper())

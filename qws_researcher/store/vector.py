@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Any
 
 from qws_researcher import Paper
 
@@ -32,7 +33,7 @@ def _chunk_text(text: str) -> list[str]:
         if current_chars >= _CHUNK_CHARS:
             chunks.append(" ".join(current_words))
             # Overlap: keep last N chars worth of words
-            overlap_words = []
+            overlap_words: list[str] = []
             overlap_chars = 0
             for w in reversed(current_words):
                 overlap_chars += len(w) + 1
@@ -51,9 +52,9 @@ def _chunk_text(text: str) -> list[str]:
 class VectorIndex:
     def __init__(self, data_dir: str = "data") -> None:
         self._data_dir = data_dir
-        self._client = None
-        self._collection = None
-        self._model = None
+        self._client: Any = None
+        self._collection: Any = None
+        self._model: Any = None
 
     def _ensure_initialized(self) -> None:
         if self._collection is not None:
@@ -85,12 +86,12 @@ class VectorIndex:
         if not chunks:
             return
 
-        embeddings = self._model.encode(chunks, show_progress_bar=False).tolist()  # type: ignore[union-attr]
+        embeddings = self._model.encode(chunks, show_progress_bar=False).tolist()
 
         ids = [f"{paper.id}__chunk_{i}" for i in range(len(chunks))]
         metadatas = [{"paper_id": paper.id, "chunk_index": i} for i in range(len(chunks))]
 
-        self._collection.upsert(  # type: ignore[union-attr]
+        self._collection.upsert(
             ids=ids,
             embeddings=embeddings,
             documents=chunks,
@@ -104,13 +105,13 @@ class VectorIndex:
         """
         self._ensure_initialized()
 
-        collection_count = self._collection.count()  # type: ignore[union-attr]
+        collection_count = self._collection.count()
         if collection_count == 0:
             return []
 
-        query_embedding = self._model.encode([query], show_progress_bar=False).tolist()[0]  # type: ignore[union-attr]
+        query_embedding = self._model.encode([query], show_progress_bar=False).tolist()[0]
 
-        raw = self._collection.query(  # type: ignore[union-attr]
+        raw = self._collection.query(
             query_embeddings=[query_embedding],
             n_results=min(n * 5, collection_count),
             include=["metadatas", "distances"],
@@ -123,7 +124,7 @@ class VectorIndex:
         self._ensure_initialized()
 
         # Get all chunks for this paper
-        existing = self._collection.get(  # type: ignore[union-attr]
+        existing = self._collection.get(
             where={"paper_id": paper_id},
             include=["embeddings"],
         )
@@ -138,8 +139,8 @@ class VectorIndex:
         arr = np.array(embeddings, dtype=float)
         paper_embedding = np.mean(arr, axis=0).tolist()
 
-        collection_count = self._collection.count()  # type: ignore[union-attr]
-        raw = self._collection.query(  # type: ignore[union-attr]
+        collection_count = self._collection.count()
+        raw = self._collection.query(
             query_embeddings=[paper_embedding],
             n_results=min(n * 5 + 10, collection_count),
             include=["metadatas", "distances"],
@@ -153,17 +154,18 @@ class VectorIndex:
         """Remove all chunks for a paper from the index."""
         self._ensure_initialized()
 
-        existing = self._collection.get(where={"paper_id": paper_id})  # type: ignore[union-attr]
+        existing = self._collection.get(where={"paper_id": paper_id})
         if existing and existing.get("ids"):
-            self._collection.delete(ids=existing["ids"])  # type: ignore[union-attr]
+            self._collection.delete(ids=existing["ids"])
 
     def count(self) -> int:
         """Return the total number of chunks in the index."""
         self._ensure_initialized()
-        return self._collection.count()  # type: ignore[union-attr]
+        result: int = self._collection.count()
+        return result
 
 
-def _dedup_results(raw: dict, n: int) -> list[tuple[str, float]]:
+def _dedup_results(raw: dict[str, Any], n: int) -> list[tuple[str, float]]:
     """Deduplicate ChromaDB query results by paper_id, keeping best score per paper."""
     best: dict[str, float] = {}
 

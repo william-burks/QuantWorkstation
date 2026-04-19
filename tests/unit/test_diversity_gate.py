@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
+import pytest
 
 from research.experiments.evaluator import _annual_breakdown, evaluate, report
 from research.experiments.metrics import diversity_score
@@ -69,37 +70,37 @@ def _make_results_df() -> pd.DataFrame:
 
 
 class TestDiversityScoreMetric:
-    def test_three_years_two_profitable(self):
+    def test_three_years_two_profitable(self) -> None:
         result = diversity_score(_THREE_YEAR_BREAKDOWN)
         assert result["diversity_distinct_years"] == 3
         assert result["diversity_years_positive"] == 2
         assert abs(result["diversity_score"] - 2 / 3) < 0.01
 
-    def test_two_years_both_profitable(self):
+    def test_two_years_both_profitable(self) -> None:
         result = diversity_score(_TWO_YEAR_BREAKDOWN)
         assert result["diversity_distinct_years"] == 2
         assert result["diversity_years_positive"] == 2
         assert result["diversity_score"] == 1.0
 
-    def test_one_year_one_profitable(self):
+    def test_one_year_one_profitable(self) -> None:
         result = diversity_score(_ONE_YEAR_BREAKDOWN)
         assert result["diversity_distinct_years"] == 1
         assert result["diversity_years_positive"] == 1
         assert result["diversity_score"] == 1.0
 
-    def test_one_year_zero_profitable(self):
+    def test_one_year_zero_profitable(self) -> None:
         result = diversity_score(_ONE_YEAR_ZERO_PROFITABLE)
         assert result["diversity_distinct_years"] == 1
         assert result["diversity_years_positive"] == 0
         assert result["diversity_score"] == 0.0
 
-    def test_empty_breakdown(self):
+    def test_empty_breakdown(self) -> None:
         result = diversity_score([])
         assert result["diversity_score"] == 0.0
         assert result["diversity_distinct_years"] == 0
         assert result["diversity_years_positive"] == 0
 
-    def test_keys_present(self):
+    def test_keys_present(self) -> None:
         result = diversity_score(_THREE_YEAR_BREAKDOWN)
         assert set(result.keys()) == {
             "diversity_score",
@@ -114,7 +115,7 @@ class TestDiversityScoreMetric:
 
 
 class TestReportDiversityBlock:
-    def test_diversity_block_printed_when_trades_provided(self, capsys):
+    def test_diversity_block_printed_when_trades_provided(self, capsys: pytest.CaptureFixture[str]) -> None:
         trades = _make_trades_df([2022, 2023, 2024], [1000.0, 2000.0, 500.0])
         results = _make_results_df()
         bh = {"sharpe": 0.5, "return": 0.10, "max_drawdown": -0.15, "calmar": 0.5}
@@ -129,7 +130,7 @@ class TestReportDiversityBlock:
         assert "Years traded:" in captured.out
         assert "Profitable years:" in captured.out
 
-    def test_no_diversity_block_without_trades(self, capsys):
+    def test_no_diversity_block_without_trades(self, capsys: pytest.CaptureFixture[str]) -> None:
         results = _make_results_df()
         bh = {"sharpe": 0.5, "return": 0.10, "max_drawdown": -0.15, "calmar": 0.5}
         metadata = {"symbol": "CL", "freq": "1H"}
@@ -148,24 +149,24 @@ class TestReportDiversityBlock:
 
 
 class TestDiversityWarnings:
-    def test_warn_when_distinct_years_lt_3(self):
+    def test_warn_when_distinct_years_lt_3(self) -> None:
         # 2 distinct years → WARN
         output = _annual_breakdown(_make_trades_df([2023, 2024], [2000.0, 1500.0]))
         assert "[WARN] Diversity: only 2 year" in output
 
-    def test_warn_when_profitable_years_lt_2(self):
+    def test_warn_when_profitable_years_lt_2(self) -> None:
         # 3 distinct but only 1 profitable
         trades = _make_trades_df([2022, 2023, 2024], [-100.0, -200.0, 3000.0])
         output = _annual_breakdown(trades)
         assert "[WARN] Diversity: only 1 profitable year" in output
 
-    def test_both_warns_fire_when_one_year(self):
+    def test_both_warns_fire_when_one_year(self) -> None:
         trades = _make_trades_df([2024], [1000.0])
         output = _annual_breakdown(trades)
         # 1 distinct year → warn on distinct_years < 3
         assert "[WARN] Diversity:" in output
 
-    def test_warn_fired_zero_profitable(self):
+    def test_warn_fired_zero_profitable(self) -> None:
         trades = _make_trades_df([2022, 2023, 2024], [-100.0, -200.0, -50.0])
         output = _annual_breakdown(trades)
         assert "[WARN] Diversity: only 0 profitable year" in output
@@ -177,14 +178,14 @@ class TestDiversityWarnings:
 
 
 class TestDiversityNoWarnAtThreshold:
-    def test_no_warn_three_years_two_profitable(self):
+    def test_no_warn_three_years_two_profitable(self) -> None:
         # 3 distinct, 2 profitable — exactly at thresholds — no warn
         trades = _make_trades_df([2022, 2023, 2024], [1000.0, 2000.0, -100.0])
         output = _annual_breakdown(trades)
         # distinct_years == 3 (not < 3), profitable == 2 (not < 2) → no warn
         assert "[WARN] Diversity:" not in output
 
-    def test_no_warn_four_years_three_profitable(self):
+    def test_no_warn_four_years_three_profitable(self) -> None:
         trades = _make_trades_df([2021, 2022, 2023, 2024], [500.0, 1000.0, 2000.0, -200.0])
         output = _annual_breakdown(trades)
         assert "[WARN] Diversity:" not in output
@@ -216,7 +217,7 @@ class TestBundleCliDiversityWarning:
         )
         (tmp_path / "baseline_results.csv").write_text(csv_content)
 
-    def test_bundle_reads_diversity_fields_no_recompute(self, tmp_path: Path, capsys):
+    def test_bundle_reads_diversity_fields_no_recompute(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """_cmd_bundle reads pre-computed diversity from bundle.json, writes to trial_metadata."""
         import argparse
         from unittest.mock import patch
@@ -274,7 +275,7 @@ class TestBundleCliDiversityWarning:
 
 
 class TestEvaluatorWritesToBundle:
-    def test_diversity_written_to_bundle_json(self, tmp_path: Path):
+    def test_diversity_written_to_bundle_json(self, tmp_path: Path) -> None:
         bundle_path = tmp_path / "bundle.json"
         bundle_path.write_text(json.dumps({"trial": "test", "files": {}}))
 
@@ -293,7 +294,7 @@ class TestEvaluatorWritesToBundle:
         assert "diversity_distinct_years" in tm
         assert "diversity_years_positive" in tm
 
-    def test_diversity_merges_with_existing_trial_metadata(self, tmp_path: Path):
+    def test_diversity_merges_with_existing_trial_metadata(self, tmp_path: Path) -> None:
         bundle_path = tmp_path / "bundle.json"
         bundle_path.write_text(
             json.dumps(
@@ -327,7 +328,7 @@ class TestEvaluatorWritesToBundle:
 
 
 class TestBundleDoesNotRecompute:
-    def test_trial_metadata_passed_as_is_to_write_trial_metadata(self, tmp_path: Path):
+    def test_trial_metadata_passed_as_is_to_write_trial_metadata(self, tmp_path: Path) -> None:
         """Verifies _cmd_bundle passes bundle.json trial_metadata directly."""
         import argparse
         from unittest.mock import patch
@@ -400,7 +401,7 @@ class TestBundleDoesNotRecompute:
 
 
 class TestTrialMetadataOnRunNode:
-    def test_write_trial_metadata_called_with_diversity_keys(self, tmp_path: Path):
+    def test_write_trial_metadata_called_with_diversity_keys(self, tmp_path: Path) -> None:
         """When bundle.json has diversity in trial_metadata, store.write_trial_metadata is called."""
         import argparse
         from unittest.mock import patch
@@ -471,7 +472,7 @@ class TestTrialMetadataOnRunNode:
 
 
 class TestNoAutoRejection:
-    def test_ingest_proceeds_with_low_diversity(self, tmp_path: Path):
+    def test_ingest_proceeds_with_low_diversity(self, tmp_path: Path) -> None:
         """Ingest completes (rc=0) even when diversity is below both thresholds."""
         import argparse
         from unittest.mock import patch

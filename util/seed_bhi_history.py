@@ -206,14 +206,14 @@ def _parse_state_sheet(xl: pd.ExcelFile, sheet: str) -> dict[str, pd.Series]:
     for label, arc_key in targets.items():
         label_stripped = label.strip()
         # find matching row (leading spaces in sheet)
-        row_idx = None
+        match_idx: int | None = None
         for k, v in label_to_row.items():
             if k.strip() == label_stripped:
-                row_idx = v
+                match_idx = v
                 break
-        if row_idx is None:
+        if match_idx is None:
             continue
-        data_row = df.iloc[row_idx]
+        data_row = df.iloc[match_idx]
         timestamps = []
         values = []
         for col_idx, ts in date_cols:

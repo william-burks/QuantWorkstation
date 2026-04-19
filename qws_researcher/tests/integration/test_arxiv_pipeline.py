@@ -12,7 +12,7 @@ import pytest
 
 
 @pytest.mark.integration
-def test_arxiv_search_and_full_pipeline():
+def test_arxiv_search_and_full_pipeline() -> None:
     """Search arXiv for a known paper and run the full fetch pipeline."""
     import tempfile
 
@@ -30,7 +30,7 @@ def test_arxiv_search_and_full_pipeline():
 
         paper = papers[0]
         assert paper.id.startswith("arxiv:")
-        assert len(paper.title) > 5
+        assert paper.title is not None and len(paper.title) > 5
         assert paper.abstract
 
         # Fetch PDF
@@ -40,12 +40,13 @@ def test_arxiv_search_and_full_pipeline():
         # Extract text
         from qws_researcher.extract import extract_text
 
+        assert pdf_path is not None
         text = extract_text(pdf_path)
         assert len(text) > 500, "Expected extracted text to be non-trivial"
 
 
 @pytest.mark.integration
-def test_library_full_roundtrip():
+def test_library_full_roundtrip() -> None:
     """Add papers to library, search, verify persistence."""
     from qws_researcher.sources import arxiv as arxiv_src
     from qws_researcher.store.library import PaperLibrary

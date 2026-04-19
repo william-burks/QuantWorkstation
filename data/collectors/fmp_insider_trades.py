@@ -26,7 +26,7 @@ import time
 from datetime import UTC, datetime, timedelta
 
 import pandas as pd
-import requests  # type: ignore[import-untyped]
+import requests
 
 from data.collectors.fmp_earnings_surprises import SYMBOLS
 from data.config import get_settings
@@ -48,7 +48,7 @@ def _fetch_symbol_pages(api_key: str, symbol: str, cutoff: pd.Timestamp) -> pd.D
     frames: list[pd.DataFrame] = []
 
     for page in range(MAX_PAGES):
-        params = {
+        params: dict[str, str | int] = {
             "symbol": symbol,
             "page": page,
             "limit": PAGE_LIMIT,

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
+from typing import Any
 
 import httpx
 
@@ -22,9 +23,9 @@ def _extract_ssrn_id(url: str) -> str | None:
     return None
 
 
-def _parse_html(html: str, url: str) -> dict:
+def _parse_html(html: str, url: str) -> dict[str, Any]:
     """Parse SSRN abstract page HTML for metadata using basic string operations."""
-    data: dict = {"title": "", "authors": [], "abstract": "", "date": None}
+    data: dict[str, Any] = {"title": "", "authors": [], "abstract": "", "date": None}
 
     # Title: <meta name="citation_title" content="...">
     m = re.search(

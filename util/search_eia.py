@@ -1,5 +1,7 @@
 """Verify EIA HDD/CDD series range and frequency."""
 
+from typing import Any, cast
+
 import requests
 
 from data.config import get_settings
@@ -8,13 +10,13 @@ KEY = get_settings().eia_api_key
 BASE = "https://api.eia.gov/v2"
 
 
-def get(route: str, params: dict | None = None) -> dict:
-    p = {"api_key": KEY}
+def get(route: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    p: dict[str, Any] = {"api_key": KEY}
     if params:
         p.update(params)
     r = requests.get(f"{BASE}{route}", params=p, timeout=15)
     r.raise_for_status()
-    return r.json().get("response", {})
+    return cast(dict[str, Any], r.json().get("response", {}))
 
 
 for msn in ["ZWHDPUS", "ZWCDPUS"]:

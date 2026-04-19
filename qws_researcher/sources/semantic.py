@@ -4,6 +4,7 @@ import logging
 import os
 import time
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 import httpx
@@ -43,15 +44,15 @@ def _get_client() -> SemanticScholar:
     return SemanticScholar(api_key=api_key if api_key else None)
 
 
-def _build_headers() -> dict:
-    headers = {}
+def _build_headers() -> dict[str, str]:
+    headers: dict[str, str] = {}
     api_key = os.environ.get("SEMANTIC_SCHOLAR_API_KEY")
     if api_key:
         headers["x-api-key"] = api_key
     return headers
 
 
-def _bulk_result_to_paper(item: dict, data_dir: str = "data") -> Paper | None:
+def _bulk_result_to_paper(item: dict[str, Any], data_dir: str = "data") -> Paper | None:
     """Convert a bulk search API dict to Paper. Returns None on bad data."""
     try:
         title = item.get("title") or ""
@@ -220,7 +221,7 @@ def search(
     """Search Semantic Scholar for papers using the bulk search endpoint."""
     try:
         fos = fields_of_study or FIELDS_OF_STUDY
-        params = {
+        params: dict[str, str | int] = {
             "query": query,
             "fields": _BULK_FIELDS,
             "fieldsOfStudy": ",".join(fos),

@@ -27,6 +27,7 @@ import sys
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import requests
@@ -95,7 +96,7 @@ def _fetch_chunk(
     start_ts: int,
     end_ts: int,
     session: requests.Session,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Fetch up to BARS_PER_REQUEST 1-min candles. Retries on 429 / transient errors."""
     url = f"{API_BASE}/{product_id}/candles"
     params = {"granularity": GRANULARITY, "start": str(start_ts), "end": str(end_ts)}
@@ -109,7 +110,8 @@ def _fetch_chunk(
                 time.sleep(wait)
                 continue
             resp.raise_for_status()
-            return resp.json().get("candles", [])
+            candles: list[dict[str, Any]] = resp.json().get("candles", [])
+            return candles
         except requests.RequestException as exc:
             if attempt == 5:
                 raise
@@ -134,7 +136,7 @@ def fetch_1min(product_id: str, start: datetime, end: datetime) -> pd.DataFrame:
     total_minutes = int((end - start).total_seconds() / 60)
     total_chunks = (total_minutes // BARS_PER_REQUEST) + 1
 
-    all_candles: list[dict] = []
+    all_candles: list[dict[str, Any]] = []
     current = start
     chunk_num = 0
 
@@ -223,7 +225,7 @@ def _normalize(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 
-def _load_existing(store, arc_sym: str, new_suffix: str, alpaca_suffix: str | None) -> pd.DataFrame:
+def _load_existing(store: Any, arc_sym: str, new_suffix: str, alpaca_suffix: str | None) -> pd.DataFrame:
     """Read existing data from new key; fall back to old Alpaca key if not found."""
     arc_key = f"{arc_sym}_{new_suffix}"
     try:
@@ -248,7 +250,7 @@ def _load_existing(store, arc_sym: str, new_suffix: str, alpaca_suffix: str | No
 
 def _write_merged(
     df_coinbase: pd.DataFrame,
-    store,
+    store: Any,
     arc_sym: str,
     new_suffix: str,
     alpaca_suffix: str | None,

@@ -15,6 +15,7 @@ import asyncio
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Harness
@@ -108,7 +109,7 @@ async def block_0(tmp_dir: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def block_1(tmp_dir: str) -> tuple[str | None, list[dict]]:
+async def block_1(tmp_dir: str) -> tuple[str | None, list[dict[str, Any]]]:
     begin_block(1, "Search + Abstract")
     from qws_researcher.server import read_abstract, search_papers
 
@@ -172,7 +173,7 @@ async def block_2(paper_id: str) -> bool:
         (stats.get("with_doi_hint", 0) + stats.get("without_doi_hint", 0)) >= 1,
     )
 
-    return campus_needed
+    return bool(campus_needed)
 
 
 # ---------------------------------------------------------------------------

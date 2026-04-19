@@ -4,6 +4,7 @@ import json
 import logging
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 from qws_researcher import Paper, PaperSummary
 from qws_researcher.store.vector import VectorIndex
@@ -115,20 +116,20 @@ class PaperLibrary:
 
     # --- Equations ---
 
-    def save_equation(self, equation: dict) -> None:
+    def save_equation(self, equation: dict[str, str]) -> None:
         self._conn.execute(
             "INSERT INTO equations (paper_id, latex) VALUES (?, ?)",
             (equation.get("paper_id", ""), equation.get("latex", "")),
         )
         self._conn.commit()
 
-    def get_equations(self, paper_id: str) -> list[dict]:
+    def get_equations(self, paper_id: str) -> list[dict[str, str]]:
         rows = self._conn.execute(
             "SELECT paper_id, latex FROM equations WHERE paper_id = ?", (paper_id,)
         ).fetchall()
         return [{"paper_id": r[0], "latex": r[1]} for r in rows]
 
-    def search_equations(self, latex_fragment: str) -> list[dict]:
+    def search_equations(self, latex_fragment: str) -> list[dict[str, str]]:
         rows = self._conn.execute(
             "SELECT paper_id, latex FROM equations WHERE latex LIKE ?",
             (f"%{latex_fragment}%",),
@@ -164,7 +165,7 @@ class PaperLibrary:
 
     # --- Stats / summaries ---
 
-    def stats(self) -> dict:
+    def stats(self) -> dict[str, Any]:
         papers = self.list_all()
         sources: dict[str, int] = {}
         dates = []

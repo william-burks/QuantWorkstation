@@ -35,7 +35,7 @@ import time
 from datetime import timedelta
 
 import pandas as pd
-import requests  # type: ignore[import-untyped]
+import requests
 
 from data.config import get_settings
 from data.store import get_store
