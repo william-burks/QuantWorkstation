@@ -9,7 +9,7 @@ End-to-end algo trading workbench: data collection → research → strategy →
 
 ## Highlights
 
-- **IS/OOS validation framework** with evidence-weighted significance gating — killed a champion strategy (4.58 IS Sharpe, 32 trades) on OOS regime sensitivity (−12% DD) instead of deploying a false positive. See [docs/PROVENANCE_ENGINE.md](docs/PROVENANCE_ENGINE.md).
+- **IS/OOS validation framework** with evidence-weighted significance gating — designed to kill strategies that look great in-sample but fail on regime-shifted OOS data, rather than shipping false positives. See [docs/PROVENANCE_ENGINE.md](docs/PROVENANCE_ENGINE.md).
 - **Research provenance graph** (Neo4j): Hypothesis → Trial → Champion → FormerChampion lineage; every run, parameter set, and promotion gate recorded and queryable.
 - **Prop-firm risk engine** enforcing daily-loss, trailing-drawdown, exposure, and consistency rules before every order. See the Risk Engine table below.
 - **`qw` CLI + MCP server** as the only research interface. No direct Cypher, no raw Python glue.
@@ -22,7 +22,7 @@ End-to-end algo trading workbench: data collection → research → strategy →
 data/           — collectors, schemas, arcticdb store
 execution/      — broker clients, OMS, risk engine, scheduler
 strategies/     — BaseStrategy ABC, adapters, signal implementations
-research/       — trials, experiments (sweep, walk-forward), analytics; `research/graph/` holds the Neo4j CLI/store/MCP
+research/       — trials, experiments (sweep, metrics, standards), analytics; `research/graph/` holds the Neo4j CLI/store/MCP
 docs/           — manifesto, workflow, provenance spec; `docs/graph/` holds schema + runbook
 epics/          — sprint/story backlog
 infra/          — deployment scaffolds (docker-compose.neo4j.yml, launchd plists)
@@ -63,14 +63,9 @@ Schema, MCP tools, and promotion gate logic: [docs/PROVENANCE_ENGINE.md](docs/PR
 
 ### Research Agents
 
-Two agents assist with research sessions:
+Design for two research-assist agents — `research-navigator` (session start, shortlist, redundancy gate, pivot analysis) and `trial-engineer` (hypothesis → trial script → ingest) — lives in [docs/agents/](docs/agents/) with role contracts and handoff patterns.
 
-| Agent | Role |
-|---|---|
-| `research-navigator` | Session start: graph screening → ranked shortlist. Redundancy check before hypothesis commit. Mid-session pivot analysis. Session wrap with findings update. |
-| `trial-engineer` | Accepts hypothesis input contract, generates trial script + bundle.json, stops before run. After "run it": executes, ingests, reports raw metrics. |
-
-Usage: [docs/AGENT_USER_MANUAL.md](docs/AGENT_USER_MANUAL.md)
+Agent runtime definitions (`.claude/`) are private to this install. The design is framework-agnostic — reimplement in your agent runtime of choice, or read as reference for MCP-driven research workflows. Usage: [docs/AGENT_USER_MANUAL.md](docs/AGENT_USER_MANUAL.md).
 
 ---
 
@@ -201,10 +196,10 @@ To wipe and start fresh — delete the `arctic_data/` directory. It is recreated
 ### Run tests
 
 ```bash
-make test           # qws_graph unit tests
-make test-unit      # legacy tests/unit/ (risk, OMS)
+make test           # unit tests (tests/unit/)
+make test-integration  # integration tests (tests/integration/)
 make test-all       # both suites
-make verify         # lint + typecheck + both test suites
+make verify         # lint + typecheck + unit tests
 ```
 
 ---
