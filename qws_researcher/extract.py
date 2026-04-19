@@ -16,6 +16,7 @@ def extract_text(pdf_path: str) -> str:
     """
     try:
         import pymupdf4llm  # noqa: PLC0415
+
         raw = pymupdf4llm.to_markdown(pdf_path)
     except Exception:
         return ""
@@ -55,7 +56,7 @@ def extract_text(pdf_path: str) -> str:
     refs_tail = full_text[cutoff:]
     refs_match = re.search(r"\n\s*#{0,3}\s*References?\s*\n", refs_tail, re.IGNORECASE)
     if refs_match:
-        full_text = full_text[:cutoff + refs_match.start()]
+        full_text = full_text[: cutoff + refs_match.start()]
 
     # Normalize excessive blank lines
     full_text = re.sub(r"\n{3,}", "\n\n", full_text)
@@ -82,7 +83,7 @@ def _clean_latex_eq(s: str) -> str:
     s = re.sub(r"\\label\{[^}]*\}", "", s)
     s = re.sub(r"\\nonumber\b", "", s)
     # Normalize whitespace
-    s = re.sub(r"[ \t]+", " ", s)   # collapse horizontal whitespace (preserve newlines)
+    s = re.sub(r"[ \t]+", " ", s)  # collapse horizontal whitespace (preserve newlines)
     s = re.sub(r"\n{3,}", "\n\n", s)
     return s.strip()
 

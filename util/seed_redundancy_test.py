@@ -76,7 +76,7 @@ MATCH (ch:Champion) WHERE ch.champion_id IN ['redundancy_test_ch001', 'redundanc
 """
 
 
-def _driver() -> "GraphDatabase.driver":
+def _driver() -> GraphDatabase.driver:
     uri = os.environ.get("GRAPH_URI", "bolt://localhost:7687")
     user = os.environ.get("GRAPH_USER", "neo4j")
     password = os.environ.get("GRAPH_PASSWORD", "")

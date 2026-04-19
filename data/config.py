@@ -68,15 +68,15 @@ class Settings(BaseSettings):
         "VIXCLS",
         "BAMLH0A0HYM2",
         # Inflation expectations
-        "T5YIE",       # 5-year breakeven inflation
-        "T10YIE",      # 10-year breakeven inflation
-        "DFII10",      # 10-year TIPS real yield
-        "PCEPILFE",    # Core PCE (Fed's preferred inflation measure)
+        "T5YIE",  # 5-year breakeven inflation
+        "T10YIE",  # 10-year breakeven inflation
+        "DFII10",  # 10-year TIPS real yield
+        "PCEPILFE",  # Core PCE (Fed's preferred inflation measure)
         # Labor / activity
-        "ICSA",        # Initial jobless claims (weekly)
-        "RSAFS",       # Retail sales (monthly)
+        "ICSA",  # Initial jobless claims (weekly)
+        "RSAFS",  # Retail sales (monthly)
         # Financial stress
-        "STLFSI4",     # St. Louis Fed Financial Stress Index
+        "STLFSI4",  # St. Louis Fed Financial Stress Index
     ]
 
     # EIA petroleum stock series to collect (see data/collectors/eia.py)

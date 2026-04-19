@@ -291,7 +291,9 @@ if __name__ == "__main__":
         help="Fetch full history from 2006 to present (~20yr, ~40 downloads)",
     )
     parser.add_argument(
-        "--symbols", nargs="+", default=None,
+        "--symbols",
+        nargs="+",
+        default=None,
         help="Symbols to collect (default: all)",
     )
     args = parser.parse_args()

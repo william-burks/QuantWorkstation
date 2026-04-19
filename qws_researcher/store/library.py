@@ -65,15 +65,11 @@ class PaperLibrary:
         self._upsert_vector(paper)
 
     def get(self, paper_id: str) -> Paper | None:
-        row = self._conn.execute(
-            "SELECT data FROM papers WHERE id = ?", (paper_id,)
-        ).fetchone()
+        row = self._conn.execute("SELECT data FROM papers WHERE id = ?", (paper_id,)).fetchone()
         return Paper.from_dict(json.loads(row[0])) if row else None
 
     def find_by_doi(self, doi: str) -> Paper | None:
-        row = self._conn.execute(
-            "SELECT data FROM papers WHERE doi = ?", (doi,)
-        ).fetchone()
+        row = self._conn.execute("SELECT data FROM papers WHERE doi = ?", (doi,)).fetchone()
         return Paper.from_dict(json.loads(row[0])) if row else None
 
     def list_all(self) -> list[Paper]:

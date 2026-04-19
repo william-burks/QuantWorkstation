@@ -1,6 +1,7 @@
 """Quick test: does FMP return historical economic calendar data with actuals?"""
-import os
+
 import requests
+
 from data.config import get_settings
 
 settings = get_settings()

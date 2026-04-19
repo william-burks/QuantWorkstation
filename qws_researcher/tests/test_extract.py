@@ -1,4 +1,5 @@
 """Unit tests for PDF text extraction."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -46,9 +47,6 @@ def test_extract_text_strips_repeated_headers(tmp_path):
 def test_extract_text_truncates_references(tmp_path):
     fake_pdf = tmp_path / "test.pdf"
     fake_pdf.write_bytes(b"%PDF-1.4")
-
-    main_body = "Main body content.\n" * 50
-    references_section = "\nReferences\n[1] Smith et al. 2020...\n[2] Jones 2019..."
 
     # Put references in last 30% — need enough content
     long_body = "A" * 1000

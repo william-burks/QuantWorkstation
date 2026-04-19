@@ -72,7 +72,9 @@ def ingest_folder(
             if paper is None:
                 logger.info("DOI not in library (%s), moving to unmatched: %s", doi, pdf_file.name)
                 shutil.move(str(pdf_file), str(unmatched_path / pdf_file.name))
-                result["unmatched"].append({"file": pdf_file.name, "reason": f"DOI not in library: {doi}"})
+                result["unmatched"].append(
+                    {"file": pdf_file.name, "reason": f"DOI not in library: {doi}"}
+                )
                 continue
 
             # Copy PDF to data/papers/
@@ -100,7 +102,9 @@ def ingest_folder(
 
             # Move original PDF to ingested/
             shutil.move(str(pdf_file), str(ingested_path / pdf_file.name))
-            result["ingested"].append({"file": pdf_file.name, "paper_id": paper.id, "title": paper.title})
+            result["ingested"].append(
+                {"file": pdf_file.name, "paper_id": paper.id, "title": paper.title}
+            )
             logger.info("Ingested: %s -> %s", pdf_file.name, paper.id)
 
         except Exception as e:

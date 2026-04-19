@@ -40,12 +40,8 @@ dependencies = [
     # Web scraping (BDTI from StockQ)
     "requests>=2.31",
     "beautifulsoup4>=4.12",
-    # API
-    "fastapi>=0.110",
-    "uvicorn[standard]>=0.29",
     # Observability
     "opentelemetry-sdk>=1.23",
-    "opentelemetry-instrumentation-fastapi>=0.44b0",
     # Utilities
     "pandas>=2.2",
     "numpy>=1.26",
@@ -67,7 +63,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["data", "research", "strategies", "execution", "api", "qws_researcher"]
+packages = ["data", "research", "strategies", "execution", "qws_researcher"]
 
 [tool.ruff]
 line-length = 100

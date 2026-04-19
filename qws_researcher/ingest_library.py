@@ -4,6 +4,7 @@ Terminal entry point for batch PDF ingestion from the library inbox.
 Drop PDFs named by DOI (e.g. 10.1016_j.jfineco.2023.01.001.pdf) into
 qws_researcher/data/inbox/, then run this script.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -32,11 +33,11 @@ def main() -> None:
     unmatched = result["unmatched"]
     errors = result["errors"]
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"Ingested:   {len(ingested)}")
     print(f"Unmatched:  {len(unmatched)}")
     print(f"Errors:     {len(errors)}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     if ingested:
         print("\nIngested:")

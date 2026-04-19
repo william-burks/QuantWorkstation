@@ -90,7 +90,9 @@ def compute_metrics(trades: pd.DataFrame, window: str, equity: pd.Series) -> dic
         "max_drawdown": m["max_drawdown"],
         "calmar": m["calmar"],
         "total_r": float(pnl.sum()),
-        "avg_bars_held": float(trades["bars_held"].mean()) if "bars_held" in trades.columns else 0.0,
+        "avg_bars_held": float(trades["bars_held"].mean())
+        if "bars_held" in trades.columns
+        else 0.0,
         "first_trade_ts": pd.Timestamp(trades["entry_time"].min()).isoformat()
         if "entry_time" in trades.columns
         else "",

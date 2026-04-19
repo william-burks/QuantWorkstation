@@ -1,4 +1,5 @@
 """Debug BHI Excel format — print top rows to verify cell positions."""
+
 from io import BytesIO
 
 import pandas as pd

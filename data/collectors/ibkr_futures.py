@@ -738,6 +738,7 @@ def collect_all_timeframes() -> None:
 
 if __name__ == "__main__":
     import logging as _logging
+
     _logging.basicConfig(level=_logging.INFO, format="%(levelname)s %(message)s")
     # Suppress IB connection-status pings (2104/2106/2158) — not actionable
     _logging.getLogger("ib_insync").setLevel(_logging.WARNING)

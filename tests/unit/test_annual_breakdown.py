@@ -15,9 +15,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from research.experiments.metrics import annual_pnl_breakdown
 from research.experiments.evaluator import _annual_breakdown
-
+from research.experiments.metrics import annual_pnl_breakdown
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -26,9 +25,7 @@ from research.experiments.evaluator import _annual_breakdown
 
 def _trades(rows: list[tuple[str, float]]) -> pd.DataFrame:
     """Build a minimal trades_df from (entry_time_str, pnl_usd) pairs."""
-    return pd.DataFrame(
-        {"entry_time": [r[0] for r in rows], "pnl_usd": [r[1] for r in rows]}
-    )
+    return pd.DataFrame({"entry_time": [r[0] for r in rows], "pnl_usd": [r[1] for r in rows]})
 
 
 # ---------------------------------------------------------------------------

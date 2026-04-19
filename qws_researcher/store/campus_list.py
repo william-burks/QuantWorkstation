@@ -17,7 +17,7 @@ class CampusEntry:
     authors: list[str]
     year: int | None
     doi: str | None
-    filename_hint: str | None   # doi.replace("/","_",1)+".pdf" if DOI known
+    filename_hint: str | None  # doi.replace("/","_",1)+".pdf" if DOI known
     source: str
     url: str
     abstract: str | None

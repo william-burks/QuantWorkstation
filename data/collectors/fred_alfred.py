@@ -45,7 +45,7 @@ Run via: ``python -m data.collectors.fred_alfred``
 """
 
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 import pandas as pd
 import requests  # type: ignore[import-untyped]
@@ -65,13 +65,13 @@ DEFAULT_START = "2019-01-01"
 
 # Series IDs to collect as initial-release vintage data
 ALFRED_SERIES: list[str] = [
-    "CPIAUCSL",   # CPI All Urban Consumers
-    "CPILFESL",   # Core CPI ex food & energy
-    "PCEPILFE",   # Core PCE ex food & energy
-    "PAYEMS",     # Nonfarm Payrolls
-    "UNRATE",     # Unemployment Rate
-    "ICSA",       # Initial Jobless Claims (weekly)
-    "RSAFS",      # Retail Sales
+    "CPIAUCSL",  # CPI All Urban Consumers
+    "CPILFESL",  # Core CPI ex food & energy
+    "PCEPILFE",  # Core PCE ex food & energy
+    "PAYEMS",  # Nonfarm Payrolls
+    "UNRATE",  # Unemployment Rate
+    "ICSA",  # Initial Jobless Claims (weekly)
+    "RSAFS",  # Retail Sales
 ]
 
 

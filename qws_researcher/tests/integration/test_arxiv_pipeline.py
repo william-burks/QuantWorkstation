@@ -3,6 +3,7 @@ Integration tests — require real network access.
 Run with: uv run pytest tests/integration/ -m integration -v
 Skipped by default.
 """
+
 from __future__ import annotations
 
 import tempfile

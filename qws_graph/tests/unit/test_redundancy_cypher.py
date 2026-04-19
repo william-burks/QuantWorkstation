@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import re
 
-import pytest
-
 from qws_graph.research.graph.query import GET_CHECK_REDUNDANCY_V1_CYPHER
 
 
@@ -38,12 +36,14 @@ class TestRedundancyCypherStructure:
     def test_cypher_no_cartesian_product(self) -> None:
         """Three OPTIONAL MATCH clauses must NOT appear consecutively without a WITH between them."""
         # Find all OPTIONAL MATCH positions
-        positions = [m.start() for m in re.finditer(r"OPTIONAL MATCH", GET_CHECK_REDUNDANCY_V1_CYPHER)]
+        positions = [
+            m.start() for m in re.finditer(r"OPTIONAL MATCH", GET_CHECK_REDUNDANCY_V1_CYPHER)
+        ]
         assert len(positions) == 3, f"Expected 3 OPTIONAL MATCH clauses, got {len(positions)}"
 
         # Between each consecutive pair there must be a WITH keyword
         for i in range(len(positions) - 1):
-            segment = GET_CHECK_REDUNDANCY_V1_CYPHER[positions[i]:positions[i + 1]]
+            segment = GET_CHECK_REDUNDANCY_V1_CYPHER[positions[i] : positions[i + 1]]
             assert "WITH" in segment, (
                 f"No WITH found between OPTIONAL MATCH #{i + 1} and #{i + 2} — "
                 "cartesian product bug still present"
@@ -53,7 +53,9 @@ class TestRedundancyCypherStructure:
         """RETURN must reference pre-collected variables, not re-collect from OPTIONAL MATCH."""
         # After the fix, RETURN uses active_champion_matches and aborted_strategy_matches directly
         assert "active_champion_matches: active_champion_matches" in GET_CHECK_REDUNDANCY_V1_CYPHER
-        assert "aborted_strategy_matches: aborted_strategy_matches" in GET_CHECK_REDUNDANCY_V1_CYPHER
+        assert (
+            "aborted_strategy_matches: aborted_strategy_matches" in GET_CHECK_REDUNDANCY_V1_CYPHER
+        )
 
     def test_cypher_includes_hypothesis_id_and_title_in_return(self) -> None:
         """RETURN block must include hypothesis_id and title fields."""

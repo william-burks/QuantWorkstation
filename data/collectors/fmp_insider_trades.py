@@ -38,8 +38,8 @@ FMP_BASE_URL = "https://financialmodelingprep.com/stable/insider-trading/search"
 ARC_KEY = "INSIDER_TRADES"
 ARC_LIB = "macro"
 PAGE_LIMIT = 100
-LOOKBACK_DAYS = 365   # initial seed depth
-MAX_PAGES = 20        # per symbol (2,000 rows ≈ years of history per name)
+LOOKBACK_DAYS = 365  # initial seed depth
+MAX_PAGES = 20  # per symbol (2,000 rows ≈ years of history per name)
 REQUEST_DELAY = 0.25  # seconds between requests (300 calls/min limit)
 
 
@@ -95,13 +95,23 @@ def _fetch_symbol_pages(api_key: str, symbol: str, cutoff: pd.Timestamp) -> pd.D
             (c for c in raw.columns if "reporting" in c.lower() and "name" in c.lower()), None
         ),
         "transaction_type": next(
-            (c for c in raw.columns if "transactiontype" in c.lower() or "transaction_type" in c.lower()), None
+            (
+                c
+                for c in raw.columns
+                if "transactiontype" in c.lower() or "transaction_type" in c.lower()
+            ),
+            None,
         ),
         "acquisition_or_disposition": next(
             (c for c in raw.columns if "acquisition" in c.lower() or "acquis" in c.lower()), None
         ),
         "securities_transacted": next(
-            (c for c in raw.columns if "transacted" in c.lower() or "securitiestransacted" in c.lower()), None
+            (
+                c
+                for c in raw.columns
+                if "transacted" in c.lower() or "securitiestransacted" in c.lower()
+            ),
+            None,
         ),
         "price": next((c for c in raw.columns if c.lower() == "price"), None),
         "securities_owned": next((c for c in raw.columns if "owned" in c.lower()), None),
@@ -130,7 +140,9 @@ def collect() -> None:
     except Exception:
         existing = pd.DataFrame()
 
-    default_cutoff = pd.Timestamp(datetime.now(UTC) - timedelta(days=LOOKBACK_DAYS)).tz_convert("UTC")
+    default_cutoff = pd.Timestamp(datetime.now(UTC) - timedelta(days=LOOKBACK_DAYS)).tz_convert(
+        "UTC"
+    )
 
     all_frames: list[pd.DataFrame] = []
 
@@ -141,7 +153,12 @@ def collect() -> None:
             if not sym_rows.empty:
                 cutoff = sym_rows.index.max() - timedelta(days=7)
                 cutoff = pd.Timestamp(cutoff).tz_convert("UTC")
-                log.info("%s: last stored %s, fetching from %s", symbol, sym_rows.index.max().date(), cutoff.date())
+                log.info(
+                    "%s: last stored %s, fetching from %s",
+                    symbol,
+                    sym_rows.index.max().date(),
+                    cutoff.date(),
+                )
             else:
                 cutoff = default_cutoff
                 log.info("%s: no existing data, fetching %d days", symbol, LOOKBACK_DAYS)
@@ -182,9 +199,7 @@ def collect() -> None:
             if sym_new.empty:
                 continue
             sym_cutoff = sym_new.index.min() - timedelta(days=7)
-            sym_old = existing[
-                (existing["symbol"] == symbol) & (existing.index < sym_cutoff)
-            ]
+            sym_old = existing[(existing["symbol"] == symbol) & (existing.index < sym_cutoff)]
             keep_existing = pd.concat([keep_existing, sym_old])
 
         combined = pd.concat([keep_existing, new_data]).sort_index()

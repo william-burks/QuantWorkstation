@@ -1,10 +1,15 @@
 """Unit tests for paper sources — all network calls are mocked."""
+
 from __future__ import annotations
 
 import io
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 from qws_researcher import Paper
+
+if TYPE_CHECKING:
+    from qws_researcher.store.campus_list import CampusEntry
 
 # ---------------------------------------------------------------------------
 # arXiv
@@ -104,6 +109,7 @@ def test_arxiv_search_returns_empty_on_error():
 # Semantic Scholar
 # ---------------------------------------------------------------------------
 
+
 def _make_bulk_response(title="Test Paper", paper_id="abc123def456", external_ids=None):
     return {
         "data": [
@@ -135,6 +141,7 @@ def test_semantic_scholar_search_returns_papers():
         import importlib
 
         import papers.sources.semantic as sem_mod
+
         importlib.reload(sem_mod)
 
         papers_list = sem_mod.search("realized volatility", data_dir="/tmp/test_data")
@@ -160,6 +167,7 @@ def test_semantic_scholar_search_promotes_arxiv_id():
         import importlib
 
         import papers.sources.semantic as sem_mod
+
         importlib.reload(sem_mod)
 
         papers_list = sem_mod.search("realized volatility", data_dir="/tmp/test_data")
@@ -180,6 +188,7 @@ def test_semantic_scholar_search_uses_bulk_endpoint():
         import importlib
 
         import papers.sources.semantic as sem_mod
+
         importlib.reload(sem_mod)
 
         sem_mod.search("realized volatility", data_dir="/tmp/test_data")
@@ -200,6 +209,7 @@ def test_semantic_scholar_search_returns_empty_on_error():
         import importlib
 
         import papers.sources.semantic as sem_mod
+
         importlib.reload(sem_mod)
 
         result = sem_mod.search("volatility", data_dir="/tmp/test_data")
@@ -250,15 +260,17 @@ _PUBMED_SEARCH_RESULT = {
 
 
 def test_pubmed_search_returns_papers():
-    with patch("Bio.Entrez.esearch") as mock_esearch, \
-         patch("Bio.Entrez.read") as mock_read, \
-         patch("Bio.Entrez.efetch") as mock_efetch:
-
+    with (
+        patch("Bio.Entrez.esearch") as mock_esearch,
+        patch("Bio.Entrez.read") as mock_read,
+        patch("Bio.Entrez.efetch") as mock_efetch,
+    ):
         mock_read.return_value = _PUBMED_SEARCH_RESULT
         mock_esearch.return_value = MagicMock()
         mock_efetch.return_value = io.BytesIO(_PUBMED_XML)
 
         from qws_researcher.sources import pubmed as pubmed_mod
+
         result = pubmed_mod.search("volatility econophysics", max_results=5)
 
     assert len(result) == 1
@@ -271,13 +283,12 @@ def test_pubmed_search_returns_papers():
 
 def test_pubmed_econophysics_filter_is_appended():
     """Verify the econophysics filter is always appended to queries."""
-    with patch("Bio.Entrez.esearch") as mock_esearch, \
-         patch("Bio.Entrez.read") as mock_read:
-
+    with patch("Bio.Entrez.esearch") as mock_esearch, patch("Bio.Entrez.read") as mock_read:
         mock_read.return_value = {"IdList": []}
         mock_esearch.return_value = MagicMock()
 
         from qws_researcher.sources import pubmed as pubmed_mod
+
         pubmed_mod.search("my query", max_results=5)
 
     call_kwargs = mock_esearch.call_args[1]
@@ -290,6 +301,7 @@ def test_pubmed_search_returns_empty_on_error():
         mock_esearch.side_effect = Exception("Network error")
 
         from qws_researcher.sources import pubmed as pubmed_mod
+
         result = pubmed_mod.search("volatility")
 
     assert result == []
@@ -298,6 +310,7 @@ def test_pubmed_search_returns_empty_on_error():
 # ---------------------------------------------------------------------------
 # Unpaywall
 # ---------------------------------------------------------------------------
+
 
 def _make_unpaywall_response(is_oa=True, pdf_url="https://example.com/paper.pdf"):
     return {
@@ -313,12 +326,15 @@ def test_unpaywall_returns_pdf_url():
     mock_response.status_code = 200
     mock_response.raise_for_status.return_value = None
 
-    with patch("httpx.Client") as MockClient, \
-         patch.dict("os.environ", {"UNPAYWALL_EMAIL": "test@university.edu"}):
+    with (
+        patch("httpx.Client") as MockClient,
+        patch.dict("os.environ", {"UNPAYWALL_EMAIL": "test@university.edu"}),
+    ):
         instance = MockClient.return_value.__enter__.return_value
         instance.get.return_value = mock_response
 
         from qws_researcher.sources import unpaywall as uw_mod
+
         result = uw_mod.get_oa_pdf_url("10.1234/test")
 
     assert result == "https://example.com/paper.pdf"
@@ -330,12 +346,15 @@ def test_unpaywall_returns_none_when_not_oa():
     mock_response.status_code = 200
     mock_response.raise_for_status.return_value = None
 
-    with patch("httpx.Client") as MockClient, \
-         patch.dict("os.environ", {"UNPAYWALL_EMAIL": "test@university.edu"}):
+    with (
+        patch("httpx.Client") as MockClient,
+        patch.dict("os.environ", {"UNPAYWALL_EMAIL": "test@university.edu"}),
+    ):
         instance = MockClient.return_value.__enter__.return_value
         instance.get.return_value = mock_response
 
         from qws_researcher.sources import unpaywall as uw_mod
+
         result = uw_mod.get_oa_pdf_url("10.1234/test")
 
     assert result is None
@@ -344,6 +363,7 @@ def test_unpaywall_returns_none_when_not_oa():
 def test_unpaywall_returns_none_without_email():
     with patch.dict("os.environ", {}, clear=True):
         from qws_researcher.sources import unpaywall as uw_mod
+
         result = uw_mod.get_oa_pdf_url("10.1234/test")
 
     assert result is None
@@ -353,12 +373,15 @@ def test_unpaywall_returns_none_on_404():
     mock_response = MagicMock()
     mock_response.status_code = 404
 
-    with patch("httpx.Client") as MockClient, \
-         patch.dict("os.environ", {"UNPAYWALL_EMAIL": "test@university.edu"}):
+    with (
+        patch("httpx.Client") as MockClient,
+        patch.dict("os.environ", {"UNPAYWALL_EMAIL": "test@university.edu"}),
+    ):
         instance = MockClient.return_value.__enter__.return_value
         instance.get.return_value = mock_response
 
         from qws_researcher.sources import unpaywall as uw_mod
+
         result = uw_mod.get_oa_pdf_url("10.1234/nonexistent")
 
     assert result is None
@@ -368,6 +391,7 @@ def test_unpaywall_returns_none_on_404():
 # ingest_pdf
 # ---------------------------------------------------------------------------
 
+
 def test_ingest_pdf_new_paper(tmp_path):
     """Ingesting a PDF with no existing library record creates a new Paper."""
     import asyncio
@@ -375,22 +399,26 @@ def test_ingest_pdf_new_paper(tmp_path):
     pdf_file = tmp_path / "test_paper.pdf"
     pdf_file.write_bytes(b"%PDF-1.4 fake content")
 
-    with patch("papers.server._get_library") as mock_lib_fn, \
-         patch("papers.extract.extract_text", return_value="Extracted full text."), \
-         patch("shutil.copy2"):
-
+    with (
+        patch("papers.server._get_library") as mock_lib_fn,
+        patch("papers.extract.extract_text", return_value="Extracted full text."),
+        patch("shutil.copy2"),
+    ):
         mock_lib = MagicMock()
         mock_lib.get.return_value = None  # Not in library yet
         mock_lib.add.return_value = True
         mock_lib_fn.return_value = mock_lib
 
         from qws_researcher.server import ingest_pdf
-        result = asyncio.run(ingest_pdf(
-            file_path=str(pdf_file),
-            paper_id="s2:abc123",
-            title="Test Paper Title",
-            authors=["Author One"],
-        ))
+
+        result = asyncio.run(
+            ingest_pdf(
+                file_path=str(pdf_file),
+                paper_id="s2:abc123",
+                title="Test Paper Title",
+                authors=["Author One"],
+            )
+        )
 
     assert result["id"] == "s2:abc123"
     assert result["title"] == "Test Paper Title"
@@ -415,24 +443,28 @@ def test_ingest_pdf_updates_existing(tmp_path):
         doi="10.1234/test",
     )
 
-    with patch("papers.server._get_library") as mock_lib_fn, \
-         patch("papers.extract.extract_text", return_value="Full text from PDF."), \
-         patch("shutil.copy2"):
-
+    with (
+        patch("papers.server._get_library") as mock_lib_fn,
+        patch("papers.extract.extract_text", return_value="Full text from PDF."),
+        patch("shutil.copy2"),
+    ):
         mock_lib = MagicMock()
         mock_lib.get.return_value = existing
         mock_lib.add.return_value = False  # Already exists
         mock_lib_fn.return_value = mock_lib
 
         from qws_researcher.server import ingest_pdf
-        result = asyncio.run(ingest_pdf(
-            file_path=str(pdf_file),
-            paper_id="s2:abc123",
-        ))
+
+        result = asyncio.run(
+            ingest_pdf(
+                file_path=str(pdf_file),
+                paper_id="s2:abc123",
+            )
+        )
 
     assert result["id"] == "s2:abc123"
-    assert result["title"] == "Existing Title from S2"   # S2 metadata preserved
-    assert result["abstract"] == "Existing abstract."     # S2 metadata preserved
+    assert result["title"] == "Existing Title from S2"  # S2 metadata preserved
+    assert result["abstract"] == "Existing abstract."  # S2 metadata preserved
     assert result["full_text"] == "Full text from PDF."  # PDF text added
     mock_lib.update.assert_called_once()
 
@@ -441,13 +473,35 @@ def test_ingest_pdf_updates_existing(tmp_path):
 # Deduplication
 # ---------------------------------------------------------------------------
 
+
 def test_server_dedup_by_title():
     from qws_researcher.server import _dedup_by_title
 
     papers_input = [
-        Paper(id="arxiv:1", title="Realized Volatility HAR Model", authors=[], abstract="", source="arxiv", url=""),
-        Paper(id="arxiv:2", title="Realized Volatility HAR Model", authors=[], abstract="", source="arxiv", url=""),
-        Paper(id="arxiv:3", title="Completely Different Paper", authors=[], abstract="", source="arxiv", url=""),
+        Paper(
+            id="arxiv:1",
+            title="Realized Volatility HAR Model",
+            authors=[],
+            abstract="",
+            source="arxiv",
+            url="",
+        ),
+        Paper(
+            id="arxiv:2",
+            title="Realized Volatility HAR Model",
+            authors=[],
+            abstract="",
+            source="arxiv",
+            url="",
+        ),
+        Paper(
+            id="arxiv:3",
+            title="Completely Different Paper",
+            authors=[],
+            abstract="",
+            source="arxiv",
+            url="",
+        ),
     ]
 
     unique = _dedup_by_title(papers_input)
@@ -461,6 +515,7 @@ def test_server_dedup_by_title():
 # ---------------------------------------------------------------------------
 # ingest_folder
 # ---------------------------------------------------------------------------
+
 
 def test_ingest_folder_matches_by_doi(tmp_path):
     """PDF with valid DOI filename, DOI in library → ingested and text extracted."""
@@ -482,15 +537,17 @@ def test_ingest_folder_matches_by_doi(tmp_path):
         doi="10.1016/j.najef.2026.102605",
     )
 
-    with patch("papers.ingest.PaperLibrary") as MockLib, \
-         patch("papers.ingest.extract_text", return_value="Extracted text."), \
-         patch("shutil.copy2"), \
-         patch("shutil.move"):
-
+    with (
+        patch("papers.ingest.PaperLibrary") as MockLib,
+        patch("papers.ingest.extract_text", return_value="Extracted text."),
+        patch("shutil.copy2"),
+        patch("shutil.move"),
+    ):
         mock_lib = MockLib.return_value
         mock_lib.find_by_doi.return_value = existing
 
         from qws_researcher.ingest import ingest_folder
+
         result = ingest_folder(
             inbox=str(inbox),
             ingested_dir=str(ingested),
@@ -515,13 +572,12 @@ def test_ingest_folder_unmatched_doi_not_in_library(tmp_path):
     pdf_file = inbox / "10.1111_jofi.13234.pdf"
     pdf_file.write_bytes(b"%PDF-1.4 fake")
 
-    with patch("papers.ingest.PaperLibrary") as MockLib, \
-         patch("shutil.move"):
-
+    with patch("papers.ingest.PaperLibrary") as MockLib, patch("shutil.move"):
         mock_lib = MockLib.return_value
         mock_lib.find_by_doi.return_value = None  # Not in library
 
         from qws_researcher.ingest import ingest_folder
+
         result = ingest_folder(
             inbox=str(inbox),
             ingested_dir=str(ingested),
@@ -544,10 +600,9 @@ def test_ingest_folder_invalid_filename(tmp_path):
     pdf_file = inbox / "some_random_paper.pdf"
     pdf_file.write_bytes(b"%PDF-1.4 fake")
 
-    with patch("papers.ingest.PaperLibrary"), \
-         patch("shutil.move"):
-
+    with patch("papers.ingest.PaperLibrary"), patch("shutil.move"):
         from qws_researcher.ingest import ingest_folder
+
         result = ingest_folder(
             inbox=str(inbox),
             ingested_dir=str(ingested),
@@ -564,8 +619,10 @@ def test_ingest_folder_invalid_filename(tmp_path):
 # CampusList
 # ---------------------------------------------------------------------------
 
+
 def _make_campus_entry(paper_id="s2:abc123", doi="10.1016/j.test.2026.001") -> CampusEntry:
     from qws_researcher.store.campus_list import CampusEntry
+
     return CampusEntry(
         paper_id=paper_id,
         title="Test Paper",
@@ -596,9 +653,10 @@ def test_bookmark_adds_to_campus_list(tmp_path):
         doi="10.1016/j.test.2026.001",
     )
 
-    with patch("papers.server._get_library") as mock_lib_fn, \
-         patch("papers.server._get_campus_list") as mock_cl_fn:
-
+    with (
+        patch("papers.server._get_library") as mock_lib_fn,
+        patch("papers.server._get_campus_list") as mock_cl_fn,
+    ):
         mock_lib = MagicMock()
         mock_lib.get.return_value = existing
         mock_lib_fn.return_value = mock_lib
@@ -608,11 +666,14 @@ def test_bookmark_adds_to_campus_list(tmp_path):
         mock_cl_fn.return_value = mock_campus
 
         from qws_researcher.server import bookmark_paper
-        result = asyncio.run(bookmark_paper(
-            paper_id="s2:abc123",
-            reason="Need for HAR implementation",
-            tags=["to-read"],
-        ))
+
+        result = asyncio.run(
+            bookmark_paper(
+                paper_id="s2:abc123",
+                reason="Need for HAR implementation",
+                tags=["to-read"],
+            )
+        )
 
     assert result["campus_trip_needed"] is True
     assert result["filename_hint"] == "10.1016_j.test.2026.001.pdf"
@@ -633,9 +694,10 @@ def test_bookmark_skips_campus_if_full_text(tmp_path):
         full_text="This paper is fully available.",
     )
 
-    with patch("papers.server._get_library") as mock_lib_fn, \
-         patch("papers.server._get_campus_list") as mock_cl_fn:
-
+    with (
+        patch("papers.server._get_library") as mock_lib_fn,
+        patch("papers.server._get_campus_list") as mock_cl_fn,
+    ):
         mock_lib = MagicMock()
         mock_lib.get.return_value = existing
         mock_lib_fn.return_value = mock_lib
@@ -644,6 +706,7 @@ def test_bookmark_skips_campus_if_full_text(tmp_path):
         mock_cl_fn.return_value = mock_campus
 
         from qws_researcher.server import bookmark_paper
+
         result = asyncio.run(bookmark_paper(paper_id="arxiv:2301.00001"))
 
     assert result["campus_trip_needed"] is False
@@ -681,6 +744,7 @@ def test_campus_list_deduplicates(tmp_path):
 # ---------------------------------------------------------------------------
 # Title safety + StandardSearchResult
 # ---------------------------------------------------------------------------
+
 
 def _make_paper(**kwargs) -> Paper:
     defaults = dict(
@@ -761,12 +825,9 @@ def test_standard_result_never_url_title():
 # Crossref
 # ---------------------------------------------------------------------------
 
+
 def _crossref_response(doi: str, score: float) -> dict:
-    return {
-        "message": {
-            "items": [{"DOI": doi, "title": ["Some Paper Title"], "score": score}]
-        }
-    }
+    return {"message": {"items": [{"DOI": doi, "title": ["Some Paper Title"], "score": score}]}}
 
 
 def test_crossref_returns_doi_on_high_score():
@@ -835,6 +896,7 @@ def test_crossref_returns_none_on_empty_title():
 # add_repo tool
 # ---------------------------------------------------------------------------
 
+
 def test_add_repo_links_repo(tmp_path):
     import asyncio
     from unittest.mock import MagicMock, patch
@@ -855,6 +917,7 @@ def test_add_repo_links_repo(tmp_path):
     async def run():
         with patch("papers.server._get_library", return_value=mock_lib):
             from qws_researcher.server import add_repo
+
             result = await add_repo("arxiv:2301.00001", "turboPutty/rBergomi")
         return result
 
@@ -885,6 +948,7 @@ def test_add_repo_deduplicates(tmp_path):
     async def run():
         with patch("papers.server._get_library", return_value=mock_lib):
             from qws_researcher.server import add_repo
+
             await add_repo("arxiv:2301.00001", "turboPutty/rBergomi")
 
     asyncio.run(run())

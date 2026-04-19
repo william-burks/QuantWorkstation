@@ -47,12 +47,10 @@ class TestNavigatorAgentFile:
 
     def test_phase1_cold_start_clause(self) -> None:
         content = AGENT_FILE.read_text()
-        assert (
-            "cold start" in content.lower() or "cold-start" in content.lower()
-        ), "Missing cold-start handling"
-        assert (
-            "No prior research" in content
-        ), "Missing 'No prior research — cold start' message"
+        assert "cold start" in content.lower() or "cold-start" in content.lower(), (
+            "Missing cold-start handling"
+        )
+        assert "No prior research" in content, "Missing 'No prior research — cold start' message"
 
     def test_phase2_redundancy_check(self) -> None:
         content = AGENT_FILE.read_text()
@@ -68,18 +66,18 @@ class TestNavigatorAgentFile:
 
     def test_phase4_findings_update(self) -> None:
         content = AGENT_FILE.read_text()
-        assert (
-            "record --hypothesis" in content and "findings" in content
-        ), "Phase 4 must update findings on hypothesis"
-        assert (
-            "research/ideas/session" in content
-        ), "Phase 4 must write session notes to research/ideas/"
+        assert "record --hypothesis" in content and "findings" in content, (
+            "Phase 4 must update findings on hypothesis"
+        )
+        assert "research/ideas/session" in content, (
+            "Phase 4 must write session notes to research/ideas/"
+        )
 
     def test_reads_project_memory(self) -> None:
         content = AGENT_FILE.read_text()
-        assert (
-            "agent-memory" in content or "MEMORY.md" in content
-        ), "Agent must read project memory at session start"
+        assert "agent-memory" in content or "MEMORY.md" in content, (
+            "Agent must read project memory at session start"
+        )
 
     def test_tool_list_scoped(self) -> None:
         content = AGENT_FILE.read_text()
@@ -91,9 +89,7 @@ class TestNavigatorAgentFile:
 
     def test_queued_hypotheses_in_phase1(self) -> None:
         content = AGENT_FILE.read_text()
-        assert (
-            "queued_hypotheses" in content
-        ), "Phase 1 must run queued_hypotheses query"
+        assert "queued_hypotheses" in content, "Phase 1 must run queued_hypotheses query"
 
 
 # ---------------------------------------------------------------------------
@@ -164,23 +160,19 @@ class TestResearchGuardAllows:
         assert result.returncode == 0, f"Guard must allow qw query; stderr={result.stderr}"
 
     def test_allows_qw_record_hypothesis(self) -> None:
-        result = _run_guard(
-            "Bash", command='qw record --hypothesis "test idea" --queue'
+        result = _run_guard("Bash", command='qw record --hypothesis "test idea" --queue')
+        assert result.returncode == 0, (
+            f"Guard must allow qw record --hypothesis; stderr={result.stderr}"
         )
-        assert (
-            result.returncode == 0
-        ), f"Guard must allow qw record --hypothesis; stderr={result.stderr}"
 
     def test_allows_write_to_ideas(self) -> None:
-        result = _run_guard(
-            "Write", file_path="/path/to/repo/research/ideas/session_2026-04-13.md"
+        result = _run_guard("Write", file_path="/path/to/repo/research/ideas/session_2026-04-13.md")
+        assert result.returncode == 0, (
+            f"Guard must allow write to research/ideas/; stderr={result.stderr}"
         )
-        assert (
-            result.returncode == 0
-        ), f"Guard must allow write to research/ideas/; stderr={result.stderr}"
 
     def test_allows_qw_query_queued_hypotheses(self) -> None:
         result = _run_guard("Bash", command="qw query --name queued_hypotheses")
-        assert (
-            result.returncode == 0
-        ), f"Guard must allow queued_hypotheses query; stderr={result.stderr}"
+        assert result.returncode == 0, (
+            f"Guard must allow queued_hypotheses query; stderr={result.stderr}"
+        )

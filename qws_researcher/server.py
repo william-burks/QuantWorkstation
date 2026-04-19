@@ -115,9 +115,7 @@ async def search_papers(
     lib = _get_library()
 
     async def _search_semantic():
-        return await _run_in_executor(
-            semantic_src.search, query, None, max_per_source, _DATA_DIR
-        )
+        return await _run_in_executor(semantic_src.search, query, None, max_per_source, _DATA_DIR)
 
     results = await asyncio.gather(_search_semantic())
 
@@ -213,7 +211,12 @@ async def fetch_paper(paper_id: str) -> dict:
                 if local_path:
                     paper.pdf_path = local_path
 
-        if paper and paper.pdf_path and not paper.pdf_path.startswith("url:") and Path(paper.pdf_path).exists():
+        if (
+            paper
+            and paper.pdf_path
+            and not paper.pdf_path.startswith("url:")
+            and Path(paper.pdf_path).exists()
+        ):
             text = await _run_in_executor(extract_text, paper.pdf_path)
             if text:
                 paper.full_text = text
@@ -520,10 +523,14 @@ async def get_paper_metadata(paper_id: str) -> dict:
         "text_extractor": paper.text_extractor,
         "text_source": paper.text_source,
         "ingestion_status": paper.ingestion_status,
-        "has_full_text": bool(paper.full_text or (paper.text_path and Path(paper.text_path).exists())),
+        "has_full_text": bool(
+            paper.full_text or (paper.text_path and Path(paper.text_path).exists())
+        ),
         "pdf_path": paper.pdf_path,
         "fetched_at": paper.fetched_at,
-        "campus_download_needed": not bool(paper.full_text or (paper.text_path and Path(paper.text_path).exists())),
+        "campus_download_needed": not bool(
+            paper.full_text or (paper.text_path and Path(paper.text_path).exists())
+        ),
         "doi_filename": doi_filename,
         "brief": paper.brief,
         "regime_tags": paper.regime_tags,
@@ -566,8 +573,7 @@ async def export_campus_list() -> str:
 
     # Papers with no full text — need campus download
     needed = [
-        p for p in papers
-        if not p.full_text and not (p.text_path and Path(p.text_path).exists())
+        p for p in papers if not p.full_text and not (p.text_path and Path(p.text_path).exists())
     ]
 
     if not needed:
@@ -815,6 +821,7 @@ async def bookmark_paper(
     # Persist the recovered DOI so downstream steps (Unpaywall, campus filename) can use it.
     if not paper.doi and paper.title:
         from qws_researcher.sources import crossref as crossref_src  # noqa: PLC0415
+
         first_author = paper.authors[0] if paper.authors else None
         recovered_doi = await _run_in_executor(crossref_src.lookup_doi, paper.title, first_author)
         if recovered_doi:
@@ -1082,8 +1089,7 @@ async def get_related_papers(paper_id: str, n: int = 15) -> list[dict]:
     shared_tag_papers = []
     if target_tags:
         shared_tag_papers = [
-            p for p in lib.list_all()
-            if p.id != paper_id and target_tags.intersection(set(p.tags))
+            p for p in lib.list_all() if p.id != paper_id and target_tags.intersection(set(p.tags))
         ]
         shared_tag_papers.sort(key=lambda p: p.citations or 0, reverse=True)
 
@@ -1137,13 +1143,16 @@ async def cite(paper_id: str, format: str = "bibtex") -> str:
     cite_key = id_safe(paper_id)
 
     if format == "bibtex":
+
         def _bibtex_author(name: str) -> str:
             parts = name.strip().split()
             if len(parts) >= 2:
                 return f"{parts[-1]}, {' '.join(parts[:-1])}"
             return name
 
-        author_str = " and ".join(_bibtex_author(a) for a in paper.authors) if paper.authors else "Unknown"
+        author_str = (
+            " and ".join(_bibtex_author(a) for a in paper.authors) if paper.authors else "Unknown"
+        )
         missing = []
         if not paper.authors:
             missing.append("authors")
@@ -1303,10 +1312,7 @@ async def fix_metadata(dry_run: bool = True) -> dict:
     lib = _get_library()
     all_papers = lib.list_all()
 
-    bad = [
-        p for p in all_papers
-        if not p.title or p.title.startswith("http")
-    ]
+    bad = [p for p in all_papers if not p.title or p.title.startswith("http")]
 
     if not bad:
         return {"affected": 0, "papers": [], "message": "No bad metadata found."}
@@ -1334,9 +1340,7 @@ async def fix_metadata(dry_run: bool = True) -> dict:
                 fresh = results[0] if results else None
             elif paper.id.startswith("s2:"):
                 s2_id = paper.id.removeprefix("s2:")
-                results = await _run_in_executor(
-                    semantic_src.search, s2_id, None, 1, _DATA_DIR
-                )
+                results = await _run_in_executor(semantic_src.search, s2_id, None, 1, _DATA_DIR)
                 fresh = next((p for p in results if p.id == paper.id), None)
 
             if fresh and fresh.title and not fresh.title.startswith("http"):

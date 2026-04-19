@@ -26,20 +26,85 @@ _file_lock = threading.Lock()
 
 TOPICS = [
     # Gap topics — active study
-    {"id": "11", "name": "#11 Risk & Factor Models",   "desc": "Fama-French, Barra, beta neutralization",          "gap": True},
-    {"id": "12", "name": "#12 Portfolio Optimization", "desc": "Mean-variance, cvxpy, convex optimization",         "gap": True},
-    {"id": "8",  "name": "#8 Statistical Arbitrage",   "desc": "Pairs trading, cointegration, stat arb",            "gap": True},
-    {"id": "10", "name": "#10 Execution & Costs",      "desc": "Slippage, spread, transaction cost modeling",       "gap": True},
-    {"id": "4",  "name": "#4 Model Weighting",         "desc": "Covariance, risk-parity, volatility-weighting",     "gap": True},
-    {"id": "5",  "name": "#5 Portfolio Construction",  "desc": "Cross-sectional vs time-series models",             "gap": True},
+    {
+        "id": "11",
+        "name": "#11 Risk & Factor Models",
+        "desc": "Fama-French, Barra, beta neutralization",
+        "gap": True,
+    },
+    {
+        "id": "12",
+        "name": "#12 Portfolio Optimization",
+        "desc": "Mean-variance, cvxpy, convex optimization",
+        "gap": True,
+    },
+    {
+        "id": "8",
+        "name": "#8 Statistical Arbitrage",
+        "desc": "Pairs trading, cointegration, stat arb",
+        "gap": True,
+    },
+    {
+        "id": "10",
+        "name": "#10 Execution & Costs",
+        "desc": "Slippage, spread, transaction cost modeling",
+        "gap": True,
+    },
+    {
+        "id": "4",
+        "name": "#4 Model Weighting",
+        "desc": "Covariance, risk-parity, volatility-weighting",
+        "gap": True,
+    },
+    {
+        "id": "5",
+        "name": "#5 Portfolio Construction",
+        "desc": "Cross-sectional vs time-series models",
+        "gap": True,
+    },
     # Covered topics — built in QuantWorkstation
-    {"id": "3",  "name": "#3 Strategy Evaluation",     "desc": "Sharpe, drawdown, alpha, beta, regressions",        "gap": False},
-    {"id": "6",  "name": "#6 Backtesting",             "desc": "Walk-forward, dual-hurdle, OOS testing",            "gap": False},
-    {"id": "13", "name": "#13 Live Trading Library",   "desc": "OMS, broker APIs, risk engine, live data feeds",    "gap": False},
-    {"id": "7",  "name": "#7 Research Best Practices", "desc": "Overfitting, OOS, priors, model complexity",        "gap": False},
-    {"id": "9",  "name": "#9 Course Project",          "desc": "Stat arb in crypto — full research workflow",       "gap": False},
-    {"id": "1",  "name": "#1 The Big Picture",         "desc": "Backtesting, strategy types, quant firms overview", "gap": False},
-    {"id": "2",  "name": "#2 Python & Libraries",      "desc": "Python, numpy, pandas, data analysis",              "gap": False},
+    {
+        "id": "3",
+        "name": "#3 Strategy Evaluation",
+        "desc": "Sharpe, drawdown, alpha, beta, regressions",
+        "gap": False,
+    },
+    {
+        "id": "6",
+        "name": "#6 Backtesting",
+        "desc": "Walk-forward, dual-hurdle, OOS testing",
+        "gap": False,
+    },
+    {
+        "id": "13",
+        "name": "#13 Live Trading Library",
+        "desc": "OMS, broker APIs, risk engine, live data feeds",
+        "gap": False,
+    },
+    {
+        "id": "7",
+        "name": "#7 Research Best Practices",
+        "desc": "Overfitting, OOS, priors, model complexity",
+        "gap": False,
+    },
+    {
+        "id": "9",
+        "name": "#9 Course Project",
+        "desc": "Stat arb in crypto — full research workflow",
+        "gap": False,
+    },
+    {
+        "id": "1",
+        "name": "#1 The Big Picture",
+        "desc": "Backtesting, strategy types, quant firms overview",
+        "gap": False,
+    },
+    {
+        "id": "2",
+        "name": "#2 Python & Libraries",
+        "desc": "Python, numpy, pandas, data analysis",
+        "gap": False,
+    },
 ]
 
 SYSTEM_PROMPT = """You are the Learning Companion for Will, a full-stack SWE (JPMC SWE II) targeting quant developer/researcher roles.
@@ -113,7 +178,9 @@ def build_context(data: dict) -> str:
     streaks = compute_streaks(data["sessions"])
 
     lines = [f"Learning log — {date.today().isoformat()}"]
-    lines.append(f"Streak: {streaks['current']} day(s) current, {streaks['longest']} day(s) longest")
+    lines.append(
+        f"Streak: {streaks['current']} day(s) current, {streaks['longest']} day(s) longest"
+    )
     lines.append("")
     lines.append("Topic depth:")
     for t in TOPICS:
@@ -127,7 +194,9 @@ def build_context(data: dict) -> str:
     if recent:
         for s in reversed(recent):
             note = f", notes: {s['notes']}" if s.get("notes") else ""
-            lines.append(f"  {s['date']} — {s['topic_name']}, {s['duration_min']}min, depth: {s['depth_after']}{note}")
+            lines.append(
+                f"  {s['date']} — {s['topic_name']}, {s['duration_min']}min, depth: {s['depth_after']}{note}"
+            )
     else:
         lines.append("  None yet.")
 
@@ -235,13 +304,15 @@ class Handler(BaseHTTPRequestHandler):
 
         # Build messages — inject context as cached prefix on first user turn
         if not history:
-            messages = [{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": context, "cache_control": {"type": "ephemeral"}},
-                    {"type": "text", "text": message},
-                ],
-            }]
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": context, "cache_control": {"type": "ephemeral"}},
+                        {"type": "text", "text": message},
+                    ],
+                }
+            ]
         else:
             first = history[0]
             if isinstance(first["content"], str):
@@ -273,11 +344,13 @@ class Handler(BaseHTTPRequestHandler):
             with client.messages.stream(
                 model="claude-opus-4-6",
                 max_tokens=1024,
-                system=[{
-                    "type": "text",
-                    "text": SYSTEM_PROMPT,
-                    "cache_control": {"type": "ephemeral"},
-                }],
+                system=[
+                    {
+                        "type": "text",
+                        "text": SYSTEM_PROMPT,
+                        "cache_control": {"type": "ephemeral"},
+                    }
+                ],
                 messages=messages,
             ) as stream:
                 for text in stream.text_stream:
@@ -294,7 +367,7 @@ class Handler(BaseHTTPRequestHandler):
                 pass
         finally:
             try:
-                self.wfile.write(b"data: {\"done\": true}\n\n")
+                self.wfile.write(b'data: {"done": true}\n\n')
                 self.wfile.flush()
             except Exception:
                 pass

@@ -50,34 +50,34 @@ log = logging.getLogger(__name__)
 
 # (arc_key_suffix, pandas_resample_rule, is_contfut)
 TIMEFRAMES: list[tuple[str, str, bool]] = [
-    ("5min",  "5min",  False),
+    ("5min", "5min", False),
     ("10min", "10min", False),
     ("15min", "15min", False),
     ("30min", "30min", False),
-    ("1H",    "1h",    False),
-    ("2H",    "2h",    False),
-    ("4H",    "4h",    False),
-    ("8H",    "8h",    False),
-    ("1D",    "1D",    True),
-    ("1W",    "1W",    True),
-    ("1M",    "1ME",   True),
+    ("1H", "1h", False),
+    ("2H", "2h", False),
+    ("4H", "4h", False),
+    ("8H", "8h", False),
+    ("1D", "1D", True),
+    ("1W", "1W", True),
+    ("1M", "1ME", True),
 ]
 
 # Databento parent symbol → ArcticDB root symbol
 SYMBOL_MAP: dict[str, str] = {
-    "ES":  "ES",
-    "CL":  "CL",
-    "GC":  "GC",
-    "ZN":  "ZN",
-    "NQ":  "NQ",
+    "ES": "ES",
+    "CL": "CL",
+    "GC": "GC",
+    "ZN": "ZN",
+    "NQ": "NQ",
     "RTY": "RTY",
-    "6E":  "6E",
-    "NG":  "NG",
-    "ZB":  "ZB",
-    "SI":  "SI",
-    "HG":  "HG",
-    "6J":  "6J",
-    "6B":  "6B",
+    "6E": "6E",
+    "NG": "NG",
+    "ZB": "ZB",
+    "SI": "SI",
+    "HG": "HG",
+    "6J": "6J",
+    "6B": "6B",
 }
 
 # ---------------------------------------------------------------------------
@@ -86,8 +86,18 @@ SYMBOL_MAP: dict[str, str] = {
 
 # CME month codes: F=Jan G=Feb H=Mar J=Apr K=May M=Jun N=Jul Q=Aug U=Sep V=Oct X=Nov Z=Dec
 _MONTH_CODES: dict[str, int] = {
-    "F": 1, "G": 2, "H": 3, "J": 4, "K": 5, "M": 6,
-    "N": 7, "Q": 8, "U": 9, "V": 10, "X": 11, "Z": 12,
+    "F": 1,
+    "G": 2,
+    "H": 3,
+    "J": 4,
+    "K": 5,
+    "M": 6,
+    "N": 7,
+    "Q": 8,
+    "U": 9,
+    "V": 10,
+    "X": 11,
+    "Z": 12,
 }
 
 # Matches e.g. ESH2, CLF25, GCZ5, ZNM4 — root + month_letter + 1-2 digit year

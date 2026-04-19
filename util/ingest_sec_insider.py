@@ -18,11 +18,11 @@ Usage:
 
 import argparse
 import logging
+import sys
 import time
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-import sys
 
 import pandas as pd
 import requests
@@ -50,22 +50,23 @@ KEEP_CODES = {"P", "S"}
 # SEC helpers
 # ---------------------------------------------------------------------------
 
+
 def _get(url: str, session: requests.Session, retries: int = 4) -> requests.Response:
     for attempt in range(retries):
         try:
             resp = session.get(url, headers=HEADERS, timeout=30)
             if resp.status_code == 429:
-                wait = 2 ** attempt
+                wait = 2**attempt
                 log.warning("Rate limited — sleeping %ds", wait)
                 time.sleep(wait)
                 continue
             resp.raise_for_status()
             time.sleep(REQUEST_SLEEP)
             return resp
-        except requests.RequestException as exc:
+        except requests.RequestException:
             if attempt == retries - 1:
                 raise
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
     raise RuntimeError(f"Failed to fetch {url}")
 
 
@@ -73,10 +74,7 @@ def _load_ticker_cik_map(session: requests.Session) -> dict[str, str]:
     """Return {ticker: cik_padded_10} from SEC company_tickers.json."""
     resp = _get(TICKERS_URL, session)
     data = resp.json()
-    return {
-        v["ticker"].upper(): str(v["cik_str"]).zfill(10)
-        for v in data.values()
-    }
+    return {v["ticker"].upper(): str(v["cik_str"]).zfill(10) for v in data.values()}
 
 
 def _get_form4_filings(cik: str, session: requests.Session, start_date: datetime) -> list[dict]:
@@ -95,18 +93,20 @@ def _get_form4_filings(cik: str, session: requests.Session, start_date: datetime
         for form, date_str, acc, doc in zip(forms, dates, accessions, docs):
             if form not in ("4", "4/A"):
                 continue
-            filing_date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            filing_date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=UTC)
             if filing_date < start_date:
                 continue
             # Skip old .txt format filings (pre-XML, harder to parse)
             if not doc.lower().endswith(".xml"):
                 continue
-            results.append({
-                "accession": acc,
-                "filing_date": filing_date,
-                "primary_doc": doc,
-                "cik": cik,
-            })
+            results.append(
+                {
+                    "accession": acc,
+                    "filing_date": filing_date,
+                    "primary_doc": doc,
+                    "cik": cik,
+                }
+            )
 
     # Recent filings (inline)
     _extract_filings(data.get("filings", {}).get("recent", {}))
@@ -131,15 +131,12 @@ def _parse_form4_xml(xml_bytes: bytes, ticker: str, filing_date: datetime) -> li
         log.warning("XML parse error for %s: %s", ticker, exc)
         return []
 
-    ns = ""  # Form 4 XML uses no namespace
-
     def _text(el, path: str) -> str:
         node = el.find(path)
         return node.text.strip() if node is not None and node.text else ""
 
     # Insider name and title
     owner_name = _text(root, "reportingOwner/reportingOwnerId/rptOwnerName")
-    is_officer = _text(root, "reportingOwner/reportingOwnerRelationship/isOfficer")
     is_director = _text(root, "reportingOwner/reportingOwnerRelationship/isDirector")
     title = _text(root, "reportingOwner/reportingOwnerRelationship/officerTitle")
     if not title:
@@ -153,7 +150,7 @@ def _parse_form4_xml(xml_bytes: bytes, ticker: str, filing_date: datetime) -> li
 
         date_str = _text(txn, "transactionDate/value")
         try:
-            txn_date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            txn_date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=UTC)
         except (ValueError, TypeError):
             txn_date = filing_date
 
@@ -170,16 +167,18 @@ def _parse_form4_xml(xml_bytes: bytes, ticker: str, filing_date: datetime) -> li
         except ValueError:
             price = None
 
-        transactions.append({
-            "symbol": ticker,
-            "reporting_name": owner_name,
-            "transaction_type": code,
-            "acquisition_or_disposition": a_or_d,
-            "securities_transacted": shares,
-            "price": price,
-            "securities_owned": None,
-            "_date": txn_date,
-        })
+        transactions.append(
+            {
+                "symbol": ticker,
+                "reporting_name": owner_name,
+                "transaction_type": code,
+                "acquisition_or_disposition": a_or_d,
+                "securities_transacted": shares,
+                "price": price,
+                "securities_owned": None,
+                "_date": txn_date,
+            }
+        )
 
     return transactions
 
@@ -187,6 +186,7 @@ def _parse_form4_xml(xml_bytes: bytes, ticker: str, filing_date: datetime) -> li
 # ---------------------------------------------------------------------------
 # Main ingest
 # ---------------------------------------------------------------------------
+
 
 def ingest(start_date: datetime) -> None:
     session = requests.Session()
@@ -198,7 +198,9 @@ def ingest(start_date: datetime) -> None:
     store = get_store()
     try:
         existing = store.read_series(ARC_LIB, ARC_KEY)
-        existing_end = existing.index.max() if not existing.empty else pd.Timestamp.min.tz_localize("UTC")
+        existing_end = (
+            existing.index.max() if not existing.empty else pd.Timestamp.min.tz_localize("UTC")
+        )
         log.info("Existing INSIDER_TRADES: %d rows up to %s", len(existing), existing_end.date())
     except Exception:
         existing = pd.DataFrame()
@@ -266,7 +268,9 @@ def ingest(start_date: datetime) -> None:
         combined = pd.concat([sec_historical, existing]).sort_index()
         log.info(
             "Merged: %d SEC historical rows + %d existing FMP rows = %d total",
-            len(sec_historical), len(existing), len(combined),
+            len(sec_historical),
+            len(existing),
+            len(combined),
         )
     else:
         combined = new_data
@@ -275,8 +279,11 @@ def ingest(start_date: datetime) -> None:
     store.write_series(ARC_LIB, ARC_KEY, combined)
     log.info(
         "Wrote %d rows to %s/%s  (%s → %s)",
-        len(combined), ARC_LIB, ARC_KEY,
-        combined.index.min().date(), combined.index.max().date(),
+        len(combined),
+        ARC_LIB,
+        ARC_KEY,
+        combined.index.min().date(),
+        combined.index.max().date(),
     )
     log.info("SEC insider backfill complete")
 
@@ -290,11 +297,16 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Backfill insider trades from SEC EDGAR Form 4")
     parser.add_argument(
-        "--start", default="2006-01-01",
+        "--start",
+        default="2006-01-01",
         help="Start date YYYY-MM-DD (default: 2006-01-01)",
     )
     args = parser.parse_args()
 
-    start_dt = datetime.strptime(args.start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-    log.info("Backfilling SEC Form 4 insider trades from %s for %d symbols", start_dt.date(), len(SYMBOLS))
+    start_dt = datetime.strptime(args.start, "%Y-%m-%d").replace(tzinfo=UTC)
+    log.info(
+        "Backfilling SEC Form 4 insider trades from %s for %d symbols",
+        start_dt.date(),
+        len(SYMBOLS),
+    )
     ingest(start_dt)

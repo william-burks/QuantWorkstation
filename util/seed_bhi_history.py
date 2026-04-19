@@ -32,34 +32,35 @@ DOWNLOADS = Path.home() / "Downloads"
 # Single-segment states appear as a bare label (sometimes abbreviated).
 # ---------------------------------------------------------------------------
 KEY_STATE_LABELS: dict[str, str] = {
-    "TOTAL TEXAS":       "BHI_STATE_TX_RIGS",   # Permian Basin + Eagle Ford
-    "NEW MEXICO":        "BHI_STATE_NM_RIGS",   # Permian Basin
-    "N DAKOTA":          "BHI_STATE_ND_RIGS",   # Bakken
-    "TOTAL LOUISIANA":   "BHI_STATE_LA_RIGS",   # Haynesville + Gulf offshore
-    "OKLAHOMA":          "BHI_STATE_OK_RIGS",   # SCOOP/STACK
-    "PENNSYLVANIA":      "BHI_STATE_PA_RIGS",   # Marcellus/Utica
-    "W VIRGINIA":        "BHI_STATE_WV_RIGS",   # Marcellus/Utica
-    "WYOMING":           "BHI_STATE_WY_RIGS",   # DJ Basin / Niobrara
-    "COLORADO":          "BHI_STATE_CO_RIGS",   # DJ Basin
+    "TOTAL TEXAS": "BHI_STATE_TX_RIGS",  # Permian Basin + Eagle Ford
+    "NEW MEXICO": "BHI_STATE_NM_RIGS",  # Permian Basin
+    "N DAKOTA": "BHI_STATE_ND_RIGS",  # Bakken
+    "TOTAL LOUISIANA": "BHI_STATE_LA_RIGS",  # Haynesville + Gulf offshore
+    "OKLAHOMA": "BHI_STATE_OK_RIGS",  # SCOOP/STACK
+    "PENNSYLVANIA": "BHI_STATE_PA_RIGS",  # Marcellus/Utica
+    "W VIRGINIA": "BHI_STATE_WV_RIGS",  # Marcellus/Utica
+    "WYOMING": "BHI_STATE_WY_RIGS",  # DJ Basin / Niobrara
+    "COLORADO": "BHI_STATE_CO_RIGS",  # DJ Basin
 }
 
 # State names as they appear in the NAM Weekly sheet State/Province column
 NAM_WEEKLY_STATE_MAP: dict[str, str] = {
-    "TEXAS":         "BHI_STATE_TX_RIGS",
-    "NEW MEXICO":    "BHI_STATE_NM_RIGS",
-    "NORTH DAKOTA":  "BHI_STATE_ND_RIGS",
-    "LOUISIANA":     "BHI_STATE_LA_RIGS",
-    "OKLAHOMA":      "BHI_STATE_OK_RIGS",
-    "PENNSYLVANIA":  "BHI_STATE_PA_RIGS",
+    "TEXAS": "BHI_STATE_TX_RIGS",
+    "NEW MEXICO": "BHI_STATE_NM_RIGS",
+    "NORTH DAKOTA": "BHI_STATE_ND_RIGS",
+    "LOUISIANA": "BHI_STATE_LA_RIGS",
+    "OKLAHOMA": "BHI_STATE_OK_RIGS",
+    "PENNSYLVANIA": "BHI_STATE_PA_RIGS",
     "WEST VIRGINIA": "BHI_STATE_WV_RIGS",
-    "WYOMING":       "BHI_STATE_WY_RIGS",
-    "COLORADO":      "BHI_STATE_CO_RIGS",
+    "WYOMING": "BHI_STATE_WY_RIGS",
+    "COLORADO": "BHI_STATE_CO_RIGS",
 }
 
 
 # ---------------------------------------------------------------------------
 # 1. WW Monthly detail — 2013-Jul 2025 monthly
 # ---------------------------------------------------------------------------
+
 
 def seed_ww_monthly(path: Path) -> None:
     log.info("Seeding WW monthly history from %s", path.name)
@@ -79,11 +80,11 @@ def seed_ww_monthly(path: Path) -> None:
     regional = df.groupby(["Region", "date"])["Rig Count Value"].sum().reset_index()
 
     regions = {
-        "Africa":       "BHI_WW_AFRICA_RIGS",
+        "Africa": "BHI_WW_AFRICA_RIGS",
         "Asia-Pacific": "BHI_WW_APAC_RIGS",
-        "Europe":       "BHI_WW_EUROPE_RIGS",
+        "Europe": "BHI_WW_EUROPE_RIGS",
         "Latin America": "BHI_WW_LATAM_RIGS",
-        "Middle East":  "BHI_WW_MIDEAST_RIGS",
+        "Middle East": "BHI_WW_MIDEAST_RIGS",
         "North America": "BHI_WW_NA_RIGS",
     }
 
@@ -102,7 +103,8 @@ def seed_ww_monthly(path: Path) -> None:
     intl_regions = [r for r in regions if r != "North America"]
     intl = (
         regional[regional["Region"].isin(intl_regions)]
-        .groupby("date")["Rig Count Value"].sum()
+        .groupby("date")["Rig Count Value"]
+        .sum()
         .rename("count")
         .to_frame()
     )
@@ -110,11 +112,7 @@ def seed_ww_monthly(path: Path) -> None:
     log.info("Wrote %d rows to macro/BHI_WW_INTL_RIGS", len(intl))
 
     # Worldwide = all regions
-    ww = (
-        regional.groupby("date")["Rig Count Value"].sum()
-        .rename("count")
-        .to_frame()
-    )
+    ww = regional.groupby("date")["Rig Count Value"].sum().rename("count").to_frame()
     store.write_series("macro", "BHI_WW_TOTAL_RIGS", ww)
     log.info("Wrote %d rows to macro/BHI_WW_TOTAL_RIGS", len(ww))
 
@@ -128,11 +126,13 @@ def seed_ww_monthly(path: Path) -> None:
 #    Reuse the existing parse functions from the collector
 # ---------------------------------------------------------------------------
 
+
 def seed_snapshots() -> None:
     from data.collectors.baker_hughes import (
         _parse_na_rig_count,
         _parse_ww_rig_count,
     )
+
     store = get_store()
 
     snapshot_files = [
@@ -161,6 +161,7 @@ def seed_snapshots() -> None:
 # ---------------------------------------------------------------------------
 # 3. State file — US weekly 2000-2024
 # ---------------------------------------------------------------------------
+
 
 def _parse_state_sheet(xl: pd.ExcelFile, sheet: str) -> dict[str, pd.Series]:
     """Parse one month-sheet from Rigs by State.
@@ -262,7 +263,14 @@ def seed_na_weekly_archive(*paths: Path) -> None:
     df = pd.concat(frames, ignore_index=True)
     # Deduplicate: keep last occurrence (later file wins on overlapping dates)
     df = df.drop_duplicates(
-        subset=["US_PublishDate", "Country", "DrillFor", "Location", "State/Province", "Trajectory"],
+        subset=[
+            "US_PublishDate",
+            "Country",
+            "DrillFor",
+            "Location",
+            "State/Province",
+            "Trajectory",
+        ],
         keep="last",
     )
 
@@ -280,17 +288,21 @@ def seed_na_weekly_archive(*paths: Path) -> None:
 
     series_map = {
         "BHI_US_TOTAL_RIGS": _agg(us),
-        "BHI_US_OIL_RIGS":   _agg(us[us["DrillFor"] == "Oil"]),
-        "BHI_US_GAS_RIGS":   _agg(us[us["DrillFor"] == "Gas"]),
-        "BHI_CANADA_RIGS":   _agg(ca),
+        "BHI_US_OIL_RIGS": _agg(us[us["DrillFor"] == "Oil"]),
+        "BHI_US_GAS_RIGS": _agg(us[us["DrillFor"] == "Gas"]),
+        "BHI_CANADA_RIGS": _agg(ca),
     }
 
     store = get_store()
     for arc_key, df_out in series_map.items():
         store.write_series("macro", arc_key, df_out)
-        log.info("Wrote %d rows to macro/%s  (%s → %s)",
-                 len(df_out), arc_key,
-                 df_out.index.min().date(), df_out.index.max().date())
+        log.info(
+            "Wrote %d rows to macro/%s  (%s → %s)",
+            len(df_out),
+            arc_key,
+            df_out.index.min().date(),
+            df_out.index.max().date(),
+        )
 
     log.info("NA weekly archive seeding complete")
 
@@ -298,6 +310,7 @@ def seed_na_weekly_archive(*paths: Path) -> None:
 def seed_na_current_snapshot(path: Path) -> None:
     """Seed the current week's NA snapshot (single row per series) from a local file."""
     from data.collectors.baker_hughes import _parse_na_rig_count
+
     log.info("Seeding NA current snapshot from %s", path.name)
     excel_bytes = path.read_bytes()
     try:
@@ -323,7 +336,7 @@ def seed_ww_us_canada_from_na() -> None:
 
     mapping = [
         ("BHI_US_TOTAL_RIGS", "BHI_WW_US_RIGS"),
-        ("BHI_CANADA_RIGS",   "BHI_WW_CANADA_RIGS"),
+        ("BHI_CANADA_RIGS", "BHI_WW_CANADA_RIGS"),
     ]
 
     for src_key, dst_key in mapping:
@@ -342,22 +355,17 @@ def seed_ww_us_canada_from_na() -> None:
             log.error("macro/%s has no 'count' column — skipping", src_key)
             continue
 
-        monthly = (
-            weekly["count"]
-            .resample("ME")
-            .mean()
-            .dropna()
-            .rename("count")
-            .to_frame()
-        )
+        monthly = weekly["count"].resample("ME").mean().dropna().rename("count").to_frame()
         # Align index to month-start (consistent with WW archive)
         monthly.index = monthly.index.to_period("M").to_timestamp(how="start").tz_localize("UTC")
 
         store.write_series("macro", dst_key, monthly)
         log.info(
             "Wrote %d rows to macro/%s  (%s → %s)",
-            len(monthly), dst_key,
-            monthly.index.min().date(), monthly.index.max().date(),
+            len(monthly),
+            dst_key,
+            monthly.index.min().date(),
+            monthly.index.max().date(),
         )
 
     log.info("BHI_WW_US_RIGS / BHI_WW_CANADA_RIGS seeding complete")
@@ -395,6 +403,7 @@ def seed_state_weekly(path: Path) -> None:
 # ---------------------------------------------------------------------------
 # 5. State gap fill from NAM Weekly sheet (2024-present)
 # ---------------------------------------------------------------------------
+
 
 def seed_state_from_nam_weekly(*paths: Path) -> None:
     """Extend BHI state rig counts past Mar 2024 using NAM Weekly sheet.
@@ -445,9 +454,13 @@ def seed_state_from_nam_weekly(*paths: Path) -> None:
 
         if existing.empty:
             store.write_series("macro", arc_key, new_data)
-            log.info("Wrote %d rows to macro/%s  (%s → %s)",
-                     len(new_data), arc_key,
-                     new_data.index.min().date(), new_data.index.max().date())
+            log.info(
+                "Wrote %d rows to macro/%s  (%s → %s)",
+                len(new_data),
+                arc_key,
+                new_data.index.min().date(),
+                new_data.index.max().date(),
+            )
             continue
 
         existing_end = existing.index.max()
@@ -460,8 +473,12 @@ def seed_state_from_nam_weekly(*paths: Path) -> None:
         combined = pd.concat([existing, new_rows]).sort_index()
         combined = combined[~combined.index.duplicated(keep="first")]
         store.write_series("macro", arc_key, combined)
-        log.info("Extended macro/%s by %d rows → now ends %s",
-                 arc_key, len(new_rows), combined.index.max().date())
+        log.info(
+            "Extended macro/%s by %d rows → now ends %s",
+            arc_key,
+            len(new_rows),
+            combined.index.max().date(),
+        )
 
     log.info("State gap fill complete")
 
@@ -471,10 +488,10 @@ def seed_state_from_nam_weekly(*paths: Path) -> None:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    na_archive  = DOWNLOADS / "08-29-2025 North America Rig Count Report (1).xlsx"
-    na_current  = DOWNLOADS / "04-10-2026 North_America Rig_Count Report (2).xlsx"
-    ww_archive  = DOWNLOADS / "July-2025  WorldWide Rig Count Report.xlsx"
-    state_file  = DOWNLOADS / "Rigs by State_Jan 2000_Mar 2024.xlsx"
+    na_archive = DOWNLOADS / "08-29-2025 North America Rig Count Report (1).xlsx"
+    na_current = DOWNLOADS / "04-10-2026 North_America Rig_Count Report (2).xlsx"
+    ww_archive = DOWNLOADS / "July-2025  WorldWide Rig Count Report.xlsx"
+    state_file = DOWNLOADS / "Rigs by State_Jan 2000_Mar 2024.xlsx"
 
     seed_na_weekly_archive(na_archive, na_current)
 

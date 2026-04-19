@@ -7,8 +7,8 @@ from qws_researcher import Paper
 
 logger = logging.getLogger(__name__)
 
-_CHUNK_CHARS = 512 * 4       # ~512 tokens @ 4 chars/token
-_OVERLAP_CHARS = 64 * 4      # ~64 token overlap
+_CHUNK_CHARS = 512 * 4  # ~512 tokens @ 4 chars/token
+_OVERLAP_CHARS = 64 * 4  # ~64 token overlap
 _COLLECTION_NAME = "papers"
 
 
@@ -172,7 +172,9 @@ def _dedup_results(raw: dict, n: int) -> list[tuple[str, float]]:
 
     for meta, dist in zip(metadatas, distances):
         pid = meta["paper_id"]
-        score = float(1.0 - dist)  # convert cosine distance to similarity; cast to avoid numpy ambiguity
+        score = float(
+            1.0 - dist
+        )  # convert cosine distance to similarity; cast to avoid numpy ambiguity
         if pid not in best or score > best[pid]:
             best[pid] = score
 

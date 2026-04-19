@@ -11,6 +11,7 @@ Usage:
     python -m qws_researcher.batch_extract --data-dir qws_researcher/data
     python -m qws_researcher.batch_extract --limit 20   # process first N only
 """
+
 from __future__ import annotations
 
 import argparse
@@ -60,12 +61,12 @@ def main() -> None:
         else:
             failed += 1
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"Total:    {total}")
     print(f"Done:     {done}")
     print(f"Skipped:  {skipped}  (already extracted)")
     print(f"Failed:   {failed}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"Extracts at: {extracts_dir}")
 
 

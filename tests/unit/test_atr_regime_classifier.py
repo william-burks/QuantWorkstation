@@ -17,7 +17,6 @@ from research.regimes.atr_trend_classifier import (
     run,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -129,7 +128,10 @@ class TestLabelAssignment:
 class TestDistributionGuard:
     def test_passes_for_diverse_series(self) -> None:
         s = pd.Categorical(
-            ["crisis"] * 20 + ["high_vol_trending"] * 30 + ["low_vol_ranging"] * 25 + ["transitional"] * 25,
+            ["crisis"] * 20
+            + ["high_vol_trending"] * 30
+            + ["low_vol_ranging"] * 25
+            + ["transitional"] * 25,
             categories=LABELS,
         )
         series = pd.Series(s)

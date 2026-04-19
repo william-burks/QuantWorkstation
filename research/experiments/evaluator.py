@@ -342,8 +342,7 @@ def _annual_breakdown(trades_df: pd.DataFrame, div: dict[str, Any] | None = None
     for r in rows:
         if r["pct_of_total"] > _CONCENTRATION_THRESHOLD:
             lines.append(
-                f"\n[WARN] Regime concentration: "
-                f"{r['year']} = {r['pct_of_total']:.1f}% of profit"
+                f"\n[WARN] Regime concentration: {r['year']} = {r['pct_of_total']:.1f}% of profit"
             )
 
     # Diversity block
@@ -353,7 +352,9 @@ def _annual_breakdown(trades_df: pd.DataFrame, div: dict[str, Any] | None = None
     distinct = div["diversity_distinct_years"]
     profitable = div["diversity_years_positive"]
     lines.append(f"\n{sep} Regime Diversity {sep}")
-    lines.append(f"Score: {score_val:.2f} | Years traded: {distinct} | Profitable years: {profitable}")
+    lines.append(
+        f"Score: {score_val:.2f} | Years traded: {distinct} | Profitable years: {profitable}"
+    )
     if distinct < _DISTINCT_YEARS_THRESHOLD:
         lines.append(
             f"[WARN] Diversity: only {distinct} year{'s' if distinct != 1 else ''} of IS trades"

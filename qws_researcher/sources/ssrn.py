@@ -27,31 +27,49 @@ def _parse_html(html: str, url: str) -> dict:
     data: dict = {"title": "", "authors": [], "abstract": "", "date": None}
 
     # Title: <meta name="citation_title" content="...">
-    m = re.search(r'<meta\s+name=["\']citation_title["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE)
+    m = re.search(
+        r'<meta\s+name=["\']citation_title["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE
+    )
     if m:
         data["title"] = m.group(1).strip()
 
     if not data["title"]:
-        m = re.search(r'<h1[^>]*class=["\'][^"\']*title[^"\']*["\'][^>]*>(.*?)</h1>', html, re.IGNORECASE | re.DOTALL)
+        m = re.search(
+            r'<h1[^>]*class=["\'][^"\']*title[^"\']*["\'][^>]*>(.*?)</h1>',
+            html,
+            re.IGNORECASE | re.DOTALL,
+        )
         if m:
             data["title"] = re.sub(r"<[^>]+>", "", m.group(1)).strip()
 
     # Authors: <meta name="citation_author" content="..."> (multiple)
-    authors = re.findall(r'<meta\s+name=["\']citation_author["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE)
+    authors = re.findall(
+        r'<meta\s+name=["\']citation_author["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE
+    )
     data["authors"] = [a.strip() for a in authors if a.strip()]
 
     # Abstract
-    m = re.search(r'<div[^>]+class=["\'][^"\']*abstract[^"\']*["\'][^>]*>(.*?)</div>', html, re.IGNORECASE | re.DOTALL)
+    m = re.search(
+        r'<div[^>]+class=["\'][^"\']*abstract[^"\']*["\'][^>]*>(.*?)</div>',
+        html,
+        re.IGNORECASE | re.DOTALL,
+    )
     if m:
         data["abstract"] = re.sub(r"<[^>]+>", " ", m.group(1)).strip()
 
     if not data["abstract"]:
-        m = re.search(r'<meta\s+name=["\']description["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE)
+        m = re.search(
+            r'<meta\s+name=["\']description["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE
+        )
         if m:
             data["abstract"] = m.group(1).strip()
 
     # Date
-    m = re.search(r'<meta\s+name=["\']citation_publication_date["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE)
+    m = re.search(
+        r'<meta\s+name=["\']citation_publication_date["\']\s+content=["\'](.*?)["\']',
+        html,
+        re.IGNORECASE,
+    )
     if m:
         data["date"] = m.group(1).strip()
 

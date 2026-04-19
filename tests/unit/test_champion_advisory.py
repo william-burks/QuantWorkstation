@@ -22,7 +22,6 @@ if _QWS_GRAPH_ROOT not in sys.path:
 
 from research.graph.cli import _cmd_monitor_audit_lineage, cmd_degrade, cmd_monitor  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

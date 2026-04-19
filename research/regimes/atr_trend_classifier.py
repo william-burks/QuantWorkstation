@@ -16,10 +16,10 @@ from __future__ import annotations
 
 import argparse
 import sys
-from typing import Sequence
+from collections.abc import Sequence
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from data.store import Store
 
@@ -72,7 +72,6 @@ def _adx(high: pd.Series, low: pd.Series, close: pd.Series, period: int) -> pd.S
     """Standard 14-period ADX."""
     prev_high = high.shift(1)
     prev_low = low.shift(1)
-    prev_close = close.shift(1)
 
     up_move = high - prev_high
     down_move = prev_low - low
@@ -145,10 +144,10 @@ def classify(df: pd.DataFrame) -> pd.Series:
     # Assign labels in priority order (crisis first)
     label = pd.Series("transitional", index=df.index, dtype=object)
     label = label.where(~((z > 2.0) & (adx > 40)), other="crisis")
+    label = label.where(~((z > 0.5) & (adx > 25) & (label != "crisis")), other="high_vol_trending")
     label = label.where(
-        ~((z > 0.5) & (adx > 25) & (label != "crisis")), other="high_vol_trending"
+        ~((z < 0) & (adx < 20) & (label == "transitional")), other="low_vol_ranging"
     )
-    label = label.where(~((z < 0) & (adx < 20) & (label == "transitional")), other="low_vol_ranging")
 
     return label.astype(LABEL_DTYPE)
 
@@ -179,9 +178,7 @@ def run(symbol: str, tf: str) -> None:
     store = Store()
 
     if symbol not in _SYMBOL_LIBS:
-        raise ValueError(
-            f"Unknown symbol: {symbol!r}. Supported: {list(_SYMBOL_LIBS.keys())}"
-        )
+        raise ValueError(f"Unknown symbol: {symbol!r}. Supported: {list(_SYMBOL_LIBS.keys())}")
 
     lib, bar_key = _SYMBOL_LIBS[symbol]
     # Override tf suffix in bar key for flexibility (story currently only needs 1H)

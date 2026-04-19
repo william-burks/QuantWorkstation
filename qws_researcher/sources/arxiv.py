@@ -14,9 +14,16 @@ from qws_researcher import Paper, id_safe
 logger = logging.getLogger(__name__)
 
 SUPPORTED_CATEGORIES = [
-    "q-fin.TR", "q-fin.PM", "q-fin.RM", "q-fin.MF",
-    "q-fin.ST", "q-fin.CP", "stat.ML", "stat.AP",
-    "physics.data-an", "cond-mat.stat-mech",
+    "q-fin.TR",
+    "q-fin.PM",
+    "q-fin.RM",
+    "q-fin.MF",
+    "q-fin.ST",
+    "q-fin.CP",
+    "stat.ML",
+    "stat.AP",
+    "physics.data-an",
+    "cond-mat.stat-mech",
 ]
 
 _ATOM_NS = "http://www.w3.org/2005/Atom"
@@ -81,20 +88,22 @@ def _parse_atom(xml_bytes: bytes) -> list[Paper]:
         if not pdf_url:
             pdf_url = f"https://arxiv.org/pdf/{arxiv_id}"
 
-        papers.append(Paper(
-            id=paper_id,
-            title=title,
-            authors=authors,
-            abstract=abstract,
-            source="arxiv",
-            url=f"https://arxiv.org/abs/{arxiv_id}",
-            published_date=published or None,
-            categories=categories,
-            citations=None,
-            references=[],
-            fetched_at="",
-            pdf_path=f"url:{pdf_url}",
-        ))
+        papers.append(
+            Paper(
+                id=paper_id,
+                title=title,
+                authors=authors,
+                abstract=abstract,
+                source="arxiv",
+                url=f"https://arxiv.org/abs/{arxiv_id}",
+                published_date=published or None,
+                categories=categories,
+                citations=None,
+                references=[],
+                fetched_at="",
+                pdf_path=f"url:{pdf_url}",
+            )
+        )
     return papers
 
 
@@ -167,7 +176,7 @@ def fetch_arxiv_source(arxiv_path: str) -> str | None:
             resp.raise_for_status()
             raw = resp.content
     except Exception as e:
-        logger.warning("arXiv source fetch failed for %s: %s", paper_id, e)
+        logger.warning("arXiv source fetch failed for %s: %s", arxiv_path, e)
         return None
 
     # Try tar.gz first (most submissions)
@@ -193,7 +202,7 @@ def fetch_arxiv_source(arxiv_path: str) -> str | None:
     try:
         return raw.decode("utf-8", errors="replace")
     except Exception as e:
-        logger.warning("arXiv source decode failed for %s: %s", paper_id, e)
+        logger.warning("arXiv source decode failed for %s: %s", arxiv_path, e)
         return None
 
 

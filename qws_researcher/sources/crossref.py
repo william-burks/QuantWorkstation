@@ -24,7 +24,9 @@ def lookup_doi(title: str, first_author: str | None = None) -> str | None:
 
     try:
         with httpx.Client(timeout=15, headers=_HEADERS) as client:
-            resp = client.get(_BASE_URL, params={"query": query, "rows": 1, "select": "DOI,title,score"})
+            resp = client.get(
+                _BASE_URL, params={"query": query, "rows": 1, "select": "DOI,title,score"}
+            )
             if resp.status_code != 200:
                 logger.debug("Crossref returned %s for query %r", resp.status_code, query[:60])
                 return None

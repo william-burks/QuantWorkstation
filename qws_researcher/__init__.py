@@ -6,11 +6,11 @@ from typing import Any
 
 @dataclass
 class Paper:
-    id: str                       # "arxiv:2301.00001", "pmid:12345", "ssrn:4567890"
+    id: str  # "arxiv:2301.00001", "pmid:12345", "ssrn:4567890"
     title: str | None
     authors: list[str]
     abstract: str
-    source: str                   # "arxiv" | "semantic_scholar" | "pubmed" | "ssrn"
+    source: str  # "arxiv" | "semantic_scholar" | "pubmed" | "ssrn"
     url: str
     full_text: str | None = None
     pdf_path: str | None = None
@@ -21,12 +21,14 @@ class Paper:
     references: list[str] = field(default_factory=list)
     fetched_at: str = ""
     doi: str | None = None
-    text_extractor: str | None = None  # "pymupdf4llm", "nougat", "nougat-low-confidence", or None (legacy)
+    text_extractor: str | None = (
+        None  # "pymupdf4llm", "nougat", "nougat-low-confidence", or None (legacy)
+    )
     notes: str | None = None
     tags: list[str] = field(default_factory=list)
     github_repos: list[str] = field(default_factory=list)
     brief: str | None = None
-    regime_tags: dict | None = None      # {"asset_class": "futures", "frequency": "daily", ...}
+    regime_tags: dict | None = None  # {"asset_class": "futures", "frequency": "daily", ...}
     method_summary: dict | None = None
     results_snapshot: list | None = None
     assumptions: list | None = None
@@ -123,7 +125,11 @@ class PaperSummary:
 
     @classmethod
     def from_paper(cls, paper: Paper) -> PaperSummary:
-        title = paper.title if paper.title and not paper.title.startswith("http") else f"[No title — re-fetch {paper.id}]"
+        title = (
+            paper.title
+            if paper.title and not paper.title.startswith("http")
+            else f"[No title — re-fetch {paper.id}]"
+        )
         return cls(
             id=paper.id,
             title=title,
@@ -185,10 +191,29 @@ class StandardSearchResult:
     ) -> str:
         """Render results as a fixed 9-column markdown table.
         extra_col: optional (header, values) tuple to append as a 10th column."""
-        headers = ["#", "Title", "Authors", "Year", "Citations", "Source", "Abstract", "Full Text", "ID"]
+        headers = [
+            "#",
+            "Title",
+            "Authors",
+            "Year",
+            "Citations",
+            "Source",
+            "Abstract",
+            "Full Text",
+            "ID",
+        ]
         rows = [
-            [str(r.row), r.title, r.authors, r.year, r.citations, r.source,
-             r.has_abstract, r.has_full_text, r.id]
+            [
+                str(r.row),
+                r.title,
+                r.authors,
+                r.year,
+                r.citations,
+                r.source,
+                r.has_abstract,
+                r.has_full_text,
+                r.id,
+            ]
             for r in results
         ]
         if extra_col:

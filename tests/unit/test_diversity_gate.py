@@ -8,11 +8,9 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
-import pytest
 
+from research.experiments.evaluator import _annual_breakdown, evaluate, report
 from research.experiments.metrics import diversity_score
-from research.experiments.evaluator import report, _diversity_score, _annual_breakdown, evaluate
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -152,7 +150,6 @@ class TestReportDiversityBlock:
 class TestDiversityWarnings:
     def test_warn_when_distinct_years_lt_3(self):
         # 2 distinct years → WARN
-        breakdown = _TWO_YEAR_BREAKDOWN  # 2 distinct, 2 profitable
         output = _annual_breakdown(_make_trades_df([2023, 2024], [2000.0, 1500.0]))
         assert "[WARN] Diversity: only 2 year" in output
 
@@ -201,9 +198,7 @@ class TestDiversityNoWarnAtThreshold:
 class TestBundleCliDiversityWarning:
     """Verifying _cmd_bundle reads diversity from bundle.json trial_metadata and prints warning."""
 
-    def _make_bundle_with_diversity(
-        self, tmp_path: Path, diversity: dict[str, str]
-    ) -> None:
+    def _make_bundle_with_diversity(self, tmp_path: Path, diversity: dict[str, str]) -> None:
         manifest = {
             "trial": "test_trial",
             "run_ts": "20260416-120000",
@@ -224,7 +219,8 @@ class TestBundleCliDiversityWarning:
     def test_bundle_reads_diversity_fields_no_recompute(self, tmp_path: Path, capsys):
         """_cmd_bundle reads pre-computed diversity from bundle.json, writes to trial_metadata."""
         import argparse
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
+
         from qws_graph.research.graph.cli import _cmd_bundle
         from qws_graph.research.graph.store import GraphStore
 
@@ -236,7 +232,11 @@ class TestBundleCliDiversityWarning:
         self._make_bundle_with_diversity(tmp_path, diversity)
 
         mock_store = MagicMock(spec=GraphStore)
-        outcomes = [MagicMock(run_id="aaa000000001", status="recorded", evidence_score=2.5, champion_id=None)]
+        outcomes = [
+            MagicMock(
+                run_id="aaa000000001", status="recorded", evidence_score=2.5, champion_id=None
+            )
+        ]
         mock_store.persist_artifact.return_value = MagicMock(evolution=outcomes)
 
         args = argparse.Namespace(
@@ -295,11 +295,15 @@ class TestEvaluatorWritesToBundle:
 
     def test_diversity_merges_with_existing_trial_metadata(self, tmp_path: Path):
         bundle_path = tmp_path / "bundle.json"
-        bundle_path.write_text(json.dumps({
-            "trial": "test",
-            "files": {},
-            "trial_metadata": {"atr_bucket": "high"},
-        }))
+        bundle_path.write_text(
+            json.dumps(
+                {
+                    "trial": "test",
+                    "files": {},
+                    "trial_metadata": {"atr_bucket": "high"},
+                }
+            )
+        )
 
         trades = _make_trades_df([2022, 2023, 2024], [1000.0, 2000.0, 500.0])
         results = _make_results_df()
@@ -326,7 +330,8 @@ class TestBundleDoesNotRecompute:
     def test_trial_metadata_passed_as_is_to_write_trial_metadata(self, tmp_path: Path):
         """Verifies _cmd_bundle passes bundle.json trial_metadata directly."""
         import argparse
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
+
         from qws_graph.research.graph.cli import _cmd_bundle
         from qws_graph.research.graph.store import GraphStore
 
@@ -353,7 +358,11 @@ class TestBundleDoesNotRecompute:
         (tmp_path / "baseline_results.csv").write_text(csv_content)
 
         mock_store = MagicMock(spec=GraphStore)
-        outcomes = [MagicMock(run_id="aaa000000001", status="recorded", evidence_score=2.5, champion_id=None)]
+        outcomes = [
+            MagicMock(
+                run_id="aaa000000001", status="recorded", evidence_score=2.5, champion_id=None
+            )
+        ]
         mock_store.persist_artifact.return_value = MagicMock(evolution=outcomes)
 
         args = argparse.Namespace(
@@ -394,7 +403,8 @@ class TestTrialMetadataOnRunNode:
     def test_write_trial_metadata_called_with_diversity_keys(self, tmp_path: Path):
         """When bundle.json has diversity in trial_metadata, store.write_trial_metadata is called."""
         import argparse
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
+
         from qws_graph.research.graph.cli import _cmd_bundle
         from qws_graph.research.graph.store import GraphStore
 
@@ -420,7 +430,11 @@ class TestTrialMetadataOnRunNode:
         (tmp_path / "baseline_results.csv").write_text(csv_content)
 
         mock_store = MagicMock(spec=GraphStore)
-        outcomes = [MagicMock(run_id="aaa000000001", status="recorded", evidence_score=2.5, champion_id=None)]
+        outcomes = [
+            MagicMock(
+                run_id="aaa000000001", status="recorded", evidence_score=2.5, champion_id=None
+            )
+        ]
         mock_store.persist_artifact.return_value = MagicMock(evolution=outcomes)
 
         args = argparse.Namespace(
@@ -460,7 +474,8 @@ class TestNoAutoRejection:
     def test_ingest_proceeds_with_low_diversity(self, tmp_path: Path):
         """Ingest completes (rc=0) even when diversity is below both thresholds."""
         import argparse
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
+
         from qws_graph.research.graph.cli import _cmd_bundle
         from qws_graph.research.graph.store import GraphStore
 
@@ -487,7 +502,11 @@ class TestNoAutoRejection:
         (tmp_path / "baseline_results.csv").write_text(csv_content)
 
         mock_store = MagicMock(spec=GraphStore)
-        outcomes = [MagicMock(run_id="aaa000000001", status="recorded", evidence_score=2.5, champion_id=None)]
+        outcomes = [
+            MagicMock(
+                run_id="aaa000000001", status="recorded", evidence_score=2.5, champion_id=None
+            )
+        ]
         mock_store.persist_artifact.return_value = MagicMock(evolution=outcomes)
 
         args = argparse.Namespace(

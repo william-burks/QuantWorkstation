@@ -1,4 +1,5 @@
 """Verify ALFRED release dates look correct."""
+
 from data.store import get_store
 
 store = get_store()

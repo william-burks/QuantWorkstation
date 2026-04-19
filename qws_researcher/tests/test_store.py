@@ -1,4 +1,5 @@
 """Unit tests for PaperLibrary and VectorIndex."""
+
 from __future__ import annotations
 
 import tempfile
@@ -109,15 +110,18 @@ class TestVectorSearch:
 
         papers = [
             _make_paper(
-                "arxiv:0001", "Realized Volatility and HAR Model",
+                "arxiv:0001",
+                "Realized Volatility and HAR Model",
                 abstract="We study realized volatility using the HAR model with intraday returns.",
             ),
             _make_paper(
-                "arxiv:0002", "Deep Learning for Stock Prediction",
+                "arxiv:0002",
+                "Deep Learning for Stock Prediction",
                 abstract="Neural networks applied to stock price prediction using LSTM architecture.",
             ),
             _make_paper(
-                "arxiv:0003", "High-frequency Trading Microstructure",
+                "arxiv:0003",
+                "High-frequency Trading Microstructure",
                 abstract="Analysis of order book dynamics and market microstructure at high frequency.",
             ),
         ]

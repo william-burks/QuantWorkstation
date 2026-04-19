@@ -7,6 +7,15 @@ End-to-end algo trading workbench: data collection → research → strategy →
 
 ---
 
+## Highlights
+
+- **IS/OOS validation framework** with evidence-weighted significance gating — killed a champion strategy (4.58 IS Sharpe, 32 trades) on OOS regime sensitivity (−12% DD) instead of deploying a false positive. See [docs/PROVENANCE_ENGINE.md](docs/PROVENANCE_ENGINE.md).
+- **Research provenance graph** (Neo4j): Hypothesis → Trial → Champion → FormerChampion lineage; every run, parameter set, and promotion gate recorded and queryable.
+- **Prop-firm risk engine** enforcing daily-loss, trailing-drawdown, exposure, and consistency rules before every order. See the Risk Engine table below.
+- **`qw` CLI + MCP server** as the only research interface. No direct Cypher, no raw Python glue.
+
+---
+
 ## Architecture
 
 ```
@@ -43,7 +52,7 @@ qw query --name recent_champions
 qw query --name queued_hypotheses
 ```
 
-Schema, MCP tools, and promotion gate logic: `docs/PROVENANCE_ENGINE.md`
+Schema, MCP tools, and promotion gate logic: [docs/PROVENANCE_ENGINE.md](docs/PROVENANCE_ENGINE.md)
 
 ### Research Agents
 
@@ -54,7 +63,7 @@ Two agents assist with research sessions:
 | `research-navigator` | Session start: graph screening → ranked shortlist. Redundancy check before hypothesis commit. Mid-session pivot analysis. Session wrap with findings update. |
 | `trial-engineer` | Accepts hypothesis input contract, generates trial script + bundle.json, stops before run. After "run it": executes, ingests, reports raw metrics. |
 
-Usage: `docs/AGENT_USER_MANUAL.md`
+Usage: [docs/AGENT_USER_MANUAL.md](docs/AGENT_USER_MANUAL.md)
 
 ---
 
@@ -62,7 +71,8 @@ Usage: `docs/AGENT_USER_MANUAL.md`
 
 **1. Create virtualenv and install**
 ```bash
-cd ~/ClaudeProjects/QuantWorkstation
+git clone https://github.com/william-burks/QuantWorkstation.git
+cd QuantWorkstation
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```

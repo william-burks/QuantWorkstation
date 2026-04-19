@@ -23,14 +23,14 @@ Usage:
 
 import argparse
 import logging
+import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
 import requests
 
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from data.store import get_store
@@ -41,43 +41,44 @@ log = logging.getLogger(__name__)
 # Config
 # ---------------------------------------------------------------------------
 
-DEFAULT_START = datetime(2019, 1, 1, tzinfo=timezone.utc)
+DEFAULT_START = datetime(2019, 1, 1, tzinfo=UTC)
 DEFAULT_SYMBOLS = ["BTC-USD", "ETH-USD"]
 
 API_BASE = "https://api.coinbase.com/api/v3/brokerage/market/products"
 GRANULARITY = "ONE_MINUTE"
-BARS_PER_REQUEST = 300        # Coinbase hard cap
-REQUEST_SLEEP = 0.12          # ~8 req/sec — safely under 10/sec public limit
+BARS_PER_REQUEST = 300  # Coinbase hard cap
+REQUEST_SLEEP = 0.12  # ~8 req/sec — safely under 10/sec public limit
 
 # (arc_key_suffix, pandas_resample_rule, closed/label="left" for intraday)
 TIMEFRAMES: list[tuple[str, str]] = [
-    ("5min",  "5min"),
+    ("5min", "5min"),
     ("10min", "10min"),
     ("15min", "15min"),
     ("30min", "30min"),
-    ("1H",    "1h"),
-    ("2H",    "2h"),
-    ("4H",    "4h"),
-    ("8H",    "8h"),
-    ("1D",    "1D"),
-    ("1W",    "1W"),
-    ("1M",    "1ME"),
+    ("1H", "1h"),
+    ("2H", "2h"),
+    ("4H", "4h"),
+    ("8H", "8h"),
+    ("1D", "1D"),
+    ("1W", "1W"),
+    ("1M", "1ME"),
 ]
 
 # Alpaca suffix → new suffix, for migrating existing data into merged series
 ALPACA_KEY_MAP: dict[str, str] = {
-    "5T":  "5min",
+    "5T": "5min",
     "15T": "15min",
-    "1H":  "1H",
-    "4H":  "4H",
-    "1D":  "1D",
-    "1W":  "1W",
+    "1H": "1H",
+    "4H": "4H",
+    "1D": "1D",
+    "1W": "1W",
 }
 
 
 # ---------------------------------------------------------------------------
 # Symbol helpers
 # ---------------------------------------------------------------------------
+
 
 def _arc_symbol(coinbase_id: str) -> str:
     """BTC-USD → BTC/USD"""
@@ -87,6 +88,7 @@ def _arc_symbol(coinbase_id: str) -> str:
 # ---------------------------------------------------------------------------
 # API fetch
 # ---------------------------------------------------------------------------
+
 
 def _fetch_chunk(
     product_id: str,
@@ -102,7 +104,7 @@ def _fetch_chunk(
         try:
             resp = session.get(url, params=params, timeout=30)
             if resp.status_code == 429:
-                wait = 2 ** attempt
+                wait = 2**attempt
                 log.warning("Rate limited — sleeping %ds", wait)
                 time.sleep(wait)
                 continue
@@ -111,7 +113,7 @@ def _fetch_chunk(
         except requests.RequestException as exc:
             if attempt == 5:
                 raise
-            wait = 2 ** attempt
+            wait = 2**attempt
             log.warning("Request error (attempt %d): %s — retrying in %ds", attempt + 1, exc, wait)
             time.sleep(wait)
 
@@ -136,7 +138,9 @@ def fetch_1min(product_id: str, start: datetime, end: datetime) -> pd.DataFrame:
     current = start
     chunk_num = 0
 
-    log.info("[%s] Fetching %d min of 1-min bars (%d chunks)…", product_id, total_minutes, total_chunks)
+    log.info(
+        "[%s] Fetching %d min of 1-min bars (%d chunks)…", product_id, total_minutes, total_chunks
+    )
 
     while current < end:
         chunk_end = min(current + chunk_delta, end)
@@ -151,8 +155,14 @@ def fetch_1min(product_id: str, start: datetime, end: datetime) -> pd.DataFrame:
 
         if chunk_num % 1000 == 0:
             pct = 100.0 * chunk_num / total_chunks
-            log.info("[%s]  %d/%d chunks (%.0f%%) — %d bars so far",
-                     product_id, chunk_num, total_chunks, pct, len(all_candles))
+            log.info(
+                "[%s]  %d/%d chunks (%.0f%%) — %d bars so far",
+                product_id,
+                chunk_num,
+                total_chunks,
+                pct,
+                len(all_candles),
+            )
 
         current = chunk_end
         time.sleep(REQUEST_SLEEP)
@@ -171,14 +181,20 @@ def fetch_1min(product_id: str, start: datetime, end: datetime) -> pd.DataFrame:
     )
     df = df[~df.index.duplicated(keep="last")]
 
-    log.info("[%s] Fetched %d 1-min bars  (%s → %s)",
-             product_id, len(df), df.index.min().date(), df.index.max().date())
+    log.info(
+        "[%s] Fetched %d 1-min bars  (%s → %s)",
+        product_id,
+        len(df),
+        df.index.min().date(),
+        df.index.max().date(),
+    )
     return df
 
 
 # ---------------------------------------------------------------------------
 # Resample + schema
 # ---------------------------------------------------------------------------
+
 
 def _resample(df_1m: pd.DataFrame, rule: str) -> pd.DataFrame:
     agg = df_1m.resample(rule, label="left", closed="left").agg(
@@ -205,6 +221,7 @@ def _normalize(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Write with merge
 # ---------------------------------------------------------------------------
+
 
 def _load_existing(store, arc_sym: str, new_suffix: str, alpaca_suffix: str | None) -> pd.DataFrame:
     """Read existing data from new key; fall back to old Alpaca key if not found."""
@@ -271,7 +288,12 @@ def _write_merged(
         merged = pd.concat(parts)
         merged = merged[~merged.index.duplicated(keep="last")].sort_index()
         store.overwrite_bars("crypto", arc_key, merged)
-        log.info("  [%s] %d rows — rewrite (prepended %d historical rows)", arc_key, len(merged), len(historical))
+        log.info(
+            "  [%s] %d rows — rewrite (prepended %d historical rows)",
+            arc_key,
+            len(merged),
+            len(historical),
+        )
     else:
         new_norm = _normalize(new_after)
         for col in existing.columns:
@@ -284,6 +306,7 @@ def _write_merged(
 # ---------------------------------------------------------------------------
 # Main ingest
 # ---------------------------------------------------------------------------
+
 
 def ingest(product_id: str, start: datetime, end: datetime) -> None:
     """Full pipeline for one symbol: fetch → resample → merge → write."""
@@ -321,23 +344,30 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Ingest Coinbase historical crypto OHLCV")
     parser.add_argument(
-        "--symbols", nargs="+", default=DEFAULT_SYMBOLS,
+        "--symbols",
+        nargs="+",
+        default=DEFAULT_SYMBOLS,
         help="Coinbase product IDs (default: BTC-USD ETH-USD)",
     )
     parser.add_argument(
-        "--start", default=DEFAULT_START.strftime("%Y-%m-%d"),
+        "--start",
+        default=DEFAULT_START.strftime("%Y-%m-%d"),
         help="Start date YYYY-MM-DD (default: 2019-01-01)",
     )
     args = parser.parse_args()
 
-    start_dt = datetime.strptime(args.start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-    end_dt = datetime.now(tz=timezone.utc)
+    start_dt = datetime.strptime(args.start, "%Y-%m-%d").replace(tzinfo=UTC)
+    end_dt = datetime.now(tz=UTC)
 
     total_minutes = int((end_dt - start_dt).total_seconds() / 60)
     total_requests = (total_minutes // BARS_PER_REQUEST + 1) * len(args.symbols)
     est_seconds = total_requests * REQUEST_SLEEP
-    log.info("Estimated runtime: %.0f requests × %.2fs = %.0f min",
-             total_requests, REQUEST_SLEEP, est_seconds / 60)
+    log.info(
+        "Estimated runtime: %.0f requests × %.2fs = %.0f min",
+        total_requests,
+        REQUEST_SLEEP,
+        est_seconds / 60,
+    )
 
     for sym in args.symbols:
         ingest(sym, start_dt, end_dt)

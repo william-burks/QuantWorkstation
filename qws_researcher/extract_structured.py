@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Structured extraction pipeline.
 
@@ -11,6 +9,8 @@ Usage:
     from qws_researcher.extract_structured import extract_paper
     extract_paper(paper, data_dir="qws_researcher/data")
 """
+
+from __future__ import annotations
 
 import json
 import logging

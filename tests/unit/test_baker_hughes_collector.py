@@ -235,7 +235,9 @@ def test_collect_written_df_has_count_column_and_datetime_index():
 def test_collect_incremental_appends_only_new_rows():
     """If existing data is older than the snapshot date, collect writes 1 new row."""
     # Snapshot is 2024-01-19; existing data ends at 2024-01-05 → new row expected
-    excel_bytes = _make_excel_bytes(date_str="2024-01-19", us_total=598, us_oil=478, us_gas=109, canada=188)
+    excel_bytes = _make_excel_bytes(
+        date_str="2024-01-19", us_total=598, us_oil=478, us_gas=109, canada=188
+    )
 
     existing_df = pd.DataFrame(
         {"count": pd.array([600], dtype="Int64")},
@@ -267,7 +269,9 @@ def test_collect_incremental_appends_only_new_rows():
 
 def test_collect_idempotent_no_write_when_fully_up_to_date():
     """If last stored date matches the snapshot date, write_series is not called."""
-    excel_bytes = _make_excel_bytes(date_str="2024-01-19", us_total=598, us_oil=478, us_gas=109, canada=188)
+    excel_bytes = _make_excel_bytes(
+        date_str="2024-01-19", us_total=598, us_oil=478, us_gas=109, canada=188
+    )
 
     # Last stored date matches the snapshot date → no new rows
     existing_df = pd.DataFrame(

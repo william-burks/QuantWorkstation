@@ -35,9 +35,18 @@ ARC_KEY = "TREASURY_RATES_1D"
 ARC_LIB = "macro"
 CHUNK_DAYS = 89  # stay under 90-day API limit
 RATE_COLUMNS = [
-    "month1", "month2", "month3", "month6",
-    "year1", "year2", "year3", "year5",
-    "year7", "year10", "year20", "year30",
+    "month1",
+    "month2",
+    "month3",
+    "month6",
+    "year1",
+    "year2",
+    "year3",
+    "year5",
+    "year7",
+    "year10",
+    "year20",
+    "year30",
 ]
 # FMP treasury data available back to 2010+; 7yr covers 2019 for regime conditioning
 HISTORY_YEARS = 7
@@ -93,7 +102,9 @@ def collect(force_backfill: bool = False) -> None:
                     start_date = incremental_start
                 log.info("TREASURY_RATES: last stored %s, fetching from %s", last, start_date)
         except Exception:
-            log.info("TREASURY_RATES: no existing data, fetching %d years of history", HISTORY_YEARS)
+            log.info(
+                "TREASURY_RATES: no existing data, fetching %d years of history", HISTORY_YEARS
+            )
     else:
         log.info("TREASURY_RATES: force backfill from %s (%d years)", start_date, HISTORY_YEARS)
 

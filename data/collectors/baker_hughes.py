@@ -181,8 +181,7 @@ def _parse_na_rig_count(excel_bytes: bytes) -> dict[str, pd.DataFrame]:
             if c in label_map:
                 return label_map[c]
         raise ValueError(
-            f"Cannot find row matching {candidates}. "
-            f"Available labels: {list(label_map.keys())}"
+            f"Cannot find row matching {candidates}. Available labels: {list(label_map.keys())}"
         )
 
     us_total = _find_count("United States Total", "U.S. Total", "US Total")
@@ -339,8 +338,7 @@ def _parse_ww_rig_count(excel_bytes: bytes) -> dict[str, pd.DataFrame]:
             if c in label_map:
                 return label_map[c]
         raise ValueError(
-            f"Cannot find row matching {candidates}. "
-            f"Available labels: {list(label_map.keys())}"
+            f"Cannot find row matching {candidates}. Available labels: {list(label_map.keys())}"
         )
 
     def _make_df(count: float) -> pd.DataFrame:

@@ -1,5 +1,7 @@
 """Find valid unit_desc values for CORN PROGRESS from NASS API."""
+
 import requests
+
 from data.config import get_settings
 
 key = get_settings().usda_api_key

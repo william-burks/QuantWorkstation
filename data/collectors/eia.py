@@ -221,7 +221,9 @@ def collect_mer(series: list[str] | None = None) -> None:
             if not existing.empty:
                 last_date = existing.index.max()
                 start_date = (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
-                log.info("MER %s: last stored %s, fetching from %s", msn, last_date.date(), start_date)
+                log.info(
+                    "MER %s: last stored %s, fetching from %s", msn, last_date.date(), start_date
+                )
         except Exception:
             log.info("MER %s: no existing data, fetching full history", msn)
 

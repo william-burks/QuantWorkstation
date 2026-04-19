@@ -16,13 +16,23 @@ logger = logging.getLogger(__name__)
 FIELDS_OF_STUDY = ["Finance", "Economics", "Mathematics", "Statistics", "Physics"]
 
 _PAPER_FIELDS = [
-    "title", "authors", "abstract", "year", "citationCount",
-    "openAccessPdf", "references", "externalIds", "url",
-    "fieldsOfStudy", "publicationDate",
+    "title",
+    "authors",
+    "abstract",
+    "year",
+    "citationCount",
+    "openAccessPdf",
+    "references",
+    "externalIds",
+    "url",
+    "fieldsOfStudy",
+    "publicationDate",
 ]
 
 _BULK_SEARCH_URL = "https://api.semanticscholar.org/graph/v1/paper/search/bulk"
-_BULK_FIELDS = "paperId,externalIds,title,authors,abstract,year,citationCount,openAccessPdf,fieldsOfStudy"
+_BULK_FIELDS = (
+    "paperId,externalIds,title,authors,abstract,year,citationCount,openAccessPdf,fieldsOfStudy"
+)
 
 # Only attempt PDF download from these trusted open-access hosts
 _OA_TRUSTED_HOSTS = {"arxiv.org", "ar5iv.labs.arxiv.org", "export.arxiv.org"}

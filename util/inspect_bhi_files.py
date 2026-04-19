@@ -1,4 +1,5 @@
 """Check NAM Weekly sheet in the current Apr 2026 file."""
+
 from pathlib import Path
 
 import pandas as pd
