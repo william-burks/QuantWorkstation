@@ -19,6 +19,7 @@ You (Guiding Researcher)
   ├── learning-companion   ← quant theory tutor; tracks your depth across gap topics
   │
   └── qws_researcher       ← literature pipeline; fetch → store → extract → markdown
+                              (lives in private sibling: ~/ClaudeProjects/QuantWorkstation-private/qws_researcher/)
 ```
 
 You decide at every handoff. No agent promotes, retires, or acts on results without
@@ -32,9 +33,9 @@ your explicit instruction.
 |---|---|---|---|
 | research-navigator | Opus 4.6 | [research-navigator.md](agents/research-navigator.md) | Every session — start, mid-pivot, wrap |
 | trial-engineer | Sonnet 4.6 | [trial-engineer.md](agents/trial-engineer.md) | After direction is chosen; needs hypothesis_id |
-| quant-strategist | Opus 4.6 | [quant-strategist.md](agents/quant-strategist.md) | After OOS champion confirmed; idea generation |
+| quant-strategist | Opus 4.6 | `~/ClaudeProjects/QuantWorkstation-private/docs/agents/quant-strategist.md` | After OOS champion confirmed; idea generation (private) |
 | learning-companion | Sonnet 4.6 | [learning-companion.md](agents/learning-companion.md) | Any time; quant theory questions |
-| literature pipeline | — (CLI) | [literature-pipeline.md](agents/literature-pipeline.md) | After downloading papers; feed strategist |
+| literature pipeline | — (CLI) | `~/ClaudeProjects/QuantWorkstation-private/docs/agents/literature-pipeline.md` | After downloading papers; feed strategist (private) |
 
 ---
 
@@ -62,7 +63,7 @@ your explicit instruction.
 | Raw idea seeds | `research/ideas/YYYY-MM-DD-<slug>.md` |
 | Trial scripts | `research/trials/<asset>/<strategy>/NN_description.py` |
 | Trial results | `research/results/<asset>/<strategy>/runs/<timestamp>/` |
-| Paper extracts | `qws_researcher/data/extracts/<paper_id>.md` |
+| Paper extracts | `~/ClaudeProjects/QuantWorkstation-private/qws_researcher/data/extracts/<paper_id>.md` |
 | Navigator memory | `.claude/agent-memory/research-navigator/` |
 | Research standards | `research/experiments/standards.py` |
 | Strategy interface | `strategies/base.py` |
@@ -71,8 +72,9 @@ your explicit instruction.
 
 ## First Session from Cold Start
 
-1. **Ingest papers** (optional — do before first strategist session):
+1. **Ingest papers** (optional — do before first strategist session; pipeline lives in private sibling):
    ```bash
+   cd ~/ClaudeProjects/QuantWorkstation-private
    python -m qws_researcher.ingest arxiv:<id>
    python -m qws_researcher.batch_extract --data-dir qws_researcher/data --limit 5
    ```

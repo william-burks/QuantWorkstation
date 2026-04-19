@@ -24,13 +24,6 @@ dependencies = [
     "arch>=6",
     # HTTP
     "httpx>=0.27",
-    # Literature pipeline (qws_researcher)
-    "anthropic>=0.40",
-    "arxiv>=2.1",
-    "pymupdf4llm>=0.0.17",
-    "semanticscholar>=0.8",
-    "chromadb>=0.5",
-    "sentence-transformers>=3.0",
     # FRED macro data
     "fredapi>=0.5",
     # Excel parsing (Baker Hughes rig count)
@@ -62,7 +55,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["data", "research", "strategies", "execution", "qws_researcher"]
+packages = ["data", "research", "strategies", "execution"]
 
 [tool.ruff]
 line-length = 100
