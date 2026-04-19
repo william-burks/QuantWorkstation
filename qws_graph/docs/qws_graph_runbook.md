@@ -17,6 +17,12 @@ Operator runbook for Graph V1 as currently implemented in QuantWorkstation.
 Primary references:
 - `qws_graph/docs/graph_v1_contract.md`
 
+> **Note on examples.** Concrete strategy files, CSV artifacts, and shell runners referenced
+> below (e.g. `strategies/legacy/bear_es_sweep_*`, `research/bin/run_liquidity_sweep_*.sh`,
+> `results/es_bear_sweep_*.csv`) live in a private sibling repo. Treat them as placeholders
+> for `strategies/<your_strategy>.py`, `research/bin/<your_runner>.sh`, and
+> `results/<your_output>.csv`. The CLI flags and expected behavior are unchanged.
+
 ## Day-0 Setup and Verification
 
 ### 1) Start local Neo4j

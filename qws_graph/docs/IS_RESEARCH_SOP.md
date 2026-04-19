@@ -240,14 +240,14 @@ Maintain one entry per strategy in `registry.json`:
 
 ```json
 {
-  "strategy_id": "bear_cl_1h_nypre_after",
+  "strategy_id": "<strategy_slug>",
   "status": "oos_pending",
   "is_complete": true,
   "oos_windows_passed": 0,
   "oos_windows_run": 0,
   "tier": "professional",
   "trades_per_month_estimate": 2,
-  "champion_file": "strategies/bear_cl_sweep_1h_baseline.py"
+  "champion_file": "strategies/<champion_strategy>.py"
 }
 ```
 

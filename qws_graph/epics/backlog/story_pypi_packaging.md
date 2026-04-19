@@ -35,8 +35,7 @@ Create a publishable Python package for shared strategy utilities with a stable 
 ## Repo Touchpoints
 - `strategies/common/strategy_artifacts.py`
 - `strategies/common/__init__.py`
-- `strategies/legacy/bear_es_sweep_1h_baseline.py` — existing consumer; verify import still works post-migration
-- `strategies/legacy/bear_nq_sweep_1h_baseline.py` — existing consumer; verify import still works post-migration
+- Any existing strategy consumers of `strategies/common/` helpers — verify imports still work post-migration
 - `tests/unit/test_strategy_artifacts.py`
 - `pyproject.toml`
 
@@ -50,14 +49,14 @@ Create a publishable Python package for shared strategy utilities with a stable 
 ## Acceptance Criteria
 - [ ] A dedicated package directory exists with valid `pyproject.toml`
 - [ ] Shared helpers are importable from package namespace
-- [ ] `strategies/legacy/bear_es_sweep_1h_baseline.py` and `strategies/legacy/bear_nq_sweep_1h_baseline.py` import from the package namespace without behavior change (confirmed via `tests/unit/test_strategy_artifacts.py` passing)
+- [ ] existing strategy consumers of `strategies/common/strategy_artifacts.py` import from the package namespace without behavior change (confirmed via `tests/unit/test_strategy_artifacts.py` passing)
 - [ ] Package tests pass in CI/local runs
 - [ ] Build artifacts (`sdist`, `wheel`) are generated successfully
 - [ ] TestPyPI publish path is documented and validated
 
 ## Validation
 - Run unit tests for shared helper behavior
-- Run `--help` smoke checks on `strategies/legacy/bear_es_sweep_1h_baseline.py` and `bear_nq_sweep_1h_baseline.py` after import switch
+- Run `--help` smoke checks on any existing strategy consumers after import switch
 - Build package with `python -m build`
 - Verify distribution metadata with `twine check`
 - Perform TestPyPI upload dry run or actual test publish

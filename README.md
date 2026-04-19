@@ -46,8 +46,8 @@ Neo4j tracks the full provenance chain: Hypothesis → Trial → Champion → Fo
 The `qw` CLI is the only interface — no direct Cypher, no FastAPI.
 
 ```bash
-qw record --hypothesis "CL 1H bear liquidity sweep, ATR regime filter"
-qw record --bundle research/results/futures/liquidity_sweep/runs/<timestamp>/
+qw record --hypothesis "<one-line hypothesis statement>"
+qw record --bundle research/results/<asset>/<strategy>/runs/<timestamp>/
 qw query --name recent_champions
 qw query --name queued_hypotheses
 ```

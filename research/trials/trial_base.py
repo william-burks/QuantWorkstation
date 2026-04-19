@@ -228,7 +228,7 @@ def make_bundle(
     """Build bundle.json manifest dict.
 
     Args:
-        trial_name: trial identifier string (e.g. "btc_donchian_01_baseline")
+        trial_name: trial identifier string (e.g. "<strategy>_NN_<description>")
         hypothesis_id: 12-char hypothesis ID — REQUIRED for qw record --bundle
         run_ts: timestamp string (YYYYmmdd-HHMMSS)
         files: dict mapping role → filename, e.g. {"csv": "results.csv", "html": "results.html"}

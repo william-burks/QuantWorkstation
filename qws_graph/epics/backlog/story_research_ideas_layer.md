@@ -56,7 +56,7 @@ related_hypothesis_id: ""   # populated after qw record --hypothesis
   - Promotion trigger: Will or navigator decides → `qw record --hypothesis` → update
     `related_hypothesis_id` in idea file → set `status: hypothesis_logged`
   - Rejection: set `status: rejected` with a one-line reason in the file body
-- `research/ideas/2026-04-11-example-cl-eia-reversal.md` — illustrative example idea file
+- `research/ideas/YYYY-MM-DD-<slug>.md` — one illustrative example idea file
 
 ## Out of Scope
 - Any CLI changes to `qw`
@@ -65,14 +65,14 @@ related_hypothesis_id: ""   # populated after qw record --hypothesis
 
 ## Repo Touchpoints
 - `research/ideas/.gitkeep` (new)
-- `research/ideas/2026-04-11-example-cl-eia-reversal.md` (new)
+- `research/ideas/YYYY-MM-DD-<slug>.md` (new — one illustrative example)
 - `docs/RESEARCH_WORKFLOW.md`
 
 ## Acceptance Criteria
 - [ ] `research/ideas/` directory exists and is tracked in git via `.gitkeep`
 - [ ] `docs/RESEARCH_WORKFLOW.md` contains "Pre-Graph Ideation" section with file convention,
   frontmatter spec, and promotion trigger documented
-- [ ] Example idea file exists at `research/ideas/2026-04-11-example-cl-eia-reversal.md` with
+- [ ] Example idea file exists at `research/ideas/YYYY-MM-DD-<slug>.md` with
   correct frontmatter (`status: raw`, `source: user`, `related_hypothesis_id: ""`)
 - [ ] No graph schema changes, no CLI changes
 

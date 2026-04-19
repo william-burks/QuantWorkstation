@@ -111,31 +111,31 @@ Each ingested run prints one of three outcomes:
 
 ```zsh
 # Ingest a baseline CSV run
-qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv
+qw record --file results/<strategy>_baseline.csv --kind baseline_csv
 
 # Ingest a grid sweep, keep only significant runs
-qw record --file results/es_bear_sweep_1h_grid_v1.csv --kind grid_csv
+qw record --file results/<strategy>_grid_v1.csv --kind grid_csv
 
 # Ingest a grid sweep, keep all rows (bypass significance gate)
-qw record --file results/es_bear_sweep_1h_grid_v1.csv --kind grid_csv --all
+qw record --file results/<strategy>_grid_v1.csv --kind grid_csv --all
 
 # Ingest a champion markdown with explicit pivot link
 qw record \
-  --file research/results/futures/liquidity_sweep/cl_bear_liquidity_sweep_1h_golden_champion.md \
+  --file research/results/<asset>/<strategy>/<champion>.md \
   --kind champion_md \
-  --pivot-from d2f56cf73a2d
+  --pivot-from <prior_champion_id>
 
 # Ingest a champion with family_id derived from strategy source
 qw record \
-  --file research/results/futures/liquidity_sweep/cl_bear_liquidity_sweep_1h_golden_champion.md \
+  --file research/results/<asset>/<strategy>/<champion>.md \
   --kind champion_md \
-  --source-file strategies/liquidity_sweep/bear_cl_sweep_1h_golden.py
+  --source-file strategies/<strategy>/<champion_strategy>.py
 
 # Validate only, no write
-qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --dry-run
+qw record --file results/<strategy>_baseline.csv --kind baseline_csv --dry-run
 
 # Queue for later (Neo4j offline)
-qw record --file results/es_bear_sweep_1h_baseline.csv --kind baseline_csv --offline
+qw record --file results/<strategy>_baseline.csv --kind baseline_csv --offline
 ```
 
 ---

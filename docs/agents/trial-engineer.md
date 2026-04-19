@@ -51,9 +51,9 @@ Agent always does three reads before writing anything:
 ## Output (before run)
 
 ```
-Generated: research/trials/futures/liquidity_sweep/12_bear_atrgated_short.py
-Bundle template: research/trials/futures/liquidity_sweep/bundle.json
-Review, then run: python -m research.trials.futures.liquidity_sweep.12_bear_atrgated_short
+Generated: research/trials/<asset>/<strategy>/NN_<description>.py
+Bundle template: research/trials/<asset>/<strategy>/bundle.json
+Review, then run: python -m research.trials.<asset>.<strategy>.NN_<description>
 ```
 
 **STOPS HERE.** Does not execute until you say "run it".

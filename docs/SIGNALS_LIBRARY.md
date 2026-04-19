@@ -45,8 +45,8 @@ from data.store import Store
 store = Store()
 
 # Strategy signals
-store.write_signals("bear_cl_sweep_1h", "CL_1H", df)      # df: DatetimeIndex + 'direction'
-df = store.read_signals("bear_cl_sweep_1h", "CL_1H")
+store.write_signals("demo_strategy_1h", "CL_1H", df)      # df: DatetimeIndex + 'direction'
+df = store.read_signals("demo_strategy_1h", "CL_1H")
 
 # Regime labels (classifier writes via overwrite_bars under the hood)
 # Read back with the raw bars API using the fully-qualified key:
