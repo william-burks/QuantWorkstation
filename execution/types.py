@@ -1,4 +1,4 @@
-"""Shared broker types — used by both AlpacaBroker and IBKRBroker."""
+"""Shared broker types — used by AlpacaBroker (IBKRBroker deferred; see docs/ROADMAP.md)."""
 
 from dataclasses import dataclass
 
