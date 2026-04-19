@@ -249,9 +249,49 @@ single source of truth — sessions are stateless, the graph is stateful.
 
 ---
 
+## [CURRENT] Shipped Agents (Epic 13)
+
+Three Claude Code sub-agents automate phases of the loop. Invoke via `/research-session`
+or spawn individually through the agent system.
+
+| Agent | Role | Story |
+|---|---|---|
+| `research-navigator` | Session start: loads graph state, synthesizes next-direction shortlist. Phase 2: redundancy gate before hypothesis commit. Phase 3: mid-session pivot from trial output. Phase 4: session wrap with findings update. | QWS-1302 |
+| `trial-engineer` | Accepts hypothesis input contract, generates trial script + `bundle.json` template, STOPS before run. After explicit "run it": executes, ingests, reports raw metrics. | QWS-1303 |
+| `quant-strategist` | On-demand after baseline champion exists. Generates novel alpha hypotheses from literature + first principles. Writes ideas to `research/ideas/`. | — |
+
+Agent definitions live under `.claude/agents/`. Each has a scoped toolbelt — the
+navigator cannot run trials; the trial-engineer cannot touch champion lifecycle.
+
+---
+
+## [CURRENT] qw CLI Reference
+
+All commands are graph-side. Data-side ingestion lives in `data/collectors/` + `util/`.
+
+| Command | Purpose |
+|---|---|
+| `qw record` | Parse and ingest artifact (CSV or Markdown) to graph or pending queue. Also handles Hypothesis journaling via `--hypothesis`, `--tested-as`, `--branched-from`, `--rationale`, `--status`, `--findings`, `--queue`. |
+| `qw seed` | Seed or update singleton configuration nodes (e.g. `ResearchTarget`). |
+| `qw abort` | Mark a strategy family as ABORTED with an explicit reason. Prevents any further Trials/Champions from attaching. |
+| `qw reconcile` | Audit ingested artifacts against graph records — surfaces missing or divergent nodes. |
+| `qw query --name <preset>` | Run a predefined graph query preset. Add `--json` for machine output. |
+| `qw query --cypher <query>` | Run an arbitrary read-only Cypher query (QWS-0906). |
+| `qw backfill` | Backfill missing graph properties (e.g. hypothesis embeddings). |
+| `qw degrade` | Demote a Champion to FormerChampion with mandatory cause-of-death. `--reason` adds researcher note (QWS-1405). |
+| `qw retire` | Retire a FormerChampion to a final RetiredChampion node. |
+| `qw gate` | Re-evaluate correlation gate for all promotion candidates. |
+| `qw monitor` | Re-run Champion trial scripts and flag decay via DEGRADED_TO edges. `--audit-lineage` adds champion-degradation lineage audit (QWS-1405). `--dry-run` to preview. |
+| `qw patch` | Surgically update one property on a Run node. |
+
+Run `qw <command> --help` for full flag list.
+
+---
+
 ## Reference Documents
 
 - `docs/MANIFESTO.md` — mission, quantitative targets, philosophy
 - `docs/PROVENANCE_ENGINE.md` — graph schema, MCP tools, promotion gate logic
+- `docs/SIGNALS_LIBRARY.md` — ArcticDB `signals` lib reference (strategies + regime classifiers)
 - `docs/BACKLOG_ALIGNMENT.md` — what is built vs. what is planned
-- `docs/IS_RESEARCH_SOP.md` — 5-phase research methodology (Baseline → OOS Preparation)
+- `qws_graph/docs/IS_RESEARCH_SOP.md` — 5-phase research methodology (Baseline → OOS Preparation)

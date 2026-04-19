@@ -87,6 +87,12 @@ provenance in the graph.
 **Query convention:** All MCP presets that traverse Strategy nodes filter with
 `WHERE s.status <> 'ABORTED'` by default. Aborted strategies are only surfaced via `list_aborted`.
 
+### Strategy — key taxonomy property (QWS-1012)
+
+| Property | Type | Description |
+|---|---|---|
+| `strategy_class` | str | Taxonomy label grouping strategies by logic family (e.g. `trend_following`, `mean_reversion`, `liquidity_sweep`). Drives `portfolio_by_class` preset. Authoritative values defined in `qws_graph/docs/data_dictionary.yaml`. |
+
 ### [NEW — QWS-0502] — Regime Context
 
 | Node | Story | Role |
@@ -248,9 +254,17 @@ JSON output: append `--json` to any preset. Pipe to `jq` for filtering.
 | `downstream_champions` | Champions downstream of a specific Run. **Update (QWS-0504):** add `depth` param |
 | `cross_artifact_correlation` | Strategies sharing the same family_id |
 | `portfolio_alpha` | All OOS-pass Champions with aggregate metrics |
+| `portfolio_by_class` | Active (non-ABORTED) strategies grouped by `strategy_class`. Columns: strategy_class, count, strategies. QWS-1012. |
 | `instrument_concentration` | Champions grouped by instrument |
 | `pending_offline` | Artifacts in `.qws/pending/` not yet ingested |
 | `former_champions` | Cemetery view: FormerChampion nodes with `strategy_id`, `instrument`, `degraded_at`, `oos_reason`, `retirement_note`, `status` (DEGRADED \| RETIRED). QWS-0801. |
+| `fragility_report` | Champions whose `fragility` list mentions regime sensitivity. Narrow signal — broader fragility distribution lives in `portfolio_alpha`, `former_champions`, `regime_performance`. |
+| `list_hypotheses` | All Hypothesis nodes ordered by `created_at` DESC. Columns: hypothesis_id, title, status, created_at. |
+| `hypotheses_by_status` | Hypotheses grouped by status (open \| confirmed \| rejected); ordered by status ASC then created_at DESC. Columns: hypothesis_id, title, status, findings (80-char truncated), created_at. |
+| `hypothesis_search` | Find Hypothesis nodes whose title contains `title_fragment` (case-insensitive). Columns: hypothesis_id, title, status, findings. |
+| `check_redundancy` | Given `hypothesis_id`, check for active Champions and aborted strategies with similar logic (title substring). Also surfaces SEMANTICALLY_RELATED hypotheses. Returns match / no match. |
+| `similar_hypotheses` | Hypotheses semantically related to a given `hypothesis_id` via SEMANTICALLY_RELATED edges, ordered by similarity DESC. QWS-0604. |
+| `queued_hypotheses` | Hypothesis nodes with `queued=true`, ordered by `created_at` DESC. Columns: hypothesis_id, title, findings (200-char truncated), branched_from_id, created_at. QWS-1301. |
 
 ### [DECOM] Tools Being Removed
 
@@ -258,7 +272,6 @@ JSON output: append `--json` to any preset. Pipe to `jq` for filtering.
 |---|---|
 | `rank_by_evidence` | Redundant — duplicate of `run_history` |
 | `trace_champion` | Redundant — duplicate of `downstream_champions` |
-| `fragility_report` | Replaced — fragility signals distributed across `portfolio_alpha`, `former_champions`, `regime_performance` (see below) |
 | `staleness_report` | Low value — clutters the MCP interface |
 
 ### [CURRENT] Monitor Tool (QWS-0803)
@@ -276,12 +289,11 @@ JSON output: append `--json` to any preset. Pipe to `jq` for filtering.
 | `promotion_candidates` | QWS-0406 | Runs meeting `standards.py` tier thresholds not yet promoted. Dual-hurdle gate: `total_trades >= 30` AND `active_window_frequency >= 0.06 trades/day`. Output includes **Tier** (Professional / Institutional), **Active-Window Frequency**, and **Regime Diversity Score** — so the LLM can distinguish "Regime Specialist" from "Robust Performer" before recommending promotion. |
 | `regime_performance` | QWS-0503 | Performance table grouped by `--regime` property. Includes **Regime Diversity Score** (count of distinct regimes meeting Sharpe threshold). Score = 1 → "Regime Specialist" (fragility flag). |
 | `hypothesis_audit` | QWS-0601 | Traces current state back to the original `curator_note` intent |
-| `queued_hypotheses` | QWS-1301 (**IMPLEMENTED**) | Returns all Hypothesis nodes with `queued=true`, ordered by `created_at` desc. Columns: hypothesis_id, title, findings (200-char truncated), branched_from_id, created_at. |
 
 ### [TARGET] Fragility Signal Distribution
 
-`fragility_report` is not simply removed — its risk signals are promoted into three tools
-where they have more context:
+`fragility_report` still exists as a narrow preset (Champions flagged with regime sensitivity).
+Broader fragility signals are distributed across three tools where they have more context:
 
 | Tool | Fragility Signal |
 |---|---|

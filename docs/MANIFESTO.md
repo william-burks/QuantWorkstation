@@ -168,5 +168,6 @@ that reasons about its own past and guides the next direction.
 
 - `docs/PROVENANCE_ENGINE.md` — authoritative graph schema and MCP tool reference
 - `docs/RESEARCH_WORKFLOW.md` — how the research loop works in practice
+- `docs/SIGNALS_LIBRARY.md` — ArcticDB `signals` lib reference (strategies + regime classifiers)
 - `docs/BACKLOG_ALIGNMENT.md` — which stories implement which target capabilities
-- `docs/IS_RESEARCH_SOP.md` — 5-phase research methodology (Baseline → OOS Preparation)
+- `qws_graph/docs/IS_RESEARCH_SOP.md` — 5-phase research methodology (Baseline → OOS Preparation)
