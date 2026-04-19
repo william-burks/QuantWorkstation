@@ -17,6 +17,7 @@ from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from socketserver import ThreadingMixIn
+from typing import Any
 
 import anthropic
 
@@ -126,19 +127,20 @@ Rules:
 - Under 200 words for definitions, under 400 for full explanations"""
 
 
-def load_data() -> dict:
+def load_data() -> dict[str, Any]:
     with _file_lock:
         with open(DATA_FILE) as f:
-            return json.load(f)
+            result: dict[str, Any] = json.load(f)
+            return result
 
 
-def save_data(data: dict) -> None:
+def save_data(data: dict[str, Any]) -> None:
     with _file_lock:
         with open(DATA_FILE, "w") as f:
             json.dump(data, f, indent=2)
 
 
-def compute_streaks(sessions: list) -> dict:
+def compute_streaks(sessions: list[dict[str, Any]]) -> dict[str, int]:
     if not sessions:
         return {"current": 0, "longest": 0}
 
@@ -174,7 +176,7 @@ def compute_streaks(sessions: list) -> dict:
     return {"current": current, "longest": longest}
 
 
-def build_context(data: dict) -> str:
+def build_context(data: dict[str, Any]) -> str:
     streaks = compute_streaks(data["sessions"])
 
     lines = [f"Learning log — {date.today().isoformat()}"]
@@ -208,20 +210,20 @@ def build_context(data: dict) -> str:
 
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, fmt, *args):
+    def log_message(self, fmt: str, *args: Any) -> None:
         pass  # suppress noisy access log
 
-    def do_OPTIONS(self):
+    def do_OPTIONS(self) -> None:
         self.send_response(200)
         self._cors()
         self.end_headers()
 
-    def _cors(self):
+    def _cors(self) -> None:
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         if self.path in ("/", "/index.html"):
             self._serve_file(Path(__file__).parent / "index.html", "text/html; charset=utf-8")
         elif self.path == "/api/data":
@@ -232,7 +234,7 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self.send_error(404)
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         length = int(self.headers.get("Content-Length", 0))
         body = json.loads(self.rfile.read(length)) if length else {}
 
@@ -249,7 +251,7 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self.send_error(404)
 
-    def _handle_log(self, body: dict):
+    def _handle_log(self, body: dict[str, Any]) -> None:
         data = load_data()
         session = {
             "id": str(uuid.uuid4())[:8],
@@ -269,7 +271,7 @@ class Handler(BaseHTTPRequestHandler):
         data["topics"] = TOPICS
         self._json(data)
 
-    def _handle_resource_url(self, body: dict):
+    def _handle_resource_url(self, body: dict[str, Any]) -> None:
         data = load_data()
         if "resource_urls" not in data:
             data["resource_urls"] = {}
@@ -280,7 +282,7 @@ class Handler(BaseHTTPRequestHandler):
         save_data(data)
         self._json({"ok": True})
 
-    def _handle_resource_status(self, body: dict):
+    def _handle_resource_status(self, body: dict[str, Any]) -> None:
         data = load_data()
         if "resource_status" not in data:
             data["resource_status"] = {}
@@ -288,14 +290,14 @@ class Handler(BaseHTTPRequestHandler):
         save_data(data)
         self._json({"ok": True})
 
-    def _handle_save_rec(self, body: dict):
+    def _handle_save_rec(self, body: dict[str, Any]) -> None:
         data = load_data()
         data["recommendations"]["next_reading"] = body["text"]
         data["recommendations"]["updated"] = date.today().isoformat()
         save_data(data)
         self._json({"ok": True})
 
-    def _handle_chat(self, body: dict):
+    def _handle_chat(self, body: dict[str, Any]) -> None:
         message = body["message"]
         history = body.get("history", [])
 
@@ -351,7 +353,7 @@ class Handler(BaseHTTPRequestHandler):
                         "cache_control": {"type": "ephemeral"},
                     }
                 ],
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
             ) as stream:
                 for text in stream.text_stream:
                     chunk = json.dumps({"text": text})
@@ -372,7 +374,7 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 pass
 
-    def _serve_file(self, path: Path, content_type: str):
+    def _serve_file(self, path: Path, content_type: str) -> None:
         try:
             content = path.read_bytes()
         except FileNotFoundError:
@@ -385,7 +387,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(content)
 
-    def _json(self, data: dict):
+    def _json(self, data: dict[str, Any]) -> None:
         content = json.dumps(data).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")

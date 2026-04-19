@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 from qws_researcher import Paper
@@ -30,7 +31,7 @@ _ATOM_FEED = b"""<?xml version="1.0" encoding="UTF-8"?>
 </feed>"""
 
 
-def _mock_httpx_response(content: bytes, status: int = 200):
+def _mock_httpx_response(content: bytes, status: int = 200) -> MagicMock:
     resp = MagicMock()
     resp.status_code = status
     resp.content = content
@@ -38,7 +39,7 @@ def _mock_httpx_response(content: bytes, status: int = 200):
     return resp
 
 
-def test_arxiv_search_returns_papers():
+def test_arxiv_search_returns_papers() -> None:
     import time
 
     import papers.sources.arxiv as arxiv_mod
@@ -63,7 +64,7 @@ def test_arxiv_search_returns_papers():
     assert p.pdf_path == "url:https://arxiv.org/pdf/2301.00001"
 
 
-def test_arxiv_search_with_categories():
+def test_arxiv_search_with_categories() -> None:
     import time
 
     import papers.sources.arxiv as arxiv_mod
@@ -87,7 +88,7 @@ def test_arxiv_search_with_categories():
     assert len(papers_list) == 1
 
 
-def test_arxiv_search_returns_empty_on_error():
+def test_arxiv_search_returns_empty_on_error() -> None:
     import time
 
     import papers.sources.arxiv as arxiv_mod
@@ -110,7 +111,11 @@ def test_arxiv_search_returns_empty_on_error():
 # ---------------------------------------------------------------------------
 
 
-def _make_bulk_response(title="Test Paper", paper_id="abc123def456", external_ids=None):
+def _make_bulk_response(
+    title: str = "Test Paper",
+    paper_id: str = "abc123def456",
+    external_ids: dict[str, str] | None = None,
+) -> dict[str, Any]:
     return {
         "data": [
             {
@@ -129,7 +134,7 @@ def _make_bulk_response(title="Test Paper", paper_id="abc123def456", external_id
     }
 
 
-def test_semantic_scholar_search_returns_papers():
+def test_semantic_scholar_search_returns_papers() -> None:
     mock_response = MagicMock()
     mock_response.json.return_value = _make_bulk_response()
     mock_response.raise_for_status.return_value = None
@@ -153,7 +158,7 @@ def test_semantic_scholar_search_returns_papers():
     assert p.source == "semantic_scholar"
 
 
-def test_semantic_scholar_search_promotes_arxiv_id():
+def test_semantic_scholar_search_promotes_arxiv_id() -> None:
     mock_response = MagicMock()
     mock_response.json.return_value = _make_bulk_response(
         paper_id="abc123", external_ids={"ArXiv": "2301.99999"}
@@ -176,7 +181,7 @@ def test_semantic_scholar_search_promotes_arxiv_id():
     assert "arxiv.org" in papers_list[0].url
 
 
-def test_semantic_scholar_search_uses_bulk_endpoint():
+def test_semantic_scholar_search_uses_bulk_endpoint() -> None:
     mock_response = MagicMock()
     mock_response.json.return_value = _make_bulk_response()
     mock_response.raise_for_status.return_value = None
@@ -201,7 +206,7 @@ def test_semantic_scholar_search_uses_bulk_endpoint():
     assert "Finance" in params["fieldsOfStudy"]
 
 
-def test_semantic_scholar_search_returns_empty_on_error():
+def test_semantic_scholar_search_returns_empty_on_error() -> None:
     with patch("httpx.Client") as MockClient, patch("time.sleep"):
         instance = MockClient.return_value.__enter__.return_value
         instance.get.side_effect = Exception("API error")
@@ -259,7 +264,7 @@ _PUBMED_SEARCH_RESULT = {
 }
 
 
-def test_pubmed_search_returns_papers():
+def test_pubmed_search_returns_papers() -> None:
     with (
         patch("Bio.Entrez.esearch") as mock_esearch,
         patch("Bio.Entrez.read") as mock_read,
@@ -276,12 +281,12 @@ def test_pubmed_search_returns_papers():
     assert len(result) == 1
     p = result[0]
     assert p.id == "pmid:12345678"
-    assert "Econophysics" in p.title
+    assert p.title is not None and "Econophysics" in p.title
     assert p.source == "pubmed"
     assert "John Doe" in p.authors
 
 
-def test_pubmed_econophysics_filter_is_appended():
+def test_pubmed_econophysics_filter_is_appended() -> None:
     """Verify the econophysics filter is always appended to queries."""
     with patch("Bio.Entrez.esearch") as mock_esearch, patch("Bio.Entrez.read") as mock_read:
         mock_read.return_value = {"IdList": []}
@@ -296,7 +301,7 @@ def test_pubmed_econophysics_filter_is_appended():
     assert "my query" in call_kwargs["term"]
 
 
-def test_pubmed_search_returns_empty_on_error():
+def test_pubmed_search_returns_empty_on_error() -> None:
     with patch("Bio.Entrez.esearch") as mock_esearch:
         mock_esearch.side_effect = Exception("Network error")
 
@@ -312,7 +317,9 @@ def test_pubmed_search_returns_empty_on_error():
 # ---------------------------------------------------------------------------
 
 
-def _make_unpaywall_response(is_oa=True, pdf_url="https://example.com/paper.pdf"):
+def _make_unpaywall_response(
+    is_oa: bool = True, pdf_url: str = "https://example.com/paper.pdf"
+) -> dict[str, Any]:
     return {
         "doi": "10.1234/test",
         "is_oa": is_oa,
@@ -320,7 +327,7 @@ def _make_unpaywall_response(is_oa=True, pdf_url="https://example.com/paper.pdf"
     }
 
 
-def test_unpaywall_returns_pdf_url():
+def test_unpaywall_returns_pdf_url() -> None:
     mock_response = MagicMock()
     mock_response.json.return_value = _make_unpaywall_response()
     mock_response.status_code = 200
@@ -340,7 +347,7 @@ def test_unpaywall_returns_pdf_url():
     assert result == "https://example.com/paper.pdf"
 
 
-def test_unpaywall_returns_none_when_not_oa():
+def test_unpaywall_returns_none_when_not_oa() -> None:
     mock_response = MagicMock()
     mock_response.json.return_value = _make_unpaywall_response(is_oa=False)
     mock_response.status_code = 200
@@ -360,7 +367,7 @@ def test_unpaywall_returns_none_when_not_oa():
     assert result is None
 
 
-def test_unpaywall_returns_none_without_email():
+def test_unpaywall_returns_none_without_email() -> None:
     with patch.dict("os.environ", {}, clear=True):
         from qws_researcher.sources import unpaywall as uw_mod
 
@@ -369,7 +376,7 @@ def test_unpaywall_returns_none_without_email():
     assert result is None
 
 
-def test_unpaywall_returns_none_on_404():
+def test_unpaywall_returns_none_on_404() -> None:
     mock_response = MagicMock()
     mock_response.status_code = 404
 
@@ -392,7 +399,7 @@ def test_unpaywall_returns_none_on_404():
 # ---------------------------------------------------------------------------
 
 
-def test_ingest_pdf_new_paper(tmp_path):
+def test_ingest_pdf_new_paper(tmp_path: Path) -> None:
     """Ingesting a PDF with no existing library record creates a new Paper."""
     import asyncio
 
@@ -426,7 +433,7 @@ def test_ingest_pdf_new_paper(tmp_path):
     mock_lib.add.assert_called_once()
 
 
-def test_ingest_pdf_updates_existing(tmp_path):
+def test_ingest_pdf_updates_existing(tmp_path: Path) -> None:
     """Ingesting a PDF when paper_id already exists updates the record."""
     import asyncio
 
@@ -474,7 +481,7 @@ def test_ingest_pdf_updates_existing(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_server_dedup_by_title():
+def test_server_dedup_by_title() -> None:
     from qws_researcher.server import _dedup_by_title
 
     papers_input = [
@@ -517,7 +524,7 @@ def test_server_dedup_by_title():
 # ---------------------------------------------------------------------------
 
 
-def test_ingest_folder_matches_by_doi(tmp_path):
+def test_ingest_folder_matches_by_doi(tmp_path: Path) -> None:
     """PDF with valid DOI filename, DOI in library → ingested and text extracted."""
     inbox = tmp_path / "inbox"
     ingested = tmp_path / "ingested"
@@ -562,7 +569,7 @@ def test_ingest_folder_matches_by_doi(tmp_path):
     mock_lib.update.assert_called_once()
 
 
-def test_ingest_folder_unmatched_doi_not_in_library(tmp_path):
+def test_ingest_folder_unmatched_doi_not_in_library(tmp_path: Path) -> None:
     """PDF with valid DOI filename but DOI not in library → moved to unmatched."""
     inbox = tmp_path / "inbox"
     ingested = tmp_path / "ingested"
@@ -590,7 +597,7 @@ def test_ingest_folder_unmatched_doi_not_in_library(tmp_path):
     assert len(result["ingested"]) == 0
 
 
-def test_ingest_folder_invalid_filename(tmp_path):
+def test_ingest_folder_invalid_filename(tmp_path: Path) -> None:
     """Non-DOI filename → moved to unmatched."""
     inbox = tmp_path / "inbox"
     ingested = tmp_path / "ingested"
@@ -639,7 +646,7 @@ def _make_campus_entry(paper_id="s2:abc123", doi="10.1016/j.test.2026.001") -> C
     )
 
 
-def test_bookmark_adds_to_campus_list(tmp_path):
+def test_bookmark_adds_to_campus_list(tmp_path: Path) -> None:
     """bookmark_paper with no full text should add paper to campus list."""
     import asyncio
 
@@ -680,7 +687,7 @@ def test_bookmark_adds_to_campus_list(tmp_path):
     mock_campus.add.assert_called_once()
 
 
-def test_bookmark_skips_campus_if_full_text(tmp_path):
+def test_bookmark_skips_campus_if_full_text(tmp_path: Path) -> None:
     """bookmark_paper with full text should NOT add to campus list."""
     import asyncio
 
@@ -713,7 +720,7 @@ def test_bookmark_skips_campus_if_full_text(tmp_path):
     mock_campus.add.assert_not_called()
 
 
-def test_ingest_clears_campus_list(tmp_path):
+def test_ingest_clears_campus_list(tmp_path: Path) -> None:
     """CampusList.clear_ingested removes papers that have been ingested."""
     from qws_researcher.store.campus_list import CampusList
 
@@ -729,7 +736,7 @@ def test_ingest_clears_campus_list(tmp_path):
     assert "s2:def456" in remaining
 
 
-def test_campus_list_deduplicates(tmp_path):
+def test_campus_list_deduplicates(tmp_path: Path) -> None:
     """Adding the same paper_id twice should return False the second time."""
     from qws_researcher.store.campus_list import CampusList
 
@@ -759,7 +766,7 @@ def _make_paper(**kwargs) -> Paper:
     return Paper(**defaults)
 
 
-def test_paper_summary_never_shows_url_as_title():
+def test_paper_summary_never_shows_url_as_title() -> None:
     from qws_researcher import PaperSummary
 
     p_none = _make_paper(title=None)
@@ -774,7 +781,7 @@ def test_paper_summary_never_shows_url_as_title():
     assert not s_url.title.startswith("http")
 
 
-def test_standard_result_truncates_long_title():
+def test_standard_result_truncates_long_title() -> None:
     from qws_researcher import StandardSearchResult
 
     long_title = "A" * 70
@@ -785,7 +792,7 @@ def test_standard_result_truncates_long_title():
     assert len(r.title) == 61  # 60 chars + ellipsis character
 
 
-def test_standard_result_formats_citations():
+def test_standard_result_formats_citations() -> None:
     from qws_researcher import StandardSearchResult
 
     assert StandardSearchResult.from_paper(_make_paper(citations=1234), 1).citations == "1,234"
@@ -793,7 +800,7 @@ def test_standard_result_formats_citations():
     assert StandardSearchResult.from_paper(_make_paper(citations=0), 1).citations == "—"
 
 
-def test_standard_result_shortens_source():
+def test_standard_result_shortens_source() -> None:
     from qws_researcher import StandardSearchResult
 
     p = _make_paper(source="semantic_scholar")
@@ -801,7 +808,7 @@ def test_standard_result_shortens_source():
     assert r.source == "s2"
 
 
-def test_standard_result_formats_authors():
+def test_standard_result_formats_authors() -> None:
     from qws_researcher import StandardSearchResult
 
     authors = ["John Smith", "Jane Doe", "Alice Brown", "Bob Jones"]
@@ -811,7 +818,7 @@ def test_standard_result_formats_authors():
     assert r.authors == "Smith, J.; Doe, J.; Brown, A.; et al."
 
 
-def test_standard_result_never_url_title():
+def test_standard_result_never_url_title() -> None:
     from qws_researcher import StandardSearchResult
 
     p = _make_paper(title="https://example.com/paper.pdf")
@@ -830,7 +837,7 @@ def _crossref_response(doi: str, score: float) -> dict:
     return {"message": {"items": [{"DOI": doi, "title": ["Some Paper Title"], "score": score}]}}
 
 
-def test_crossref_returns_doi_on_high_score():
+def test_crossref_returns_doi_on_high_score() -> None:
     from qws_researcher.sources import crossref as crossref_src
 
     mock_resp = MagicMock()
@@ -844,7 +851,7 @@ def test_crossref_returns_doi_on_high_score():
     assert doi == "10.1016/j.jfineco.2020.01.001"
 
 
-def test_crossref_returns_none_on_low_score():
+def test_crossref_returns_none_on_low_score() -> None:
     from qws_researcher.sources import crossref as crossref_src
 
     mock_resp = MagicMock()
@@ -858,7 +865,7 @@ def test_crossref_returns_none_on_low_score():
     assert doi is None
 
 
-def test_crossref_returns_none_on_empty_results():
+def test_crossref_returns_none_on_empty_results() -> None:
     from qws_researcher.sources import crossref as crossref_src
 
     mock_resp = MagicMock()
@@ -872,7 +879,7 @@ def test_crossref_returns_none_on_empty_results():
     assert doi is None
 
 
-def test_crossref_returns_none_on_http_error():
+def test_crossref_returns_none_on_http_error() -> None:
     from qws_researcher.sources import crossref as crossref_src
 
     mock_resp = MagicMock()
@@ -885,7 +892,7 @@ def test_crossref_returns_none_on_http_error():
     assert doi is None
 
 
-def test_crossref_returns_none_on_empty_title():
+def test_crossref_returns_none_on_empty_title() -> None:
     from qws_researcher.sources import crossref as crossref_src
 
     assert crossref_src.lookup_doi("") is None
@@ -897,7 +904,7 @@ def test_crossref_returns_none_on_empty_title():
 # ---------------------------------------------------------------------------
 
 
-def test_add_repo_links_repo(tmp_path):
+def test_add_repo_links_repo(tmp_path: Path) -> None:
     import asyncio
     from unittest.mock import MagicMock, patch
 
@@ -927,7 +934,7 @@ def test_add_repo_links_repo(tmp_path):
     mock_lib.update.assert_called_once_with(paper)
 
 
-def test_add_repo_deduplicates(tmp_path):
+def test_add_repo_deduplicates(tmp_path: Path) -> None:
     import asyncio
     from unittest.mock import MagicMock, patch
 
