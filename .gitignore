@@ -27,7 +27,8 @@ qws_graph/node_modules/
 prefect.db
 mlruns/
 
-# Generated research outputs
+# Generated research outputs (symlinked to ~/ClaudeProjects/QuantWorkstation-private/results)
+research/results
 research/results/registry.json
 research/trials/futures/liquidity_sweep/*.html
 research/trials/futures/liquidity_sweep/*.csv
