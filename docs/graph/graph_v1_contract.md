@@ -688,7 +688,7 @@ MERGE (rt:ResearchTarget {target_id: "singleton"})
 ON CREATE SET
   rt.sharpe_professional = 2.0,
   rt.sharpe_institutional = 3.5,
-  rt.max_holding_hours = 4,
+  rt.max_holding_hours = null,
   rt.min_trades = 30,
   rt.min_active_window_frequency = 0.06,
   rt.profit_factor_min = 1.3,

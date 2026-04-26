@@ -25,7 +25,10 @@ Navigation and execution index for `epics/`.
 14. **Epic 11 — Production Tracking** — `PLANNED`
 14. **Epic 13 — Agent Design** — `IN PROGRESS` (QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303 CLOSED; QWS-1304 BLOCKED)
 15. **Epic 14 — Research Pipeline Hardening** — `READY`
-16. **Epic 12 — ML Research Layer** — `PLANNED`
+16. **Epic 15 — Data Infrastructure Quality & Provenance** — `PLANNED` (blocked on QWS-1304; insert before Epic 12/17)
+17. **Epic 16 — Data Collection Operations** — `PLACEHOLDER` (plan after QWS-1510 ships)
+18. **Epic 17 — Grammatical Evolution** — `PLANNED` (blocked on QWS-1304, Epic 15A, QWS-1506a/b, QWS-1201)
+19. **Epic 12 — ML Research Layer** — `PLANNED` (QWS-1201/1202 proceed; QWS-1203–1207 deprioritized pending Epic 17 Phase 1)
 
 ## Dependency Notes
 - Epics 1–8 COMPLETE. Epic 9 in progress — QWS-0903 READY.
@@ -37,6 +40,10 @@ Navigation and execution index for `epics/`.
 - Epic 13: QWS-1301 CLOSED; QWS-1302 CLOSED; QWS-1303 CLOSED; QWS-1304 BLOCKED (~~QWS-1303~~ satisfied).
 - Epic 14: QWS-1401 READY; QWS-1402 blocked on QWS-1401; QWS-1403/1404/1405/1406 independent. Execute before Epic 12.
 - Epic 9HF stories live in `epics/epic_9hf_bugs_and_hotfixes/`. Future one-off hotfixes go in `epics/hotfix/` (currently empty).
+- Epic 15: Phase A before Phase B. Both before Epic 12 and Epic 17. Phase A can start after QWS-1304 if needed. Phase B hard-blocked on Phase A.
+- Epic 16: no story IDs — plan after QWS-1510 ships. Story files go in `epic_16_data_collection_ops/` when created.
+- Epic 17: story files go in `epic_17_grammatical_evolution/` when created. Phase 1 sequential. Phase 2/3 parallel after manual gate. Phase 4 (scale) not yet scoped.
+- Epic 12: QWS-1201 and QWS-1202 are READY and proceed independently. QWS-1203–1207 deprioritized — resume after Epic 17 Phase 1 proves out.
 
 ---
 
@@ -314,6 +321,58 @@ QWS-1207 blocked on QWS-1206.
 
 Epic entry blocked on: QWS-0803 CLOSED (decay monitor must be live before ML Champion
 promotion).
+
+---
+
+---
+
+## Epic 15 — Data Infrastructure Quality & Provenance [PLANNED]
+- Epic README: `docs/EPIC_15_DATA_INFRASTRUCTURE.md`
+- Objective: Phase A — bar health gates, CONTFUT revision detection, delivery monitor, roll anomaly alert, data steward agent. Phase B — DataSnapshot node, CONSUMED_DATA edge, strategy input contracts, env fingerprint, bitemporal as_of.
+- Blocked on: QWS-1304 CLOSED (Phase A can proceed earlier; Phase B blocked on Phase A)
+- Phase A sprint order: QWS-1501 ∥ QWS-1504, then QWS-1503 → QWS-1505, then QWS-1510
+- Phase B sprint order: QWS-1506a, then QWS-1506b ∥ (QWS-1507 → QWS-1508) ∥ QWS-1509
+
+Stories:
+- `QWS-1501` — `PLANNED` (ArcticDB Bar Health Report)
+- `QWS-1502` — `DEFERRED` (Vendor Schema Contract — Alpaca; post-MVP, crypto out of scope)
+- `QWS-1503` — `PLANNED` (CONTFUT Revision Detection)
+- `QWS-1504` — `PLANNED` (Collector Delivery Monitor)
+- `QWS-1505` — `PLANNED` (IBKR Roll Anomaly Alert)
+- `QWS-1510` — `PLANNED` (Data Steward Agent)
+- `QWS-1506a` — `PLANNED` (DataSnapshot Node + Hash)
+- `QWS-1506b` — `PLANNED` (CONSUMED_DATA Edge + Preset)
+- `QWS-1507` — `PLANNED` (Strategy Input Contract)
+- `QWS-1508` — `PLANNED` (Environment Fingerprint on Run)
+- `QWS-1509` — `PLANNED` (Bitemporal as_of on Runs)
+
+---
+
+## Epic 16 — Data Collection Operations [PLACEHOLDER]
+- Epic README: none yet (placeholder — fully plan after QWS-1510 ships)
+- Objective: proactive staleness prevention; per-symbol SLAs, scheduled collection, gap-detect → backfill, failure alerting, unified `qw data status`
+- Blocked on: QWS-1510 CLOSED
+- Story IDs: not yet assigned
+
+---
+
+## Epic 17 — Grammatical Evolution [PLANNED]
+- Epic README: `docs/EPIC_17_GRAMMATICAL_EVOLUTION.md`
+- Objective: BNF grammar-based evolutionary search over strategy logic space; multi-instrument robustness scoring; survivor ingest to existing Hypothesis→Run lifecycle
+- Blocked on: QWS-1304 CLOSED, Epic 15A CLOSED (QWS-1501/1503/1504/1505/1510), QWS-1506a + QWS-1506b CLOSED, QWS-1201 CLOSED
+- Phase order: Phase 1 (QWS-1701–1704) → manual gate → Phase 2/3 parallel (QWS-1705/1706/1707/1708)
+
+Stories (Phase 1 — sequential):
+- `QWS-1701` `epic_17_grammatical_evolution/story_QWS-1701_bnf_grammar_v0.md` — `PLANNED`
+- `QWS-1702` `epic_17_grammatical_evolution/story_QWS-1702_genome_phenotype_mapping.md` — `PLANNED` (QWS-1701)
+- `QWS-1703` `epic_17_grammatical_evolution/story_QWS-1703_fitness_evaluator.md` — `PLANNED` (QWS-1702)
+- `QWS-1704` `epic_17_grammatical_evolution/story_QWS-1704_ge_loop_v0.md` — `PLANNED` (QWS-1703)
+
+Stories (Phase 2/3 — after Phase 1 manual gate):
+- `QWS-1705` `epic_17_grammatical_evolution/story_QWS-1705_robustness_scorer.md` — `PLANNED` (QWS-1704)
+- `QWS-1706` `epic_17_grammatical_evolution/story_QWS-1706_population_schema.md` — `PLANNED` (QWS-1704)
+- `QWS-1707` `epic_17_grammatical_evolution/story_QWS-1707_survivor_ingest.md` — `PLANNED` (QWS-1706)
+- `QWS-1708` `epic_17_grammatical_evolution/story_QWS-1708_mcp_filter_updates.md` — `PLANNED` (QWS-1707)
 
 ---
 

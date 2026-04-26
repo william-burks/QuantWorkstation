@@ -790,10 +790,10 @@ nodes:
         description: Minimum Sharpe ratio for Institutional tier promotion.
       max_holding_hours:
         type: int
-        nullable: false
-        default: 4
+        nullable: true
+        default: null
         unit: hours
-        description: Maximum holding period in hours. Strategies exceeding this are excluded.
+        description: Maximum holding period in hours. Null means no hard cap — holding period is edge-defined.
       min_trades:
         type: int
         nullable: false

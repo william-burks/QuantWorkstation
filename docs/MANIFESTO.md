@@ -4,15 +4,16 @@
 > ```
 > CONSTRAINTS:
 >   - Sharpe target ≥ 2.0 (Professional) | ≥ 3.5 (Institutional)
->   - Max holding period ≤ 4 hours
+>   - Holding period: defined by the edge — no hard cap; minimize unnecessary overnight/weekend exposure
 >   - Optimize for alpha and risk-adjusted profitability — NOT win rate, NOT trend following
->   - Instruments: futures (ES, NQ, CL, NG, ZC, ZS, MES, MNQ) and crypto (BTC) — short-duration edges
+>   - Instruments: futures (ES, NQ, CL, NG, ZC, ZS, MES, MNQ) and crypto (BTC)
+>   - Robustness over raw IS performance: a strategy that works on multiple instruments is worth more
+>     than one that posts high Sharpe on a single market
 >
 > BEFORE SUGGESTING a new strategy:
 >   1. Call qw query --name recent_champions
 >   2. Call qw query --name former_champions (check for reskins of dead edges)
 >   3. If suggestion resembles a FormerChampion, state the similarity and cause-of-death explicitly
->
 > AUTHORITY: Will is the Guiding Researcher and final decision-maker on all champion promotions.
 >            You are the Navigator. Suggest, surface, and query — do not decide.
 > ```
@@ -72,8 +73,11 @@ reason but keeps re-emerging because the failure was never queryable.
 linking the new Hypothesis back to the node that prompted the pivot — with a `rationale`
 property. This is how context survives session boundaries and model changes.
 
-**Low frequency is a feature.** Short holding periods (≤ 4h) reduce overnight exposure,
-reduce execution slippage, and make regime sensitivity more visible.
+**Holding period is defined by the edge.** Don't pre-constrain the search space. Minimize unnecessary overnight or weekend exposure where possible, but let the signal decay determine the exit — not an arbitrary clock.
+
+**Population search over manual search.** Long-term research direction moves toward automated population-based strategy search (Epic 17). Manual hypotheses continue alongside. Will curates all output — nothing is promoted autonomously.
+
+**Data integrity is a prerequisite, not a detail.** Population-based search runs batch evaluation across all available history. A single corrupted bar or walk-forward leakage bug silently contaminates every candidate. The data layer must be clean before any batch search runs. Epic 15 (data health + DataSnapshot provenance) is the gating investment.
 
 ---
 
@@ -88,7 +92,7 @@ Defaulted values, rarely changed:
 |---|---|---|
 | Sharpe ratio | ≥ 2.0 | Professional |
 | Sharpe ratio | ≥ 3.5 | Institutional |
-| Max holding period | ≤ 4 hours | Both |
+| Holding period | Edge-defined, no hard cap | Both |
 | Profit factor | ≥ 1.3 | Both |
 | Calmar ratio | ≥ 1.5 | Both |
 | Max drawdown | > -20% | Both |
@@ -142,15 +146,16 @@ signal (FormerChampion).
 | Dimension | Target State |
 |---|---|
 | Research loop | Closed: Hypothesis logged → redundancy checked → Trial run → auto-ingested → Champion or FormerChampion |
-| Idea tracking | Hypothesis nodes with `SUGGESTED` (source) and `BRANCHED_FROM` (pivot origin) |
+| Strategy generation | Population-based search (Epic 17) supplements manual hypotheses; Will curates all output |
+| Idea tracking | Hypothesis nodes with `SUGGESTED` (source), `BRANCHED_FROM` (pivot origin) |
 | Context | Shared exocortex: same Neo4j graph accessible to any model via MCP tools |
 | Champion lifecycle | Three-stage: Champion → FormerChampion (decay watch) → RetiredChampion (archive) |
 | Multi-model | Any LLM with MCP access reads the same graph — no manual context bridging |
 | Redundancy check | `check_redundancy` MCP skill runs before any strategy suggestion |
+| Data layer | Epic 15: DataSnapshot nodes pin the exact data each trial consumed; bar health gates validate all symbols before any batch eval |
 | Fragility | Distributed across `portfolio_alpha`, `former_champions`, `regime_performance` |
 
-The graph becomes a **state-aware research exocortex**: a non-linear, provenance-rich tree
-that reasons about its own past and guides the next direction.
+The graph becomes a **state-aware research exocortex**: provenance-rich, multi-model, populated by both manual and search-generated survivors — all reviewed and promoted by Will.
 
 ---
 
